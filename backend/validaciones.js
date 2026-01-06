@@ -14,7 +14,7 @@ export const verificarValidaciones = (req, res, next) => {
   }
   next();
 };
-
+//-----------------------VALIDACION PARA ALUMNOS----------------------
 export const validarAlumnos = [
   body("nombre")
     .isAlpha("es-ES")
@@ -83,7 +83,11 @@ export const validarAlumnos = [
     .isIn([1,2,3,4,5,6,7]) 
     .withMessage('La categoría debe ser del 1 al 7')
 ];
+//-----------------------------------------------------------------------
 
+
+
+//-----------------------VALIDACION PARA DOCENTES----------------------
 export const validarDocentes = [
 
   
@@ -185,7 +189,11 @@ export const validarDocentes = [
       return true;
     }),
 ];
+//-----------------------------------------------------------------------
 
+
+
+//-----------------------VALIDACION PARA TUTORES----------------------
 export const validarTutores = [
 
   
@@ -239,7 +247,11 @@ export const validarTutores = [
       return true;
     }),
 ];
+//-----------------------------------------------------------------------
 
+
+
+//-----------------------VALIDACION PARA HORARIOS----------------------
 export const validarHorarios = [
 
   
@@ -284,7 +296,11 @@ export const validarHorarios = [
     .isLength({ max: 10 })
     .withMessage("Los días no pueden superar los 10 caracteres."),
 ];
+//-----------------------------------------------------------------------
 
+
+
+//-----------------------VALIDACION PARA MATERIAS----------------------
 export const validarMaterias = [
   body("nombre")
     .isAlpha("es-ES", { ignore: " " })
@@ -321,7 +337,11 @@ export const validarMaterias = [
       return true;
     }),
 ];
+//-----------------------------------------------------------------------
 
+
+
+//-----------------------VALIDACION PARA PLANES----------------------
 export const validarPlanes = [
 
 
@@ -370,7 +390,11 @@ export const validarPlanes = [
     .isLength({ max: 50 })
     .withMessage("La duración no puede superar los 50 caracteres."),
 ];
+//-----------------------------------------------------------------------
 
+
+
+//-----------------------VALIDACION PARA PAGOS----------------------
 export const validarPagos = [
 
   
@@ -417,7 +441,11 @@ export const validarPagos = [
     .isLength({ max: 45 })
     .withMessage("El método de pago no puede superar los 45 caracteres."),
 ];
+//-----------------------------------------------------------------------
 
+
+
+//-----------------------VALIDACION PARA ALUMNOS-TUTORES----------------------
 export const validarAlumnoTutores = [
 
 
@@ -464,7 +492,11 @@ export const validarAlumnoTutores = [
       return true;
     }),
 ];
+//-----------------------------------------------------------------------
 
+
+
+//-----------------------VALIDACION PARA HORARIOS-ALUMNOS----------------------
 export const validarHorariosAlumnos = [
 
   
@@ -530,7 +562,11 @@ export const validarHorariosAlumnos = [
       return true;
     }),
 ];
+//-----------------------------------------------------------------------
 
+
+
+//-----------------------VALIDACION PARA USUARIOS----------------------
 export const validarUsuarios = [
   body("nombre")
     .trim()
@@ -583,6 +619,7 @@ export const validarUsuarios = [
       "La contraseña debe tener al menos 8 caracteres, una mayúscula, una minúscula, un número y un símbolo."
     ),
 ];
+//-----------------------------------------------------------------------
 
 export const validarModificarUsuarios = [
   body("username")
