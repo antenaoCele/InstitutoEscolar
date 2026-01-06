@@ -14,7 +14,7 @@ export const verificarValidaciones = (req, res, next) => {
   }
   next();
 };
-
+//-----------------------VALIDACION PARA ALUMNOS----------------------
 export const validarAlumnos = [
   body("nombre")
     .isAlpha("es-ES")
@@ -83,7 +83,11 @@ export const validarAlumnos = [
     .isIn([1,2,3,4,5,6,7]) 
     .withMessage('La categoría debe ser del 1 al 7')
 ];
+//-----------------------------------------------------------------------
 
+
+
+//-----------------------VALIDACION PARA DOCENTES----------------------
 export const validarDocentes = [
 
   
@@ -185,7 +189,11 @@ export const validarDocentes = [
       return true;
     }),
 ];
+//-----------------------------------------------------------------------
 
+
+
+//-----------------------VALIDACION PARA TUTORES----------------------
 export const validarTutores = [
 
   
@@ -239,7 +247,11 @@ export const validarTutores = [
       return true;
     }),
 ];
+//-----------------------------------------------------------------------
 
+
+
+//-----------------------VALIDACION PARA HORARIOS----------------------
 export const validarHorarios = [
 
   
@@ -284,11 +296,15 @@ export const validarHorarios = [
     .isLength({ max: 10 })
     .withMessage("Los días no pueden superar los 10 caracteres."),
 ];
+//-----------------------------------------------------------------------
 
+
+
+//-----------------------VALIDACION PARA MATERIAS----------------------
 export const validarMaterias = [
-  body("materia")
-    .isAlpha("es-ES")
-    .withMessage("La materia debe ser alfabética y sin espacios.")
+  body("nombre")
+    .isAlpha("es-ES", { ignore: " " })
+    .withMessage("La materia debe ser alfabética.")
     .trim()
     .notEmpty()
     .withMessage("La materia es obligatoria.")
@@ -304,69 +320,253 @@ export const validarMaterias = [
       }
       return true;
     }),
+    
+    body("id_docente")
+    .notEmpty()
+    .withMessage("El docente es obligatorio.")
+    .isInt({ min: 1 })
+    .withMessage("El docente debe ser válido.")
+    .custom(async (value) => {
+      const [rows] = await db.execute(
+        "SELECT id FROM docentes WHERE id = ?",
+        [value]
+      );
+      if (rows.length === 0) {
+        throw new Error("El docente no existe.");
+      }
+      return true;
+    }),
+];
+//-----------------------------------------------------------------------
 
-  body("codigo")
-    .isAlpha("es-ES")
-    .withMessage("El código debe ser alfabético y sin espacios.")
+
+
+//-----------------------VALIDACION PARA PLANES----------------------
+export const validarPlanes = [
+
+
+  body("nombre")
     .trim()
     .notEmpty()
-    .withMessage("El código es obligatorio.")
-    .isLength({ min: 3, max: 3 })
-    .withMessage("El código debe tener 3 caracteres.")
-    .custom(async (codigo) => {
-      const [rows] = await db.execute(
-        "SELECT id FROM materias WHERE codigo = ?",
-        [codigo]
-      );
-      if (rows.length > 0) {
-        throw new Error("Código ya registrado.");
+    .withMessage("El nombre del plan es obligatorio.")
+    .isLength({ max: 45 })
+    .withMessage("El nombre del plan no puede superar los 45 caracteres."),
+
+  
+  body("monto")
+    .notEmpty()
+    .withMessage("El monto es obligatorio.")
+    .isDecimal({ decimal_digits: "1,2" })
+    .withMessage("El monto debe ser un número decimal válido.")
+    .custom((value) => {
+      if (parseFloat(value) <= 0) {
+        throw new Error("El monto debe ser mayor a 0.");
       }
       return true;
     }),
 
-  body("año")
-    .isInt({ min: 1900, max: 2150 })
-    .withMessage("El año debe ser un número válido."),
-];
 
-export const validarNotas = [
-  body("alumno_id")
+  body("id_materia")
+    .notEmpty()
+    .withMessage("La materia es obligatoria.")
     .isInt({ min: 1 })
-    .withMessage("El ID del alumno debe ser un número entero positivo."),
-
-  body("materia_id")
-    .isInt({ min: 1 })
-    .withMessage("El ID de la materia debe ser un número entero positivo.")
-    .custom(async (materia_id, { req }) => {
-      const { alumno_id } = req.body;
-
+    .withMessage("La materia debe ser válida.")
+    .custom(async (value) => {
       const [rows] = await db.execute(
-        "SELECT * FROM notas WHERE alumno_id = ? AND materia_id = ?",
-        [alumno_id, materia_id]
+        "SELECT id FROM materias WHERE id = ?",
+        [value]
+      );
+      if (rows.length === 0) {
+        throw new Error("La materia no existe.");
+      }
+      return true;
+    }),
+
+
+  body("duracion")
+    .trim()
+    .notEmpty()
+    .withMessage("La duración es obligatoria.")
+    .isLength({ max: 50 })
+    .withMessage("La duración no puede superar los 50 caracteres."),
+];
+//-----------------------------------------------------------------------
+
+
+
+//-----------------------VALIDACION PARA PAGOS----------------------
+export const validarPagos = [
+
+  
+  body("id_alumno")
+    .notEmpty()
+    .withMessage("El alumno es obligatorio.")
+    .isInt({ min: 1 })
+    .withMessage("El alumno debe ser válido.")
+    .custom(async (value) => {
+      const [rows] = await db.execute(
+        "SELECT id FROM alumnos WHERE id = ?",
+        [value]
+      );
+      if (rows.length === 0) {
+        throw new Error("El alumno no existe.");
+      }
+      return true;
+    }),
+
+
+  body("fecha_pago")
+    .notEmpty()
+    .withMessage("La fecha de pago es obligatoria.")
+    .isISO8601()
+    .withMessage("La fecha debe tener formato YYYY-MM-DD."),
+
+  
+  body("monto")
+    .notEmpty()
+    .withMessage("El monto es obligatorio.")
+    .isDecimal({ decimal_digits: "1,2" })
+    .withMessage("El monto debe ser un número decimal válido.")
+    .custom((value) => {
+      if (parseFloat(value) <= 0) {
+        throw new Error("El monto debe ser mayor a 0.");
+      }
+      return true;
+    }),
+
+  body("metodo_pago")
+    .trim()
+    .notEmpty()
+    .withMessage("El método de pago es obligatorio.")
+    .isLength({ max: 45 })
+    .withMessage("El método de pago no puede superar los 45 caracteres."),
+];
+//-----------------------------------------------------------------------
+
+
+
+//-----------------------VALIDACION PARA ALUMNOS-TUTORES----------------------
+export const validarAlumnoTutores = [
+
+
+  body("id_alumnos")
+    .notEmpty()
+    .withMessage("El alumno es obligatorio.")
+    .isInt({ min: 1 })
+    .withMessage("El alumno debe ser válido.")
+    .custom(async (value) => {
+      const [rows] = await db.execute(
+        "SELECT id FROM alumnos WHERE id = ?",
+        [value]
+      );
+      if (rows.length === 0) {
+        throw new Error("El alumno no existe.");
+      }
+      return true;
+    }),
+
+  
+  body("id_tutores")
+    .notEmpty()
+    .withMessage("El tutor es obligatorio.")
+    .isInt({ min: 1 })
+    .withMessage("El tutor debe ser válido.")
+    .custom(async (value, { req }) => {
+      const [rows] = await db.execute(
+        "SELECT id FROM tutores WHERE id = ?",
+        [value]
+      );
+      if (rows.length === 0) {
+        throw new Error("El tutor no existe.");
+      }
+
+      const [relacion] = await db.execute(
+        "SELECT id FROM alumno_tutores WHERE id_alumnos = ? AND id_tutores = ?",
+        [req.body.id_alumnos, value]
       );
 
-      if (rows.length > 0) {
-        throw new Error(
-          "Ya existen notas registradas para este alumno en esta materia."
-        );
+      if (relacion.length > 0) {
+        throw new Error("El tutor ya está asignado a este alumno.");
       }
 
       return true;
     }),
-
-  body("nota1")
-    .isFloat({ min: 0, max: 10 })
-    .withMessage("La nota 1 debe ser un número entre 0 y 10."),
-
-  body("nota2")
-    .isFloat({ min: 0, max: 10 })
-    .withMessage("La nota 2 debe ser un número entre 0 y 10."),
-
-  body("nota3")
-    .isFloat({ min: 0, max: 10 })
-    .withMessage("La nota 3 debe ser un número entre 0 y 10."),
 ];
+//-----------------------------------------------------------------------
 
+
+
+//-----------------------VALIDACION PARA HORARIOS-ALUMNOS----------------------
+export const validarHorariosAlumnos = [
+
+  
+  body("id_horarios")
+    .notEmpty()
+    .withMessage("El horario es obligatorio.")
+    .isInt({ min: 1 })
+    .withMessage("El horario debe ser válido.")
+    .custom(async (value) => {
+      const [rows] = await db.execute(
+        "SELECT id FROM horarios WHERE id = ?",
+        [value]
+      );
+      if (rows.length === 0) {
+        throw new Error("El horario no existe.");
+      }
+      return true;
+    }),
+
+  
+  body("id_alumnos")
+    .notEmpty()
+    .withMessage("El alumno es obligatorio.")
+    .isInt({ min: 1 })
+    .withMessage("El alumno debe ser válido.")
+    .custom(async (value) => {
+      const [rows] = await db.execute(
+        "SELECT id FROM alumnos WHERE id = ?",
+        [value]
+      );
+      if (rows.length === 0) {
+        throw new Error("El alumno no existe.");
+      }
+      return true;
+    }),
+
+  
+  body("id_docente")
+    .notEmpty()
+    .withMessage("El docente es obligatorio.")
+    .isInt({ min: 1 })
+    .withMessage("El docente debe ser válido.")
+    .custom(async (value, { req }) => {
+      const [rows] = await db.execute(
+        "SELECT id FROM docentes WHERE id = ?",
+        [value]
+      );
+      if (rows.length === 0) {
+        throw new Error("El docente no existe.");
+      }
+
+      
+      const [relacion] = await db.execute(
+        `SELECT id FROM horarios_alumnos 
+         WHERE id_horarios = ? AND id_alumnos = ?`,
+        [req.body.id_horarios, req.body.id_alumnos]
+      );
+
+      if (relacion.length > 0) {
+        throw new Error("El alumno ya está asignado a este horario.");
+      }
+
+      return true;
+    }),
+];
+//-----------------------------------------------------------------------
+
+
+
+//-----------------------VALIDACION PARA USUARIOS----------------------
 export const validarUsuarios = [
   body("nombre")
     .trim()
@@ -419,6 +619,7 @@ export const validarUsuarios = [
       "La contraseña debe tener al menos 8 caracteres, una mayúscula, una minúscula, un número y un símbolo."
     ),
 ];
+//-----------------------------------------------------------------------
 
 export const validarModificarUsuarios = [
   body("username")
@@ -546,16 +747,3 @@ export const validarModificarMaterias = [
     .withMessage("El año debe ser un número válido."),
 ];
 
-export const validarModificarNotas = [
-  body("nota1")
-    .isFloat({ min: 0, max: 10 })
-    .withMessage("La nota 1 debe ser un número entre 0 y 10."),
-
-  body("nota2")
-    .isFloat({ min: 0, max: 10 })
-    .withMessage("La nota 2 debe ser un número entre 0 y 10."),
-
-  body("nota3")
-    .isFloat({ min: 0, max: 10 })
-    .withMessage("La nota 3 debe ser un número entre 0 y 10."),
-];

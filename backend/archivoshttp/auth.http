@@ -6,9 +6,52 @@ POST {{url}}/auth/login
 Content-Type: application/json
 
 {
-    "nombre": "novak",
-    "contrasena": "NOvak123"
+    "nombre": "Celeste",
+    "apellido": "Antenao", 
+    "username": "cele123", 
+    "password": "Ab123456@"
 }
 
 ###
 @token = {{login.response.body.token}}  
+
+
+
+
+### Consultar usuarios
+GET {{url}}/usuarios
+Authorization: Bearer {{token}}
+
+### Consultar por un usuario
+GET {{url}}/usuarios/1
+Authorization: Bearer {{token}}
+
+
+### Crear usuario
+POST {{url}}/usuarios
+Content-Type: application/json
+
+{
+    "nombre": "Celeste",
+    "apellido": "Antenao", 
+    "username": "cele123", 
+    "password": "Ab123456@"
+}
+
+### Eliminar usuario 
+DELETE {{url}}/usuarios/1
+Authorization: Bearer {{token}}
+
+### Modificar usuario 
+PUT {{url}}/usuarios/3
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+    "nombre": "Celeste",
+    "apellido": "Antenao", 
+    "username": "cele123", 
+    "password": "Ab123456@"
+}
+
+
