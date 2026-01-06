@@ -1,0 +1,39 @@
+@url = http://localhost:3000
+
+
+### Obtener un docente por ID
+GET {{url}}/docentes/1
+
+
+### Crear docente
+POST {{url}}/docentes
+Content-Type: application/json
+
+{
+    "nombre": "franco",
+    "apellido": "colapinto",
+    "dni": "20345678",
+    "id_materia": 1,
+    "telefono": "3804987654",
+    "mail": "franco.colapinto@gmail.com",
+    "domicilio": "Av. rivadavia 456",
+    "sueldo": 150000.50
+}
+
+### Actualizar docente
+PUT {{url}}/docentes/1
+Content-Type: application/json
+
+{
+    "nombre": "david",
+    "apellido": "nalbandian",
+    "dni": "20345433",
+    "id_materia": 2,
+    "telefono": "3804567432",
+    "mail": "davidnalban@gmail.com",
+    "domicilio": "Av. peron 2000",
+    "sueldo": 160000.00
+}
+
+### Eliminar docente
+DELETE {{url}}/docentes/1
