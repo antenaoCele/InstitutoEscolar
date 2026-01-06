@@ -42,11 +42,13 @@ router.post(
   "/login",
   [
     body("nombre").notEmpty().withMessage("El nombre es obligatorio"),
-    body("contrasena").notEmpty().withMessage("La contraseña es obligatoria"),
+    body("apellido").notEmpty().withMessage("El apellido es obligatorio"),
+    body("username").notEmpty().withMessage("El nombre de usuario es obligatorio"),
+    body("password").notEmpty().withMessage("La contraseña es obligatoria"),
   ],
   verificarValidaciones,
   async (req, res) => {
-    const { nombre, contrasena } = req.body;
+    const { nombre, apellido, username, password} = req.body;
 
     const [usuarios] = await db.execute(
       "SELECT * FROM usuarios WHERE nombre = ?",
@@ -59,8 +61,8 @@ router.post(
         .json({ success: false, error: "usuario o contraseña no valido" });
     }
 
-    const hashedPassword = usuarios[0].contrasena;
-    const passwordComparada = await bcrypt.compare(contrasena, hashedPassword);
+    const hashedPassword = usuarios[0].password;
+    const passwordComparada = await bcrypt.compare(password, hashedPassword);
 
     if (!passwordComparada) {
       return res
@@ -70,7 +72,7 @@ router.post(
 
     const payload = { userId: usuarios[0].id };
     const token = jwt.sign(payload, process.env.JWT_SECRET, {
-      expiresIn: "4h",
+      expiresIn: "5s",
     });
 
     res.json({
