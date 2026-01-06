@@ -50,6 +50,108 @@ export const validarAlumnos = [
     }),
 ];
 
+export const validarDocentes = [
+
+  
+  body("nombre")
+    .trim()
+    .notEmpty()
+    .withMessage("El nombre es obligatorio.")
+    .isAlpha("es-ES", { ignore: " " })
+    .withMessage("El nombre solo puede contener letras.")
+    .isLength({ max: 45 })
+    .withMessage("El nombre no puede superar los 45 caracteres."),
+
+
+  body("apellido")
+    .trim()
+    .notEmpty()
+    .withMessage("El apellido es obligatorio.")
+    .isAlpha("es-ES", { ignore: " " })
+    .withMessage("El apellido solo puede contener letras.")
+    .isLength({ max: 45 })
+    .withMessage("El apellido no puede superar los 45 caracteres."),
+
+  
+  body("dni")
+    .trim()
+    .notEmpty()
+    .withMessage("El DNI es obligatorio.")
+    .isNumeric()
+    .withMessage("El DNI debe ser numérico.")
+    .isLength({ max: 10 })
+    .withMessage("El DNI no puede superar los 10 caracteres.")
+    .custom(async (value) => {
+      const [rows] = await db.execute(
+        "SELECT id FROM docentes WHERE dni = ?",
+        [value]
+      );
+      if (rows.length > 0) {
+        throw new Error("El DNI ya está registrado");
+      }
+      return true;
+    }),
+
+  
+  body("id_materia")
+    .notEmpty()
+    .withMessage("La materia es obligatoria.")
+    .isInt({ min: 1 })
+    .withMessage("La materia debe ser un número válido."),
+
+  
+  body("telefono")
+    .trim()
+    .notEmpty()
+    .withMessage("El teléfono es obligatorio.")
+    .isLength({ max: 20 })
+    .withMessage("El teléfono no puede superar los 20 caracteres.")
+    .matches(/^[0-9+\- ]+$/)
+    .withMessage("El teléfono solo puede contener números, + o -"),
+
+
+  body("mail")
+    .trim()
+    .notEmpty()
+    .withMessage("El email es obligatorio.")
+    .isEmail()
+    .withMessage("Debe ser un email válido.")
+    .isLength({ max: 45 })
+    .withMessage("El email no puede superar los 45 caracteres.")
+    .normalizeEmail()
+    .custom(async (value) => {
+      const [rows] = await db.execute(
+        "SELECT id FROM docentes WHERE mail = ?",
+        [value]
+      );
+      if (rows.length > 0) {
+        throw new Error("El email ya está registrado");
+      }
+      return true;
+    }),
+
+
+  body("domicilio")
+    .trim()
+    .notEmpty()
+    .withMessage("El domicilio es obligatorio.")
+    .isLength({ max: 100 })
+    .withMessage("El domicilio no puede superar los 100 caracteres."),
+
+
+  body("sueldo")
+    .notEmpty()
+    .withMessage("El sueldo es obligatorio.")
+    .isDecimal({ decimal_digits: "1,2" })
+    .withMessage("El sueldo debe ser un número decimal válido.")
+    .custom((value) => {
+      if (parseFloat(value) <= 0) {
+        throw new Error("El sueldo debe ser mayor a 0");
+      }
+      return true;
+    }),
+];
+
 export const validarMaterias = [
   body("materia")
     .isAlpha("es-ES")
@@ -133,12 +235,30 @@ export const validarNotas = [
 ];
 
 export const validarUsuarios = [
+  body("nombre")
+    .trim()
+    .notEmpty()
+    .withMessage("El nombre es obligatorio.")
+    .isAlpha("es-ES", { ignore: " " })
+    .withMessage("El nombre solo puede contener letras.")
+    .isLength({ max: 45 })
+    .withMessage("El nombre no puede tener más de 45 caracteres."),
+
+  body("apellido")
+    .trim()
+    .notEmpty()
+    .withMessage("El apellido es obligatorio.")
+    .isAlpha("es-ES", { ignore: " " })
+    .withMessage("El apellido solo puede contener letras.")
+    .isLength({ max: 45 })
+    .withMessage("El apellido no puede tener más de 45 caracteres."),
+
   body("username")
-    .isAlpha("es-ES")
-    .withMessage("El nombre de usuario debe ser alfabético y sin espacios.")
     .trim()
     .notEmpty()
     .withMessage("El nombre de usuario es obligatorio.")
+    .isAlphanumeric("es-ES")
+    .withMessage("El nombre de usuario debe ser alfanumérico y sin espacios.")
     .isLength({ max: 45 })
     .withMessage("El nombre de usuario no puede tener más de 45 caracteres.")
     .custom(async (value) => {
@@ -147,32 +267,14 @@ export const validarUsuarios = [
         [value]
       );
       if (rows.length > 0) {
-        throw new Error("Usuario ya está registrado");
+        throw new Error("El usuario ya está registrado");
       }
       return true;
     }),
 
-  body("email")
-    .trim()
+  body("password")
     .notEmpty()
-    .withMessage("El email es obligatorio.")
-    .isEmail()
-    .withMessage("Debe proporcionar un formato de email válido.")
-    .isLength({ max: 45 })
-    .withMessage("El email no puede tener más de 45 caracteres.")
-    .normalizeEmail()
-    .custom(async (value) => {
-      const [rows] = await db.execute(
-        "SELECT id FROM usuarios WHERE email = ?",
-        [value]
-      );
-      if (rows.length > 0) {
-        throw new Error("E-mail ya está registrado");
-      }
-      return true;
-    }),
-
-  body("contraseña")
+    .withMessage("La contraseña es obligatoria.")
     .isStrongPassword({
       minLength: 8,
       minLowercase: 1,
@@ -181,7 +283,7 @@ export const validarUsuarios = [
       minSymbols: 1,
     })
     .withMessage(
-      "La contraseña debe tener al menos 8 caracteres, e incluir una mayúscula, una minúscula, un número y un símbolo."
+      "La contraseña debe tener al menos 8 caracteres, una mayúscula, una minúscula, un número y un símbolo."
     ),
 ];
 
