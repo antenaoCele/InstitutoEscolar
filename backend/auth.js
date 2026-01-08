@@ -41,27 +41,27 @@ export const autorizacion = (rol) => {
 router.post(
   "/login",
   [
-    body("nombre").notEmpty().withMessage("El nombre es obligatorio"),
-    body("apellido").notEmpty().withMessage("El apellido es obligatorio"),
+    body("first_name").notEmpty().withMessage("El nombre es obligatorio"),
+    body("last_name").notEmpty().withMessage("El apellido es obligatorio"),
     body("username").notEmpty().withMessage("El nombre de usuario es obligatorio"),
     body("password").notEmpty().withMessage("La contraseña es obligatoria"),
   ],
   verificarValidaciones,
   async (req, res) => {
-    const { nombre, apellido, username, password} = req.body;
+    const { first_name, last_name, username, password} = req.body;
 
-    const [usuarios] = await db.execute(
-      "SELECT * FROM usuarios WHERE nombre = ?",
-      [nombre]
+    const [users] = await db.execute(
+      "SELECT * FROM users WHERE first_name = ?",
+      [first_name]
     );
 
-    if (usuarios.length === 0) {
+    if (users.length === 0) {
       return res
         .status(400)
         .json({ success: false, error: "usuario o contraseña no valido" });
     }
 
-    const hashedPassword = usuarios[0].password;
+    const hashedPassword = users[0].password;
     const passwordComparada = await bcrypt.compare(password, hashedPassword);
 
     if (!passwordComparada) {
@@ -78,7 +78,7 @@ router.post(
     res.json({
       success: true,
       token,
-      nombre: usuarios[0].nombre,
+      nombre: users[0].first_name,
       message: "Inicio de sesion exitoso",
     });
   }
