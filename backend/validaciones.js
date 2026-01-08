@@ -445,46 +445,6 @@ export const validarAlumnoTutores = [
 
 
 
-//-----------------------VALIDACION PARA HORARIOS-ALUMNOS----------------------
-export const validarHorariosAlumnos = [
-
-  
-  body("schedule_id")
-    .notEmpty()
-    .withMessage("El horario es obligatorio.")
-    .isInt({ min: 1 })
-    .withMessage("El horario debe ser válido.")
-    .custom(async (value) => {
-      const [rows] = await db.execute(
-        "SELECT id FROM schedules WHERE id = ?",
-        [value]
-      );
-      if (rows.length === 0) {
-        throw new Error("El horario no existe.");
-      }
-      return true;
-    }),
-
-  
-  body("student_id")
-    .notEmpty()
-    .withMessage("El alumno es obligatorio.")
-    .isInt({ min: 1 })
-    .withMessage("El alumno debe ser válido.")
-    .custom(async (value) => {
-      const [rows] = await db.execute(
-        "SELECT id FROM students WHERE id = ?",
-        [value]
-      );
-      if (rows.length === 0) {
-        throw new Error("El alumno no existe.");
-      }
-      return true;
-    }),
-
-]
-//-----------------------------------------------------------------------
-
 
 
 //-----------------------VALIDACION PARA USUARIOS----------------------
