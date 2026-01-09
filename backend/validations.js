@@ -3,7 +3,8 @@ import { db } from "./db.js";
 
 export const validateID = param("id").isInt({ min: 1 });
 
-export const validateVerification = (req, res, next) => {
+export const checkValidations
+ = (req, res, next) => {
   const validation = validationResult(req);
   if (!validation.isEmpty()) {
     return res.status(400).json({
