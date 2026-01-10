@@ -1,18 +1,18 @@
 import express from "express";
 import { db } from "./db.js";
-import { validarId, verificarValidaciones, validarTutores } from "./validaciones.js";
+import {validateId, checkvalidations, validatetutors } from "./validations.js";
 import passport from "passport";
 
 const router = express.Router();
 
 router.get("/:id",
-    validarId,
-    verificarValidaciones,
+   validateId,
+    checkvalidations,
     async (req, res) => {
         const id = Number(req.params.id);
 
         const [rows] = await db.execute(
-            "SELECT * FROM tutores WHERE id=?",
+            "SELECT * FROM tutors WHERE id=?",
             [id]
         );
 
@@ -27,59 +27,59 @@ router.get("/:id",
 
 router.post(
     "/",
-    validarTutores,
-    verificarValidaciones,
+    validatetutors,
+    checkvalidations,
     async (req, res) => {
-        const { nombre, apellido, telefono, dni } = req.body;
+        const {first_name, last_name, phone, dni } = req.body;
 
         const [result] = await db.execute(
-            "INSERT INTO tutores (nombre, apellido, telefono, dni) VALUES (?,?,?,?)",
-            [nombre, apellido, telefono, dni]
+            "INSERT INTO tutors (first_name, last_name, phone, dni) VALUES (?,?,?,?)",
+            [first_name, last_name, phone, dni]
         );
 
         res.status(201).json({
             success: true,
-            data: { id: result.insertId, nombre, apellido, telefono, dni },
+            data: { id: result.insertId,first_name, last_name, phone, dni },
         });
     }
 );
 
 router.put("/:id",
-    validarId,
-    validarTutores,
-    verificarValidaciones,
+   validateId,
+    validatetutors,
+    checkvalidations,
     async (req, res) => {
-        const { nombre, apellido, telefono, dni } = req.body;
+        const {first_name, last_name, phone, dni } = req.body;
         const { id } = req.params;
 
-        const [rows] = await db.execute("SELECT * FROM tutores WHERE id=?", [id]);
+        const [rows] = await db.execute("SELECT * FROM tutors WHERE id=?", [id]);
 
         if (rows.length === 0) {
             return res.status(404).json({ success: false, error: "Tutor no encontrado" });
         }
 
         await db.execute(
-            "UPDATE tutores SET nombre=?, apellido=?, telefono=?, dni=? WHERE id=?",
-            [nombre, apellido, telefono, dni, id]
+            "UPDATE tutors SETfirst_name=?, last_name=?, phone=?, dni=? WHERE id=?",
+            [first_name, last_name, phone, dni, id]
         );
 
         return res.status(200).json({
             success: true,
-            data: { id: Number(id), nombre, apellido, telefono, dni },
+            data: { id: Number(id),first_name, last_name, phone, dni },
         });
     });
 
-router.delete("/:id", validarId, verificarValidaciones,
+router.delete("/:id",validateId, checkvalidations,
     async (req, res) => {
         const { id } = req.params;
 
-        const [rows] = await db.execute("SELECT * FROM tutores WHERE id=?", [id]);
+        const [rows] = await db.execute("SELECT * FROM tutors WHERE id=?", [id]);
 
         if (rows.length === 0) {
             return res.status(404).json({ success: false, error: "Tutor no encontrado" });
         }
 
-        await db.execute("DELETE FROM tutores WHERE id=?", [id]);
+        await db.execute("DELETE FROM tutors WHERE id=?", [id]);
 
         res.json({ success: true, message: "Tutor eliminado" });
     });
