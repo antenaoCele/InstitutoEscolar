@@ -1,6 +1,6 @@
 import express from "express";
 import { db } from "./db.js";
-import { verificarValidaciones } from "./validaciones.js";
+import { checkValidations } from "./validations.js";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import passport from "passport";
@@ -22,7 +22,7 @@ export function authConfig() {
   );
 }
 
-export const autenticacion = passport.authenticate("jwt", {
+export const authentication = passport.authenticate("jwt", {
   session: false,
 });
 
@@ -46,7 +46,7 @@ router.post(
     body("username").notEmpty().withMessage("El nombre de usuario es obligatorio"),
     body("password").notEmpty().withMessage("La contraseña es obligatoria"),
   ],
-  verificarValidaciones,
+  checkValidations,
   async (req, res) => {
     const { first_name, last_name, username, password} = req.body;
 

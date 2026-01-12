@@ -1,6 +1,6 @@
 import express from "express";
 import { db } from "./db.js";
-import { validarId, verificarValidaciones, validarUsers } from "./validaciones.js";
+import { validateID, checkValidations, validateUsers } from "./validations.js";
 import bcrypt from "bcrypt";
 import passport from "passport";
 
@@ -20,8 +20,8 @@ router.get(
 );
 
 router.get("/:id",
-    validarId,
-    verificarValidaciones,
+    validateID,
+    checkValidations,
     passport.authenticate("jwt", { session: false }),
     async (req, res) => {
         const id = Number(req.params.id);
@@ -49,8 +49,8 @@ router.get("/:id",
 
 router.post(
     "/",
-    validarUsers,
-    verificarValidaciones,
+    validateUsers,
+    checkValidations,
     async (req, res) => {
         const { first_name, last_name, username, password } = req.body;
 
@@ -69,9 +69,9 @@ router.post(
 );
 
 router.put("/:id",
-    validarId,
-    validarUsers,
-    verificarValidaciones,
+    validateID,
+    validateUsers,
+    checkValidations,
     passport.authenticate("jwt", { session: false }),
     async (req, res) => {
         const { first_name, last_name, username, password } = req.body;
@@ -99,7 +99,7 @@ router.put("/:id",
     });
 
 
-router.delete("/:id", validarId, verificarValidaciones,
+router.delete("/:id", validateID, checkValidations,
     passport.authenticate("jwt", { session: false }),
     async (req, res) => {
         const { id } = req.params;
