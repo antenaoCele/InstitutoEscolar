@@ -32,10 +32,10 @@ POST {{url}}/usuarios
 Content-Type: application/json
 
 {
-    "first_name": "Exequiel",
-    "last_name": "Mendoza", 
-    "username": "Exe123", 
-    "password": "Exe1234@"
+    "first_name": "Ramiro",
+    "last_name": "Pioli", 
+    "username": "Rami123", 
+    "password": "Rami1234@"
 }
 
 ### Eliminar usuario 
