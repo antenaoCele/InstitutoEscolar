@@ -6,8 +6,8 @@ POST {{url}}/auth/login
 Content-Type: application/json
 
 {
-    "username": "novak",
-    "password": "NOvak123"
+    "username": "rama123",
+    "password": "Rama123."
 }
 
 ###
@@ -30,10 +30,10 @@ POST {{url}}/users
 Content-Type: application/json
 
 {
-    "first_name": "Exequiel",
-    "last_name": "Mendoza", 
-    "username": "Exe123", 
-    "password": "Exe1234@"
+    "first_name": "ramiro",
+    "last_name": "pioli", 
+    "username": "Rama123", 
+    "password": "Rama123."
 }
 
 ### Eliminar usuario 
