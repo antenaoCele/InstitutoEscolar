@@ -5,9 +5,15 @@ import passport from "passport";
 
 const router = express.Router();
 
+router.get("/", passport.authenticate("jwt", { session: false }), async (req, res) => {
+    const [rows] = await db.execute("SELECT * FROM teachers");
+    res.json({ success: true, teachers});
+});
+
 router.get("/:id",
     validateID,
     checkValidations,
+    passport.authenticate("jwt", { session: false }),
     async (req, res) => {
         const id = Number(req.params.id);
 
@@ -29,6 +35,7 @@ router.post(
     "/",
     validateTeachers,
     checkValidations,
+    passport.authenticate("jwt", { session: false }),
     async (req, res) => {
         const { first_name, last_name, dni,phone,salary } = req.body;
 
@@ -48,6 +55,7 @@ router.put("/:id",
     validateID,
     validateTeachers,
     checkValidations,
+    passport.authenticate("jwt", { session: false }),
     async (req, res) => {
         const { first_name, last_name, dni,phone,salary } = req.body;
         const { id } = req.params;
@@ -70,6 +78,7 @@ router.put("/:id",
     });
 
 router.delete("/:id", validateID, checkValidations,
+    passport.authenticate("jwt", { session: false }),
     async (req, res) => {
         const { id } = req.params;
 

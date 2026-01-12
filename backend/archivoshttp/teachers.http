@@ -18,7 +18,7 @@ Content-Type: application/json
 }
 
 ### Actualizar docente
-PUT {{url}}/teachers/1
+PUT {{url}}/teachers/2
 Content-Type: application/json
 
 {
