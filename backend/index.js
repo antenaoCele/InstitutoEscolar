@@ -25,7 +25,7 @@ app.use("/users", usersRouter);
 app.use("/tutors", tutorsRouter);
 app.use("/teachers", teachersRouter);
 app.use("/subjects", subjectsRouter);
-app.use("/students", studentsRouterRouter);
+app.use("/students", studentsRouter);
 
 app.listen(port, () => {
   console.log(`La aplicación esta funcionando en el puerto ${port}`);
