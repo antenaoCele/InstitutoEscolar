@@ -1,33 +1,50 @@
-@url = http://localhost:3000
-
-
-### Obtener un docente por ID
-GET {{url}}/teachers/1
-
-
-### Crear docente
-POST {{url}}/teachers
+### Iniciar sesión para obtener el token
+# @name login
+POST http://localhost:3000/auth/login
 Content-Type: application/json
 
 {
-    "first_name": "franco",
-    "last_name": "colapinto",
-    "dni": "20345678",
+    "nombre": "ramiro",
+    "contrasena": "Ramiro123."
+}
+
+### Guardar el token en una variable
+@token = {{login.response.body.token}}
+
+### Obtener todos los docentes (Requiere autenticación)
+GET http://localhost:3000/teachers
+Authorization: Bearer {{token}}
+
+### Obtener un docente por ID (Requiere autenticación)
+GET http://localhost:3000/teachers/1
+Authorization: Bearer {{token}}
+
+### Crear un nuevo docente (Requiere autenticación)
+POST http://localhost:3000/teachers
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+    "first_name": "ramiro",
+    "last_name": "pioli",
+    "dni": "43212488",
     "phone": "3804987654",
-    "salary": 150000.50
+    "salary": 60000.00
 }
 
-### Actualizar docente
-PUT {{url}}/teachers/2
+### Actualizar un docente (Requiere autenticación)
+PUT http://localhost:3000/teachers/1
 Content-Type: application/json
+Authorization: Bearer {{token}}
 
 {
-    "first_name": "david",
-    "last_name": "nalbandian",
-    "dni": "20345433",
-    "phone": "3804567432",
-    "salary": 160000.00
+    "first_name": "celeste",
+    "last_name": "antenao",
+    "dni": "44323565",
+    "phone": "3804432213",
+    "salary": 65000.50
 }
 
-### Eliminar docente
-DELETE {{url}}/teachers/1
+### Eliminar un docente (Requiere autenticación)
+DELETE http://localhost:3000/teachers/1
+Authorization: Bearer {{token}}
