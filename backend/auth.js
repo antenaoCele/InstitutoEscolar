@@ -41,18 +41,16 @@ export const autorizacion = (rol) => {
 router.post(
   "/login",
   [
-    body("first_name").notEmpty().withMessage("El nombre es obligatorio"),
-    body("last_name").notEmpty().withMessage("El apellido es obligatorio"),
     body("username").notEmpty().withMessage("El nombre de usuario es obligatorio"),
     body("password").notEmpty().withMessage("La contraseña es obligatoria"),
   ],
   checkValidations,
   async (req, res) => {
-    const { first_name, last_name, username, password} = req.body;
+    const { username, password} = req.body;
 
     const [users] = await db.execute(
-      "SELECT * FROM users WHERE first_name = ?",
-      [first_name]
+      "SELECT * FROM users WHERE username = ?",
+      [username]
     );
 
     if (users.length === 0) {
@@ -70,9 +68,9 @@ router.post(
         .json({ success: false, error: "usuario o contraseña no valido" });
     }
 
-    const payload = { userId: usuarios[0].id };
+    const payload = { userId: users[0].id };
     const token = jwt.sign(payload, process.env.JWT_SECRET, {
-      expiresIn: "5s",
+      expiresIn: "4h",
     });
 
     res.json({
