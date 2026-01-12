@@ -1,13 +1,13 @@
 import express from "express";
 import { db } from "./db.js";
-import { validateId, checkvalidations, validateteachers } from "./validations.js";
+import { validateID, checkValidations, validateTeachers } from "./validations.js";
 import passport from "passport";
 
 const router = express.Router();
 
 router.get("/:id",
-    validateId,
-    checkvalidations,
+    validateID,
+    checkValidations,
     async (req, res) => {
         const id = Number(req.params.id);
 
@@ -27,8 +27,8 @@ router.get("/:id",
 
 router.post(
     "/",
-    validateteachers,
-    checkvalidations,
+    validateTeachers,
+    checkValidations,
     async (req, res) => {
         const { first_name, last_name, dni,phone,salary } = req.body;
 
@@ -45,9 +45,9 @@ router.post(
 );
 
 router.put("/:id",
-    validateId,
-    validateteachers,
-    checkvalidations,
+    validateID,
+    validateTeachers,
+    checkValidations,
     async (req, res) => {
         const { first_name, last_name, dni,phone,salary } = req.body;
         const { id } = req.params;
@@ -69,7 +69,7 @@ router.put("/:id",
         });
     });
 
-router.delete("/:id", validateId, checkvalidations,
+router.delete("/:id", validateID, checkValidations,
     async (req, res) => {
         const { id } = req.params;
 

@@ -1,60 +1,60 @@
 import express from "express";
 import { db } from "./db.js";
 import {
-  verificarValidaciones,
-  validarAlumnos,
-  validarModificarAlumnos,
-  validarId,
-} from "./validaciones.js";
-import { autenticacion } from "./auth.js";
+  checkValidations,
+  validateStudents,
+  validateEditStudents,
+  validateID,
+} from "./validations.js";
+import { authentication } from "./auth.js";
 
 const router = express.Router();
 
-router.get("/", autenticacion, async (req, res) => {
-  const [alumnos] = await db.execute(
-    "SELECT id, nombre, apellido, dni, colegio, nacimiento, id_plan, inscripcion, nivel, grado FROM alumnos"
+router.get("/", authentication, async (req, res) => {
+  const [students] = await db.execute(
+    "SELECT id, first_name, last_name, dni, school, birth_date, enrolled, level, grade FROM students"
   );
-  res.json({ success: true, alumnos });
+  res.json({ success: true, students });
 });
 
 router.get(
   "/:id",
-  autenticacion,
-  validarId,
-  verificarValidaciones,
+  authentication,
+  validateID,
+  checkValidations,
   async (req, res) => {
     const id = Number(req.params.id);
 
-    const [alumnos] = await db.execute("SELECT * FROM alumnos WHERE id = ?", [
+    const [students] = await db.execute("SELECT * FROM students WHERE id = ?", [
       id,
     ]);
 
-    if (alumnos.length === 0) {
+    if (students.length === 0) {
       return res
         .status(404)
         .json({ success: false, message: "Alumno no encontrado" });
     }
 
-    res.json({ success: true, alumno: alumnos[0] });
+    res.json({ success: true, student: students[0] });
   }
 );
 
 router.post(
   "/",
-  autenticacion,
-  validarAlumnos,
-  verificarValidaciones,
+  authentication,
+  validateStudents,
+  checkValidations,
   async (req, res) => {
-    const { nombre, apellido, dni } = req.body;
+    const { first_name, last_name, dni, school, birth_date, enrolled, level, grade} = req.body;
 
-    const [resultado] = await db.execute(
-      "INSERT INTO alumnos (nombre, apellido, dni) VALUES (?, ?, ?)",
-      [nombre, apellido, dni]
+    const [result] = await db.execute(
+      "INSERT INTO stduents (first_name, last_name, dni, school, birth_date, enrolled, level, grade) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+      [first_name, last_name, dni, school, birth_date, enrolled, level, grade]
     );
 
     res.status(201).json({
       success: true,
-      data: { id: resultado.insertId, nombre, apellido, dni },
+      data: { id: result.insertId, first_name, last_name, dni, school, birth_date, enrolled, level, grade },
       message: "Alumno creado exitosamente",
     });
   }
@@ -62,33 +62,33 @@ router.post(
 
 router.put(
   "/:id",
-  autenticacion,
-  validarId,
-  validarModificarAlumnos,
-  verificarValidaciones,
+  authentication,
+  validateID,
+  validateEditStudents,
+  checkValidations,
   async (req, res) => {
     const id = Number(req.params.id);
 
-    const [alumnos] = await db.execute("SELECT * FROM alumnos WHERE id = ?", [
+    const [students] = await db.execute("SELECT * FROM students WHERE id = ?", [
       id,
     ]);
 
-    if (alumnos.length === 0) {
+    if (students.length === 0) {
       return res
         .status(404)
         .json({ success: false, message: "Alumno no encontrado" });
     }
 
-    const { nombre, apellido, dni } = req.body;
+    const { first_name, last_name, dni, school, birth_date, enrolled, level, grade } = req.body;
 
     await db.execute(
-      "UPDATE alumnos SET nombre = ?, apellido = ?, dni = ? WHERE id = ?",
-      [nombre, apellido, dni, id]
+      "UPDATE students SET first_name = ?, last_name = ?, dni = ?, school = ?, birth_date = ?, enrolled = ?, level = ?, grade = ?, dni = ? WHERE id = ?",
+      [first_name, last_name, dni, school, birth_date, enrolled, level, grade, id]
     );
 
     res.json({
       success: true,
-      data: { nombre, apellido, dni },
+      data: { first_name, last_name, dni, school, birth_date, enrolled, level, grade },
       message: "Alumno actualizado exitosamente",
     });
   }
@@ -96,36 +96,24 @@ router.put(
 
 router.delete(
   "/:id",
-  autenticacion,
-  validarId,
-  verificarValidaciones,
+  authentication,
+  validateID,
+  checkValidations,
   async (req, res) => {
     const id = Number(req.params.id);
 
-    const [alumnos] = await db.execute("SELECT * FROM alumnos WHERE id = ?", [
+    const [students] = await db.execute("SELECT * FROM students WHERE id = ?", [
       id,
     ]);
 
-    if (alumnos.length === 0) {
+    if (students.length === 0) {
       return res
         .status(404)
         .json({ success: false, message: "Alumno no encontrado" });
     }
 
-    const [alumnoRegistrado] = await db.query(
-      "SELECT * FROM notas WHERE materia_id = ?",
-      [id]
-    );
 
-    if (alumnoRegistrado.length > 0) {
-      return res.status(400).json({
-        success: false,
-        message:
-          "No se puede eliminar este alumno, ya que se le ha asignado una o más materias.",
-      });
-    }
-
-    await db.execute("DELETE FROM alumnos WHERE id = ?", [id]);
+    await db.execute("DELETE FROM students WHERE id = ?", [id]);
 
     res.json({ success: true, message: "Alumno eliminado exitosamente" });
   }
