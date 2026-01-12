@@ -1,0 +1,64 @@
+@url = http://localhost:3000
+
+
+###
+# @name login
+POST {{url}}/auth/login
+Content-Type: application/json
+
+{
+    "username": "exe123",
+    "password": "Exe1234@"
+}
+
+###
+@token = {{login.response.body.token}}  
+
+
+
+### GET todos los alumnos
+GET {{url}}/students
+Authorization: Bearer {{token}}
+
+
+### GET por id
+GET {{url}}/students/1
+Authorization: Bearer {{token}}
+
+
+### Crear alumno
+POST {{url}}/students
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "first_name": "Laura",
+  "last_name": "Fernández",
+  "dni": 49681322, 
+  "school": "CPUGSM", 
+  "birth_date": "2004-01-13",
+  "enrolled": true,
+  "level": "universitario", 
+  "grade": 2
+}
+
+
+### Modificar alumno
+PUT {{url}}/students/12
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "first_name": "Laura",
+  "last_name": "Fernández",
+  "dni": 49681322, 
+  "school": "CPUGSM", 
+  "birth_date": 13-01-2004,
+  "enrolled": true,
+  "level": "universitario", 
+  "grade": 2
+}
+
+### Eliminar alumno
+DELETE {{url}}/students/12
+Authorization: Bearer {{token}}

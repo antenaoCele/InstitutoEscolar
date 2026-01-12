@@ -6,8 +6,8 @@ POST {{url}}/auth/login
 Content-Type: application/json
 
 {
-    "nombre": "novak",
-    "contrasena": "NOvak123"
+    "username": "novak",
+    "password": "NOvak123"
 }
 
 ###
@@ -17,16 +17,16 @@ Content-Type: application/json
 
 
 ### Consultar usuarios
-GET {{url}}/usuarios
+GET {{url}}/users
 Authorization: Bearer {{token}}
 
 ### Consultar por un usuario
-GET {{url}}/usuarios/1
+GET {{url}}/users/1
 Authorization: Bearer {{token}}
 
 
 ### Crear usuario
-POST {{url}}/usuarios
+POST {{url}}/users
 Content-Type: application/json
 
 {
@@ -37,11 +37,11 @@ Content-Type: application/json
 }
 
 ### Eliminar usuario 
-DELETE {{url}}/usuarios/1
+DELETE {{url}}/users/1
 Authorization: Bearer {{token}}
 
 ### Modificar usuario 
-PUT {{url}}/usuarios/3
+PUT {{url}}/users/3
 Content-Type: application/json
 Authorization: Bearer {{token}}
 
