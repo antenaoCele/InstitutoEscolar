@@ -34,7 +34,7 @@ Authorization: Bearer {{token}}
 {
   "first_name": "Laura",
   "last_name": "Fernández",
-  "dni": 49681322, 
+  "dni": "49681322", 
   "school": "CPUGSM", 
   "birth_date": "2004-01-13",
   "enrolled": true,

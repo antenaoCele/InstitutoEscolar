@@ -42,8 +42,7 @@ export const validateStudents = [
     .withMessage("El apellido no puede tener más de 45 caracteres."),
 
   body("dni")
-    .isAlphanumeric
-    ({ min: 1000000, max: 99999999 })
+    .isInt({ min: 1000000, max: 99999999 })
     .withMessage("El DNI debe ser un número válido y hasta 8 dígitos.")
     .custom(async (dni) => {
       const [rows] = await db.execute("SELECT id FROM students WHERE dni = ?", [

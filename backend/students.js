@@ -48,7 +48,7 @@ router.post(
     const { first_name, last_name, dni, school, birth_date, enrolled, level, grade} = req.body;
 
     const [result] = await db.execute(
-      "INSERT INTO stduents (first_name, last_name, dni, school, birth_date, enrolled, level, grade) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+      "INSERT INTO students (first_name, last_name, dni, school, birth_date, enrolled, level, grade) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
       [first_name, last_name, dni, school, birth_date, enrolled, level, grade]
     );
 
