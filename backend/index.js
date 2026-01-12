@@ -6,6 +6,7 @@ import tutorsRouter from "./tutors.js";
 import teachersRouter from "./teachers.js";
 import subjectsRouter from "./subjects.js";
 import usersRouter from "./users.js";
+import studentsRouter from "./students.js";
 
 
 
@@ -24,6 +25,7 @@ app.use("/users", usersRouter);
 app.use("/tutors", tutorsRouter);
 app.use("/teachers", teachersRouter);
 app.use("/subjects", subjectsRouter);
+app.use("/students", studentsRouterRouter);
 
 app.listen(port, () => {
   console.log(`La aplicación esta funcionando en el puerto ${port}`);
