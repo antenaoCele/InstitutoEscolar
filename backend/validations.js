@@ -1,21 +1,26 @@
 import { param, body, validationResult } from "express-validator";
 import { db } from "./db.js";
 
-export const validarId = param("id").isInt({ min: 1 });
+export const validateID = param("id").isInt({ min: 1 });
 
-export const verificarValidaciones = (req, res, next) => {
-  const validacion = validationResult(req);
-  if (!validacion.isEmpty()) {
+export const checkValidations
+ = (req, res, next) => {
+  const validation = validationResult(req);
+  if (!validation.isEmpty()) {
     return res.status(400).json({
       success: false,
       message: "Falla de validacion",
-      errors: validacion.array(),
+      errors: validation.array(),
     });
   }
   next();
 };
-//-----------------------VALIDACION PARA ALUMNOS----------------------
-export const validarAlumnos = [
+
+//-----------------------------------------------------------------------
+
+//-----------------------VALIDACIÓN PARA ALUMNOS-------------------------
+
+export const validateStudents = [
   body("first_name")
     .isAlpha("es-ES")
     .withMessage("El nombre debe ser alfabético y no puede contener espacios.")
@@ -83,14 +88,13 @@ export const validarAlumnos = [
     .isIn([1,2,3,4,5,6,7]) 
     .withMessage('La categoría debe ser del 1 al 7')
 ];
+
 //-----------------------------------------------------------------------
 
+//-----------------------VALIDACIÓN PARA DOCENTES------------------------
 
+export const validateTeachers = [
 
-//-----------------------VALIDACION PARA DOCENTES----------------------
-export const validarDocentes = [
-
-  
   body("first_name")
     .trim()
     .notEmpty()
@@ -100,7 +104,6 @@ export const validarDocentes = [
     .isLength({ max: 45 })
     .withMessage("El nombre no puede superar los 45 caracteres."),
 
-
   body("last_name")
     .trim()
     .notEmpty()
@@ -109,7 +112,6 @@ export const validarDocentes = [
     .withMessage("El apellido solo puede contener letras.")
     .isLength({ max: 45 })
     .withMessage("El apellido no puede superar los 45 caracteres."),
-
   
   body("dni")
     .trim()
@@ -130,7 +132,6 @@ export const validarDocentes = [
       return true;
     }),
 
-  
   body("phone")
     .trim()
     .notEmpty()
@@ -139,8 +140,6 @@ export const validarDocentes = [
     .withMessage("El teléfono no puede superar los 20 caracteres.")
     .matches(/^[0-9+\- ]+$/)
     .withMessage("El teléfono solo puede contener números, + o -"),
-
-
 
   body("salary")
     .notEmpty()
@@ -154,14 +153,13 @@ export const validarDocentes = [
       return true;
     }),
 ];
+
 //-----------------------------------------------------------------------
 
+//-----------------------VALIDACIÓN PARA TUTORES-------------------------
 
+export const validateTutors = [
 
-//-----------------------VALIDACION PARA TUTORES----------------------
-export const validarTutores = [
-
-  
   body("first_name")
     .trim()
     .notEmpty()
@@ -171,7 +169,6 @@ export const validarTutores = [
     .isLength({ max: 45 })
     .withMessage("El nombre no puede superar los 45 caracteres."),
 
-  
   body("last_name")
     .trim()
     .notEmpty()
@@ -181,7 +178,6 @@ export const validarTutores = [
     .isLength({ max: 45 })
     .withMessage("El apellido no puede superar los 45 caracteres."),
 
-  
   body("phone")
     .trim()
     .notEmpty()
@@ -190,8 +186,6 @@ export const validarTutores = [
     .withMessage("El teléfono no puede superar los 20 caracteres.")
    .isNumeric()
 .withMessage("El teléfono solo puede contener números."),
-
-
 
   body("dni")
     .trim()
@@ -212,20 +206,18 @@ export const validarTutores = [
       return true;
     }),
 ];
+
 //-----------------------------------------------------------------------
 
+//-----------------------VALIDACIÓN PARA HORARIOS------------------------
 
+export const validateSchedules = [
 
-//-----------------------VALIDACION PARA HORARIOS----------------------
-export const validarHorarios = [
-
-  
   body("teacher_id")
     .notEmpty()
     .withMessage("El docente es obligatorio.")
     .isInt({ min: 1 })
     .withMessage("El docente debe ser un ID válido."),
-
   
   body("subject_id")
     .notEmpty()
@@ -233,13 +225,11 @@ export const validarHorarios = [
     .isInt({ min: 1 })
     .withMessage("La materia debe ser un ID válido."),
 
-  
   body("start_time")
     .notEmpty()
     .withMessage("La hora de inicio es obligatoria.")
     .matches(/^([01]\d|2[0-3]):([0-5]\d)$/)
     .withMessage("La hora de inicio debe tener formato HH:MM."),
-
   
   body("end_time")
     .notEmpty()
@@ -253,7 +243,6 @@ export const validarHorarios = [
       return true;
     }),
 
-
   body("days")
     .trim()
     .notEmpty()
@@ -261,12 +250,13 @@ export const validarHorarios = [
     .isLength({ max: 10 })
     .withMessage("Los días no pueden superar los 10 caracteres."),
 ];
+
 //-----------------------------------------------------------------------
 
+//-----------------------VALIDACIÓN PARA MATERIAS------------------------
 
+export const validateSubjects = [
 
-//-----------------------VALIDACION PARA MATERIAS----------------------
-export const validarMaterias = [
   body("name")
     .isAlpha("es-ES", { ignore: " " })
     .withMessage("La materia debe ser alfabética.")
@@ -302,13 +292,12 @@ export const validarMaterias = [
       return true;
     }),
 ];
+
 //-----------------------------------------------------------------------
 
+//-----------------------VALIDACIÓN PARA PLANES--------------------------
 
-
-//-----------------------VALIDACION PARA PLANES----------------------
-export const validarPlanes = [
-
+export const validatePlans = [
 
   body("name")
     .trim()
@@ -317,7 +306,6 @@ export const validarPlanes = [
     .isLength({ max: 45 })
     .withMessage("El nombre del plan no puede superar los 45 caracteres."),
 
-  
   body("price")
     .notEmpty()
     .withMessage("El monto es obligatorio.")
@@ -330,8 +318,6 @@ export const validarPlanes = [
       return true;
     }),
 
-
-
   body("duration")
     .trim()
     .notEmpty()
@@ -339,14 +325,13 @@ export const validarPlanes = [
     .isLength({ max: 50 })
     .withMessage("La duración no puede superar los 50 caracteres."),
 ];
+
 //-----------------------------------------------------------------------
 
+//-----------------------VALIDACIÓN PARA PAGOS---------------------------
 
+export const validatePayments = [
 
-//-----------------------VALIDACION PARA PAGOS----------------------
-export const validarPagos = [
-
-  
   body("student_plan_id")
     .notEmpty()
     .withMessage("El alumno es obligatorio.")
@@ -363,13 +348,11 @@ export const validarPagos = [
       return true;
     }),
 
-
   body("payment_day")
     .notEmpty()
     .withMessage("La fecha de pago es obligatoria.")
     .isISO8601()
     .withMessage("La fecha debe tener formato YYYY-MM-DD."),
-
   
   body("mount")
     .notEmpty()
@@ -390,13 +373,12 @@ export const validarPagos = [
     .isLength({ max: 45 })
     .withMessage("El método de pago no puede superar los 45 caracteres."),
 ];
+
 //-----------------------------------------------------------------------
 
+//-------------------VALIDACIÓN PARA ALUMNOS-TUTORES---------------------
 
-
-//-----------------------VALIDACION PARA ALUMNOS-TUTORES----------------------
-export const validarAlumnoTutores = [
-
+export const validateStudentsTutors = [
 
   body("student_id")
     .notEmpty()
@@ -414,7 +396,6 @@ export const validarAlumnoTutores = [
       return true;
     }),
 
-  
   body("tutor_id")
     .notEmpty()
     .withMessage("El tutor es obligatorio.")
@@ -441,14 +422,12 @@ export const validarAlumnoTutores = [
       return true;
     }),
 ];
+
 //-----------------------------------------------------------------------
 
+//-----------------------VALIDACIÓN PARA USUARIOS------------------------
 
-
-
-
-//-----------------------VALIDACION PARA USUARIOS----------------------
-export const validarUsers = [
+export const validateUsers = [
   body("first_name")
     .trim()
     .notEmpty()
@@ -500,9 +479,12 @@ export const validarUsers = [
       "La contraseña debe tener al menos 8 caracteres, una mayúscula, una minúscula, un número y un símbolo."
     ),
 ];
+
 //-----------------------------------------------------------------------
 
-export const validarModificarUsuarios = [
+//-------------------VALIDACIÓN PARA EDITAR USUARIOS---------------------
+
+export const validateEditUsers = [
   body("username")
     .isAlpha("es-ES")
     .withMessage("El nombre de usuario debe ser una cadena de texto.")
@@ -525,14 +507,20 @@ export const validarModificarUsuarios = [
   
 ];
 
+//-----------------------------------------------------------------------
 
-//--------------------LOGIN--------------------
-export const validarLogin = [
+//-----------------------VALIDACIÓN PARA LOGIN---------------------------
+
+export const validateLogin = [
   body("username").notEmpty().withMessage("El username es obligatorio."),
   body("password").notEmpty().withMessage("La contraseña es obligatoria."),
 ];
 
-export const validarModificarAlumnos = [
+//-----------------------------------------------------------------------
+
+//------------------VALIDACIÓN PARA EDITAR ALUMNOS--------------------
+
+export const validateEditStudents = [
   body("first_name")
     .isAlpha("es-ES")
     .withMessage("El nombre debe ser alfabético.")
@@ -567,7 +555,11 @@ export const validarModificarAlumnos = [
     }),
 ];
 
-export const validarModificarMaterias = [
+//-----------------------------------------------------------------------
+
+//-------------------VALIDACIÓN PARA EDITAR MATERIAS---------------------
+
+export const validateEditSubjects = [
   body("name")
     .isAlpha("es-ES")
     .withMessage("La materia debe ser alfabético.")
