@@ -56,7 +56,7 @@ export const validateStudents = [
     }),
 
     body("school")
-    .matches(/^[A-Za-z0-9ÁÉÍÓÚáéíóúÑñ ]+$/)
+    .isAlpha("es-ES", { ignore: ' ' } )
     .withMessage(
       "El colegio debe ser alfabético."
     )
