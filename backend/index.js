@@ -7,8 +7,7 @@ import teachersRouter from "./teachers.js";
 import subjectsRouter from "./subjects.js";
 import usersRouter from "./users.js";
 import studentsRouter from "./students.js";
-
-
+import plan_subjectsRouter from "./plan_subjects.js";
 
 conectarDB();
 
@@ -26,6 +25,8 @@ app.use("/tutors", tutorsRouter);
 app.use("/teachers", teachersRouter);
 app.use("/subjects", subjectsRouter);
 app.use("/students", studentsRouter);
+app.use("/plan_subjects", plan_subjectsRouter);
+
 
 app.listen(port, () => {
   console.log(`La aplicación esta funcionando en el puerto ${port}`);
