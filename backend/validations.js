@@ -275,21 +275,6 @@ export const validateSubjects = [
       return true;
     }),
     
-    body("teacher_id")
-    .notEmpty()
-    .withMessage("El docente es obligatorio.")
-    .isInt({ min: 1 })
-    .withMessage("El docente debe ser válido.")
-    .custom(async (value) => {
-      const [rows] = await db.execute(
-        "SELECT id FROM teachers WHERE id = ?",
-        [value]
-      );
-      if (rows.length === 0) {
-        throw new Error("El docente no existe.");
-      }
-      return true;
-    }),
 ];
 
 //-----------------------------------------------------------------------
@@ -570,7 +555,7 @@ export const validateEditSubjects = [
     .custom(async (name, { req }) => {
       const { id } = req.params;
       const [rows] = await db.execute(
-        "SELECT id FROM schedules WHERE name = ? AND id != ?",
+        "SELECT id FROM subjects WHERE name = ? AND id != ?",
         [name, id]
       );
       if (rows.length > 0) {
