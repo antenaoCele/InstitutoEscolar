@@ -37,7 +37,7 @@ router.post(
     if (plan.length === 0) {
       return res.status(400).json({
         success: false,
-        message: "El plan no existe",
+        message: "El ID del plan no existe",
       });
     }
 
@@ -49,7 +49,7 @@ router.post(
     if (subject.length === 0) {
       return res.status(400).json({
         success: false,
-        message: "La materia no existe",
+        message: "EL ID de la materia no existe",
       });
     }
 

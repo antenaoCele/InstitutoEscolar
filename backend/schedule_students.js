@@ -37,7 +37,7 @@ router.post(
     if (schedule.length === 0) {
       return res.status(400).json({
         success: false,
-        message: "El horario no existe",
+        message: "El ID del horario no existe",
       });
     }
 
@@ -49,7 +49,7 @@ router.post(
     if (student.length === 0) {
       return res.status(400).json({
         success: false,
-        message: "El estudiante no existe",
+        message: "El ID del estudiante no existe",
       });
     }
 
