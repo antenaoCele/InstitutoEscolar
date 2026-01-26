@@ -12,13 +12,13 @@ const router = express.Router();
 
 router.get("/", authentication, async (req, res) => {
   let sql =
-"SELECT p.id, s.id \
-FROM plan_subjects ps \
-JOIN plans p ON ps.plan_id = p.id \
-JOIN subjects s ON ps.subject_id = s.id";
+"SELECT sc.id AS schedule_id, st.id AS student_id \
+FROM schedule_students ss \
+JOIN schedules sc ON ss.schedule_id = sc.id \
+JOIN students st ON ss.student_id = st.id";
 
-  const [planSubjects] = await db.execute(sql);
-  res.json({ success: true, planSubjects });
+  const [schedulesSubjects] = await db.execute(sql);
+  res.json({ success: true, schedulesSubjects });
 });
 
 router.post(
