@@ -27,22 +27,47 @@ router.post(
   validateSubjects,
   checkValidations,
   async (req, res) => {
-    const {plan_id, subject_id} = req.body;
+    const { schedule_id, student_id } = req.body;
 
-    const [result] = await db.execute(
-      "INSERT INTO plan_subjects (plan_id, subject_id) VALUES (?, ?)",
-      [plan_id, subject_id]
+    const [schedule] = await db.execute(
+      "SELECT id FROM schedules WHERE id = ?",
+      [schedule_id]
+    );
+
+    if (schedule.length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: "El horario no existe",
+      });
+    }
+
+    const [student] = await db.execute(
+      "SELECT id FROM students WHERE id = ?",
+      [student_id]
+    );
+
+    if (student.length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: "El estudiante no existe",
+      });
+    }
+
+    await db.execute(
+      "INSERT INTO schedule_students (schedule_id, student_id) VALUES (?, ?)",
+      [schedule_id, student_id]
     );
 
     res.status(201).json({
       success: true,
       data: {
-        plan_id,
-        subject_id,
+        schedule_id,
+        student_id,
       },
-      message: "Materia asignada al plan exitosamente",
+      message: "Horario asignado al estudiante exitosamente",
     });
   }
 );
+
 
 export default router;
