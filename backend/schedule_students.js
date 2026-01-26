@@ -2,9 +2,7 @@ import express from "express";
 import { db } from "./db.js";
 import {
   checkValidations,
-  validateID,
-  validateSubjects,
-  validateEditSubjects
+  validateScheduleStudents
 } from "./validations.js";
 import { authentication } from "./auth.js";
 
@@ -24,7 +22,7 @@ JOIN students st ON ss.student_id = st.id";
 router.post(
   "/",
   authentication,
-  validateSubjects,
+  validateScheduleStudents,
   checkValidations,
   async (req, res) => {
     const { schedule_id, student_id } = req.body;

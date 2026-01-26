@@ -2,9 +2,7 @@ import express from "express";
 import { db } from "./db.js";
 import {
   checkValidations,
-  validateID,
-  validateSubjects,
-  validateEditSubjects
+  validatePlanSubjects
 } from "./validations.js";
 import { authentication } from "./auth.js";
 
@@ -24,7 +22,7 @@ JOIN subjects s ON ps.subject_id = s.id";
 router.post(
   "/",
   authentication,
-  validateSubjects,
+  validatePlanSubjects,
   checkValidations,
   async (req, res) => {
     const {plan_id, subject_id} = req.body;
@@ -64,7 +62,7 @@ router.post(
         plan_id,
         subject_id,
       },
-      message: "Materia asignada al plan exitosamente",
+      message: "Materia asignada al plan, exitosamente",
     });
   }
 );
