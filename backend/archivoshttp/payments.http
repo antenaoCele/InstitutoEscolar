@@ -1,0 +1,63 @@
+@url=http://localhost:3000
+
+###
+# @name login
+POST {{url}}/auth/login
+Content-Type: application/json
+
+{
+    "username": "rama123",
+    "password": "Rama123."
+}
+
+###
+@token = {{login.response.body.token}}
+
+
+
+### PAYMENTS
+
+
+### Obtener todos los pagos
+GET {{url}}/payments
+Authorization: Bearer {{token}}
+
+
+### Obtener un pago por ID
+GET {{url}}/payments/1
+Authorization: Bearer {{token}}
+
+### Obtener todos los pagos de un alumno
+GET {{url}}/students/1/payments
+Authorization: Bearer {{token}}
+
+
+### Crear un pago
+POST {{url}}/payments
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+    "student_plan_id": 1,
+    "amount": 15000,
+    "payment_method": "transferencia"
+}
+
+
+### Modificar un pago
+PUT {{url}}/payments/1
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+    "student_plan_id": 1,
+    "amount": 18000,
+    "payment_method": "efectivo"
+}
+
+
+### Eliminar un pago
+DELETE {{url}}/payments/1
+Authorization: Bearer {{token}}
+
+

@@ -10,6 +10,9 @@ import studentsRouter from "./students.js";
 import plan_subjectsRouter from "./plan_subjects.js";
 import schedule_subjectsRouter from "./schedule_subjects.js";
 import student_plans from "./student_plans.js";
+import schedulesRouter from "./schedules.js";
+import plansRouter from "./plans.js";
+import paymentsRouter from "./payments.js";
 
 connectDB();
 
@@ -30,6 +33,9 @@ app.use("/students", studentsRouter);
 app.use("/plan_subjects", plan_subjectsRouter);
 app.use("/schedule_subjects", schedule_subjectsRouter);
 app.use("/student_plans", student_plans);
+app.use("/plans", plansRouter);
+app.use("/payments", paymentsRouter);
+app.use("/schedules", schedulesRouter);
 
 app.listen(port, () => {
   console.log(`La aplicación está funcionando en el puerto ${port}`);

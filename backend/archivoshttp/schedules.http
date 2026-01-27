@@ -1,0 +1,59 @@
+@url=http://localhost:3000
+
+###
+# @name login
+POST {{url}}/auth/login
+Content-Type: application/json
+
+{
+    "username": "rama123",
+    "password": "Rama123."
+}
+
+###
+@token = {{login.response.body.token}}
+
+
+### SCHEDULES
+
+### Obtener todos los horarios
+GET {{url}}/schedules
+Authorization: Bearer {{token}}
+
+
+### Obtener un horario por ID
+GET {{url}}/schedules/1
+Authorization: Bearer {{token}}
+
+
+### Crear un horario
+POST {{url}}/schedules
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+    "teacher_id": 1,
+    "subject_id": 2,
+    "start_time": "08:00:00",
+    "end_time": "10:00:00",
+    "days": "Lunes, Miércoles"
+}
+
+
+### Modificar un horario
+PUT {{url}}/schedules/1
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+    "teacher_id": 1,
+    "subject_id": 3,
+    "start_time": "10:00:00",
+    "end_time": "12:00:00",
+    "days": "Martes, Jueves"
+}
+
+
+### Eliminar un horario
+DELETE {{url}}/schedules/1
+Authorization: Bearer {{token}}

@@ -1,0 +1,57 @@
+@url=http://localhost:3000
+
+###
+# @name login
+POST {{url}}/auth/login
+Content-Type: application/json
+
+{
+    "username": "rama123",
+    "password": "Rama123."
+}
+
+###
+@token = {{login.response.body.token}}
+
+
+### PLANS
+
+
+
+### Obtener todos los planes
+GET {{url}}/plans
+Authorization: Bearer {{token}}
+
+
+### Obtener un plan por ID
+GET {{url}}/plans/1
+Authorization: Bearer {{token}}
+
+
+### Crear un plan
+POST {{url}}/plans
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+    "name": "Plan Programación Web",
+    "duration": 12,
+    "price": 150000
+}
+
+
+### Modificar un plan
+PUT {{url}}/plans/1
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+    "name": "Plan Programación Web Avanzado",
+    "duration": 14,
+    "price": 180000
+}
+
+
+### Eliminar un plan
+DELETE {{url}}/plans/1
+Authorization: Bearer {{token}}

@@ -2,19 +2,19 @@ import express from "express";
 import { db } from "./db.js";
 import { validateID, checkValidations, validateUsers } from "./validations.js";
 import bcrypt from "bcrypt";
-import passport from "passport";
+import { authentication } from "./auth.js";
 
 const router = express.Router();
 
 router.get(
     "/",
-    passport.authenticate("jwt", { session: false }),
+    authentication,
     async (req, res) => {
 
         const [rows] = await db.execute("SELECT * FROM users");
         res.json({
             success: true,
-            usuarios: rows.map((u) => ({ ...u, password_hash: undefined })),
+            users: rows.map((u) => ({ ...u, password_hash: undefined })),
         });
     }
 );
@@ -22,7 +22,7 @@ router.get(
 router.get("/:id",
     validateID,
     checkValidations,
-    passport.authenticate("jwt", { session: false }),
+    authentication,
     async (req, res) => {
         const id = Number(req.params.id);
 
@@ -69,10 +69,10 @@ router.post(
 );
 
 router.put("/:id",
+    authentication,
     validateID,
     validateUsers,
     checkValidations,
-    passport.authenticate("jwt", { session: false }),
     async (req, res) => {
         const { first_name, last_name, username, password } = req.body;
         const { id } = req.params;
@@ -99,8 +99,7 @@ router.put("/:id",
     });
 
 
-router.delete("/:id", validateID, checkValidations,
-    passport.authenticate("jwt", { session: false }),
+router.delete("/:id", authentication, validateID, checkValidations,
     async (req, res) => {
         const { id } = req.params;
 
