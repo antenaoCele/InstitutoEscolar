@@ -566,3 +566,30 @@ export const validateEditSubjects = [
 
 ];
 
+//-----------------------------------------------------------------------
+
+//-------------------VALIDACIÓN PARA STUDENT_PLANS-----------------------
+
+export const validateStudentPlans = [
+  body("student_id").isInt({ min: 1 }).withMessage("El ID del alumno es obligatorio y debe ser un número igual o mayor a 1."),
+  body("plan_id").isInt({ min: 1 }).withMessage("El ID del alumno es obligatorio y debe ser un número igual o mayor a 1."),
+  body("paid_amount").isDecimal({ decimal_digits: "0,2" }).withMessage("El monto pagado debe ser un número decimal válido."),
+  body("start_date").isISO8601().withMessage("La fecha de inicio debe tener formato AAAA-MM-DD."),
+]; //usar isDate o isISO8601???
+
+//-----------------------------------------------------------------------
+
+//-----------------VALIDACIÓN PARA SCHEDULE_STUDENTS---------------------
+
+export const validateScheduleStudents = [
+  body("student_id").isInt({ min: 1 }).withMessage("El ID del alumno es obligatorio y debe ser un número igual o mayor a 1."),
+  body("schedule_id").isInt({ min: 1 }).withMessage("El ID del horario es obligatorio y debe ser un número igual o mayor a 1."),
+];
+
+//-----------------------------------------------------------------------
+//-------------------VALIDACIÓN PARA PLAN_SUBJECTS-----------------------
+
+export const validatePlanSubjects = [
+  body("plan_id").isInt({ min: 1 }).withMessage("El ID del plan es obligatorio y debe ser un número igual o mayor a 1."),
+  body("subject_id").isInt({ min: 1 }).withMessage("El ID la materia es obligatorio y debe ser un número igual o mayor a 1."),
+];
