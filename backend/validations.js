@@ -336,7 +336,7 @@ export const validatePayments = [
     .notEmpty()
     .withMessage("La fecha de pago es obligatoria.")
     .isISO8601()
-    .withMessage("La fecha debe tener formato YYYY-MM-DD."),
+    .withMessage("La fecha debe tener formato AAAA-MM-DD."),
   
   body("mount")
     .notEmpty()
@@ -566,52 +566,3 @@ export const validateEditSubjects = [
 
 ];
 
-//-----------------------------------------------------------------------
-
-//-------------------VALIDACIÓN PARA DOCENTES-MATERIAS-------------------
-
-export const validateTeachersSubjects = [
-  body("teacher_id")
-    .notEmpty()
-    .withMessage("El docente es obligatorio.")
-    .isInt({ min: 1 })
-    .withMessage("El docente debe ser un ID válido.")
-    .toInt()
-    .custom(async (value) => {
-      const [rows] = await db.execute(
-        "SELECT id FROM teachers WHERE id = ?",
-        [value]
-      );
-      if (rows.length === 0) {
-        throw new Error("El docente no existe.");
-      }
-      return true;
-    }),
-
-  body("subject_id")
-    .notEmpty()
-    .withMessage("La materia es obligatoria.")
-    .isInt({ min: 1 })
-    .withMessage("La materia debe ser un ID válido.")
-    .toInt()
-    .custom(async (value, { req }) => {
-      const [Rows] = await db.execute(
-        "SELECT id FROM subjects WHERE id = ?",
-        [value]
-      );
-      if (Rows.length === 0) {
-        throw new Error("La materia no existe.");
-      }
-
-      const [relation] = await db.execute(
-        "SELECT id FROM teachers_subjects WHERE teacher_id = ? AND subject_id = ?",
-        [req.body.teacher_id, value]
-      );
-
-      if (relation.length > 0) {
-        throw new Error("La materia ya está asignada a este docente.");
-      }
-
-      return true;
-    }),
-];

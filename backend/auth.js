@@ -26,7 +26,7 @@ export const authentication = passport.authenticate("jwt", {
   session: false,
 });
 
-export const autorizacion = (rol) => {
+export const authorization = (rol) => {
   return (req, res, next) => {
     const roles = req.user.roles;
     if (!roles || !roles.includes(rol)) {
@@ -56,16 +56,16 @@ router.post(
     if (users.length === 0) {
       return res
         .status(400)
-        .json({ success: false, error: "usuario o contraseña no valido" });
+        .json({ success: false, error: "Usuario o contraseña no valido" });
     }
 
     const hashedPassword = users[0].password;
-    const passwordComparada = await bcrypt.compare(password, hashedPassword);
+    const comparedPassword = await bcrypt.compare(password, hashedPassword);
 
-    if (!passwordComparada) {
+    if (!comparedPassword) {
       return res
         .status(400)
-        .json({ success: false, error: "usuario o contraseña no valido" });
+        .json({ success: false, error: "Usuario o contraseña no valido" });
     }
 
     const payload = { userId: users[0].id };

@@ -2,9 +2,7 @@ import express from "express";
 import { db } from "./db.js";
 import {
   checkValidations,
-  validateID,
-  validateSubjects,
-  validateEditSubjects
+  validatePlanSubjects
 } from "./validations.js";
 import { authentication } from "./auth.js";
 
@@ -12,9 +10,9 @@ const router = express.Router();
 
 router.get("/", authentication, async (req, res) => {
   let sql =
-"SELECT p.id, s.id \
+"SELECT p.id AS plan_id, s.id AS subject_id \
 FROM plan_subjects ps \
-JOIN plan p ON ps.plan_id = p.id \
+JOIN plans p ON ps.plan_id = p.id \
 JOIN subjects s ON ps.subject_id = s.id";
 
   const [planSubjects] = await db.execute(sql);
@@ -24,12 +22,36 @@ JOIN subjects s ON ps.subject_id = s.id";
 router.post(
   "/",
   authentication,
-  validateSubjects,
+  validatePlanSubjects,
   checkValidations,
   async (req, res) => {
     const {plan_id, subject_id} = req.body;
 
-    const [result] = await db.execute(
+    const [plan] = await db.execute(
+      "SELECT id FROM plans WHERE id = ?",
+      [plan_id]
+    );
+
+    if (plan.length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: "El ID del plan no existe",
+      });
+    }
+
+    const [subject] = await db.execute(
+      "SELECT id FROM subjects WHERE id = ?",
+      [subject_id]
+    );
+
+    if (subject.length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: "EL ID de la materia no existe",
+      });
+    }
+
+    await db.execute(
       "INSERT INTO plan_subjects (plan_id, subject_id) VALUES (?, ?)",
       [plan_id, subject_id]
     );
@@ -40,7 +62,9 @@ router.post(
         plan_id,
         subject_id,
       },
-      message: "Materia asignada al plan exitosamente",
+      message: "Materia asignada al plan, exitosamente",
     });
   }
 );
+
+export default router;
