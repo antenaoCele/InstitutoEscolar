@@ -593,3 +593,51 @@ export const validatePlanSubjects = [
   body("plan_id").isInt({ min: 1 }).withMessage("El ID del plan es obligatorio y debe ser un número igual o mayor a 1."),
   body("subject_id").isInt({ min: 1 }).withMessage("El ID la materia es obligatorio y debe ser un número igual o mayor a 1."),
 ];
+
+//-----------------------------------------------------------------------
+
+//-------------------VALIDACIÓN PARA TEACHERS_SUBJECTS-------------------
+
+export const validateTeachersSubjects = [
+  body("teacher_id")
+    .notEmpty()
+    .withMessage("El docente es obligatorio.")
+    .isInt({ min: 1 })
+    .withMessage("El docente debe ser válido.")
+    .custom(async (value) => {
+      const [rows] = await db.execute(
+        "SELECT id FROM teachers WHERE id = ?",
+        [value]
+      );
+      if (rows.length === 0) {
+        throw new Error("El docente no existe.");
+      }
+      return true;
+    }),
+
+  body("subject_id")
+    .notEmpty()
+    .withMessage("La materia es obligatoria.")
+    .isInt({ min: 1 })
+    .withMessage("La materia debe ser válida.")
+    .custom(async (value, { req }) => {
+      const [rows] = await db.execute(
+        "SELECT id FROM subjects WHERE id = ?",
+        [value]
+      );
+      if (rows.length === 0) {
+        throw new Error("La materia no existe.");
+      }
+
+      const [relacion] = await db.execute(
+        "SELECT id FROM teacher_subjects WHERE teacher_id = ? AND subject_id = ?",
+        [req.body.teacher_id, value]
+      );
+
+      if (relacion.length > 0) {
+        throw new Error("La materia ya está asignada a este docente.");
+      }
+
+      return true;
+    }),
+];
