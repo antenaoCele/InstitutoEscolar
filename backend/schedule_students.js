@@ -1,22 +1,19 @@
 import express from "express";
 import { db } from "./db.js";
-import {
-  checkValidations,
-  validateScheduleStudents
-} from "./validations.js";
+import { checkValidations, validateScheduleStudents } from "./validations.js";
 import { authentication } from "./auth.js";
 
 const router = express.Router();
 
 router.get("/", authentication, async (req, res) => {
   let sql =
-"SELECT sc.id AS schedule_id, st.id AS student_id \
+    "SELECT sc.id AS schedule_id, st.id AS student_id \
 FROM schedule_students ss \
 JOIN schedules sc ON ss.schedule_id = sc.id \
 JOIN students st ON ss.student_id = st.id";
 
-  const [schedulesSubjects] = await db.execute(sql);
-  res.json({ success: true, schedulesSubjects });
+  const [scheduleStudents] = await db.execute(sql);
+  res.json({ success: true, scheduleStudents });
 });
 
 router.post(
@@ -27,33 +24,9 @@ router.post(
   async (req, res) => {
     const { schedule_id, student_id } = req.body;
 
-    const [schedule] = await db.execute(
-      "SELECT id FROM schedules WHERE id = ?",
-      [schedule_id]
-    );
-
-    if (schedule.length === 0) {
-      return res.status(400).json({
-        success: false,
-        message: "El ID del horario no existe",
-      });
-    }
-
-    const [student] = await db.execute(
-      "SELECT id FROM students WHERE id = ?",
-      [student_id]
-    );
-
-    if (student.length === 0) {
-      return res.status(400).json({
-        success: false,
-        message: "El ID del estudiante no existe",
-      });
-    }
-
     await db.execute(
       "INSERT INTO schedule_students (schedule_id, student_id) VALUES (?, ?)",
-      [schedule_id, student_id]
+      [schedule_id, student_id],
     );
 
     res.status(201).json({
@@ -64,8 +37,7 @@ router.post(
       },
       message: "Horario asignado al estudiante exitosamente",
     });
-  }
+  },
 );
-
 
 export default router;
