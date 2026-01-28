@@ -3,8 +3,7 @@ import { db } from "./db.js";
 
 export const validateID = param("id").isInt({ min: 1 });
 
-export const checkValidations
- = (req, res, next) => {
+export const checkValidations = (req, res, next) => {
   const validation = validationResult(req);
   if (!validation.isEmpty()) {
     return res.status(400).json({
@@ -33,7 +32,7 @@ export const validateStudents = [
   body("last_name")
     .isAlpha("es-ES")
     .withMessage(
-      "El apellido debe ser alfabético y no puede contener espacios."
+      "El apellido debe ser alfabético y no puede contener espacios.",
     )
     .trim()
     .notEmpty()
@@ -54,38 +53,38 @@ export const validateStudents = [
       return true;
     }),
 
-    body("school")
-    .isAlpha("es-ES", { ignore: ' ' } )
-    .withMessage(
-      "El colegio debe ser alfabético."
-    )
+  body("school")
+    .isAlpha("es-ES", { ignore: " " })
+    .withMessage("El colegio debe ser alfabético.")
     .trim()
     .notEmpty()
     .withMessage("El colegio es obligatorio.")
     .isLength({ max: 45 })
     .withMessage("El colegio no puede tener más de 45 caracteres."),
 
-    body("birth_date")
+  body("birth_date")
     .isDate()
     .withMessage("La fecha de nacimiento debe ser una fecha válida."),
 
-    body("enrolled")
+  body("enrolled")
     .isBoolean()
     .toBoolean()
     .withMessage("La inscripción debe ser un valor booleano."),
 
   body("level")
-  .isString()
-  .trim()
-  .toLowerCase()
-  .isIn(['inicial', 'primario', 'secundario', 'universitario'])
-  .withMessage('El nivel debe ser inicial, primario, secundario o universitario.'),
+    .isString()
+    .trim()
+    .toLowerCase()
+    .isIn(["inicial", "primario", "secundario", "universitario"])
+    .withMessage(
+      "El nivel debe ser inicial, primario, secundario o universitario.",
+    ),
 
   body("grade")
-   .isInt()        
-    .toInt()      
-    .isIn([1,2,3,4,5,6,7]) 
-    .withMessage('La categoría debe ser del 1 al 7')
+    .isInt()
+    .toInt()
+    .isIn([1, 2, 3, 4, 5, 6, 7])
+    .withMessage("La categoría debe ser del 1 al 7"),
 ];
 
 //-----------------------------------------------------------------------
@@ -93,7 +92,6 @@ export const validateStudents = [
 //-----------------------VALIDACIÓN PARA DOCENTES------------------------
 
 export const validateTeachers = [
-
   body("first_name")
     .trim()
     .notEmpty()
@@ -111,7 +109,7 @@ export const validateTeachers = [
     .withMessage("El apellido solo puede contener letras.")
     .isLength({ max: 45 })
     .withMessage("El apellido no puede superar los 45 caracteres."),
-  
+
   body("dni")
     .trim()
     .notEmpty()
@@ -121,10 +119,9 @@ export const validateTeachers = [
     .isLength({ max: 10 })
     .withMessage("El DNI no puede superar los 10 caracteres.")
     .custom(async (value) => {
-      const [rows] = await db.execute(
-        "SELECT id FROM teachers WHERE dni = ?",
-        [value]
-      );
+      const [rows] = await db.execute("SELECT id FROM teachers WHERE dni = ?", [
+        value,
+      ]);
       if (rows.length > 0) {
         throw new Error("El DNI ya está registrado");
       }
@@ -158,7 +155,6 @@ export const validateTeachers = [
 //-----------------------VALIDACIÓN PARA TUTORES-------------------------
 
 export const validateTutors = [
-
   body("first_name")
     .trim()
     .notEmpty()
@@ -183,8 +179,8 @@ export const validateTutors = [
     .withMessage("El teléfono es obligatorio.")
     .isLength({ max: 20 })
     .withMessage("El teléfono no puede superar los 20 caracteres.")
-   .isNumeric()
-.withMessage("El teléfono solo puede contener números."),
+    .isNumeric()
+    .withMessage("El teléfono solo puede contener números."),
 
   body("dni")
     .trim()
@@ -195,10 +191,9 @@ export const validateTutors = [
     .isLength({ max: 10 })
     .withMessage("El DNI no puede superar los 10 caracteres.")
     .custom(async (value) => {
-      const [rows] = await db.execute(
-        "SELECT id FROM tutors WHERE dni = ?",
-        [value]
-      );
+      const [rows] = await db.execute("SELECT id FROM tutors WHERE dni = ?", [
+        value,
+      ]);
       if (rows.length > 0) {
         throw new Error("El DNI ya está registrado");
       }
@@ -211,13 +206,12 @@ export const validateTutors = [
 //-----------------------VALIDACIÓN PARA HORARIOS------------------------
 
 export const validateSchedules = [
-
   body("teacher_id")
     .notEmpty()
     .withMessage("El docente es obligatorio.")
     .isInt({ min: 1 })
     .withMessage("El docente debe ser un ID válido."),
-  
+
   body("subject_id")
     .notEmpty()
     .withMessage("La materia es obligatoria.")
@@ -229,7 +223,7 @@ export const validateSchedules = [
     .withMessage("La hora de inicio es obligatoria.")
     .matches(/^([01]\d|2[0-3]):([0-5]\d)$/)
     .withMessage("La hora de inicio debe tener formato HH:MM."),
-  
+
   body("end_time")
     .notEmpty()
     .withMessage("La hora de fin es obligatoria.")
@@ -255,7 +249,6 @@ export const validateSchedules = [
 //-----------------------VALIDACIÓN PARA MATERIAS------------------------
 
 export const validateSubjects = [
-
   body("name")
     .isAlpha("es-ES", { ignore: " " })
     .withMessage("La materia debe ser alfabética.")
@@ -267,14 +260,13 @@ export const validateSubjects = [
     .custom(async (name) => {
       const [rows] = await db.execute(
         "SELECT id FROM subjects WHERE name = ?",
-        [name]
+        [name],
       );
       if (rows.length > 0) {
         throw new Error("Materia ya registrada");
       }
       return true;
     }),
-    
 ];
 
 //-----------------------------------------------------------------------
@@ -282,7 +274,6 @@ export const validateSubjects = [
 //-----------------------VALIDACIÓN PARA PLANES--------------------------
 
 export const validatePlans = [
-
   body("name")
     .trim()
     .notEmpty()
@@ -315,17 +306,15 @@ export const validatePlans = [
 //-----------------------VALIDACIÓN PARA PAGOS---------------------------
 
 export const validatePayments = [
-
   body("student_plan_id")
     .notEmpty()
     .withMessage("El alumno es obligatorio.")
     .isInt({ min: 1 })
     .withMessage("El alumno debe ser válido.")
     .custom(async (value) => {
-      const [rows] = await db.execute(
-        "SELECT id FROM alumnos WHERE id = ?",
-        [value]
-      );
+      const [rows] = await db.execute("SELECT id FROM alumnos WHERE id = ?", [
+        value,
+      ]);
       if (rows.length === 0) {
         throw new Error("El alumno no existe.");
       }
@@ -337,7 +326,7 @@ export const validatePayments = [
     .withMessage("La fecha de pago es obligatoria.")
     .isISO8601()
     .withMessage("La fecha debe tener formato AAAA-MM-DD."),
-  
+
   body("mount")
     .notEmpty()
     .withMessage("El monto es obligatorio.")
@@ -363,17 +352,15 @@ export const validatePayments = [
 //-------------------VALIDACIÓN PARA ALUMNOS-TUTORES---------------------
 
 export const validateStudentsTutors = [
-
   body("student_id")
     .notEmpty()
     .withMessage("El alumno es obligatorio.")
     .isInt({ min: 1 })
     .withMessage("El alumno debe ser válido.")
     .custom(async (value) => {
-      const [rows] = await db.execute(
-        "SELECT id FROM students WHERE id = ?",
-        [value]
-      );
+      const [rows] = await db.execute("SELECT id FROM students WHERE id = ?", [
+        value,
+      ]);
       if (rows.length === 0) {
         throw new Error("El alumno no existe.");
       }
@@ -386,17 +373,16 @@ export const validateStudentsTutors = [
     .isInt({ min: 1 })
     .withMessage("El tutor debe ser válido.")
     .custom(async (value, { req }) => {
-      const [rows] = await db.execute(
-        "SELECT id FROM tutors WHERE id = ?",
-        [value]
-      );
+      const [rows] = await db.execute("SELECT id FROM tutors WHERE id = ?", [
+        value,
+      ]);
       if (rows.length === 0) {
         throw new Error("El tutor no existe.");
       }
 
       const [relacion] = await db.execute(
         "SELECT id FROM student_tutors WHERE student_id = ? AND tutor_id = ?",
-        [req.body.student_id, value]
+        [req.body.student_id, value],
       );
 
       if (relacion.length > 0) {
@@ -441,7 +427,7 @@ export const validateUsers = [
     .custom(async (value) => {
       const [rows] = await db.execute(
         "SELECT id FROM users WHERE username = ?",
-        [value]
+        [value],
       );
       if (rows.length > 0) {
         throw new Error("El usuario ya está registrado");
@@ -460,7 +446,7 @@ export const validateUsers = [
       minSymbols: 1,
     })
     .withMessage(
-      "La contraseña debe tener al menos 8 caracteres, una mayúscula, una minúscula, un número y un símbolo."
+      "La contraseña debe tener al menos 8 caracteres, una mayúscula, una minúscula, un número y un símbolo.",
     ),
 ];
 
@@ -481,14 +467,13 @@ export const validateEditUsers = [
       const { id } = req.params;
       const [rows] = await db.execute(
         "SELECT id FROM users WHERE username = ? AND id != ?",
-        [value, id]
+        [value, id],
       );
       if (rows.length > 0) {
         throw new Error("Usuario ya está registrado");
       }
       return true;
     }),
-  
 ];
 
 //-----------------------------------------------------------------------
@@ -530,7 +515,7 @@ export const validateEditStudents = [
       const { id } = req.params;
       const [rows] = await db.execute(
         "SELECT id FROM students WHERE dni = ? AND id != ?",
-        [dni, id]
+        [dni, id],
       );
       if (rows.length > 0) {
         throw new Error("Dni ya registrado");
@@ -556,14 +541,13 @@ export const validateEditSubjects = [
       const { id } = req.params;
       const [rows] = await db.execute(
         "SELECT id FROM subjects WHERE name = ? AND id != ?",
-        [name, id]
+        [name, id],
       );
       if (rows.length > 0) {
         throw new Error("Materia ya registrada");
       }
       return true;
     }),
-
 ];
 
 //-----------------------------------------------------------------------
@@ -571,27 +555,152 @@ export const validateEditSubjects = [
 //-------------------VALIDACIÓN PARA STUDENT_PLANS-----------------------
 
 export const validateStudentPlans = [
-  body("student_id").isInt({ min: 1 }).withMessage("El ID del alumno es obligatorio y debe ser un número igual o mayor a 1."),
-  body("plan_id").isInt({ min: 1 }).withMessage("El ID del alumno es obligatorio y debe ser un número igual o mayor a 1."),
-  body("paid_amount").isDecimal({ decimal_digits: "0,2" }).withMessage("El monto pagado debe ser un número decimal válido."),
-  body("start_date").isISO8601().withMessage("La fecha de inicio debe tener formato AAAA-MM-DD."),
-]; //usar isDate o isISO8601???
+  body("student_id")
+    .notEmpty()
+    .withMessage("El estudiante es obligatorio.")
+    .isInt({ min: 1 })
+    .withMessage("El estudiante debe ser válido")
+    .custom(async (value) => {
+      const [rows] = await db.execute("SELECT id FROM students WHERE id = ?", [
+        value,
+      ]);
+      if (rows.length === 0) {
+        throw new Error("El estudiante no existe.");
+      }
+      return true;
+    }),
+
+  body("plan_id")
+    .notEmpty()
+    .withMessage("El plan es obligatorio.")
+    .isInt({ min: 1 })
+    .withMessage("El plan debe ser debe ser válido.")
+    .custom(async (plan_id, { req }) => {
+      const [rows] = await db.execute("SELECT id FROM plans WHERE id = ?", [
+        plan_id,
+      ]);
+      if (rows.length === 0) {
+        throw new Error("El plan no existe.");
+      }
+
+      const [relation] = await db.execute(
+        "SELECT id FROM student_plans WHERE student_id = ? AND plan_id = ?",
+        [req.body.student_id, plan_id],
+      );
+
+      if (relation.length > 0) {
+        throw new Error("El alumno ya tiene asignada este plan.");
+      }
+
+      return true;
+    }),
+
+  body("paid_amount")
+    .notEmpty()
+    .withMessage("El monto pagado es obligatorio.")
+    .isDecimal({ decimal_digits: "0,2" })
+    .withMessage("El monto pagado debe ser válido."),
+
+  body("start_date")
+    .notEmpty()
+    .withMessage("La fecha de inicio es obligatoria.")
+    .isISO8601()
+    .withMessage("La fecha de inicio debe tener formato AAAA-MM-DD."),
+];
 
 //-----------------------------------------------------------------------
 
 //-----------------VALIDACIÓN PARA SCHEDULE_STUDENTS---------------------
 
 export const validateScheduleStudents = [
-  body("student_id").isInt({ min: 1 }).withMessage("El ID del alumno es obligatorio y debe ser un número igual o mayor a 1."),
-  body("schedule_id").isInt({ min: 1 }).withMessage("El ID del horario es obligatorio y debe ser un número igual o mayor a 1."),
+  body("student_id")
+    .notEmpty()
+    .withMessage("El estudiante es obligatorio.")
+    .isInt({ min: 1 })
+    .withMessage("El alumno debe ser válido")
+    .custom(async (value) => {
+      const [rows] = await db.execute("SELECT id FROM students WHERE id = ?", [
+        value,
+      ]);
+      if (rows.length === 0) {
+        throw new Error("El alumno no existe.");
+      }
+      return true;
+    }),
+
+  body("schedule_id")
+    .notEmpty()
+    .withMessage("El horario es obligatorio.")
+    .isInt({ min: 1 })
+    .withMessage("El horario debe ser válido")
+    .custom(async (schedule_id, { req }) => {
+      const [rows] = await db.execute("SELECT id FROM schedules WHERE id = ?", [
+        schedule_id,
+      ]);
+
+      if (rows.length === 0) {
+        throw new Error("El horario no existe.");
+      }
+
+      const [relation] = await db.execute(
+        "SELECT id FROM schedule_students WHERE student_id = ? AND schedule_id = ?",
+        [req.body.student_id, schedule_id],
+      );
+
+      if (relation.length > 0) {
+        throw new Error("El estudiante ya tiene asignado este horario.");
+      }
+
+      return true;
+    }),
 ];
 
 //-----------------------------------------------------------------------
+
 //-------------------VALIDACIÓN PARA PLAN_SUBJECTS-----------------------
 
 export const validatePlanSubjects = [
-  body("plan_id").isInt({ min: 1 }).withMessage("El ID del plan es obligatorio y debe ser un número igual o mayor a 1."),
-  body("subject_id").isInt({ min: 1 }).withMessage("El ID la materia es obligatorio y debe ser un número igual o mayor a 1."),
+  body("plan_id")
+    .notEmpty()
+    .withMessage("El plan es obligatorio.")
+    .isInt({ min: 1 })
+    .withMessage("El plan debe ser debe ser válido.")
+    .custom(async (plan_id) => {
+      const [rows] = await db.execute("SELECT id FROM plans WHERE id = ?", [
+        plan_id,
+      ]);
+      if (rows.length === 0) {
+        throw new Error("El plan no existe.");
+      }
+
+      return true;
+    }),
+
+  body("subject_id")
+    .notEmpty()
+    .withMessage("La materia es obligatoria.")
+    .isInt({ min: 1 })
+    .withMessage("La materia debe ser válida.")
+    .custom(async (subject_id, { req }) => {
+      const [rows] = await db.execute("SELECT id FROM subjects WHERE id = ?", [
+        subject_id,
+      ]);
+
+      if (rows.length === 0) {
+        throw new Error("La materia no existe.");
+      }
+
+      const [relation] = await db.execute(
+        "SELECT id FROM plan_subjects WHERE plan_id = ? AND subject_id = ?",
+        [req.body.plan_id, subject_id],
+      );
+
+      if (relation.length > 0) {
+        throw new Error("El plan ya tiene asignada esta materia.");
+      }
+
+      return true;
+    }),
 ];
 
 //-----------------------------------------------------------------------
@@ -605,10 +714,9 @@ export const validateTeachersSubjects = [
     .isInt({ min: 1 })
     .withMessage("El docente debe ser válido.")
     .custom(async (value) => {
-      const [rows] = await db.execute(
-        "SELECT id FROM teachers WHERE id = ?",
-        [value]
-      );
+      const [rows] = await db.execute("SELECT id FROM teachers WHERE id = ?", [
+        value,
+      ]);
       if (rows.length === 0) {
         throw new Error("El docente no existe.");
       }
@@ -621,17 +729,16 @@ export const validateTeachersSubjects = [
     .isInt({ min: 1 })
     .withMessage("La materia debe ser válida.")
     .custom(async (value, { req }) => {
-      const [rows] = await db.execute(
-        "SELECT id FROM subjects WHERE id = ?",
-        [value]
-      );
+      const [rows] = await db.execute("SELECT id FROM subjects WHERE id = ?", [
+        value,
+      ]);
       if (rows.length === 0) {
         throw new Error("La materia no existe.");
       }
 
       const [relacion] = await db.execute(
         "SELECT id FROM teacher_subjects WHERE teacher_id = ? AND subject_id = ?",
-        [req.body.teacher_id, value]
+        [req.body.teacher_id, value],
       );
 
       if (relacion.length > 0) {
