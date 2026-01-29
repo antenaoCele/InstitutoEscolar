@@ -151,7 +151,7 @@ export const validatePlans = [
 ];
 
 // =============================================================================
-// SCHEDULE-STUDENTS
+// SCHEDULE_STUDENTS
 // =============================================================================
 
 export const validateScheduleStudents = [
@@ -241,7 +241,7 @@ export const validateSchedules = [
 ];
 
 // =============================================================================
-// STUDENT-PLANS
+// STUDENT_PLANS
 // =============================================================================
 
 export const validateStudentPlans = [
@@ -360,7 +360,7 @@ export const validateEditStudentPlans = [
 ];
 
 // =============================================================================
-// STUDENT-TUTORS
+// STUDENT_TUTORS
 // =============================================================================
 
 export const validateStudentsTutors = [
