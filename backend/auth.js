@@ -1,11 +1,11 @@
 import express from "express";
 import { db } from "./db.js";
-import { checkValidations } from "./validations.js";
+import { checkValidations, validateLogin } from "./validations.js";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import passport from "passport";
 import { Strategy, ExtractJwt } from "passport-jwt";
-import { body } from "express-validator";
+
 
 const router = express.Router();
 
@@ -40,10 +40,7 @@ export const authorization = (rol) => {
 
 router.post(
   "/login",
-  [
-    body("username").notEmpty().withMessage("El nombre de usuario es obligatorio"),
-    body("password").notEmpty().withMessage("La contraseña es obligatoria"),
-  ],
+  validateLogin,
   checkValidations,
   async (req, res) => {
     const { username, password} = req.body;
