@@ -13,20 +13,13 @@ Content-Type: application/json
 ###
 @token = {{login.response.body.token}}
 
-
-### PLANS
-
-
-
 ### Obtener todos los planes
 GET {{url}}/plans
 Authorization: Bearer {{token}}
 
-
 ### Obtener un plan por ID
 GET {{url}}/plans/1
 Authorization: Bearer {{token}}
-
 
 ### Crear un plan
 POST {{url}}/plans
@@ -34,11 +27,10 @@ Content-Type: application/json
 Authorization: Bearer {{token}}
 
 {
-    "name": "Plan Programación Web",
+    "name": "Plan Lengua",
     "duration": 12,
     "price": 150000
 }
-
 
 ### Modificar un plan
 PUT {{url}}/plans/1
@@ -50,7 +42,6 @@ Authorization: Bearer {{token}}
     "duration": 14,
     "price": 180000
 }
-
 
 ### Eliminar un plan
 DELETE {{url}}/plans/1
