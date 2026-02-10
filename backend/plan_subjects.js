@@ -29,13 +29,14 @@ router.get(
     const id = Number(req.params.id);
 
     const [planSubjects] = await db.execute(
-      "SELECT ps.id, \
-       p.id AS plan_id \
-       s.id AS subject_id \
-FROM plan_subjects ps \
-JOIN plans p ON ps.plan_id = p.id \
-JOIN subjects s ON ps.subject_id = s.id \
-WHERE ps.id = ?",
+      `SELECT 
+     ps.id,
+     p.id AS plan_id,
+     s.id AS subject_id
+   FROM plan_subjects ps
+   JOIN plans p ON ps.plan_id = p.id
+   JOIN subjects s ON ps.subject_id = s.id
+   WHERE ps.id = ?`,
       [id],
     );
 
@@ -77,7 +78,6 @@ router.put(
   "/:id",
   authentication,
   validateID,
-  validateEditStudentPlans,
   checkValidations,
   async (req, res) => {
     const id = Number(req.params.id);
