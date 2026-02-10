@@ -13,36 +13,38 @@ Content-Type: application/json
 ###
 @token = {{login.response.body.token}}
 
-### Obtener todos los planes
-GET {{url}}/plans
+###
+GET {{url}}/plan_subjects
 Authorization: Bearer {{token}}
 
-### Obtener un plan por ID
-GET {{url}}/plans/1
+###
+GET {{url}}/plan_subjects/1
 Authorization: Bearer {{token}}
 
-### Crear un plan
-POST {{url}}/plans
+### NO SÉ QUÉ ES
+GET {{url}}/students/1/payments
+Authorization: Bearer {{token}}
+
+###
+POST {{url}}/plan_subjects
 Content-Type: application/json
 Authorization: Bearer {{token}}
 
 {
-    "name": "Plan Lengua",
-    "duration": 12,
-    "price": 150000
+    "plan_id": 1,
+    "subject_id": 6
 }
 
-### Modificar un plan
-PUT {{url}}/plans/1
+###
+PUT {{url}}/plan_subjects/1
 Content-Type: application/json
 Authorization: Bearer {{token}}
 
 {
-    "name": "Plan Programación Web Avanzado",
-    "duration": 14,
-    "price": 180000
+    "plan_id": 2,
+    "subject_id": 1
 }
 
-### Eliminar un plan
-DELETE {{url}}/plans/1
+###
+DELETE {{url}}/plan_subjects/1
 Authorization: Bearer {{token}}

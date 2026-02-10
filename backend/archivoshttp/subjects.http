@@ -7,8 +7,8 @@ POST {{url}}/auth/login
 Content-Type: application/json
 
 {
-    "username": "exe123",
-    "password": "Exe1234@"
+    "username": "rama123",
+    "password": "Rama123."
 }
 
 ###
@@ -28,7 +28,7 @@ Content-Type: application/json
 Authorization: Bearer {{token}}
 
 {
-    "name": "educacion fisica"
+    "name": "lengua"
 }
 
 ###
