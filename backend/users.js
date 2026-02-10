@@ -2,13 +2,14 @@ import express from "express";
 import { db } from "./db.js";
 import { validateID, checkValidations, validateUsers } from "./validations.js";
 import bcrypt from "bcrypt";
-import { authentication } from "./auth.js";
+import { authentication, authorization } from "./auth.js";
 
 const router = express.Router();
 
 router.get(
     "/",
     authentication,
+    authorization("ADMIN"),
     async (req, res) => {
 
         const [rows] = await db.execute("SELECT * FROM users");
@@ -20,9 +21,10 @@ router.get(
 );
 
 router.get("/:id",
+    authentication,
+    authorization("ADMIN"),
     validateID,
     checkValidations,
-    authentication,
     async (req, res) => {
         const id = Number(req.params.id);
 
@@ -70,6 +72,7 @@ router.post(
 
 router.put("/:id",
     authentication,
+    authorization("ADMIN"),
     validateID,
     validateUsers,
     checkValidations,
@@ -97,6 +100,40 @@ router.put("/:id",
         });
 
     });
+
+
+// CAMBIAR ROL DE UN USUARIO (solo ADMIN)
+router.put(
+  "/:id/rol",
+  authentication,
+  authorization("ADMIN"),
+  async (req, res) => {
+    const { id } = req.params;
+    const { rol } = req.body;
+
+    // Validar roles permitidos
+    if (!["ADMIN", "DOCENTE"].includes(rol)) {
+      return res.status(400).json({
+        success: false,
+        message: "Rol inválido",
+      });
+    }
+
+    try {
+      await db.execute("UPDATE users SET role = ? WHERE id = ?", [rol, id]);
+
+      res.json({
+        success: true,
+        message: "Rol actualizado correctamente",
+      });
+    } catch (error) {
+      res.status(500).json({
+        success: false,
+        message: "Error al actualizar el rol",
+      });
+    }
+  }
+);
 
 
 router.delete("/:id", authentication, validateID, checkValidations,

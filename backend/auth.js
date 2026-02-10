@@ -28,10 +28,10 @@ export const authentication = passport.authenticate("jwt", {
 
 export const authorization = (rol) => {
   return (req, res, next) => {
-    const roles = req.user.roles;
-    if (!roles || !roles.includes(rol)) {
+    const userRol = req.user.rol;
+    if (userRol !== rol) {
       return res
-        .status(401)
+        .status(403)
         .json({ success: false, message: "Usuario no autorizado" });
     }
     next();
@@ -65,7 +65,12 @@ router.post(
         .json({ success: false, error: "Usuario o contraseña no valido" });
     }
 
-    const payload = { userId: users[0].id };
+
+    const payload = { 
+      userId: users[0].id,
+      rol: users[0].rol
+    };
+
     const token = jwt.sign(payload, process.env.JWT_SECRET, {
       expiresIn: "4h",
     });
