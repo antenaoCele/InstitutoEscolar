@@ -2,7 +2,7 @@ import { param, body, validationResult } from "express-validator";
 import { db } from "./db.js";
 
 // =============================================================================
-// AUTH, ID AND LOGIN
+// ID AND LOGINs
 // =============================================================================
 
 export const checkValidations = (req, res, next) => {
