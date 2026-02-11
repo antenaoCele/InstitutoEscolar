@@ -18,7 +18,7 @@ GET {{url}}/plans
 Authorization: Bearer {{token}}
 
 ### Obtener un plan por ID
-GET {{url}}/plans/1
+GET {{url}}/plans/2
 Authorization: Bearer {{token}}
 
 ### Crear un plan
@@ -27,9 +27,9 @@ Content-Type: application/json
 Authorization: Bearer {{token}}
 
 {
-    "name": "Plan Lengua",
-    "duration": 12,
-    "price": 150000
+    "name": 3993,
+    "duration": "hola",
+    "price": 10000
 }
 
 ### Modificar un plan

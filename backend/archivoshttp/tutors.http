@@ -1,22 +1,28 @@
+@url=http://localhost:3000
+
 ### Iniciar sesión para obtener el token
 # @name login
-POST http://localhost:3000/auth/login
+POST {{url}}/auth/login
 Content-Type: application/json
 
 {
-    "nombre": "ramiro",
-    "contrasena": "Ramiro123."
+    "username": "rama123",
+    "password": "Rama123."
 }
 
 ### Guardar el token en una variable
 @token = {{login.response.body.token}}
 
+### Obtener tutores
+GET {{url}}/tutors
+Authorization: Bearer {{token}}
+
 ### Obtener un tutor por ID (Requiere autenticación)
-GET http://localhost:3000/tutors/1
+GET {{url}}/tutors/1
 Authorization: Bearer {{token}}
 
 ### Crear un nuevo tutor (Requiere autenticación)
-POST http://localhost:3000/tutors
+POST {{url}}/tutors
 Content-Type: application/json
 Authorization: Bearer {{token}}
 
@@ -28,7 +34,7 @@ Authorization: Bearer {{token}}
 }
 
 ### Actualizar un tutor (Requiere autenticación)
-PUT http://localhost:3000/tutors/1
+PUT {{url}}/tutors/1
 Content-Type: application/json
 Authorization: Bearer {{token}}
 
@@ -40,5 +46,5 @@ Authorization: Bearer {{token}}
 }
 
 ### Eliminar un tutor (Requiere autenticación)
-DELETE http://localhost:3000/tutors/1
+DELETE {{url}}/tutors/1
 Authorization: Bearer {{token}}

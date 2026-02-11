@@ -1,26 +1,28 @@
+@url=http://localhost:3000
+
 ### Iniciar sesión para obtener el token
 # @name login
 POST http://localhost:3000/auth/login
 Content-Type: application/json
 
 {
-    "nombre": "ramiro",
-    "contrasena": "Ramiro123."
+    "username": "rama123",
+    "password": "Rama123."
 }
 
 ### Guardar el token en una variable
 @token = {{login.response.body.token}}
 
 ### Obtener todos los docentes (Requiere autenticación)
-GET http://localhost:3000/teachers
+GET {{url}}/teachers
 Authorization: Bearer {{token}}
 
 ### Obtener un docente por ID (Requiere autenticación)
-GET http://localhost:3000/teachers/1
+GET {{url}}/teachers/1
 Authorization: Bearer {{token}}
 
 ### Crear un nuevo docente (Requiere autenticación)
-POST http://localhost:3000/teachers
+POST {{url}}/teachers
 Content-Type: application/json
 Authorization: Bearer {{token}}
 
@@ -33,7 +35,7 @@ Authorization: Bearer {{token}}
 }
 
 ### Actualizar un docente (Requiere autenticación)
-PUT http://localhost:3000/teachers/1
+PUT {{url}}/teachers/1
 Content-Type: application/json
 Authorization: Bearer {{token}}
 
@@ -46,5 +48,5 @@ Authorization: Bearer {{token}}
 }
 
 ### Eliminar un docente (Requiere autenticación)
-DELETE http://localhost:3000/teachers/1
+DELETE {{url}}/teachers/1
 Authorization: Bearer {{token}}

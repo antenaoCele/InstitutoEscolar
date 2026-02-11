@@ -40,9 +40,9 @@ Authorization: Bearer {{token}}
 {
     "student_plan_id": 1,
     "amount": 15000,
+    "payment_date": "2026-02-10",
     "payment_method": "transferencia"
 }
-
 
 ### Modificar un pago
 PUT {{url}}/payments/1
@@ -50,9 +50,10 @@ Content-Type: application/json
 Authorization: Bearer {{token}}
 
 {
-    "student_plan_id": 1,
-    "amount": 18000,
-    "payment_method": "efectivo"
+     "student_plan_id": 1,
+    "amount": 15000,
+    "payment_date": "2026-02-10",
+    "payment_method": "transferencia"
 }
 
 

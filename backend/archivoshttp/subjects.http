@@ -28,16 +28,16 @@ Content-Type: application/json
 Authorization: Bearer {{token}}
 
 {
-    "name": "lengua"
+    "name": "gimnasia artistica"
 }
 
 ###
-PUT {{url}}/subjects/4
+PUT {{url}}/subjects/3
 Content-Type: application/json
 Authorization: Bearer {{token}}
 
 {
-    "name": "guitarra"
+    "name": "canto"
 }
 
 ###
