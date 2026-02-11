@@ -732,8 +732,8 @@ export const validateTeachers = [
     .trim()
     .notEmpty()
     .withMessage("El DNI es obligatorio.")
-    .isNumeric()
-    .withMessage("El DNI debe ser numérico.")
+    .isInt({ min: 1 })
+    .withMessage("El DNI debe ser un número entero positivo.")
     .isLength({ max: 10 })
     .withMessage("El DNI no puede superar los 10 caracteres.")
     .custom(async (value) => {
@@ -804,8 +804,8 @@ export const validateTutors = [
     .trim()
     .notEmpty()
     .withMessage("El DNI es obligatorio.")
-    .isNumeric()
-    .withMessage("El DNI debe ser numérico.")
+    .isInt({ min: 1 })
+    .withMessage("El DNI debe ser un número entero positivo.")
     .isLength({ max: 10 })
     .withMessage("El DNI no puede superar los 10 caracteres.")
     .custom(async (value) => {
