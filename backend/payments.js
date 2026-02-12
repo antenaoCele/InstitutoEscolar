@@ -7,12 +7,12 @@ import {
   checkValidations,
   validatePayments,
 } from "./validations.js";
-import { authentication } from "./auth.js";
+import { authentication, authorization } from "./auth.js";
 
 const router = express.Router();
 
 //GET
-router.get("/", authentication, async (req, res) => {
+router.get("/", authentication, authorization("ADMIN"), async (req, res) => {
   const [payments] = await db.execute(`
     SELECT 
       p.id,
