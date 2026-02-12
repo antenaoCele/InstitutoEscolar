@@ -35,7 +35,7 @@ export const validatePayments = [
     .isInt({ min: 1 })
     .withMessage("El alumno debe ser válido.")
     .custom(async (value) => {
-      const [rows] = await db.execute("SELECT id FROM alumnos WHERE id = ?", [
+      const [rows] = await db.execute("SELECT id FROM students WHERE id = ?", [
         value,
       ]);
       if (rows.length === 0) {
@@ -44,13 +44,13 @@ export const validatePayments = [
       return true;
     }),
 
-  body("payment_day")
+  body("payment_date")
     .notEmpty()
     .withMessage("La fecha de pago es obligatoria.")
     .isISO8601()
     .withMessage("La fecha debe tener formato AAAA-MM-DD."),
 
-  body("mount")
+  body("amount")
     .notEmpty()
     .withMessage("El monto es obligatorio.")
     .isDecimal({ decimal_digits: "1,2" })
@@ -745,8 +745,8 @@ export const validateTeachers = [
     .trim()
     .notEmpty()
     .withMessage("El DNI es obligatorio.")
-    .isNumeric()
-    .withMessage("El DNI debe ser numérico.")
+    .isInt({ min: 1 })
+    .withMessage("El DNI debe ser un número entero positivo.")
     .isLength({ max: 10 })
     .withMessage("El DNI no puede superar los 10 caracteres.")
     .custom(async (value) => {
@@ -817,8 +817,8 @@ export const validateTutors = [
     .trim()
     .notEmpty()
     .withMessage("El DNI es obligatorio.")
-    .isNumeric()
-    .withMessage("El DNI debe ser numérico.")
+    .isInt({ min: 1 })
+    .withMessage("El DNI debe ser un número entero positivo.")
     .isLength({ max: 10 })
     .withMessage("El DNI no puede superar los 10 caracteres.")
     .custom(async (value) => {

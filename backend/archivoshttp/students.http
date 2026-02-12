@@ -7,8 +7,8 @@ POST {{url}}/auth/login
 Content-Type: application/json
 
 {
-    "username": "exe123",
-    "password": "Exe1234@"
+    "username": "rama123",
+    "password": "Rama123."
 }
 
 ###
@@ -34,12 +34,12 @@ Authorization: Bearer {{token}}
 {
   "first_name": "Laura",
   "last_name": "Fernández",
-  "dni": "49681322", 
+  "dni": "8380248", 
   "school": "CPUGSM", 
   "birth_date": "2004-01-13",
   "enrolled": true,
   "level": "universitario", 
-  "grade": 2
+  "grade": 34
 }
 
 

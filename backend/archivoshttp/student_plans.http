@@ -6,8 +6,8 @@ POST {{url}}/auth/login
 Content-Type: application/json
 
 {
-    "username": "holajuancarlos",
-    "password": "Comoestaschupap1ja."
+    "username": "rama123",
+    "password": "Rama123."
 }
 
 ###
@@ -32,7 +32,9 @@ Authorization: Bearer {{token}}
 
 {
     "student_id": 1,
-    "plans_id": 1,
+    "plan_id": 2,
+    "paid_amount": 15000,
+    "start_date": "2023-01-01"
 }
 
 ###
@@ -41,8 +43,10 @@ Content-Type: application/json
 Authorization: Bearer {{token}}
 
 {
-    "student_id": 2,
-    "plan_id": 2,
+    "student_id": 1,
+    "plan_id": 1,
+    "paid_amount": 15000,
+    "start_date": "2023-01-01"
 }
 
 ###
