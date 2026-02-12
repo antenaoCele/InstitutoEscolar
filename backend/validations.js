@@ -206,13 +206,26 @@ export const validateSchedules = [
     .notEmpty()
     .withMessage("El docente es obligatorio.")
     .isInt({ min: 1 })
-    .withMessage("El docente debe ser un ID válido."),
+    .withMessage("El docente debe ser un ID válido.")
+    .custom(async (teacher_id, { req }) => {
+      const { days, start_time, end_time } = req.body;
 
-  body("subject_id")
-    .notEmpty()
-    .withMessage("La materia es obligatoria.")
-    .isInt({ min: 1 })
-    .withMessage("La materia debe ser un ID válido."),
+      const [rows] = await db.execute(
+        `SELECT id FROM schedules
+        WHERE teacher_id = ?
+        AND days = ?
+        AND (? < end_time)
+        AND (? > start_time)`,
+      [teacher_id, days, start_time, end_time]
+      );
+
+      if (rows.length > 0) {
+        throw new Error("El docente ya tiene una clase en ese día y horario.");
+      } 
+
+  return true;
+}),
+
 
   body("start_time")
     .notEmpty()
@@ -226,7 +239,7 @@ export const validateSchedules = [
     .matches(/^([01]\d|2[0-3]):([0-5]\d)$/)
     .withMessage("La hora de fin debe tener formato HH:MM.")
     .custom((value, { req }) => {
-      if (req.body.hora_inicio >= value) {
+      if (req.body.start_time >= value) {
         throw new Error("La hora de fin debe ser mayor a la hora de inicio.");
       }
       return true;
@@ -236,8 +249,8 @@ export const validateSchedules = [
     .trim()
     .notEmpty()
     .withMessage("Los días son obligatorios.")
-    .isLength({ max: 10 })
-    .withMessage("Los días no pueden superar los 10 caracteres."),
+    .isLength({ max: 2 })
+    .withMessage("Los días no pueden superar los 2 caracteres."),
 ];
 
 // =============================================================================
