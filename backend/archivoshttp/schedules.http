@@ -22,7 +22,7 @@ Authorization: Bearer {{token}}
 
 
 ### Obtener un horario por ID
-GET {{url}}/schedules/1
+GET {{url}}/schedules/3
 Authorization: Bearer {{token}}
 
 
@@ -32,24 +32,22 @@ Content-Type: application/json
 Authorization: Bearer {{token}}
 
 {
-    "teacher_id": 1,
-    "subject_id": 3,
-    "start_time": "08:00",
+    "teacher_id": 21,
+    "start_time": "10:00",
     "end_time": "10:00",
-    "days": "Miércoles"
+    "days": "Miércoles y jueves"
 }
 
 
 ### Modificar un horario
-PUT {{url}}/schedules/1
+PUT {{url}}/schedules/3
 Content-Type: application/json
 Authorization: Bearer {{token}}
 
 {
     "teacher_id": 1,
-    "subject_id": 3,
-    "start_time": "10:00:00",
-    "end_time": "12:00:00",
+    "start_time": "10:00",
+    "end_time": "12:00",
     "days": "Martes, Jueves"
 }
 

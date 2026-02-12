@@ -210,6 +210,13 @@ export const validateSchedules = [
     .custom(async (teacher_id, { req }) => {
       const { days, start_time, end_time } = req.body;
 
+      const [teacher] = await db.execute( `SELECT id FROM teachers WHERE id = ?`, [teacher_id]);
+
+      if (teacher.length === 0) {
+        throw new Error("El docente no existe.");
+      }
+
+
       const [rows] = await db.execute(
         `SELECT id FROM schedules
         WHERE teacher_id = ?
@@ -249,8 +256,8 @@ export const validateSchedules = [
     .trim()
     .notEmpty()
     .withMessage("Los días son obligatorios.")
-    .isLength({ max: 2 })
-    .withMessage("Los días no pueden superar los 2 caracteres."),
+    .isLength({ max: 100 })
+    .withMessage("Los días no pueden superar los 100 caracteres."),
 ];
 
 // =============================================================================

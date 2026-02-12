@@ -6,17 +6,16 @@ import {
   validateSchedules,
 } from "./validations.js";
 import { authentication } from "./auth.js";
-import { body } from "express-validator";
+// import { body } from "express-validator";
 
 const router = express.Router();
 
 // GET TODOS
 router.get("/", authentication, async (req, res) => {
   const [rows] = await db.execute(`
-    SELECT s.teacher_id AS teacher, s.subject_id AS subject, s.start_time, s.end_time, s.days
+    SELECT s.teacher_id AS teacher, s.start_time, s.end_time, s.days, s.id
     FROM schedules s
     JOIN teachers t ON s.teacher_id = t.id
-    JOIN subjects sub ON s.subject_id = sub.id
   `);
 
   res.json({ success: true, schedules: rows });
@@ -33,10 +32,9 @@ router.get(
 
     const [schedules] = await db.execute(
       `
-      SELECT s.teacher_id AS teacher, s.subject_id AS subject, s.start_time, s.end_time, s.days
+      SELECT s.teacher_id AS teacher, s.start_time, s.end_time, s.days, s.id
       FROM schedules s
       JOIN teachers t ON s.teacher_id = t.id
-      JOIN subjects sub ON s.subject_id = sub.id
       WHERE s.id = ?
     `,
       [id],
@@ -59,12 +57,12 @@ router.post(
   validateSchedules,
   checkValidations,
   async (req, res) => {
-    const { teacher_id, subject_id, start_time, end_time, days } = req.body;
+    const { teacher_id, start_time, end_time, days } = req.body;
 
     const [result] = await db.execute(
-      `INSERT INTO schedules (teacher_id, subject_id, start_time, end_time, days)
-       VALUES (?, ?, ?, ?, ?)`,
-      [teacher_id, subject_id, start_time, end_time, days],
+      `INSERT INTO schedules (teacher_id, start_time, end_time, days)
+       VALUES (?, ?, ?, ?)`,
+      [teacher_id, start_time, end_time, days],
     );
 
     res.status(201).json({
@@ -72,7 +70,6 @@ router.post(
       data: {
         id: result.insertId,
         teacher_id,
-        subject_id,
         start_time,
         end_time,
         days,
@@ -91,7 +88,7 @@ router.put(
   checkValidations,
   async (req, res) => {
     const id = Number(req.params.id);
-    const { teacher_id, subject_id, start_time, end_time, days } = req.body;
+    const { teacher_id, start_time, end_time, days } = req.body;
 
     const [exists] = await db.execute("SELECT id FROM schedules WHERE id=?", [
       id,
@@ -104,14 +101,14 @@ router.put(
 
     await db.execute(
       `UPDATE schedules
-       SET teacher_id=?, subject_id=?, start_time=?, end_time=?, days=?
+       SET teacher_id=?, start_time=?, end_time=?, days=?
        WHERE id=?`,
-      [teacher_id, subject_id, start_time, end_time, days, id],
+      [teacher_id, start_time, end_time, days, id],
     );
 
     res.json({
       success: true,
-      data: { id, teacher_id, subject_id, start_time, end_time, days },
+      data: { id, teacher_id, start_time, end_time, days },
     });
   },
 );

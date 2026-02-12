@@ -33,7 +33,7 @@ Content-Type: application/json
     "first_name": "Juan",
     "last_name": "Pinto", 
     "username": "Juan123", 
-    "password": "Juan."
+    "password": "Juan123@"
 }
 
 
