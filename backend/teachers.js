@@ -6,12 +6,14 @@ import {
   validateTeachers,
 } from "./validations.js";
 import passport from "passport";
+import { authentication, authorization } from "./auth.js";
 
 const router = express.Router();
 
 router.get(
   "/",
-  passport.authenticate("jwt", { session: false }),
+  authentication,
+  authorization("ADMIN"),
   async (req, res) => {
     const [teachers] = await db.execute("SELECT * FROM teachers");
     res.json({ success: true, teachers });
@@ -20,9 +22,10 @@ router.get(
 
 router.get(
   "/:id",
+  authentication,
+  authorization("ADMIN"),
   validateID,
   checkValidations,
-  passport.authenticate("jwt", { session: false }),
   async (req, res) => {
     const id = Number(req.params.id);
 
@@ -40,11 +43,30 @@ router.get(
   },
 );
 
+
+//VER LIQUIDACIONES DE UN DOCENTE
+router.get("/:id/liquidations", async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const liquidations = await db("teacher_liquidations")
+      .where("teacher_id", id)
+      .orderBy("month", "desc");
+
+    res.json(liquidations);
+
+  } catch (error) {
+    res.status(500).json({ error: "Error al obtener liquidaciones" });
+  }
+});
+
+
 router.post(
   "/",
+  authentication,
+  authorization("ADMIN"),
   validateTeachers,
   checkValidations,
-  passport.authenticate("jwt", { session: false }),
   async (req, res) => {
     const { first_name, last_name, dni, phone, salary } = req.body;
 
@@ -60,12 +82,70 @@ router.post(
   },
 );
 
+
+//ENDPOINT PARA LIQUIDAR UN MES DEL DOCENTE 
+router.post("/:id/liquidate", 
+  authentication, 
+  authorization("ADMIN"), 
+  validateID, 
+  checkValidations, 
+  async (req, res) => {
+  const { id } = req.params;
+    const { month } = req.body; // ejemplo: "2026-02"
+
+    try {
+      // Calcular total recaudado del docente en ese mes
+      const [rows] = await db.execute(
+        `
+        SELECT SUM(p.amount) AS total
+        FROM payments p
+        JOIN student_plans sp ON sp.id = p.student_plan_id
+        WHERE sp.teacher_id = ?
+        AND DATE_FORMAT(p.created_at, '%Y-%m') = ?
+        `,
+        [id, month]
+      );
+
+      const totalCollected = rows[0].total || 0;
+      const netSalary = totalCollected * 0.75;
+
+      // Insertar liquidación
+      await db.execute(
+        `
+        INSERT INTO teacher_liquidations 
+        (teacher_id, month, total_collected, net_salary)
+        VALUES (?, ?, ?, ?)
+        `,
+        [id, month, totalCollected, netSalary]
+      );
+
+      res.status(201).json({
+        success: true,
+        data: {
+          teacher_id: id,
+          month,
+          total_collected: totalCollected,
+          net_salary: netSalary,
+        },
+      });
+
+    } catch (error) {
+      res.status(500).json({
+        success: false,
+        message: "Error al liquidar sueldo",
+      });
+    }
+});
+
+
+
 router.put(
   "/:id",
+  authentication,
+  authorization("ADMIN"),
   validateID,
   validateTeachers,
   checkValidations,
-  passport.authenticate("jwt", { session: false }),
   async (req, res) => {
     const { first_name, last_name, dni, phone, salary } = req.body;
     const { id } = req.params;
@@ -92,9 +172,10 @@ router.put(
 
 router.delete(
   "/:id",
+  authentication,
+  authorization("ADMIN"),
   validateID,
   checkValidations,
-  passport.authenticate("jwt", { session: false }),
   async (req, res) => {
     const { id } = req.params;
 
