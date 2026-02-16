@@ -6,8 +6,9 @@ POST {{url}}/auth/login
 Content-Type: application/json
 
 {
-    "username": "rama123",
-    "password": "Rama123."
+    "username": "juan123",
+    "password": "Juan123@"
+
 }
 
 ###
@@ -27,9 +28,9 @@ Content-Type: application/json
 Authorization: Bearer {{token}}
 
 {
-    "name": 3993,
-    "duration": "hola",
-    "price": 10000
+    "name": "Primario",
+    "duration": 1,
+    "price": 45000
 }
 
 ### Modificar un plan

@@ -26,14 +26,17 @@ export const authentication = passport.authenticate("jwt", {
   session: false,
 });
 
-export const authorization = (rol) => {
-  return (req, res, next) => {
-    const userRol = req.user.rol;
-    if (userRol !== rol) {
-      return res
-        .status(403)
-        .json({ success: false, message: "Usuario no autorizado" });
+export const authorization = (role) => {
+   return (req, res, next) => {
+    const userRole = req.user.role;
+
+    if (!userRole || userRole.toUpperCase() !== role.toUpperCase()) {
+      return res.status(403).json({
+        success: false,
+        message: "Usuario no autorizado",
+      });
     }
+
     next();
   };
 };
@@ -68,7 +71,7 @@ router.post(
 
     const payload = { 
       userId: users[0].id,
-      rol: users[0].rol
+      role: users[0].role
     };
 
     const token = jwt.sign(payload, process.env.JWT_SECRET, {

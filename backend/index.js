@@ -16,7 +16,7 @@ import paymentsRouter from "./payments.js";
 import teacher_subjectsRouter from "./teacher_subjects.js";
 import student_TutorsRouter  from "./student_tutors.js";
 
-connectDB();
+await connectDB();
 
 const app = express();
 const port = 3000;

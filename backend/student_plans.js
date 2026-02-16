@@ -6,16 +6,18 @@ import {
   validateStudentPlans,
   validateEditStudentPlans,
 } from "./validations.js";
-import { authentication } from "./auth.js";
+import { authentication, authorization } from "./auth.js";
 
 const router = express.Router();
 
 router.get("/", authentication, async (req, res) => {
   let sql =
-    "SELECT s.id AS student_id, p.id AS plan_id, paid_amount, start_date \
+    "SELECT s.id AS student_id, p.id AS plan_id, paid_amount, start_date, t.id AS teacher_id\
 FROM student_plans sp \
 JOIN students s ON sp.student_id = s.id \
-JOIN plans p ON sp.plan_id = p.id";
+JOIN plans p ON sp.plan_id = p.id \
+JOIN teachers t ON sp.teacher_id = t.id";
+
 
   const [studentPlans] = await db.execute(sql);
   res.json({ success: true, studentPlans });
@@ -36,9 +38,11 @@ router.get(
        p.name AS plan_name, \
        sp.paid_amount, \
        sp.start_date \
+       t.id AS teacher_id \
 FROM student_plans sp \
 JOIN students s ON sp.student_id = s.id \
 JOIN plans p ON sp.plan_id = p.id \
+JOIN teachers t ON sp.teacher_id = t.id \
 WHERE sp.id = ?",
       [id],
     );
@@ -59,11 +63,11 @@ router.post(
   validateStudentPlans,
   checkValidations,
   async (req, res) => {
-    const { student_id, plan_id, paid_amount, start_date } = req.body;
+    const { student_id, plan_id, paid_amount, start_date, teacher_id } = req.body;
 
     const [result] = await db.execute(
-      "INSERT INTO student_plans (student_id, plan_id, paid_amount, start_date) VALUES (?, ?, ?, ?)",
-      [student_id, plan_id, paid_amount, start_date],
+      "INSERT INTO student_plans (student_id, plan_id, paid_amount, start_date, teacher_id) VALUES (?, ?, ?, ?, ?)",
+      [student_id, plan_id, paid_amount, start_date, teacher_id],
     );
 
     res.status(201).json({
@@ -74,6 +78,7 @@ router.post(
         plan_id,
         paid_amount,
         start_date,
+        teacher_id
       },
       message: "Plan asignado al estudiante, exitosamente",
     });
@@ -103,8 +108,8 @@ router.put(
     const { student_id, plan_id, paid_amount, start_date } = req.body;
 
     await db.execute(
-      "UPDATE student_plans SET student_id = ?, plan_id = ?, paid_amount = ?, start_date = ? WHERE id = ?",
-      [student_id, plan_id, paid_amount, start_date, id],
+      "UPDATE student_plans SET student_id = ?, plan_id = ?, paid_amount = ?, start_date = ?, teacher_id = ? WHERE id = ?",
+      [student_id, plan_id, paid_amount, start_date, teacher_id, id],
     );
 
     res.json({
@@ -115,6 +120,7 @@ router.put(
         plan_id,
         paid_amount,
         start_date,
+        teacher_id
       },
       message: "Registro actualizado exitosamente",
     });

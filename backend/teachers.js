@@ -45,20 +45,29 @@ router.get(
 
 
 //VER LIQUIDACIONES DE UN DOCENTE
-router.get("/:id/liquidations", async (req, res) => {
-  const { id } = req.params;
+router.get(
+  "/:id/liquidations",
+  authentication,
+  authorization("ADMIN"),
+  validateID,
+  checkValidations,
+  async (req, res) => {
+    const { id } = req.params;
 
-  try {
-    const liquidations = await db("teacher_liquidations")
-      .where("teacher_id", id)
-      .orderBy("month", "desc");
+    try {
+      const [liquidations] = await db.execute(
+        "SELECT * FROM teacher_liquidations WHERE teacher_id = ? ORDER BY id DESC",
+        [id]
+      );
 
-    res.json(liquidations);
+      res.json({ success: true, data: liquidations });
 
-  } catch (error) {
-    res.status(500).json({ error: "Error al obtener liquidaciones" });
+    } catch (error) {
+      res.status(500).json({ error: "Error al obtener liquidaciones" });
+    }
   }
-});
+);
+
 
 
 router.post(
@@ -90,24 +99,49 @@ router.post("/:id/liquidate",
   validateID, 
   checkValidations, 
   async (req, res) => {
-  const { id } = req.params;
+    console.log("ENTRO AL ENDPOINT NUEVO");
+    const { id } = req.params;
     const { month } = req.body; // ejemplo: "2026-02"
+
+    console.log("Teacher ID:", id);
+    console.log("Month recibido:", month);
+
+
+    const [debugRows] = await db.execute(
+  `
+  SELECT 
+    p.amount,
+    p.payment_date,
+    sp.teacher_id
+  FROM payments p
+  JOIN student_plans sp ON sp.id = p.student_plan_id
+  WHERE sp.teacher_id = ?
+  `,
+  [id]
+);
+
+console.log("DEBUG ROWS:", debugRows);
+
 
     try {
       // Calcular total recaudado del docente en ese mes
       const [rows] = await db.execute(
-        `
+       `
         SELECT SUM(p.amount) AS total
         FROM payments p
         JOIN student_plans sp ON sp.id = p.student_plan_id
         WHERE sp.teacher_id = ?
-        AND DATE_FORMAT(p.created_at, '%Y-%m') = ?
+        AND p.payment_date >= ?
+        AND p.payment_date < DATE_ADD(?, INTERVAL 1 MONTH)
         `,
-        [id, month]
+        [id, `${month}-01`, `${month}-01`]
       );
+      console.log("ROWS RESULT:", rows);
+      const totalCollected = Number(rows[0].total) || 0;
+      const netSalary = Number(totalCollected) * 0.75;
 
-      const totalCollected = rows[0].total || 0;
-      const netSalary = totalCollected * 0.75;
+      console.log("TOTAL COLLECTED:", totalCollected);
+      console.log("NET SALARY:", netSalary);
 
       // Insertar liquidación
       await db.execute(

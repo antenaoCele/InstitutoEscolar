@@ -31,6 +31,7 @@ router.get("/", authentication, authorization("ADMIN"), async (req, res) => {
 router.get(
   "/:id",
   authentication,
+  authorization("ADMIN"),
   validateID,
   checkValidations,
   async (req, res) => {

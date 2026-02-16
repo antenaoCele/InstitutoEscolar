@@ -6,8 +6,9 @@ POST {{url}}/auth/login
 Content-Type: application/json
 
 {
-    "username": "rama123",
-    "password": "Rama123."
+    "username": "juan123",
+    "password": "Juan123@"
+
 }
 
 ###
@@ -39,7 +40,7 @@ Authorization: Bearer {{token}}
 
 {
     "student_plan_id": 1,
-    "amount": 15000,
+    "amount": 30000,
     "payment_date": "2026-02-10",
     "payment_method": "transferencia"
 }
