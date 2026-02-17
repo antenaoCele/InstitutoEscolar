@@ -1,0 +1,59 @@
+@url=http://localhost:3000
+
+###LOGUEARME
+# @name login
+POST {{url}}/auth/login
+Content-Type: application/json
+
+{
+    "username": "juan123",
+    "password": "Juan123@"
+}
+
+###
+@token = {{login.response.body.token}}  
+
+
+
+### Consultar usuarios
+GET {{url}}/users
+Authorization: Bearer {{token}}
+
+### Consultar por un usuario
+GET {{url}}/users/1
+Authorization: Bearer {{token}}
+
+
+### Crear usuario
+POST {{url}}/users
+Content-Type: application/json
+
+{
+    "first_name": "Ana",
+    "last_name": "Gomez", 
+    "username": "ana123", 
+    "password": "Ana123456@",
+    "role": "DOCENTE"
+}
+
+
+### Modificar usuario 
+PUT {{url}}/users/5
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+    "first_name": "Ana",
+    "last_name": "Gomez", 
+    "username": "ana123", 
+    "password": "Ana123456@",
+    "role": "DOCENTE"
+}
+
+
+### Eliminar usuario 
+DELETE {{url}}/users/1
+Authorization: Bearer {{token}}
+
+
+

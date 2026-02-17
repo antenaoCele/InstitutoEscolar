@@ -210,12 +210,14 @@ export const validateSchedules = [
     .custom(async (teacher_id, { req }) => {
       const { days, start_time, end_time } = req.body;
 
-      const [teacher] = await db.execute( `SELECT id FROM teachers WHERE id = ?`, [teacher_id]);
+      const [teacher] = await db.execute(
+        `SELECT id FROM teachers WHERE id = ?`,
+        [teacher_id],
+      );
 
       if (teacher.length === 0) {
         throw new Error("El docente no existe.");
       }
-
 
       const [rows] = await db.execute(
         `SELECT id FROM schedules
@@ -223,16 +225,15 @@ export const validateSchedules = [
         AND days = ?
         AND (? < end_time)
         AND (? > start_time)`,
-      [teacher_id, days, start_time, end_time]
+        [teacher_id, days, start_time, end_time],
       );
 
       if (rows.length > 0) {
         throw new Error("El docente ya tiene una clase en ese día y horario.");
-      } 
+      }
 
-  return true;
-}),
-
+      return true;
+    }),
 
   body("start_time")
     .notEmpty()
@@ -876,7 +877,7 @@ export const validateUsers = [
         [value],
       );
       if (rows.length > 0) {
-        throw new Error("El usuario ya está registrado");
+        throw new Error("El nombre de usuario ya está registrado");
       }
       return true;
     }),
@@ -894,6 +895,15 @@ export const validateUsers = [
     .withMessage(
       "La contraseña debe tener al menos 8 caracteres, una mayúscula, una minúscula, un número y un símbolo.",
     ),
+
+  body("role")
+    .trim()
+    .notEmpty()
+    .withMessage("El rol es obligatorio.")
+    .isAlpha("es-ES", { ignore: " " })
+    .withMessage("El rol solo puede contener letras.")
+    .isIn("ADMIN", "DOCENTE")
+    .withMessage("El rol debe ser ADMIN o DOCENTE."),
 ];
 
 // =============================================================================
@@ -902,11 +912,11 @@ export const validateUsers = [
 
 export const validateEditUsers = [
   body("username")
-    .isAlpha("es-ES")
-    .withMessage("El nombre de usuario debe ser una cadena de texto.")
     .trim()
     .notEmpty()
     .withMessage("El nombre de usuario es obligatorio.")
+    .isAlphanumeric("es-ES")
+    .withMessage("El nombre de usuario debe ser alfanumérico y sin espacios.")
     .isLength({ max: 45 })
     .withMessage("El nombre de usuario no puede tener más de 45 caracteres.")
     .custom(async (value, { req }) => {
@@ -916,7 +926,7 @@ export const validateEditUsers = [
         [value, id],
       );
       if (rows.length > 0) {
-        throw new Error("Usuario ya está registrado");
+        throw new Error("El nombre de usuario ya está registrado");
       }
       return true;
     }),
