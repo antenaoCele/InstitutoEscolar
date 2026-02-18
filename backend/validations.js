@@ -304,7 +304,7 @@ export const validateTeachers = [
 export const validateTutors = [
   validateNames("first_name"),
   validateNames("last_name"),
-  validateDNI("dni", "students"),
+  validateDNI("dni", "tutors"),
   validatePhone(),
 ];
 
@@ -443,60 +443,24 @@ export const validateStudentPlans = [
 // =============================================================================
 
 export const validateEditStudentPlans = [
-  body("student_id")
-    .notEmpty()
-    .withMessage("El estudiante es obligatorio.")
-    .isInt({ min: 1 })
-    .withMessage("El estudiante debe ser válido")
-    .custom(async (student_id) => {
-      const [rows] = await db.execute("SELECT id FROM students WHERE id = ?", [
-        student_id,
-      ]);
-      if (rows.length === 0) {
-        throw new Error("El estudiante no existe.");
-      }
-      return true;
-    }),
+  validateForeignId("student_id", "students", "true"),
+  validateForeignId("plan_id", "plans", "true"),
+  body("plan_id").custom(async (plan_id, { req }) => {
+    const recordId = req.params.id;
+    const studentId = req.body.student_id;
 
-  body("plan_id")
-    .notEmpty()
-    .withMessage("El plan es obligatorio.")
-    .isInt({ min: 1 })
-    .withMessage("El plan debe ser válido.")
-    .custom(async (plan_id, { req }) => {
-      const [rows] = await db.execute("SELECT id FROM plans WHERE id = ?", [
-        plan_id,
-      ]);
-      if (rows.length === 0) {
-        throw new Error("El plan no existe.");
-      }
+    const [relation] = await db.execute(
+      "SELECT id FROM student_plans WHERE student_id = ? AND plan_id = ? AND id != ?",
+      [studentId, plan_id, recordId],
+    );
 
-      const recordId = req.params.id;
-      const studentId = req.body.student_id;
+    if (relation.length > 0) {
+      throw new Error("El alumno ya tiene asignado este plan.");
+    }
+    return true;
+  }),
 
-      const [relation] = await db.execute(
-        "SELECT id FROM student_plans WHERE student_id = ? AND plan_id = ? AND id != ?",
-        [studentId, plan_id, recordId],
-      );
-
-      if (relation.length > 0) {
-        throw new Error("El alumno ya tiene asignado este plan.");
-      }
-
-      return true;
-    }),
-
-  body("paid_amount")
-    .notEmpty()
-    .withMessage("El monto pagado es obligatorio.")
-    .isDecimal({ decimal_digits: "0,2" })
-    .withMessage("El monto pagado debe ser válido."),
-
-  body("start_date")
-    .notEmpty()
-    .withMessage("La fecha de inicio es obligatoria.")
-    .isISO8601()
-    .withMessage("La fecha debe tener formato AAAA-MM-DD."),
+  validateDate("start_date"),
 ];
 
 // =============================================================================
@@ -504,45 +468,19 @@ export const validateEditStudentPlans = [
 // =============================================================================
 
 export const validateStudentTutors = [
-  body("student_id")
-    .notEmpty()
-    .withMessage("El alumno es obligatorio.")
-    .isInt({ min: 1 })
-    .withMessage("El alumno debe ser válido.")
-    .custom(async (value) => {
-      const [rows] = await db.execute("SELECT id FROM students WHERE id = ?", [
-        value,
-      ]);
-      if (rows.length === 0) {
-        throw new Error("El alumno no existe.");
-      }
-      return true;
-    }),
+  validateForeignId("student_id", "students"),
+  validateForeignId("tutor_id", "tutors"),
+  body("tutor_id").custom(async (value, { req }) => {
+    const [relacion] = await db.execute(
+      "SELECT id FROM student_tutors WHERE student_id = ? AND tutor_id = ?",
+      [req.body.student_id, value],
+    );
 
-  body("tutor_id")
-    .notEmpty()
-    .withMessage("El tutor es obligatorio.")
-    .isInt({ min: 1 })
-    .withMessage("El tutor debe ser válido.")
-    .custom(async (value, { req }) => {
-      const [rows] = await db.execute("SELECT id FROM tutors WHERE id = ?", [
-        value,
-      ]);
-      if (rows.length === 0) {
-        throw new Error("El tutor no existe.");
-      }
-
-      const [relacion] = await db.execute(
-        "SELECT id FROM student_tutors WHERE student_id = ? AND tutor_id = ?",
-        [req.body.student_id, value],
-      );
-
-      if (relacion.length > 0) {
-        throw new Error("El tutor ya está asignado a este alumno.");
-      }
-
-      return true;
-    }),
+    if (relacion.length > 0) {
+      throw new Error("El tutor ya está asignado a este alumno.");
+    }
+    return true;
+  }),
 ];
 
 // =============================================================================

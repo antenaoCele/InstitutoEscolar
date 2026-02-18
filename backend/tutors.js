@@ -71,7 +71,7 @@ router.put(
     }
 
     await db.execute(
-      "UPDATE tutors SETfirst_name=?, last_name=?, phone=?, dni=? WHERE id=?",
+      "UPDATE tutors SET first_name=?, last_name=?, phone=?, dni=? WHERE id=?",
       [first_name, last_name, phone, dni, id],
     );
 
