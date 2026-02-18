@@ -4,9 +4,9 @@ import {
   checkValidations,
   validateID,
   validateSubjects,
-  validateEditSubjects
+  validateEditSubjects,
 } from "./validations.js";
-import { authentication } from "./auth.js";
+import { authentication, authorization } from "./auth.js";
 
 const router = express.Router();
 
@@ -23,10 +23,9 @@ router.get(
   async (req, res) => {
     const id = Number(req.params.id);
 
-    const [subjects] = await db.execute(
-      "SELECT * FROM subjects WHERE id = ?",
-      [id]
-    );
+    const [subjects] = await db.execute("SELECT * FROM subjects WHERE id = ?", [
+      id,
+    ]);
 
     if (subjects.length === 0) {
       return res
@@ -35,12 +34,13 @@ router.get(
     }
 
     res.json({ success: true, materia: subjects[0] });
-  }
+  },
 );
 
 router.post(
   "/",
   authentication,
+  authorization("ADMIN"),
   validateSubjects,
   checkValidations,
   async (req, res) => {
@@ -48,7 +48,7 @@ router.post(
 
     const [result] = await db.execute(
       "INSERT INTO subjects (name) VALUES (?)",
-      [name]
+      [name],
     );
 
     res.status(201).json({
@@ -56,22 +56,22 @@ router.post(
       data: { id: result.insertId, name },
       message: "Asignatura creada exitosamente",
     });
-  }
+  },
 );
 
 router.put(
   "/:id",
   authentication,
+  authorization("ADMIN"),
   validateID,
   validateEditSubjects,
   checkValidations,
   async (req, res) => {
     const id = Number(req.params.id);
 
-    const [subjects] = await db.execute(
-      "SELECT * FROM subjects WHERE id = ?",
-      [id]
-    );
+    const [subjects] = await db.execute("SELECT * FROM subjects WHERE id = ?", [
+      id,
+    ]);
 
     if (subjects.length === 0) {
       return res
@@ -81,31 +81,28 @@ router.put(
 
     const { name } = req.body;
 
-    await db.execute(
-      "UPDATE subjects SET name = ? WHERE id = ?",
-      [name, id]
-    );
+    await db.execute("UPDATE subjects SET name = ? WHERE id = ?", [name, id]);
 
     res.json({
       success: true,
       data: { name },
       message: "Asignatura actualizada exitosamente",
     });
-  }
+  },
 );
 
 router.delete(
   "/:id",
   authentication,
+  authorization("ADMIN"),
   validateID,
   checkValidations,
   async (req, res) => {
     const id = Number(req.params.id);
 
-    const [subjects] = await db.execute(
-      "SELECT * FROM subjects WHERE id = ?",
-      [id]
-    );
+    const [subjects] = await db.execute("SELECT * FROM subjects WHERE id = ?", [
+      id,
+    ]);
 
     if (subjects.length === 0) {
       return res
@@ -115,7 +112,7 @@ router.delete(
 
     const [registeredSubject] = await db.execute(
       "SELECT * FROM teacher_subjects WHERE subject_id = ?",
-      [id]
+      [id],
     );
 
     if (registeredSubject.length > 0) {
@@ -129,7 +126,7 @@ router.delete(
     await db.execute("DELETE FROM subjects WHERE id = ?", [id]);
 
     res.json({ success: true, message: "Asignatura eliminada exitosamente" });
-  }
+  },
 );
 
 export default router;
