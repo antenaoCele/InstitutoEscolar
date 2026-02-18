@@ -5,15 +5,13 @@ import {
   checkValidations,
   validateSchedules,
 } from "./validations.js";
-import { authentication } from "./auth.js";
-// import { body } from "express-validator";
+import { authentication, authorization } from "./auth.js";
 
 const router = express.Router();
 
-// GET TODOS
 router.get("/", authentication, async (req, res) => {
   const [rows] = await db.execute(`
-    SELECT s.teacher_id AS teacher, s.start_time, s.end_time, s.days, s.id
+    SELECT s.id, s.teacher_id AS teacher, s.start_time, s.end_time, s.monday, s.tuesday, s.wednesday, s.thursday, s.friday, s.saturday
     FROM schedules s
     JOIN teachers t ON s.teacher_id = t.id
   `);
@@ -21,7 +19,6 @@ router.get("/", authentication, async (req, res) => {
   res.json({ success: true, schedules: rows });
 });
 
-// GET POR ID
 router.get(
   "/:id",
   authentication,
@@ -32,7 +29,7 @@ router.get(
 
     const [schedules] = await db.execute(
       `
-      SELECT s.teacher_id AS teacher, s.start_time, s.end_time, s.days, s.id
+      SELECT s.id, s.teacher_id AS teacher, s.start_time, s.end_time, s.monday, s.tuesday, s.wednesday, s.thursday, s.friday, s.saturday
       FROM schedules s
       JOIN teachers t ON s.teacher_id = t.id
       WHERE s.id = ?
@@ -50,19 +47,39 @@ router.get(
   },
 );
 
-// CREAR
 router.post(
   "/",
   authentication,
+  authorization("ADMIN"),
   validateSchedules,
   checkValidations,
   async (req, res) => {
-    const { teacher_id, start_time, end_time, days } = req.body;
+    const {
+      teacher_id,
+      start_time,
+      end_time,
+      monday,
+      tuesday,
+      wednesday,
+      thursday,
+      friday,
+      saturday,
+    } = req.body;
 
     const [result] = await db.execute(
-      `INSERT INTO schedules (teacher_id, start_time, end_time, days)
-       VALUES (?, ?, ?, ?)`,
-      [teacher_id, start_time, end_time, days],
+      `INSERT INTO schedules (teacher_id, start_time, end_time, monday, tuesday, wednesday, thursday, friday, saturday)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [
+        teacher_id,
+        start_time,
+        end_time,
+        monday,
+        tuesday,
+        wednesday,
+        thursday,
+        friday,
+        saturday,
+      ],
     );
 
     res.status(201).json({
@@ -79,10 +96,10 @@ router.post(
   },
 );
 
-// EDITAR
 router.put(
   "/:id",
   authentication,
+  authorization("ADMIN"),
   validateID,
   validateSchedules,
   checkValidations,
@@ -113,10 +130,10 @@ router.put(
   },
 );
 
-// ELIMINAR
 router.delete(
   "/:id",
   authentication,
+  authorization("ADMIN"),
   validateID,
   checkValidations,
   async (req, res) => {
