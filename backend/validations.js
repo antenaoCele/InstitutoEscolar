@@ -128,7 +128,6 @@ export const validateMoney = (monto) =>
 // ----------------------
 // Validación FECHAS
 // ----------------------
-import { body } from "express-validator";
 
 export const validateDate = (fieldName) =>
   body(fieldName)
