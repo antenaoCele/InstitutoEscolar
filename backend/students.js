@@ -6,7 +6,7 @@ import {
   validateEditStudents,
   validateID,
 } from "./validations.js";
-import { authentication } from "./auth.js";
+import { authentication, authorization } from "./auth.js";
 
 const router = express.Router();
 
