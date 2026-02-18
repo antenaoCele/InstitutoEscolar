@@ -128,22 +128,28 @@ export const validateMoney = (monto) =>
 // ----------------------
 // Validación FECHAS
 // ----------------------
-export const validateDate = (date) =>
-  body(date)
+import { body } from "express-validator";
+
+export const validateDate = (fieldName) =>
+  body(fieldName)
     .trim()
     .notEmpty()
     .withMessage("Este campo es obligatorio.")
     .isISO8601()
     .withMessage("La fecha debe tener formato válido (YYYY-MM-DD).")
     .custom((value) => {
-      const date = new Date(value);
+      const inputDate = new Date(value);
       const today = new Date();
 
-      if (date > today) {
+      // Normalizar ambas fechas a medianoche
+      inputDate.setHours(0, 0, 0, 0);
+      today.setHours(0, 0, 0, 0);
+
+      if (inputDate > today) {
         throw new Error("La fecha no puede ser futura.");
       }
+      return true;
     });
-
 // ------------------------------
 // Validación IDS de otras tablas
 // ------------------------------
