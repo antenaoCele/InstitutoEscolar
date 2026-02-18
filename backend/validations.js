@@ -1,9 +1,6 @@
 import { param, body, validationResult } from "express-validator";
 import { db } from "./db.js";
 
-import { body } from "express-validator";
-import { db } from "./db.js";
-
 // ----------------------
 // Validación nombre y apellido
 // ----------------------
