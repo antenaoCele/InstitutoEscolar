@@ -12,7 +12,7 @@ const router = express.Router();
 
 router.get("/", authentication, async (req, res) => {
   const [students] = await db.execute(
-    "SELECT id, first_name, last_name, dni, school, birth_date, enrolled, level, grade FROM students"
+    "SELECT id, first_name, last_name, dni, school, birth_date, enrolled, level, grade FROM students",
   );
   res.json({ success: true, students });
 });
@@ -36,33 +36,54 @@ router.get(
     }
 
     res.json({ success: true, student: students[0] });
-  }
+  },
 );
 
 router.post(
   "/",
   authentication,
+  authorization("ADMIN"),
   validateStudents,
   checkValidations,
   async (req, res) => {
-    const { first_name, last_name, dni, school, birth_date, enrolled, level, grade} = req.body;
+    const {
+      first_name,
+      last_name,
+      dni,
+      school,
+      birth_date,
+      enrolled,
+      level,
+      grade,
+    } = req.body;
 
     const [result] = await db.execute(
       "INSERT INTO students (first_name, last_name, dni, school, birth_date, enrolled, level, grade) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
-      [first_name, last_name, dni, school, birth_date, enrolled, level, grade]
+      [first_name, last_name, dni, school, birth_date, enrolled, level, grade],
     );
 
     res.status(201).json({
       success: true,
-      data: { id: result.insertId, first_name, last_name, dni, school, birth_date, enrolled, level, grade },
+      data: {
+        id: result.insertId,
+        first_name,
+        last_name,
+        dni,
+        school,
+        birth_date,
+        enrolled,
+        level,
+        grade,
+      },
       message: "Alumno creado exitosamente",
     });
-  }
+  },
 );
 
 router.put(
   "/:id",
   authentication,
+  authorization("ADMIN"),
   validateID,
   validateEditStudents,
   checkValidations,
@@ -79,24 +100,53 @@ router.put(
         .json({ success: false, message: "Alumno no encontrado" });
     }
 
-    const { first_name, last_name, dni, school, birth_date, enrolled, level, grade } = req.body;
+    const {
+      first_name,
+      last_name,
+      dni,
+      school,
+      birth_date,
+      enrolled,
+      level,
+      grade,
+    } = req.body;
 
     await db.execute(
       "UPDATE students SET first_name = ?, last_name = ?, dni = ?, school = ?, birth_date = ?, enrolled = ?, level = ?, grade = ?, dni = ? WHERE id = ?",
-      [first_name, last_name, dni, school, birth_date, enrolled, level, grade, id]
+      [
+        first_name,
+        last_name,
+        dni,
+        school,
+        birth_date,
+        enrolled,
+        level,
+        grade,
+        id,
+      ],
     );
 
     res.json({
       success: true,
-      data: { first_name, last_name, dni, school, birth_date, enrolled, level, grade },
+      data: {
+        first_name,
+        last_name,
+        dni,
+        school,
+        birth_date,
+        enrolled,
+        level,
+        grade,
+      },
       message: "Alumno actualizado exitosamente",
     });
-  }
+  },
 );
 
 router.delete(
   "/:id",
   authentication,
+  authorization("ADMIN"),
   validateID,
   checkValidations,
   async (req, res) => {
@@ -112,11 +162,10 @@ router.delete(
         .json({ success: false, message: "Alumno no encontrado" });
     }
 
-
     await db.execute("DELETE FROM students WHERE id = ?", [id]);
 
     res.json({ success: true, message: "Alumno eliminado exitosamente" });
-  }
+  },
 );
 
 export default router;
