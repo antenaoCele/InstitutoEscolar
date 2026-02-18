@@ -18,7 +18,6 @@ JOIN students s ON sp.student_id = s.id \
 JOIN plans p ON sp.plan_id = p.id \
 JOIN teachers t ON sp.teacher_id = t.id";
 
-
   const [studentPlans] = await db.execute(sql);
   res.json({ success: true, studentPlans });
 });
@@ -60,10 +59,12 @@ WHERE sp.id = ?",
 router.post(
   "/",
   authentication,
+  authorization("ADMIN"),
   validateStudentPlans,
   checkValidations,
   async (req, res) => {
-    const { student_id, plan_id, paid_amount, start_date, teacher_id } = req.body;
+    const { student_id, plan_id, paid_amount, start_date, teacher_id } =
+      req.body;
 
     const [result] = await db.execute(
       "INSERT INTO student_plans (student_id, plan_id, paid_amount, start_date, teacher_id) VALUES (?, ?, ?, ?, ?)",
@@ -78,7 +79,7 @@ router.post(
         plan_id,
         paid_amount,
         start_date,
-        teacher_id
+        teacher_id,
       },
       message: "Plan asignado al estudiante, exitosamente",
     });
@@ -88,6 +89,7 @@ router.post(
 router.put(
   "/:id",
   authentication,
+  authorization("ADMIN"),
   validateID,
   validateEditStudentPlans,
   checkValidations,
@@ -120,7 +122,7 @@ router.put(
         plan_id,
         paid_amount,
         start_date,
-        teacher_id
+        teacher_id,
       },
       message: "Registro actualizado exitosamente",
     });
@@ -130,6 +132,7 @@ router.put(
 router.delete(
   "/:id",
   authentication,
+  authorization("ADMIN"),
   validateID,
   checkValidations,
   async (req, res) => {

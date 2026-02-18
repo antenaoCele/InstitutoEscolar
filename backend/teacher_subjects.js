@@ -6,11 +6,11 @@ import {
   validateID,
   validateEditTeacherSubjects,
 } from "./validations.js";
-import { authentication } from "./auth.js";
+import { authentication, authorization } from "./auth.js";
 
 const router = express.Router();
 
-router.get("/", authentication, async (req, res) => {
+router.get("/", authentication, authorization("ADMIN"), async (req, res) => {
   let sql =
     "SELECT ts.id, ts.teacher_id, ts.subject_id \
     FROM teacher_subjects ts \
@@ -24,6 +24,7 @@ router.get("/", authentication, async (req, res) => {
 router.post(
   "/",
   authentication,
+  authorization("ADMIN"),
   validateTeacherSubjects,
   checkValidations,
   async (req, res) => {
@@ -31,7 +32,7 @@ router.post(
 
     const [result] = await db.execute(
       "INSERT INTO teacher_subjects (teacher_id, subject_id) VALUES (?, ?)",
-      [teacher_id, subject_id]
+      [teacher_id, subject_id],
     );
 
     res.status(201).json({
@@ -43,12 +44,13 @@ router.post(
       },
       message: "Materia asignada al docente exitosamente",
     });
-  }
+  },
 );
 
 router.put(
   "/:id",
   authentication,
+  authorization("ADMIN"),
   validateID,
   validateEditTeacherSubjects,
   checkValidations,
@@ -88,6 +90,7 @@ router.put(
 router.delete(
   "/:id",
   authentication,
+  authorization("ADMIN"),
   validateID,
   checkValidations,
   async (req, res) => {

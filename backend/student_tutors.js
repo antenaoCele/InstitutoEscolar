@@ -6,7 +6,7 @@ import {
   validateID,
   validateEditStudentTutors,
 } from "./validations.js";
-import { authentication } from "./auth.js";
+import { authentication, authorization } from "./auth.js";
 
 const router = express.Router();
 
@@ -24,6 +24,7 @@ FROM student_tutors st \
 router.post(
   "/",
   authentication,
+  authorization("ADMIN"),
   validateStudentTutors,
   checkValidations,
   async (req, res) => {
@@ -31,7 +32,7 @@ router.post(
 
     const [result] = await db.execute(
       "INSERT INTO student_tutors (student_id, tutor_id) VALUES (?, ?)",
-      [student_id, tutor_id]
+      [student_id, tutor_id],
     );
 
     res.status(201).json({
@@ -43,12 +44,13 @@ router.post(
       },
       message: "Tutor asignado al estudiante exitosamente",
     });
-  }
+  },
 );
 
 router.put(
   "/:id",
   authentication,
+  authorization("ADMIN"),
   validateID,
   validateEditStudentTutors,
   checkValidations,
@@ -88,6 +90,7 @@ router.put(
 router.delete(
   "/:id",
   authentication,
+  authorization("ADMIN"),
   validateID,
   checkValidations,
   async (req, res) => {
