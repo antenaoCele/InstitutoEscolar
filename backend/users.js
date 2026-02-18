@@ -56,13 +56,13 @@ router.post("/", validateUsers, checkValidations, async (req, res) => {
   const hashedPassword = await bcrypt.hash(password, 12);
 
   const [result] = await db.execute(
-    "INSERT INTO users (first_name, password, last_name, username) VALUES (?,?,?,?)",
-    [first_name, hashedPassword, last_name, username],
+    "INSERT INTO users (first_name, password, last_name, username, role) VALUES (?,?,?,?,?)",
+    [first_name, hashedPassword, last_name, username, role],
   );
 
   res.status(201).json({
     success: true,
-    data: { id: result.insertId, first_name, last_name, username },
+    data: { id: result.insertId, first_name, last_name, username, role },
   });
 });
 
