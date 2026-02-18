@@ -1,24 +1,20 @@
 import express from "express";
 import { db } from "./db.js";
 import { validateID, checkValidations, validateTutors } from "./validations.js";
-import passport from "passport";
+import { authentication, authorization } from "./auth.js";
 
 const router = express.Router();
 
-router.get(
-  "/",
-  passport.authenticate("jwt", { session: false }),
-  async (req, res) => {
-    const [tutors] = await db.execute("SELECT * FROM tutors");
-    res.json({ success: true, tutors });
-  },
-);
+router.get("/", authentication, async (req, res) => {
+  const [tutors] = await db.execute("SELECT * FROM tutors");
+  res.json({ success: true, tutors });
+});
 
 router.get(
   "/:id",
+  authentication,
   validateID,
   checkValidations,
-  passport.authenticate("jwt", { session: false }),
   async (req, res) => {
     const id = Number(req.params.id);
 
@@ -36,9 +32,10 @@ router.get(
 
 router.post(
   "/",
+  authentication,
+  authorization("ADMIN"),
   validateTutors,
   checkValidations,
-  passport.authenticate("jwt", { session: false }),
   async (req, res) => {
     const { first_name, last_name, phone, dni } = req.body;
 
@@ -56,10 +53,11 @@ router.post(
 
 router.put(
   "/:id",
+  authentication,
+  authorization("ADMIN"),
   validateID,
   validateTutors,
   checkValidations,
-  passport.authenticate("jwt", { session: false }),
   async (req, res) => {
     const { first_name, last_name, phone, dni } = req.body;
     const { id } = req.params;
@@ -86,9 +84,10 @@ router.put(
 
 router.delete(
   "/:id",
+  authentication,
+  authorization("ADMIN"),
   validateID,
   checkValidations,
-  passport.authenticate("jwt", { session: false }),
   async (req, res) => {
     const { id } = req.params;
 
