@@ -112,13 +112,14 @@ router.put(
     } = req.body;
 
     await db.execute(
-      "UPDATE students SET first_name = ?, last_name = ?, dni = ?, school = ?, birth_date = ?, enrolled = ?, level = ?, grade = ?, dni = ? WHERE id = ?",
+      "UPDATE students SET first_name = ?, last_name = ?, dni = ?, school = ?, birth_date = ?, enrolled = ?, level = ?, grade = ? WHERE id = ?",
       [first_name, last_name, dni, school, birth_date, enrolled, level, grade],
     );
 
     res.json({
       success: true,
       data: {
+        id: result.insertId,
         first_name,
         last_name,
         dni,
