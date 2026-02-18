@@ -1,32 +1,30 @@
 @url = http://localhost:3000
 
-
 ###
 # @name login
 POST {{url}}/auth/login
 Content-Type: application/json
 
 {
-    "username": "juan123",
-    "password": "Juan123@"
+    "username": "rama123",
+    "password": "Rama123."
 }
 
 ###
 @token = {{login.response.body.token}}  
 
 
-
-### GET todos los alumnos
+###
 GET {{url}}/students
 Authorization: Bearer {{token}}
 
 
-### GET por id
+###
 GET {{url}}/students/1
 Authorization: Bearer {{token}}
 
 
-### Crear alumno
+###
 POST {{url}}/students
 Content-Type: application/json
 Authorization: Bearer {{token}}
@@ -42,8 +40,7 @@ Authorization: Bearer {{token}}
   "grade": 7
 }
 
-
-### Modificar alumno
+###
 PUT {{url}}/students/12
 Content-Type: application/json
 Authorization: Bearer {{token}}
@@ -59,6 +56,6 @@ Authorization: Bearer {{token}}
   "grade": 2
 }
 
-### Eliminar alumno
+###
 DELETE {{url}}/students/12
 Authorization: Bearer {{token}}
