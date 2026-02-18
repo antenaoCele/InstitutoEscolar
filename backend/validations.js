@@ -1,8 +1,223 @@
 import { param, body, validationResult } from "express-validator";
 import { db } from "./db.js";
 
+import { body } from "express-validator";
+import { db } from "./db.js";
+
+// ----------------------
+// Validación nombre y apellido
+// ----------------------
+export const validateNames = (name) =>
+  body(name)
+    .trim()
+    .notEmpty()
+    .withMessage("Este campo es obligatorio.")
+    .isAlpha("es-ES", { ignore: " " })
+    .withMessage("Este campo solo puede contener letras.")
+    .isLength({ max: 45 })
+    .withMessage("No puedes superar los 45 caracteres.");
+
+// ----------------------
+// Validación username
+// ----------------------
+export const validateUsername = (isEdit = false) =>
+  body("username")
+    .trim()
+    .notEmpty()
+    .withMessage("El nombre de usuario es obligatorio.")
+    .isAlphanumeric("es-ES")
+    .withMessage("El nombre de usuario debe ser alfanumérico y sin espacios.")
+    .isLength({ max: 45 })
+    .withMessage("El nombre de usuario no puede tener más de 45 caracteres.")
+    .custom(async (value, { req }) => {
+      let query = "SELECT id FROM users WHERE username = ?";
+      const params = [value];
+
+      if (isEdit) {
+        const { id } = req.params;
+        query += " AND id != ?";
+        params.push(id);
+      }
+
+      const [rows] = await db.execute(query, params);
+      if (rows.length > 0)
+        throw new Error("El nombre de usuario ya está registrado");
+      return true;
+    });
+
+// ----------------------
+// Validación contraseña
+// ----------------------
+export const validatePassword = (optional = false) => {
+  let validator = body("password");
+  if (optional)
+    validator = validator.optional({ nullable: true, checkFalsy: true });
+
+  return validator
+    .isStrongPassword({
+      minLength: 8,
+      minLowercase: 1,
+      minUppercase: 1,
+      minNumbers: 1,
+      minSymbols: 1,
+    })
+    .withMessage(
+      "La contraseña debe tener al menos 8 caracteres, una mayúscula, una minúscula, un número y un símbolo.",
+    );
+};
+
+// ----------------------
+// Validación rol
+// ----------------------
+export const validateRole = () =>
+  body("role")
+    .trim()
+    .notEmpty()
+    .withMessage("El rol es obligatorio.")
+    .isAlpha("es-ES", { ignore: " " })
+    .withMessage("El rol solo puede contener letras.")
+    .isIn(["ADMIN", "DOCENTE"])
+    .withMessage("El rol debe ser ADMIN o DOCENTE.");
+
+// ----------------------
+// Validación DNI
+// ----------------------
+export const validateDNI = (fieldName = "dni", tableName, isEdit = false) =>
+  body(fieldName)
+    .isInt({ min: 1000000, max: 99999999 })
+    .withMessage("El DNI debe ser un número válido y hasta 8 dígitos.")
+    .custom(async (value, { req }) => {
+      let query = `SELECT id FROM ${tableName} WHERE ${fieldName} = ?`;
+      const params = [value];
+
+      if (isEdit) {
+        const { id } = req.params; // id del registro que estamos editando
+        query += " AND id != ?";
+        params.push(id);
+      }
+
+      const [rows] = await db.execute(query, params);
+      if (rows.length > 0) throw new Error(`${fieldName} ya registrado`);
+      return true;
+    });
+
+// ----------------------
+// Validación NUMERO
+// ----------------------
+export const validatePhone = () =>
+  body("phone")
+    .trim()
+    .isLength({ max: 20 })
+    .withMessage("El teléfono no puede superar los 20 caracteres.")
+    .matches(/^[0-9+\- ]+$/)
+    .withMessage("El teléfono solo puede contener números, + o -");
+
+// ----------------------
+// Validación MONTOS
+// ----------------------
+export const validateMoney = (monto) =>
+  body(monto)
+    .notEmpty()
+    .withMessage("El sueldo es obligatorio.")
+    .isDecimal({ decimal_digits: "1,2" })
+    .withMessage("El sueldo debe ser un número decimal válido.")
+    .custom((value) => {
+      if (parseFloat(value) <= 0) {
+        throw new Error("El sueldo debe ser mayor a 0");
+      }
+      return true;
+    });
+
+// ----------------------
+// Validación FECHAS
+// ----------------------
+export const validateDate = (date) =>
+  body(date)
+    .trim()
+    .notEmpty()
+    .withMessage("Este campo es obligatorio.")
+    .isISO8601()
+    .withMessage("La fecha debe tener formato válido (YYYY-MM-DD).")
+    .custom((value) => {
+      const date = new Date(value);
+      const today = new Date();
+
+      if (date > today) {
+        throw new Error("La fecha no puede ser futura.");
+      }
+    });
+
+// ------------------------------
+// Validación IDS de otras tablas
+// ------------------------------
+export const validateForeignId = (field, table, optional = false) => {
+  let validator = body(field);
+
+  if (optional) {
+    validator = validator.optional({ checkFalsy: true });
+  }
+
+  return validator
+    .notEmpty()
+    .withMessage("El campo es obligatorio.")
+    .isInt({ min: 1 })
+    .withMessage("El identificador debe ser válido.")
+    .custom(async (value) => {
+      const [rows] = await db.execute(`SELECT id FROM ${table} WHERE id = ?`, [
+        value,
+      ]);
+
+      if (rows.length === 0) {
+        throw new Error("El registro asociado no existe.");
+      }
+
+      return true;
+    });
+};
+
+// ------------------------------
+// Validación info estudiante
+// ------------------------------
+
+export const validateStudentInfo = () => [
+  // Estado de inscripción
+  body("enrolled")
+    .isBoolean()
+    .withMessage("La inscripción debe ser un valor booleano.")
+    .toBoolean(),
+
+  // Nivel educativo
+  body("level")
+    .isString()
+    .withMessage("El nivel debe ser un texto válido.")
+    .trim()
+    .toLowerCase()
+    .isIn(["inicial", "primario", "secundario", "universitario"])
+    .withMessage(
+      "El nivel debe ser inicial, primario, secundario o universitario.",
+    ),
+
+  // Grado / Año
+  body("grade")
+    .isInt()
+    .withMessage("El grado debe ser un número entero.")
+    .toInt()
+    .isIn([1, 2, 3, 4, 5, 6, 7])
+    .withMessage("La categoría debe ser del 1 al 7"),
+];
+
+// ------------------------------
+// Validación de HORA
+// ------------------------------
+export const validateHour = (hour) =>
+  body(hour)
+    .notEmpty()
+    .withMessage("La hora de fin es obligatoria.")
+    .matches(/^([01]\d|2[0-3]):([0-5]\d)$/)
+    .withMessage("La hora de fin debe tener formato HH:MM.");
+
 // =============================================================================
-// ID AND LOGINs
+// ID Y AUTH
 // =============================================================================
 
 export const checkValidations = (req, res, next) => {
@@ -25,49 +240,98 @@ export const validateLogin = [
 ];
 
 // =============================================================================
+// USERS
+// =============================================================================
+
+export const validateUsers = [
+  validateNames("first_name"),
+  validateNames("last_name"),
+  validateUsername(),
+  validatePassword(),
+  validateRole(),
+];
+
+// =============================================================================
+// USERS (PUT)
+// =============================================================================
+
+export const validateEditUsers = [
+  validateNames("first_name"),
+  validateNames("last_name"),
+  validateUsername(true), // true = ignorar su propio ID
+  validatePassword(true), // opcional, si no viene no valida
+  validateRole(),
+];
+
+// =============================================================================
+// STUDENTS
+// =============================================================================
+
+export const validateStudents = [
+  validateNames("first_name"),
+  validateNames("last_name"),
+  validateDNI("dni", "students"),
+  validateNames("school"),
+  validateDate("birth_date"),
+  validateStudentInfo(),
+];
+
+// =============================================================================
+// STUDENTS (PUT)
+// =============================================================================
+
+export const validateEditStudents = [
+  validateNames("first_name"),
+  validateNames("last_name"),
+  validateDNI("dni", "students", true),
+  validateNames("school"),
+  validateDate("birth_date"),
+  validateStudentInfo(),
+];
+
+// =============================================================================
+// TEACHERS
+// =============================================================================
+
+export const validateTeachers = [
+  validateNames("first_name"),
+  validateNames("last_name"),
+  validateDNI("dni", "students"),
+  validatePhone(),
+];
+
+// =============================================================================
+// TUTORS
+// =============================================================================
+
+export const validateTutors = [
+  validateNames("first_name"),
+  validateNames("last_name"),
+  validateDNI("dni", "students"),
+  validatePhone(),
+];
+
+// =============================================================================
 // PAYMENTS
 // =============================================================================
 
 export const validatePayments = [
-  body("student_plan_id")
-    .notEmpty()
-    .withMessage("El alumno es obligatorio.")
-    .isInt({ min: 1 })
-    .withMessage("El alumno debe ser válido.")
-    .custom(async (value) => {
-      const [rows] = await db.execute("SELECT id FROM students WHERE id = ?", [
-        value,
-      ]);
-      if (rows.length === 0) {
-        throw new Error("El alumno no existe.");
-      }
-      return true;
-    }),
-
-  body("payment_date")
-    .notEmpty()
-    .withMessage("La fecha de pago es obligatoria.")
-    .isISO8601()
-    .withMessage("La fecha debe tener formato AAAA-MM-DD."),
-
-  body("amount")
-    .notEmpty()
-    .withMessage("El monto es obligatorio.")
-    .isDecimal({ decimal_digits: "1,2" })
-    .withMessage("El monto debe ser un número decimal válido.")
-    .custom((value) => {
-      if (parseFloat(value) <= 0) {
-        throw new Error("El monto debe ser mayor a 0.");
-      }
-      return true;
-    }),
-
+  validateForeignId("student_id", "students"),
+  validateDate("payment_date"),
+  validateMoney("amount"),
   body("payment_method")
     .trim()
     .notEmpty()
     .withMessage("El método de pago es obligatorio.")
-    .isLength({ max: 45 })
-    .withMessage("El método de pago no puede superar los 45 caracteres."),
+    .isIn(
+      "transferencia",
+      "efectivo",
+      "tarjeta de crédito",
+      "tarjeta de débito",
+      "qr",
+      "otro",
+    )
+    .withMessage("El método de pago no es válido"),
 ];
 
 // =============================================================================
@@ -75,126 +339,45 @@ export const validatePayments = [
 // =============================================================================
 
 export const validatePlanSubjects = [
-  body("plan_id")
-    .notEmpty()
-    .withMessage("El plan es obligatorio.")
-    .isInt({ min: 1 })
-    .withMessage("El plan debe ser debe ser válido.")
-    .custom(async (plan_id) => {
-      const [rows] = await db.execute("SELECT id FROM plans WHERE id = ?", [
-        plan_id,
-      ]);
-      if (rows.length === 0) {
-        throw new Error("El plan no existe.");
-      }
+  validateForeignId("plan_id", "plans"),
+  validateForeignId("subject_id", "subjects"),
 
-      return true;
-    }),
-
-  body("subject_id")
-    .notEmpty()
-    .withMessage("La materia es obligatoria.")
-    .isInt({ min: 1 })
-    .withMessage("La materia debe ser válida.")
-    .custom(async (subject_id, { req }) => {
-      const [rows] = await db.execute("SELECT id FROM subjects WHERE id = ?", [
-        subject_id,
-      ]);
-
-      if (rows.length === 0) {
-        throw new Error("La materia no existe.");
-      }
-
-      const [relation] = await db.execute(
-        "SELECT id FROM plan_subjects WHERE plan_id = ? AND subject_id = ?",
-        [req.body.plan_id, subject_id],
-      );
-
-      if (relation.length > 0) {
-        throw new Error("El plan ya tiene asignada esta materia.");
-      }
-
-      return true;
-    }),
+  body("subject_id").custom(async (subject_id, { req }) => {
+    const [relation] = await db.execute(
+      "SELECT id FROM plan_subjects WHERE plan_id = ? AND subject_id = ?",
+      [req.body.plan_id, subject_id],
+    );
+    if (relation.length > 0) {
+      throw new Error("El plan ya tiene asignada esta materia.");
+    }
+    return true;
+  }),
 ];
 
 // =============================================================================
 // PLANS
 // =============================================================================
 
-export const validatePlans = [
-  body("name")
-    .trim()
-    .notEmpty()
-    .withMessage("El nombre del plan es obligatorio.")
-    .isLength({ max: 45 })
-    .withMessage("El nombre del plan no puede superar los 45 caracteres."),
-
-  body("price")
-    .notEmpty()
-    .withMessage("El monto es obligatorio.")
-    .isDecimal({ decimal_digits: "1,2" })
-    .withMessage("El monto debe ser un número decimal válido.")
-    .custom((value) => {
-      if (parseFloat(value) <= 0) {
-        throw new Error("El monto debe ser mayor a 0.");
-      }
-      return true;
-    }),
-
-  body("duration")
-    .trim()
-    .notEmpty()
-    .withMessage("La duración es obligatoria.")
-    .isLength({ max: 50 })
-    .withMessage("La duración no puede superar los 50 caracteres."),
-];
+export const validatePlans = [validateNames("name"), validateMoney("price")];
 
 // =============================================================================
 // SCHEDULE_STUDENTS
 // =============================================================================
 
 export const validateScheduleStudents = [
-  body("student_id")
-    .notEmpty()
-    .withMessage("El estudiante es obligatorio.")
-    .isInt({ min: 1 })
-    .withMessage("El estudiante debe ser válido")
-    .custom(async (value) => {
-      const [rows] = await db.execute("SELECT id FROM students WHERE id = ?", [
-        value,
-      ]);
-      if (rows.length === 0) {
-        throw new Error("El estudiante no existe.");
-      }
-      return true;
-    }),
+  validateForeignId("student_id", "students"),
+  validateForeignId("schedule_id", "schedules"),
+  body("schedule_id").custom(async (schedule_id, { req }) => {
+    const [relation] = await db.execute(
+      "SELECT id FROM schedule_students WHERE student_id = ? AND schedule_id = ?",
+      [req.body.student_id, schedule_id],
+    );
 
-  body("schedule_id")
-    .notEmpty()
-    .withMessage("El horario es obligatorio.")
-    .isInt({ min: 1 })
-    .withMessage("El horario debe ser válido")
-    .custom(async (schedule_id, { req }) => {
-      const [rows] = await db.execute("SELECT id FROM schedules WHERE id = ?", [
-        schedule_id,
-      ]);
-
-      if (rows.length === 0) {
-        throw new Error("El horario no existe.");
-      }
-
-      const [relation] = await db.execute(
-        "SELECT id FROM schedule_students WHERE student_id = ? AND schedule_id = ?",
-        [req.body.student_id, schedule_id],
-      );
-
-      if (relation.length > 0) {
-        throw new Error("El estudiante ya tiene asignado este horario.");
-      }
-
-      return true;
-    }),
+    if (relation.length > 0) {
+      throw new Error("El estudiante ya tiene asignado este horario.");
+    }
+    return true;
+  }),
 ];
 
 // =============================================================================
@@ -202,63 +385,40 @@ export const validateScheduleStudents = [
 // =============================================================================
 
 export const validateSchedules = [
-  body("teacher_id")
-    .notEmpty()
-    .withMessage("El docente es obligatorio.")
-    .isInt({ min: 1 })
-    .withMessage("El docente debe ser un ID válido.")
-    .custom(async (teacher_id, { req }) => {
-      const { days, start_time, end_time } = req.body;
+  validateForeignId("teacher_id", "teachers"),
+  body("teacher_id").custom(async (teacher_id, { req }) => {
+    const { start_time, end_time, ...days } = req.body;
 
-      const [teacher] = await db.execute(
-        `SELECT id FROM teachers WHERE id = ?`,
-        [teacher_id],
-      );
+    const activeDays = Object.keys(days).filter((day) => days[day] === true);
 
-      if (teacher.length === 0) {
-        throw new Error("El docente no existe.");
-      }
+    if (activeDays.length === 0) return true;
 
-      const [rows] = await db.execute(
-        `SELECT id FROM schedules
-        WHERE teacher_id = ?
-        AND days = ?
-        AND (? < end_time)
-        AND (? > start_time)`,
-        [teacher_id, days, start_time, end_time],
-      );
+    const conditions = activeDays.map((day) => `${day} = true`).join(" OR ");
 
-      if (rows.length > 0) {
-        throw new Error("El docente ya tiene una clase en ese día y horario.");
-      }
+    const [rows] = await db.execute(
+      `SELECT id FROM schedules
+     WHERE teacher_id = ?
+     AND (${conditions})
+     AND ? < end_time
+     AND ? > start_time`,
+      [teacher_id, start_time, end_time],
+    );
 
-      return true;
-    }),
+    if (rows.length > 0) {
+      throw new Error("El docente ya tiene una clase en ese día y horario.");
+    }
 
-  body("start_time")
-    .notEmpty()
-    .withMessage("La hora de inicio es obligatoria.")
-    .matches(/^([01]\d|2[0-3]):([0-5]\d)$/)
-    .withMessage("La hora de inicio debe tener formato HH:MM."),
+    return true;
+  }),
 
-  body("end_time")
-    .notEmpty()
-    .withMessage("La hora de fin es obligatoria.")
-    .matches(/^([01]\d|2[0-3]):([0-5]\d)$/)
-    .withMessage("La hora de fin debe tener formato HH:MM.")
-    .custom((value, { req }) => {
-      if (req.body.start_time >= value) {
-        throw new Error("La hora de fin debe ser mayor a la hora de inicio.");
-      }
-      return true;
-    }),
-
-  body("days")
-    .trim()
-    .notEmpty()
-    .withMessage("Los días son obligatorios.")
-    .isLength({ max: 100 })
-    .withMessage("Los días no pueden superar los 100 caracteres."),
+  validateHour("start_time"),
+  validateHour("end_time"),
+  body("end_time").custom((value, { req }) => {
+    if (req.body.start_time >= value) {
+      throw new Error("La hora de fin debe ser mayor a la hora de inicio.");
+    }
+    return true;
+  }),
 ];
 
 // =============================================================================
@@ -266,57 +426,19 @@ export const validateSchedules = [
 // =============================================================================
 
 export const validateStudentPlans = [
-  body("student_id")
-    .notEmpty()
-    .withMessage("El estudiante es obligatorio.")
-    .isInt({ min: 1 })
-    .withMessage("El estudiante debe ser válido")
-    .custom(async (value) => {
-      const [rows] = await db.execute("SELECT id FROM students WHERE id = ?", [
-        value,
-      ]);
-      if (rows.length === 0) {
-        throw new Error("El estudiante no existe.");
-      }
-      return true;
-    }),
-
-  body("plan_id")
-    .notEmpty()
-    .withMessage("El plan es obligatorio.")
-    .isInt({ min: 1 })
-    .withMessage("El plan debe ser debe ser válido.")
-    .custom(async (plan_id, { req }) => {
-      const [rows] = await db.execute("SELECT id FROM plans WHERE id = ?", [
-        plan_id,
-      ]);
-      if (rows.length === 0) {
-        throw new Error("El plan no existe.");
-      }
-
-      const [relation] = await db.execute(
-        "SELECT id FROM student_plans WHERE student_id = ? AND plan_id = ?",
-        [req.body.student_id, plan_id],
-      );
-
-      if (relation.length > 0) {
-        throw new Error("El alumno ya tiene asignada este plan.");
-      }
-
-      return true;
-    }),
-
-  body("paid_amount")
-    .notEmpty()
-    .withMessage("El monto pagado es obligatorio.")
-    .isDecimal({ decimal_digits: "0,2" })
-    .withMessage("El monto pagado debe ser válido."),
-
-  body("start_date")
-    .notEmpty()
-    .withMessage("La fecha de inicio es obligatoria.")
-    .isISO8601()
-    .withMessage("La fecha de inicio debe tener formato AAAA-MM-DD."),
+  validateForeignId("student_id", "students"),
+  validateForeignId("plan_id", "plans"),
+  body("plan_id").custom(async (plan_id, { req }) => {
+    const [relation] = await db.execute(
+      "SELECT id FROM student_plans WHERE student_id = ? AND plan_id = ?",
+      [req.body.student_id, plan_id],
+    );
+    if (relation.length > 0) {
+      throw new Error("El alumno ya tiene asignado este plan.");
+    }
+    return true;
+  }),
+  validateDate("start_date"),
 ];
 
 // =============================================================================
@@ -473,117 +595,6 @@ export const validateEditStudentTutors = [
 ];
 
 // =============================================================================
-// STUDENTS
-// =============================================================================
-
-export const validateStudents = [
-  body("first_name")
-    .isAlpha("es-ES")
-    .withMessage("El nombre debe ser alfabético y no puede contener espacios.")
-    .trim()
-    .notEmpty()
-    .withMessage("El nombre es obligatorio.")
-    .isLength({ max: 45 })
-    .withMessage("El nombre no puede tener más de 45 caracteres."),
-
-  body("last_name")
-    .isAlpha("es-ES")
-    .withMessage(
-      "El apellido debe ser alfabético y no puede contener espacios.",
-    )
-    .trim()
-    .notEmpty()
-    .withMessage("El apellido es obligatorio.")
-    .isLength({ max: 45 })
-    .withMessage("El apellido no puede tener más de 45 caracteres."),
-
-  body("dni")
-    .isInt({ min: 1000000, max: 99999999 })
-    .withMessage("El DNI debe ser un número válido y hasta 8 dígitos.")
-    .custom(async (dni) => {
-      const [rows] = await db.execute("SELECT id FROM students WHERE dni = ?", [
-        dni,
-      ]);
-      if (rows.length > 0) {
-        throw new Error("Dni ya registrado");
-      }
-      return true;
-    }),
-
-  body("school")
-    .isAlpha("es-ES", { ignore: " " })
-    .withMessage("El colegio debe ser alfabético.")
-    .trim()
-    .notEmpty()
-    .withMessage("El colegio es obligatorio.")
-    .isLength({ max: 45 })
-    .withMessage("El colegio no puede tener más de 45 caracteres."),
-
-  body("birth_date")
-    .isDate()
-    .withMessage("La fecha de nacimiento debe ser una fecha válida."),
-
-  body("enrolled")
-    .isBoolean()
-    .toBoolean()
-    .withMessage("La inscripción debe ser un valor booleano."),
-
-  body("level")
-    .isString()
-    .trim()
-    .toLowerCase()
-    .isIn(["inicial", "primario", "secundario", "universitario"])
-    .withMessage(
-      "El nivel debe ser inicial, primario, secundario o universitario.",
-    ),
-
-  body("grade")
-    .isInt()
-    .toInt()
-    .isIn([1, 2, 3, 4, 5, 6, 7])
-    .withMessage("La categoría debe ser del 1 al 7"),
-];
-
-// =============================================================================
-// STUDENTS (PUT)
-// =============================================================================
-
-export const validateEditStudents = [
-  body("first_name")
-    .isAlpha("es-ES")
-    .withMessage("El nombre debe ser alfabético.")
-    .trim()
-    .notEmpty()
-    .withMessage("El nombre es obligatorio.")
-    .isLength({ max: 45 })
-    .withMessage("El nombre no puede tener más de 45 caracteres."),
-
-  body("last_name")
-    .isAlpha("es-ES")
-    .withMessage("El apellido debe ser alfabético.")
-    .trim()
-    .notEmpty()
-    .withMessage("El apellido es obligatorio.")
-    .isLength({ max: 45 })
-    .withMessage("El apellido no puede tener más de 45 caracteres."),
-
-  body("dni")
-    .isInt({ min: 1, max: 99999999 })
-    .withMessage("El DNI debe ser un número válido de hasta 8 dígitos.")
-    .custom(async (dni, { req }) => {
-      const { id } = req.params;
-      const [rows] = await db.execute(
-        "SELECT id FROM students WHERE dni = ? AND id != ?",
-        [dni, id],
-      );
-      if (rows.length > 0) {
-        throw new Error("Dni ya registrado");
-      }
-      return true;
-    }),
-];
-
-// =============================================================================
 // SUBJECTS
 // =============================================================================
 
@@ -722,212 +733,6 @@ export const validateEditTeacherSubjects = [
         throw new Error("La materia ya está asignada a este docente.");
       }
 
-      return true;
-    }),
-];
-
-// =============================================================================
-// TEACHERS
-// =============================================================================
-
-export const validateTeachers = [
-  body("first_name")
-    .trim()
-    .notEmpty()
-    .withMessage("El nombre es obligatorio.")
-    .isAlpha("es-ES", { ignore: " " })
-    .withMessage("El nombre solo puede contener letras.")
-    .isLength({ max: 45 })
-    .withMessage("El nombre no puede superar los 45 caracteres."),
-
-  body("last_name")
-    .trim()
-    .notEmpty()
-    .withMessage("El apellido es obligatorio.")
-    .isAlpha("es-ES", { ignore: " " })
-    .withMessage("El apellido solo puede contener letras.")
-    .isLength({ max: 45 })
-    .withMessage("El apellido no puede superar los 45 caracteres."),
-
-  body("dni")
-    .trim()
-    .notEmpty()
-    .withMessage("El DNI es obligatorio.")
-    .isInt({ min: 1 })
-    .withMessage("El DNI debe ser un número entero positivo.")
-    .isLength({ max: 10 })
-    .withMessage("El DNI no puede superar los 10 caracteres.")
-    .custom(async (value) => {
-      const [rows] = await db.execute("SELECT id FROM teachers WHERE dni = ?", [
-        value,
-      ]);
-      if (rows.length > 0) {
-        throw new Error("El DNI ya está registrado");
-      }
-      return true;
-    }),
-
-  body("phone")
-    .trim()
-    .notEmpty()
-    .withMessage("El teléfono es obligatorio.")
-    .isLength({ max: 20 })
-    .withMessage("El teléfono no puede superar los 20 caracteres.")
-    .matches(/^[0-9+\- ]+$/)
-    .withMessage("El teléfono solo puede contener números, + o -"),
-
-  body("salary")
-    .notEmpty()
-    .withMessage("El sueldo es obligatorio.")
-    .isDecimal({ decimal_digits: "1,2" })
-    .withMessage("El sueldo debe ser un número decimal válido.")
-    .custom((value) => {
-      if (parseFloat(value) <= 0) {
-        throw new Error("El sueldo debe ser mayor a 0");
-      }
-      return true;
-    }),
-];
-
-// =============================================================================
-// TUTORS
-// =============================================================================
-
-export const validateTutors = [
-  body("first_name")
-    .trim()
-    .notEmpty()
-    .withMessage("El nombre es obligatorio.")
-    .isAlpha("es-ES", { ignore: " " })
-    .withMessage("El nombre solo puede contener letras.")
-    .isLength({ max: 45 })
-    .withMessage("El nombre no puede superar los 45 caracteres."),
-
-  body("last_name")
-    .trim()
-    .notEmpty()
-    .withMessage("El apellido es obligatorio.")
-    .isAlpha("es-ES", { ignore: " " })
-    .withMessage("El apellido solo puede contener letras.")
-    .isLength({ max: 45 })
-    .withMessage("El apellido no puede superar los 45 caracteres."),
-
-  body("phone")
-    .trim()
-    .notEmpty()
-    .withMessage("El teléfono es obligatorio.")
-    .isLength({ max: 20 })
-    .withMessage("El teléfono no puede superar los 20 caracteres.")
-    .isNumeric()
-    .withMessage("El teléfono solo puede contener números."),
-
-  body("dni")
-    .trim()
-    .notEmpty()
-    .withMessage("El DNI es obligatorio.")
-    .isInt({ min: 1 })
-    .withMessage("El DNI debe ser un número entero positivo.")
-    .isLength({ max: 10 })
-    .withMessage("El DNI no puede superar los 10 caracteres.")
-    .custom(async (value) => {
-      const [rows] = await db.execute("SELECT id FROM tutors WHERE dni = ?", [
-        value,
-      ]);
-      if (rows.length > 0) {
-        throw new Error("El DNI ya está registrado");
-      }
-      return true;
-    }),
-];
-
-// =============================================================================
-// USERS
-// =============================================================================
-
-export const validateUsers = [
-  body("first_name")
-    .trim()
-    .notEmpty()
-    .withMessage("El nombre es obligatorio.")
-    .isAlpha("es-ES", { ignore: " " })
-    .withMessage("El nombre solo puede contener letras.")
-    .isLength({ max: 45 })
-    .withMessage("El nombre no puede tener más de 45 caracteres."),
-
-  body("last_name")
-    .trim()
-    .notEmpty()
-    .withMessage("El apellido es obligatorio.")
-    .isAlpha("es-ES", { ignore: " " })
-    .withMessage("El apellido solo puede contener letras.")
-    .isLength({ max: 45 })
-    .withMessage("El apellido no puede tener más de 45 caracteres."),
-
-  body("username")
-    .trim()
-    .notEmpty()
-    .withMessage("El nombre de usuario es obligatorio.")
-    .isAlphanumeric("es-ES")
-    .withMessage("El nombre de usuario debe ser alfanumérico y sin espacios.")
-    .isLength({ max: 45 })
-    .withMessage("El nombre de usuario no puede tener más de 45 caracteres.")
-    .custom(async (value) => {
-      const [rows] = await db.execute(
-        "SELECT id FROM users WHERE username = ?",
-        [value],
-      );
-      if (rows.length > 0) {
-        throw new Error("El nombre de usuario ya está registrado");
-      }
-      return true;
-    }),
-
-  body("password")
-    .notEmpty()
-    .withMessage("La contraseña es obligatoria.")
-    .isStrongPassword({
-      minLength: 8,
-      minLowercase: 1,
-      minUppercase: 1,
-      minNumbers: 1,
-      minSymbols: 1,
-    })
-    .withMessage(
-      "La contraseña debe tener al menos 8 caracteres, una mayúscula, una minúscula, un número y un símbolo.",
-    ),
-
-  body("role")
-    .trim()
-    .notEmpty()
-    .withMessage("El rol es obligatorio.")
-    .isAlpha("es-ES", { ignore: " " })
-    .withMessage("El rol solo puede contener letras.")
-    .isIn("ADMIN", "DOCENTE")
-    .withMessage("El rol debe ser ADMIN o DOCENTE."),
-];
-
-// =============================================================================
-// USERS (PUT)
-// =============================================================================
-
-export const validateEditUsers = [
-  body("username")
-    .trim()
-    .notEmpty()
-    .withMessage("El nombre de usuario es obligatorio.")
-    .isAlphanumeric("es-ES")
-    .withMessage("El nombre de usuario debe ser alfanumérico y sin espacios.")
-    .isLength({ max: 45 })
-    .withMessage("El nombre de usuario no puede tener más de 45 caracteres.")
-    .custom(async (value, { req }) => {
-      const { id } = req.params;
-      const [rows] = await db.execute(
-        "SELECT id FROM users WHERE username = ? AND id != ?",
-        [value, id],
-      );
-      if (rows.length > 0) {
-        throw new Error("El nombre de usuario ya está registrado");
-      }
       return true;
     }),
 ];
