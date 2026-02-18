@@ -113,17 +113,7 @@ router.put(
 
     await db.execute(
       "UPDATE students SET first_name = ?, last_name = ?, dni = ?, school = ?, birth_date = ?, enrolled = ?, level = ?, grade = ?, dni = ? WHERE id = ?",
-      [
-        first_name,
-        last_name,
-        dni,
-        school,
-        birth_date,
-        enrolled,
-        level,
-        grade,
-        id,
-      ],
+      [first_name, last_name, dni, school, birth_date, enrolled, level, grade],
     );
 
     res.json({
