@@ -5,7 +5,6 @@ import {
   checkValidations,
   validateTeachers,
 } from "./validations.js";
-import passport from "passport";
 import { authentication, authorization } from "./auth.js";
 
 const router = express.Router();
