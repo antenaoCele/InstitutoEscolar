@@ -129,6 +129,7 @@ router.put(
     res.json({
       success: true,
       data: {
+        id: result.insertId,
         first_name,
         last_name,
         dni,

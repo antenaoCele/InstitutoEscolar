@@ -5,7 +5,7 @@ import {
   validatePlanSubjects,
   validateID,
 } from "./validations.js";
-import { authentication } from "./auth.js";
+import { authentication, authorization } from "./auth.js";
 
 const router = express.Router();
 
@@ -53,6 +53,7 @@ router.get(
 router.post(
   "/",
   authentication,
+  authorization("ADMIN"),
   validatePlanSubjects,
   checkValidations,
   async (req, res) => {
@@ -77,6 +78,7 @@ router.post(
 router.put(
   "/:id",
   authentication,
+  authorization("ADMIN"),
   validateID,
   checkValidations,
   async (req, res) => {
@@ -115,6 +117,7 @@ router.put(
 router.delete(
   "/:id",
   authentication,
+  authorization("ADMIN"),
   validateID,
   checkValidations,
   async (req, res) => {
