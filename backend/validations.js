@@ -383,6 +383,41 @@ export const validateScheduleStudents = [
 ];
 
 // =============================================================================
+// SCHEDULE_STUDENTS (PUT)
+// =============================================================================
+
+export const validateEditScheduleStudents = [
+  validateForeignId("student_id", "students", true),
+  validateForeignId("schedule_id", "schedules", true),
+
+  body().custom(async (value, { req }) => {
+    const id = Number(req.params.id);
+
+    const [current] = await db.execute(
+      "SELECT student_id, schedule_id FROM schedule_students WHERE id = ?",
+      [id],
+    );
+
+    if (current.length === 0) return true;
+
+    const student_id = req.body.student_id ?? current[0].student_id;
+    const schedule_id = req.body.schedule_id ?? current[0].schedule_id;
+
+    const [relation] = await db.execute(
+      `SELECT id FROM schedule_students
+       WHERE student_id = ? AND schedule_id = ? AND id != ?`,
+      [student_id, schedule_id, id],
+    );
+
+    if (relation.length > 0) {
+      throw new Error("El estudiante ya tiene asignado este horario.");
+    }
+
+    return true;
+  }),
+];
+
+// =============================================================================
 // SCHEDULES
 // =============================================================================
 
