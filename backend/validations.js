@@ -493,45 +493,18 @@ export const validateStudentTutors = [
 // =============================================================================
 
 export const validateEditStudentTutors = [
-  body("student_id")
-    .notEmpty()
-    .withMessage("El alumno es obligatorio.")
-    .isInt({ min: 1 })
-    .withMessage("El alumno debe ser válido.")
-    .custom(async (value) => {
-      const [rows] = await db.execute("SELECT id FROM students WHERE id = ?", [
-        value,
-      ]);
-      if (rows.length === 0) {
-        throw new Error("El alumno no existe.");
-      }
-      return true;
-    }),
-
-  body("tutor_id")
-    .notEmpty()
-    .withMessage("El tutor es obligatorio.")
-    .isInt({ min: 1 })
-    .withMessage("El tutor debe ser válido.")
-    .custom(async (value, { req }) => {
-      const [rows] = await db.execute("SELECT id FROM tutors WHERE id = ?", [
-        value,
-      ]);
-      if (rows.length === 0) {
-        throw new Error("El tutor no existe.");
-      }
-
-      const [relacion] = await db.execute(
-        "SELECT id FROM student_tutors WHERE student_id = ? AND tutor_id = ? AND id != ?",
-        [req.body.student_id, value, req.params.id],
-      );
-
-      if (relacion.length > 0) {
-        throw new Error("El tutor ya está asignado a este alumno.");
-      }
-
-      return true;
-    }),
+  validateForeignId("student_id", "students", "true"),
+  validateForeignId("tutor_id", "tutors", "true"),
+  body("tutor_id").custom(async (value, { req }) => {
+    const [relacion] = await db.execute(
+      "SELECT id FROM student_tutors WHERE student_id = ? AND tutor_id = ? AND id != ?",
+      [req.body.student_id, value, req.params.id],
+    );
+    if (relacion.length > 0) {
+      throw new Error("El tutor ya está asignado a este alumno.");
+    }
+    return true;
+  }),
 ];
 
 // =============================================================================
@@ -539,24 +512,16 @@ export const validateEditStudentTutors = [
 // =============================================================================
 
 export const validateSubjects = [
-  body("name")
-    .isAlpha("es-ES", { ignore: " " })
-    .withMessage("La materia debe ser alfabética.")
-    .trim()
-    .notEmpty()
-    .withMessage("La materia es obligatoria.")
-    .isLength({ max: 45 })
-    .withMessage("La materia no puede tener más de 45 caracteres.")
-    .custom(async (name) => {
-      const [rows] = await db.execute(
-        "SELECT id FROM subjects WHERE name = ?",
-        [name],
-      );
-      if (rows.length > 0) {
-        throw new Error("Materia ya registrada");
-      }
-      return true;
-    }),
+  validateNames("name"),
+  body("name").custom(async (name) => {
+    const [rows] = await db.execute("SELECT id FROM subjects WHERE name = ?", [
+      name,
+    ]);
+    if (rows.length > 0) {
+      throw new Error("Materia ya registrada");
+    }
+    return true;
+  }),
 ];
 
 // =============================================================================
@@ -564,25 +529,18 @@ export const validateSubjects = [
 // =============================================================================
 
 export const validateEditSubjects = [
-  body("name")
-    .isAlpha("es-ES")
-    .withMessage("La materia debe ser alfabético.")
-    .trim()
-    .notEmpty()
-    .withMessage("La materia es obligatorio.")
-    .isLength({ max: 45 })
-    .withMessage("La materia no puede tener más de 45 caracteres.")
-    .custom(async (name, { req }) => {
-      const { id } = req.params;
-      const [rows] = await db.execute(
-        "SELECT id FROM subjects WHERE name = ? AND id != ?",
-        [name, id],
-      );
-      if (rows.length > 0) {
-        throw new Error("Materia ya registrada");
-      }
-      return true;
-    }),
+  validateNames("name"),
+  body("name").custom(async (name, { req }) => {
+    const { id } = req.params;
+    const [rows] = await db.execute(
+      "SELECT id FROM subjects WHERE name = ? AND id != ?",
+      [name, id],
+    );
+    if (rows.length > 0) {
+      throw new Error("Materia ya registrada");
+    }
+    return true;
+  }),
 ];
 
 // =============================================================================
@@ -590,45 +548,19 @@ export const validateEditSubjects = [
 // =============================================================================
 
 export const validateTeacherSubjects = [
-  body("teacher_id")
-    .notEmpty()
-    .withMessage("El docente es obligatorio.")
-    .isInt({ min: 1 })
-    .withMessage("El docente debe ser válido.")
-    .custom(async (value) => {
-      const [rows] = await db.execute("SELECT id FROM teachers WHERE id = ?", [
-        value,
-      ]);
-      if (rows.length === 0) {
-        throw new Error("El docente no existe.");
-      }
-      return true;
-    }),
+  validateForeignId("teacher_id", "teachers"),
+  validateForeignId("subject_id", "subjects"),
 
-  body("subject_id")
-    .notEmpty()
-    .withMessage("La materia es obligatoria.")
-    .isInt({ min: 1 })
-    .withMessage("La materia debe ser válida.")
-    .custom(async (value, { req }) => {
-      const [rows] = await db.execute("SELECT id FROM subjects WHERE id = ?", [
-        value,
-      ]);
-      if (rows.length === 0) {
-        throw new Error("La materia no existe.");
-      }
-
-      const [relacion] = await db.execute(
-        "SELECT id FROM teacher_subjects WHERE teacher_id = ? AND subject_id = ?",
-        [req.body.teacher_id, value],
-      );
-
-      if (relacion.length > 0) {
-        throw new Error("La materia ya está asignada a este docente.");
-      }
-
-      return true;
-    }),
+  body("subject_id").custom(async (value, { req }) => {
+    const [relacion] = await db.execute(
+      "SELECT id FROM teacher_subjects WHERE teacher_id = ? AND subject_id = ?",
+      [req.body.teacher_id, value],
+    );
+    if (relacion.length > 0) {
+      throw new Error("La materia ya está asignada a este docente.");
+    }
+    return true;
+  }),
 ];
 
 // =============================================================================
@@ -636,43 +568,16 @@ export const validateTeacherSubjects = [
 // =============================================================================
 
 export const validateEditTeacherSubjects = [
-  body("teacher_id")
-    .notEmpty()
-    .withMessage("El docente es obligatorio.")
-    .isInt({ min: 1 })
-    .withMessage("El docente debe ser válido.")
-    .custom(async (value) => {
-      const [rows] = await db.execute("SELECT id FROM teachers WHERE id = ?", [
-        value,
-      ]);
-      if (rows.length === 0) {
-        throw new Error("El docente no existe.");
-      }
-      return true;
-    }),
-
-  body("subject_id")
-    .notEmpty()
-    .withMessage("La materia es obligatoria.")
-    .isInt({ min: 1 })
-    .withMessage("La materia debe ser válida.")
-    .custom(async (value, { req }) => {
-      const [rows] = await db.execute("SELECT id FROM subjects WHERE id = ?", [
-        value,
-      ]);
-      if (rows.length === 0) {
-        throw new Error("La materia no existe.");
-      }
-
-      const [relacion] = await db.execute(
-        "SELECT id FROM teacher_subjects WHERE teacher_id = ? AND subject_id = ? AND id != ?",
-        [req.body.teacher_id, value, req.params.id],
-      );
-
-      if (relacion.length > 0) {
-        throw new Error("La materia ya está asignada a este docente.");
-      }
-
-      return true;
-    }),
+  validateForeignId("teacher_id", "teachers", "true"),
+  validateForeignId("subject_id", "subjects", "true"),
+  body("subject_id").custom(async (value, { req }) => {
+    const [relacion] = await db.execute(
+      "SELECT id FROM teacher_subjects WHERE teacher_id = ? AND subject_id = ? AND id != ?",
+      [req.body.teacher_id, value, req.params.id],
+    );
+    if (relacion.length > 0) {
+      throw new Error("La materia ya está asignada a este docente.");
+    }
+    return true;
+  }),
 ];

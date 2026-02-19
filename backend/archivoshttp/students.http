@@ -6,8 +6,8 @@ POST {{url}}/auth/login
 Content-Type: application/json
 
 {
-    "username": "rama123",
-    "password": "Rama123."
+    "username": "juan123",
+    "password": "Juan123@"
 }
 
 ###
@@ -32,7 +32,7 @@ Authorization: Bearer {{token}}
 {
   "first_name": "Celeste",
   "last_name": "Fernández",
-  "dni": "8380249", 
+  "dni": "1080249", 
   "school": "CPUGSM", 
   "birth_date": "2004-01-13",
   "enrolled": true,
@@ -41,16 +41,16 @@ Authorization: Bearer {{token}}
 }
 
 ###
-PUT {{url}}/students/12
+PUT {{url}}/students/3
 Content-Type: application/json
 Authorization: Bearer {{token}}
 
 {
-  "first_name": "Laura",
+  "first_name": "Julia",
   "last_name": "Fernández",
-  "dni": 49681322, 
+  "dni": "48681322", 
   "school": "CPUGSM", 
-  "birth_date": 13-01-2004,
+  "birth_date": "2004-01-13",
   "enrolled": true,
   "level": "universitario", 
   "grade": 2
