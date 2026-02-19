@@ -1,13 +1,18 @@
 import express from "express";
 import { db } from "./db.js";
-import { checkValidations, validateScheduleStudents } from "./validations.js";
-import { authentication } from "./auth.js";
+import {
+  checkValidations,
+  validateScheduleStudents,
+  validateEditScheduleStudents,
+  validateID,
+} from "./validations.js";
+import { authentication, authorization } from "./auth.js";
 
 const router = express.Router();
 
 router.get("/", authentication, async (req, res) => {
   let sql =
-    "SELECT sc.id AS schedule_id, st.id AS student_id \
+    "SELECT sc.id, sc.id AS schedule_id, st.id AS student_id \
 FROM schedule_students ss \
 JOIN schedules sc ON ss.schedule_id = sc.id \
 JOIN students st ON ss.student_id = st.id";
@@ -19,6 +24,7 @@ JOIN students st ON ss.student_id = st.id";
 router.post(
   "/",
   authentication,
+  authorization("ADMIN"),
   validateScheduleStudents,
   checkValidations,
   async (req, res) => {
@@ -37,6 +43,77 @@ router.post(
       },
       message: "Horario asignado al estudiante exitosamente",
     });
+  },
+);
+
+router.put(
+  "/:id",
+  authentication,
+  authorization("ADMIN"),
+  validateID,
+  validateEditScheduleStudents,
+  checkValidations,
+  async (req, res) => {
+    const id = Number(req.params.id);
+
+    const [scheduleStudents] = await db.execute(
+      "SELECT * FROM schedule_students WHERE id = ?",
+      [id],
+    );
+
+    if (scheduleStudents.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "Horario y estudiante no encontrados.",
+      });
+    }
+
+    const { schedule_id, student_id } = req.body;
+
+    const newScheduleId = schedule_id ?? scheduleStudents[0].schedule_id;
+    const newStudentId = student_id ?? scheduleStudents[0].student_id;
+
+    await db.execute(
+      "UPDATE schedule_students SET schedule_id = ?, student_id = ? WHERE id = ?",
+      [newScheduleId, newStudentId, id],
+    );
+
+    res.json({
+      success: true,
+      data: {
+        id,
+        schedule_id: newScheduleId,
+        student_id: newStudentId,
+      },
+      message: "Registro actualizado exitosamente",
+    });
+  },
+);
+
+router.delete(
+  "/:id",
+  authentication,
+  authorization("ADMIN"),
+  validateID,
+  checkValidations,
+  async (req, res) => {
+    const id = Number(req.params.id);
+
+    const [scheduleStudents] = await db.execute(
+      "SELECT * FROM schedule_students WHERE id = ?",
+      [id],
+    );
+
+    if (scheduleStudents.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "Horario y estudiante no encontrados.",
+      });
+    }
+
+    await db.execute("DELETE FROM schedule_students WHERE id = ?", [id]);
+
+    res.json({ success: true, message: "Registro eliminado exitosamente." });
   },
 );
 
