@@ -16,7 +16,27 @@ export const checkValidations = (req, res, next) => {
   next();
 };
 
-export const validateID = param("id").isInt({ min: 1 });
+export const validateID = (tableName) => {
+  return [
+    param("id")
+      .isInt({ min: 1 })
+      .withMessage("El id debe ser un número entero mayor a 0.")
+      .custom(async (value) => {
+        const id = Number(value);
+
+        const [rows] = await db.execute(
+          `SELECT id FROM ${tableName} WHERE id = ?`,
+          [id],
+        );
+
+        if (rows.length === 0) {
+          throw new Error("No se encontró el registro.");
+        }
+
+        return true;
+      }),
+  ];
+};
 
 /* =========================================================
    WHITELIST ✅

@@ -2,11 +2,8 @@
 
 import express from "express";
 import { db } from "./db.js";
-import {
-  validateID,
-  checkValidations,
-  validatePayments,
-} from "./validations.js";
+import { validatePayments } from "./validations.js";
+import { validateID, checkValidations } from "./helpers.js";
 import { authentication, authorization } from "./auth.js";
 
 const router = express.Router();
@@ -40,7 +37,7 @@ router.get(
   "/:id",
   authentication,
   authorization("ADMIN"),
-  validateID,
+  validateID("payments"),
   checkValidations,
   async (req, res) => {
     try {
@@ -107,6 +104,7 @@ router.get(
         p.id AS payment_id,
         p.amount,
         p.payment_method,
+        p.payment_date,
         p.student_plan_id,
         sp.plan_id
       FROM payments p
@@ -137,36 +135,43 @@ router.post(
   validatePayments,
   checkValidations,
   async (req, res) => {
-    const { student_plan_id, amount, payment_date, payment_method } = req.body;
+    try {
+      const { student_plan_id, amount, payment_date, payment_method } =
+        req.body;
 
-    //-----------------------------------
-    const [plan] = await db.execute(
-      "SELECT id FROM student_plans WHERE id = ?",
-      [student_plan_id],
-    );
+      const [plan] = await db.execute(
+        "SELECT id FROM student_plans WHERE id = ?",
+        [student_plan_id],
+      );
 
-    if (plan.length === 0) {
-      return res.status(400).json({
+      if (plan.length === 0) {
+        return res.status(400).json({
+          success: false,
+          error: "El student_plan_id no existe",
+        });
+      }
+
+      const [result] = await db.execute(
+        "INSERT INTO payments (student_plan_id, amount, payment_date, payment_method) VALUES (?,?, ?,?)",
+        [student_plan_id, amount, payment_date, payment_method],
+      );
+
+      res.status(201).json({
+        success: true,
+        data: {
+          id: result.insertId,
+          student_plan_id,
+          amount,
+          payment_date,
+          payment_method,
+        },
+      });
+    } catch (error) {
+      res.status(500).json({
         success: false,
-        error: "El student_plan_id no existe",
+        message: "Error al crear el pago",
       });
     }
-
-    const [result] = await db.execute(
-      "INSERT INTO payments (student_plan_id, amount, payment_date, payment_method) VALUES (?,?, ?,?)",
-      [student_plan_id, amount, payment_date, payment_method],
-    );
-
-    res.status(201).json({
-      success: true,
-      data: {
-        id: result.insertId,
-        student_plan_id,
-        amount,
-        payment_date,
-        payment_method,
-      },
-    });
   },
 );
 
@@ -177,40 +182,47 @@ router.put(
   validatePayments,
   checkValidations,
   async (req, res) => {
-    const { student_plan_id, amount, payment_method } = req.body;
-    const id = Number(req.params.id);
+    try {
+      const { student_plan_id, amount, payment_method, payment_date } =
+        req.body;
+      const id = Number(req.params.id);
 
-    const [payment] = await db.execute("SELECT id FROM payments WHERE id=?", [
-      id,
-    ]);
+      const [payment] = await db.execute("SELECT id FROM payments WHERE id=?", [
+        id,
+      ]);
 
-    if (payment.length === 0) {
-      return res
-        .status(404)
-        .json({ success: false, error: "Pago no registrado" });
-    }
+      if (payment.length === 0) {
+        return res
+          .status(404)
+          .json({ success: false, error: "Pago no registrado" });
+      }
 
-    const [plan] = await db.execute(
-      "SELECT id FROM student_plans WHERE id = ?",
-      [student_plan_id],
-    );
+      const newStudentPlanId = student_plan_id ?? payment[0].student_plan_id;
+      const newAmount = amount ?? payment[0].amount;
+      const newPaymentDate = payment_date ?? payment[0].payment_date;
+      const newPaymentMethod = payment_method ?? payment[0].payment_method;
 
-    if (plan.length === 0) {
-      return res.status(400).json({
+      await db.execute(
+        "UPDATE payments SET student_plan_id=?, amount=?, payment_method=?, payment_date=? WHERE id=?",
+        [newStudentPlanId, newAmount, newPaymentMethod, newPaymentDate, id],
+      );
+
+      res.json({
+        success: true,
+        data: {
+          id: Number(id),
+          student_plan_id: newStudentPlanId,
+          payment_date: newPaymentDate,
+          amount: newAmount,
+          payment_method: newPaymentMethod,
+        },
+      });
+    } catch (error) {
+      res.status(500).json({
         success: false,
-        error: "El student_plan_id no existe",
+        message: "Error al actualizar el pago",
       });
     }
-
-    await db.execute(
-      "UPDATE payments SET student_plan_id=?, amount=?, payment_method=? WHERE id=?",
-      [student_plan_id, amount, payment_method, id],
-    );
-
-    res.json({
-      success: true,
-      data: { id, student_plan_id, amount, payment_method },
-    });
   },
 );
 
@@ -220,19 +232,28 @@ router.delete(
   validateID,
   checkValidations,
   async (req, res) => {
-    const { id } = req.params;
+    try {
+      const { id } = req.params;
 
-    const [rows] = await db.execute("SELECT * FROM payments WHERE id=?", [id]);
+      const [rows] = await db.execute("SELECT * FROM payments WHERE id=?", [
+        id,
+      ]);
 
-    if (rows.length === 0) {
-      return res
-        .status(404)
-        .json({ success: false, error: "Pago no encontrado" });
+      if (rows.length === 0) {
+        return res
+          .status(404)
+          .json({ success: false, error: "Pago no encontrado" });
+      }
+
+      await db.execute("DELETE FROM payments WHERE id=?", [id]);
+
+      res.json({ success: true, message: "Pago eliminado correctamente" });
+    } catch (error) {
+      res.status(500).json({
+        success: false,
+        message: "Error al eliminar el pago",
+      });
     }
-
-    await db.execute("DELETE FROM payments WHERE id=?", [id]);
-
-    res.json({ success: true, message: "Pago eliminado correctamente" });
   },
 );
 
