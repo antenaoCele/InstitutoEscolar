@@ -13,19 +13,27 @@ const router = express.Router();
 
 //GET
 router.get("/", authentication, authorization("ADMIN"), async (req, res) => {
-  const [payments] = await db.execute(`
+  try {
+    const [payments] = await db.execute(`
     SELECT 
       p.id,
       p.amount,
       p.payment_method,
       p.student_plan_id,
+      p.payment_date,
       sp.student_id,
       sp.plan_id
     FROM payments p
     JOIN student_plans sp ON p.student_plan_id = sp.id
   `);
 
-  res.json({ success: true, payments });
+    res.json({ success: true, payments });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Error al obtener pagos",
+    });
+  }
 });
 
 router.get(
@@ -35,31 +43,39 @@ router.get(
   validateID,
   checkValidations,
   async (req, res) => {
-    const id = Number(req.params.id);
+    try {
+      const id = Number(req.params.id);
 
-    const [rows] = await db.execute(
-      `
+      const [rows] = await db.execute(
+        `
       SELECT 
         p.id,
         p.amount,
         p.payment_method,
         p.student_plan_id,
+        p.payment_date,
         sp.student_id,
         sp.plan_id
       FROM payments p
       JOIN student_plans sp ON p.student_plan_id = sp.id
       WHERE p.id = ?
     `,
-      [id],
-    );
+        [id],
+      );
 
-    if (rows.length === 0) {
-      return res
-        .status(404)
-        .json({ success: false, error: "Pago no registrado" });
+      if (rows.length === 0) {
+        return res
+          .status(404)
+          .json({ success: false, error: "Pago no registrado" });
+      }
+
+      res.json({ success: true, data: rows[0] });
+    } catch (error) {
+      res.status(500).json({
+        success: false,
+        message: "Error al obtener el pago",
+      });
     }
-
-    res.json({ success: true, data: rows[0] });
   },
 );
 
@@ -70,21 +86,23 @@ router.get(
   validateID,
   checkValidations,
   async (req, res) => {
-    const studentId = Number(req.params.id);
+    try {
+      const studentId = Number(req.params.id);
 
-    const [student] = await db.execute("SELECT id FROM students WHERE id = ?", [
-      studentId,
-    ]);
+      const [student] = await db.execute(
+        "SELECT id FROM students WHERE id = ?",
+        [studentId],
+      );
 
-    if (student.length === 0) {
-      return res.status(404).json({
-        success: false,
-        error: "Alumno no encontrado",
-      });
-    }
+      if (student.length === 0) {
+        return res.status(404).json({
+          success: false,
+          error: "Alumno no encontrado",
+        });
+      }
 
-    const [payments] = await db.execute(
-      `
+      const [payments] = await db.execute(
+        `
       SELECT 
         p.id AS payment_id,
         p.amount,
@@ -96,14 +114,20 @@ router.get(
       WHERE sp.student_id = ?
       ORDER BY p.id DESC
     `,
-      [studentId],
-    );
+        [studentId],
+      );
 
-    res.json({
-      success: true,
-      total_payments: payments.length,
-      payments,
-    });
+      res.json({
+        success: true,
+        total_payments: payments.length,
+        payments,
+      });
+    } catch (error) {
+      res.status(500).json({
+        success: false,
+        message: "Error al obtener los pagos del alumno",
+      });
+    }
   },
 );
 

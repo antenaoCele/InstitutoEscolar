@@ -6,8 +6,15 @@ import { authentication, authorization } from "./auth.js";
 const router = express.Router();
 
 router.get("/", authentication, async (req, res) => {
-  const [plans] = await db.execute("SELECT * FROM plans");
-  res.json({ success: true, plans });
+  try {
+    const [plans] = await db.execute("SELECT * FROM plans");
+    res.json({ success: true, plans });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Error al obtener planes",
+    });
+  }
 });
 
 router.get(
@@ -16,28 +23,35 @@ router.get(
   validateID,
   checkValidations,
   async (req, res) => {
-    const id = Number(req.params.id);
+    try {
+      const id = Number(req.params.id);
 
-    const [exists] = await db.execute("SELECT * FROM plans WHERE id=?", [id]);
+      const [exists] = await db.execute("SELECT * FROM plans WHERE id=?", [id]);
 
-    if (exists.length === 0) {
-      return res
-        .status(404)
-        .json({ success: false, error: "Plan no encontrado" });
+      if (exists.length === 0) {
+        return res
+          .status(404)
+          .json({ success: false, error: "Plan no encontrado" });
+      }
+
+      const [rows] = await db.execute(
+        "SELECT id, name, price FROM plans WHERE id=?",
+        [id],
+      );
+
+      if (rows.length === 0) {
+        return res
+          .status(404)
+          .json({ success: false, error: "Usuario no encontrado" });
+      }
+
+      res.json({ success: true, data: rows[0] });
+    } catch (error) {
+      res.status(500).json({
+        success: false,
+        message: "Error al obtener el plan",
+      });
     }
-
-    const [rows] = await db.execute(
-      "SELECT id, name, duration, price FROM plans WHERE id=?",
-      [id],
-    );
-
-    if (rows.length === 0) {
-      return res
-        .status(404)
-        .json({ success: false, error: "Usuario no encontrado" });
-    }
-
-    res.json({ success: true, data: rows[0] });
   },
 );
 
@@ -48,17 +62,24 @@ router.post(
   validatePlans,
   checkValidations,
   async (req, res) => {
-    const { name, duration, price } = req.body;
+    try {
+      const { name, duration, price } = req.body;
 
-    const [result] = await db.execute(
-      "INSERT INTO plans (name, duration, price) VALUES (?,?,?)",
-      [name, duration, price],
-    );
+      const [result] = await db.execute(
+        "INSERT INTO plans (name, price) VALUES (?,?)",
+        [name, price],
+      );
 
-    res.status(201).json({
-      success: true,
-      data: { id: result.insertId, name, duration, price },
-    });
+      res.status(201).json({
+        success: true,
+        data: { id: result.insertId, name, price },
+      });
+    } catch (error) {
+      res.status(500).json({
+        success: false,
+        message: "Error al crear plan",
+      });
+    }
   },
 );
 
@@ -70,26 +91,41 @@ router.put(
   validatePlans,
   checkValidations,
   async (req, res) => {
-    const { name, duration, price } = req.body;
-    const { id } = req.params;
+    try {
+      const { name, price } = req.body;
+      const { id } = req.params;
 
-    const [rows] = await db.execute("SELECT * FROM plans WHERE id=?", [id]);
+      const [rows] = await db.execute("SELECT * FROM plans WHERE id=?", [id]);
 
-    if (rows.length === 0) {
-      return res
-        .status(404)
-        .json({ success: false, error: "Plan no encontrado" });
+      if (rows.length === 0) {
+        return res
+          .status(404)
+          .json({ success: false, error: "Plan no encontrado" });
+      }
+
+      const newName = name ?? rows[0].name;
+      const newPrice = price ?? rows[0].price;
+
+      await db.execute("UPDATE plans SET name=?, price=? WHERE id=?", [
+        newName,
+        newPrice,
+        id,
+      ]);
+
+      return res.status(200).json({
+        success: true,
+        data: {
+          id: Number(id),
+          name: newName,
+          price: newPrice,
+        },
+      });
+    } catch (error) {
+      res.status(500).json({
+        success: false,
+        message: "Error al actualizar plan",
+      });
     }
-
-    await db.execute(
-      "UPDATE plans SET name=?, duration=?, price=? WHERE id=?",
-      [name, duration, price, id],
-    );
-
-    return res.status(200).json({
-      success: true,
-      data: { id: Number(id), name, duration, price },
-    });
   },
 );
 
@@ -100,19 +136,24 @@ router.delete(
   validateID,
   checkValidations,
   async (req, res) => {
-    const { id } = req.params;
+    try {
+      const { id } = req.params;
+      const [rows] = await db.execute("SELECT * FROM plans WHERE id=?", [id]);
 
-    const [rows] = await db.execute("SELECT * FROM plans WHERE id=?", [id]);
+      if (rows.length === 0) {
+        return res
+          .status(404)
+          .json({ success: false, error: "Plan no encontrado" });
+      }
 
-    if (rows.length === 0) {
-      return res
-        .status(404)
-        .json({ success: false, error: "Plan no encontrado" });
+      await db.execute("DELETE FROM plans WHERE id=?", [id]);
+      res.json({ success: true, message: "Plan eliminado con éxito" });
+    } catch (error) {
+      res.status(500).json({
+        success: false,
+        message: "Error al eliminar el plan",
+      });
     }
-
-    await db.execute("DELETE FROM plans WHERE id=?", [id]);
-
-    res.json({ success: true, message: "Plan eliminado con éxito" });
   },
 );
 
