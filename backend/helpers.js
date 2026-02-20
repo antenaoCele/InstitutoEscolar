@@ -1,7 +1,7 @@
 import { param, validationResult } from "express-validator";
 
 /* =========================================================
-   HELPERS
+   CHECK VALIDATIONS
 ========================================================= */
 
 export const checkValidations = (req, res, next) => {
@@ -16,22 +16,25 @@ export const checkValidations = (req, res, next) => {
   next();
 };
 
+/* =========================================================
+   VALIDATE ID
+========================================================= */
+
 export const validateID = (tableName) => {
+  const safeTable = ALLOWED_TABLES[tableName];
+  if (!safeTable) throw new Error("Tabla no permitida en validación");
+
   return [
     param("id")
       .isInt({ min: 1 })
-      .withMessage("El id debe ser un número entero mayor a 0.")
+      .withMessage("El ID debe ser un número entero mayor a 0.")
       .custom(async (value) => {
-        const id = Number(value);
-
         const [rows] = await db.execute(
-          `SELECT id FROM ${tableName} WHERE id = ?`,
-          [id],
+          `SELECT id FROM ${safeTable} WHERE id = ?`,
+          [Number(value)],
         );
 
-        if (rows.length === 0) {
-          throw new Error("No se encontró el registro.");
-        }
+        if (rows.length === 0) throw new Error("No se encontró el registro.");
 
         return true;
       }),
@@ -39,7 +42,7 @@ export const validateID = (tableName) => {
 };
 
 /* =========================================================
-   WHITELIST ✅
+   WHITELIST 
 ========================================================= */
 
 export const ALLOWED_TABLES = {
@@ -52,7 +55,7 @@ export const ALLOWED_TABLES = {
 };
 
 /* =========================================================
-   HELPER 
+   IS TRUTHY 
 ========================================================= */
 
 export const isTruthy = (v) =>
