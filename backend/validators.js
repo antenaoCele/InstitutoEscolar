@@ -3,7 +3,7 @@ import { db } from "./db.js";
 import { ALLOWED_TABLES, isTruthy } from "./helpers.js";
 
 /* =========================================================
-   VALIDATE PERSON NAME (STUDENT, TEACHER, TUTOR) ✅
+   VALIDATE PERSON NAME (STUDENT, TEACHER, TUTOR)
 ========================================================= */
 
 export const validatePersonName = (field, optional = false) => {
@@ -25,7 +25,7 @@ export const validatePersonName = (field, optional = false) => {
 };
 
 /* =========================================================
-   VALIDATE DNI ✅
+   VALIDATE DNI
 ========================================================= */
 
 export const validateDNI = (field, table, optional = false) => {
@@ -68,7 +68,7 @@ export const validateDNI = (field, table, optional = false) => {
 };
 
 /* =========================================================
-   VALIDATE NAME (PLAN, SUBJECT, SCHOOL) ✅
+   VALIDATE NAME (PLAN, SUBJECT, SCHOOL)
 ========================================================= */
 
 export const validateName = (field, optional = false) => {
@@ -88,7 +88,7 @@ export const validateName = (field, optional = false) => {
 };
 
 /* =========================================================
-   VALIDATE PHONE ✅
+   VALIDATE PHONE
 ========================================================= */
 
 export const validatePhone = (field, optional = false) => {
@@ -108,7 +108,7 @@ export const validatePhone = (field, optional = false) => {
 };
 
 /* =========================================================
-   VALIDATE STUDENT INFO (ENROLLED, LEVEL, GRADE) ✅
+   VALIDATE STUDENT INFO (ENROLLED, LEVEL, GRADE)
 ========================================================= */
 
 export const validateStudentInfo = (
@@ -159,7 +159,7 @@ export const validateStudentInfo = (
 };
 
 /* =========================================================
-   VALIDATE DATE ✅
+   VALIDATE DATE
 ========================================================= */
 
 export const validateDate = (field, optional = false) => {
@@ -195,7 +195,7 @@ export const validateDate = (field, optional = false) => {
 };
 
 /* =========================================================
-   VALIDATE HOUR ✅
+   VALIDATE HOUR
 ========================================================= */
 
 export const validateHour = (field, optional = false) => {
@@ -212,7 +212,7 @@ export const validateHour = (field, optional = false) => {
 };
 
 /* =========================================================
-   VALIDATE MONEY ✅
+   VALIDATE MONEY
 ========================================================= */
 
 export const validateMoney = (field, optional = false) => {
@@ -242,7 +242,7 @@ export const validateMoney = (field, optional = false) => {
 };
 
 /* =========================================================
-   VALIDATE PAYMENT METHOD ✅
+   VALIDATE PAYMENT METHOD
 ========================================================= */
 
 export const validatePaymentMethod = (field, optional = false) => {
@@ -266,7 +266,7 @@ export const validatePaymentMethod = (field, optional = false) => {
 };
 
 /* =========================================================
-   VALIDATE FOREIGN KEY ✅
+   VALIDATE FOREIGN KEY
 ========================================================= */
 
 export const validateForeignId = (field, table, optional = false) => {
@@ -301,7 +301,7 @@ export const validateForeignId = (field, table, optional = false) => {
 };
 
 /* =========================================================
-   USERNAME ✅
+   USERNAME
 ========================================================= */
 
 export const validateUsername = (field, optional = false) => {
@@ -338,7 +338,7 @@ export const validateUsername = (field, optional = false) => {
 };
 
 /* =========================================================
-   PASSWORD ✅
+   PASSWORD
 ========================================================= */
 
 export const validatePassword = (field, optional = false) => {
@@ -363,7 +363,7 @@ export const validatePassword = (field, optional = false) => {
 };
 
 /* =========================================================
-   ROLE ✅
+   ROLE
 ========================================================= */
 
 export const validateRole = (field, optional = false) => {
