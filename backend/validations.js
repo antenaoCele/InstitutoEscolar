@@ -21,9 +21,9 @@ import {
 ========================================================= */
 
 export const validatePayments = [
-  ...validateForeignId("student_id", "students", true),
-  ...validateDate("payment_date", true),
-  ...validateMoney("amount", true),
+  ...validateForeignId("student_id", "students"),
+  ...validateDate("payment_date"),
+  ...validateMoney("amount"),
   ...validatePaymentMethod("payment_method"),
 ];
 
@@ -299,7 +299,7 @@ export const validateSubjects = [
 ];
 
 export const validateEditSubjects = [
-  ...validateName("name"),
+  ...validateName("name", true),
   body("name").custom(async (name, { req }) => {
     const [r] = await db.execute(
       "SELECT id FROM subjects WHERE name = ? AND id != ?",
@@ -381,9 +381,9 @@ export const validateEditTeachers = [
 ========================================================= */
 
 export const validateTutors = [
-  ...validatePersonName("first_name", true),
-  ...validatePersonName("last_name", true),
-  ...validateDNI("dni", "tutors", true),
+  ...validatePersonName("first_name"),
+  ...validatePersonName("last_name"),
+  ...validateDNI("dni", "tutors"),
   ...validatePhone("phone"),
 ];
 
