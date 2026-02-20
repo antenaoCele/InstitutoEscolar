@@ -1,10 +1,7 @@
 import express from "express";
 import { db } from "./db.js";
-import {
-  validateID,
-  checkValidations,
-  validateTeachers,
-} from "./validations.js";
+import { validateTeachers} from "./validations.js";
+import { validateID, checkValidations } from "./helpers.js";
 import { authentication, authorization } from "./auth.js";
 
 const router = express.Router();
@@ -14,8 +11,15 @@ router.get(
   authentication,
   authorization("ADMIN"),
   async (req, res) => {
-    const [teachers] = await db.execute("SELECT * FROM teachers");
-    res.json({ success: true, teachers });
+    try {
+      const [teachers] = await db.execute("SELECT * FROM teachers");
+      res.json({ success: true, teachers });
+    } catch (error) {
+      res.status(500).json({
+        success: false,
+        message: "Error al obtener los docentes",
+      });
+    }
   },
 );
 
@@ -26,19 +30,26 @@ router.get(
   validateID,
   checkValidations,
   async (req, res) => {
-    const id = Number(req.params.id);
+    try {
+      const id = Number(req.params.id);
 
-    const [teacher] = await db.execute("SELECT * FROM teachers WHERE id=?", [
-      id,
-    ]);
+      const [teacher] = await db.execute("SELECT * FROM teachers WHERE id=?", [
+        id,
+      ]);
 
-    if (teacher.length === 0) {
-      return res
-        .status(404)
-        .json({ success: false, error: "Docente no encontrado" });
+      if (teacher.length === 0) {
+        return res
+          .status(404)
+          .json({ success: false, error: "Docente no encontrado" });
+      }
+
+      res.json({ success: true, data: teacher[0] });
+    } catch (error) {
+      res.status(500).json({
+        success: false,
+        message: "Error al obtener el docente",
+      });
     }
-
-    res.json({ success: true, data: teacher[0] });
   },
 );
 
@@ -62,7 +73,10 @@ router.get(
       res.json({ success: true, data: liquidations });
 
     } catch (error) {
-      res.status(500).json({ error: "Error al obtener liquidaciones" });
+      res.status(500).json({
+        success: false,
+        message: "Error al obtener liquidaciones",
+      });
     }
   }
 );
@@ -76,17 +90,25 @@ router.post(
   validateTeachers,
   checkValidations,
   async (req, res) => {
-    const { first_name, last_name, dni, phone, salary } = req.body;
+    try {
+      const { first_name, last_name, dni, phone, salary } = req.body;
 
-    const [result] = await db.execute(
-      "INSERT INTO teachers (first_name, last_name, dni,phone, salary) VALUES (?,?,?,?,?)",
-      [first_name, last_name, dni, phone, salary],
-    );
+      const [result] = await db.execute(
+        "INSERT INTO teachers (first_name, last_name, dni,phone, salary) VALUES (?,?,?,?,?)",
+        [first_name, last_name, dni, phone, salary],
+      );
 
-    res.status(201).json({
-      success: true,
-      data: { id: result.insertId, first_name, last_name, dni, phone, salary },
-    });
+      res.status(201).json({
+        success: true,
+        data: { id: result.insertId, first_name, last_name, dni, phone, salary },
+        message: "Docente creado exitosamente",
+      });
+    } catch (error) {
+      res.status(500).json({
+        success: false,
+        message: "Error al crear el docente",
+      });
+    }
   },
 );
 
@@ -180,26 +202,49 @@ router.put(
   validateTeachers,
   checkValidations,
   async (req, res) => {
-    const { first_name, last_name, dni, phone, salary } = req.body;
-    const { id } = req.params;
+    try {
+      const id = Number(req.params.id);
+      const [teachers] = await db.execute("SELECT * FROM teachers WHERE id=?", [
+        id,
+      ]);
 
-    const [rows] = await db.execute("SELECT * FROM teachers WHERE id=?", [id]);
+      if (teachers.length === 0) {
+        return res
+          .status(404)
+          .json({ success: false, error: "Docente no encontrado" });
+      }
 
-    if (rows.length === 0) {
-      return res
-        .status(404)
-        .json({ success: false, error: "Docente no encontrado" });
+      const { first_name, last_name, dni, phone, salary } = req.body;
+
+      const newFirstName = first_name ?? teachers[0].first_name;
+      const newLastName = last_name ?? teachers[0].last_name;
+      const newDni = dni ?? teachers[0].dni;
+      const newPhone = phone ?? teachers[0].phone;
+      const newSalary = salary ?? teachers[0].salary;
+
+      await db.execute(
+        "UPDATE teachers SET first_name=?, last_name=?, dni=?,phone=?,salary=? WHERE id=?",
+        [newFirstName, newLastName, newDni, newPhone, newSalary, id],
+      );
+
+      return res.status(200).json({
+        success: true,
+        data: {
+          id,
+          first_name: newFirstName,
+          last_name: newLastName,
+          dni: newDni,
+          phone: newPhone,
+          salary: newSalary,
+        },
+        message: "Docente actualizado exitosamente",
+      });
+    } catch (error) {
+      res.status(500).json({
+        success: false,
+        message: "Error al actualizar el docente",
+      });
     }
-
-    await db.execute(
-      "UPDATE teachers SET first_name=?, last_name=?, dni=?,phone=?,salary=? WHERE id=?",
-      [first_name, last_name, dni, phone, salary, id],
-    );
-
-    return res.status(200).json({
-      success: true,
-      data: { id: Number(id), first_name, last_name, dni, phone, salary },
-    });
   },
 );
 
@@ -210,19 +255,26 @@ router.delete(
   validateID,
   checkValidations,
   async (req, res) => {
-    const { id } = req.params;
+    try {
+      const id = Number(req.params.id);
 
-    const [rows] = await db.execute("SELECT * FROM teachers WHERE id=?", [id]);
+      const [rows] = await db.execute("SELECT * FROM teachers WHERE id=?", [id]);
 
-    if (rows.length === 0) {
-      return res
-        .status(404)
-        .json({ success: false, error: "Docente no encontrado" });
+      if (rows.length === 0) {
+        return res
+          .status(404)
+          .json({ success: false, error: "Docente no encontrado" });
+      }
+
+      await db.execute("DELETE FROM teachers WHERE id=?", [id]);
+
+      res.json({ success: true, message: "Docente eliminado correctamente" });
+    } catch (error) {
+      res.status(500).json({
+        success: false,
+        message: "Error al eliminar el docente",
+      });
     }
-
-    await db.execute("DELETE FROM teachers WHERE id=?", [id]);
-
-    res.json({ success: true, message: "Docente eliminado" });
   },
 );
 

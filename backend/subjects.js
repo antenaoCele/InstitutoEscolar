@@ -1,18 +1,21 @@
 import express from "express";
 import { db } from "./db.js";
-import {
-  checkValidations,
-  validateID,
-  validateSubjects,
-  validateEditSubjects,
-} from "./validations.js";
+import { validateSubjects, validateEditSubjects} from "./validations.js";
+import { validateID, checkValidations } from "./helpers.js";
 import { authentication, authorization } from "./auth.js";
 
 const router = express.Router();
 
 router.get("/", authentication, async (req, res) => {
-  const [subjects] = await db.execute("SELECT * FROM subjects");
-  res.json({ success: true, subjects });
+  try {
+    const [subjects] = await db.execute("SELECT * FROM subjects");
+    res.json({ success: true, subjects });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Error al obtener las asignaturas",
+    });
+  }
 });
 
 router.get(
@@ -21,19 +24,27 @@ router.get(
   validateID,
   checkValidations,
   async (req, res) => {
-    const id = Number(req.params.id);
+    try {
+      const id = Number(req.params.id);
 
-    const [subjects] = await db.execute("SELECT * FROM subjects WHERE id = ?", [
-      id,
-    ]);
+      const [subjects] = await db.execute(
+        "SELECT * FROM subjects WHERE id = ?",
+        [id],
+      );
 
-    if (subjects.length === 0) {
-      return res
-        .status(404)
-        .json({ success: false, message: "Asignatura no encontrada" });
+      if (subjects.length === 0) {
+        return res
+          .status(404)
+          .json({ success: false, message: "Asignatura no encontrada" });
+      }
+
+      res.json({ success: true, materia: subjects[0] });
+    } catch (error) {
+      res.status(500).json({
+        success: false,
+        message: "Error al obtener la asignatura",
+      });
     }
-
-    res.json({ success: true, materia: subjects[0] });
   },
 );
 
@@ -44,18 +55,25 @@ router.post(
   validateSubjects,
   checkValidations,
   async (req, res) => {
-    const { name } = req.body;
+    try {
+      const { name } = req.body;
 
-    const [result] = await db.execute(
-      "INSERT INTO subjects (name) VALUES (?)",
-      [name],
-    );
+      const [result] = await db.execute(
+        "INSERT INTO subjects (name) VALUES (?)",
+        [name],
+      );
 
-    res.status(201).json({
-      success: true,
-      data: { id: result.insertId, name },
-      message: "Asignatura creada exitosamente",
-    });
+      res.status(201).json({
+        success: true,
+        data: { id: result.insertId, name },
+        message: "Asignatura creada exitosamente",
+      });
+    } catch (error) {
+      res.status(500).json({
+        success: false,
+        message: "Error al crear la asignatura",
+      });
+    }
   },
 );
 
@@ -67,27 +85,40 @@ router.put(
   validateEditSubjects,
   checkValidations,
   async (req, res) => {
-    const id = Number(req.params.id);
+    try {
+      const id = Number(req.params.id);
 
-    const [subjects] = await db.execute("SELECT * FROM subjects WHERE id = ?", [
-      id,
-    ]);
+      const [subjects] = await db.execute(
+        "SELECT * FROM subjects WHERE id = ?",
+        [id],
+      );
 
-    if (subjects.length === 0) {
-      return res
-        .status(404)
-        .json({ success: false, message: "Asignatura no encontrada" });
+      if (subjects.length === 0) {
+        return res
+          .status(404)
+          .json({ success: false, message: "Asignatura no encontrada" });
+      }
+
+      const { name } = req.body;
+
+      const newName = name ?? subjects[0].name;
+
+      await db.execute("UPDATE subjects SET name = ? WHERE id = ?", [
+        newName,
+        id,
+      ]);
+
+      res.json({
+        success: true,
+        data: { id, name: newName },
+        message: "Asignatura actualizada exitosamente",
+      });
+    } catch (error) {
+      res.status(500).json({
+        success: false,
+        message: "Error al actualizar la asignatura",
+      });
     }
-
-    const { name } = req.body;
-
-    await db.execute("UPDATE subjects SET name = ? WHERE id = ?", [name, id]);
-
-    res.json({
-      success: true,
-      data: { name },
-      message: "Asignatura actualizada exitosamente",
-    });
   },
 );
 
@@ -98,34 +129,42 @@ router.delete(
   validateID,
   checkValidations,
   async (req, res) => {
-    const id = Number(req.params.id);
+    try {
+      const id = Number(req.params.id);
 
-    const [subjects] = await db.execute("SELECT * FROM subjects WHERE id = ?", [
-      id,
-    ]);
+      const [subjects] = await db.execute(
+        "SELECT * FROM subjects WHERE id = ?",
+        [id],
+      );
 
-    if (subjects.length === 0) {
-      return res
-        .status(404)
-        .json({ success: false, message: "Asignatura no encontrada" });
-    }
+      if (subjects.length === 0) {
+        return res
+          .status(404)
+          .json({ success: false, message: "Asignatura no encontrada" });
+      }
 
-    const [registeredSubject] = await db.execute(
-      "SELECT * FROM teacher_subjects WHERE subject_id = ?",
-      [id],
-    );
+      const [registeredSubject] = await db.execute(
+        "SELECT * FROM teacher_subjects WHERE subject_id = ?",
+        [id],
+      );
 
-    if (registeredSubject.length > 0) {
-      return res.status(400).json({
+      if (registeredSubject.length > 0) {
+        return res.status(400).json({
+          success: false,
+          message:
+            "No se puede eliminar la Asignatura porque está asociada a uno o más docentes.",
+        });
+      }
+
+      await db.execute("DELETE FROM subjects WHERE id = ?", [id]);
+
+      res.json({ success: true, message: "Asignatura eliminada exitosamente" });
+    } catch (error) {
+      res.status(500).json({
         success: false,
-        message:
-          "No se puede eliminar la Asignatura porque está asociada a uno o más docentes.",
+        message: "Error al eliminar la asignatura",
       });
     }
-
-    await db.execute("DELETE FROM subjects WHERE id = ?", [id]);
-
-    res.json({ success: true, message: "Asignatura eliminada exitosamente" });
   },
 );
 
