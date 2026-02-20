@@ -59,7 +59,6 @@ router.get(
 
       res.json({ success: true, data: rows[0] });
     } catch (error) {
-      console.error(`Error fetching teacher liquidation with id ${req.params.id}:`, error);
       res.status(500).json({ success: false, message: "Error interno del servidor." });
     }
   },
