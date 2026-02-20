@@ -28,11 +28,6 @@ router.get("/", authentication, async (req, res) => {
   }
 });
 
-/**
- * @route   GET /api/teacher-liquidations/:id
- * @desc    Obtener una liquidación de docente por ID
- * @access  Private
- */
 router.get(
   "/:id",
   authentication,
