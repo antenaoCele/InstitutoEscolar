@@ -28,9 +28,14 @@ export const validatePersonName = (field, optional = false) => {
    VALIDATE DNI
 ========================================================= */
 
+const ALLOWED_DNI_FIELDS = ["dni"];
+
 export const validateDNI = (field, table, optional = false) => {
   const safeTable = ALLOWED_TABLES[table];
   if (!safeTable) throw new Error("Tabla no permitida en validación");
+
+  if (!ALLOWED_DNI_FIELDS.includes(field))
+    throw new Error("Campo no permitido en validación");
 
   let v = body(field).customSanitizer((v) =>
     v === undefined || v === null || v === ""
