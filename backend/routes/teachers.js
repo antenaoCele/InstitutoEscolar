@@ -1,5 +1,9 @@
 import express from "express";
+<<<<<<< HEAD:backend/routes/teachers.js
 import { db } from "../db.js";
+=======
+import { db } from "./db.js";
+>>>>>>> 4ef73462ccca644822779073ed12f427f5b4fcff:backend/teachers.js
 import { validateTeachers } from "./validations.js";
 import { validateID, checkValidations } from "./helpers.js";
 import { authentication, authorization } from "./auth.js";
@@ -32,12 +36,6 @@ router.get(
         id,
       ]);
 
-      if (teacher.length === 0) {
-        return res
-          .status(404)
-          .json({ success: false, error: "Docente no encontrado" });
-      }
-
       res.json({ success: true, data: teacher[0] });
     } catch (error) {
       res.status(500).json({
@@ -53,7 +51,7 @@ router.get(
   "/:id/liquidations",
   authentication,
   authorization("ADMIN"),
-  validateID,
+  validateID("teachers"),
   checkValidations,
   async (req, res) => {
     const { id } = req.params;
@@ -82,15 +80,16 @@ router.post(
   checkValidations,
   async (req, res) => {
     try {
-      const { first_name, last_name, dni, phone, salary } = req.body;
+      const { first_name, last_name, dni, phone } = req.body;
 
       const [result] = await db.execute(
-        "INSERT INTO teachers (first_name, last_name, dni,phone, salary) VALUES (?,?,?,?,?)",
-        [first_name, last_name, dni, phone, salary],
+        "INSERT INTO teachers (first_name, last_name, dni, phone) VALUES (?,?,?,?)",
+        [first_name, last_name, dni, phone],
       );
 
       res.status(201).json({
         success: true,
+<<<<<<< HEAD:backend/routes/teachers.js
         data: {
           id: result.insertId,
           first_name,
@@ -99,6 +98,9 @@ router.post(
           phone,
           salary,
         },
+=======
+        data: { id: result.insertId, first_name, last_name, dni, phone },
+>>>>>>> 4ef73462ccca644822779073ed12f427f5b4fcff:backend/teachers.js
         message: "Docente creado exitosamente",
       });
     } catch (error) {
@@ -115,16 +117,23 @@ router.post(
   "/:id/liquidate",
   authentication,
   authorization("ADMIN"),
+<<<<<<< HEAD:backend/routes/teachers.js
   validateID,
+=======
+  validateID("teachers"),
+>>>>>>> 4ef73462ccca644822779073ed12f427f5b4fcff:backend/teachers.js
   checkValidations,
   async (req, res) => {
     console.log("ENTRO AL ENDPOINT NUEVO");
     const { id } = req.params;
     const { month } = req.body; // ejemplo: "2026-02"
 
+<<<<<<< HEAD:backend/routes/teachers.js
     console.log("Teacher ID:", id);
     console.log("Month recibido:", month);
 
+=======
+>>>>>>> 4ef73462ccca644822779073ed12f427f5b4fcff:backend/teachers.js
     const [debugRows] = await db.execute(
       `
   SELECT 
@@ -192,33 +201,26 @@ router.put(
   "/:id",
   authentication,
   authorization("ADMIN"),
-  validateID,
+  validateID("teachers"),
   validateTeachers,
   checkValidations,
   async (req, res) => {
     try {
       const id = Number(req.params.id);
+      const { first_name, last_name, dni, phone } = req.body;
+
       const [teachers] = await db.execute("SELECT * FROM teachers WHERE id=?", [
         id,
       ]);
-
-      if (teachers.length === 0) {
-        return res
-          .status(404)
-          .json({ success: false, error: "Docente no encontrado" });
-      }
-
-      const { first_name, last_name, dni, phone, salary } = req.body;
 
       const newFirstName = first_name ?? teachers[0].first_name;
       const newLastName = last_name ?? teachers[0].last_name;
       const newDni = dni ?? teachers[0].dni;
       const newPhone = phone ?? teachers[0].phone;
-      const newSalary = salary ?? teachers[0].salary;
 
       await db.execute(
-        "UPDATE teachers SET first_name=?, last_name=?, dni=?,phone=?,salary=? WHERE id=?",
-        [newFirstName, newLastName, newDni, newPhone, newSalary, id],
+        "UPDATE teachers SET first_name=?, last_name=?, dni=?,phone=? WHERE id=?",
+        [newFirstName, newLastName, newDni, newPhone, id],
       );
 
       return res.status(200).json({
@@ -229,7 +231,6 @@ router.put(
           last_name: newLastName,
           dni: newDni,
           phone: newPhone,
-          salary: newSalary,
         },
         message: "Docente actualizado exitosamente",
       });
@@ -246,12 +247,13 @@ router.delete(
   "/:id",
   authentication,
   authorization("ADMIN"),
-  validateID,
+  validateID("teachers"),
   checkValidations,
   async (req, res) => {
     try {
       const id = Number(req.params.id);
 
+<<<<<<< HEAD:backend/routes/teachers.js
       const [rows] = await db.execute("SELECT * FROM teachers WHERE id=?", [
         id,
       ]);
@@ -262,6 +264,8 @@ router.delete(
           .json({ success: false, error: "Docente no encontrado" });
       }
 
+=======
+>>>>>>> 4ef73462ccca644822779073ed12f427f5b4fcff:backend/teachers.js
       await db.execute("DELETE FROM teachers WHERE id=?", [id]);
 
       res.json({ success: true, message: "Docente eliminado correctamente" });

@@ -33,7 +33,7 @@ router.get("/", authentication, async (req, res) => {
 router.get(
   "/:id",
   authentication,
-  validateID,
+  validateID("teacher_liquidations"),
   checkValidations,
   async (req, res) => {
     try {
@@ -54,12 +54,6 @@ router.get(
       `;
 
       const [rows] = await db.execute(sql, [id]);
-
-      if (rows.length === 0) {
-        return res
-          .status(404)
-          .json({ success: false, message: "Liquidación no encontrada." });
-      }
 
       res.json({ success: true, data: rows[0] });
     } catch (error) {

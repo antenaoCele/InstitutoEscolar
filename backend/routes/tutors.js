@@ -21,19 +21,13 @@ router.get("/", authentication, async (req, res) => {
 router.get(
   "/:id",
   authentication,
-  validateID,
+  validateID("tutors"),
   checkValidations,
   async (req, res) => {
     try {
       const id = Number(req.params.id);
 
       const [rows] = await db.execute("SELECT * FROM tutors WHERE id=?", [id]);
-
-      if (rows.length === 0) {
-        return res
-          .status(404)
-          .json({ success: false, error: "Tutor no encontrado" });
-      }
 
       res.json({ success: true, data: rows[0] });
     } catch (error) {
@@ -78,23 +72,17 @@ router.put(
   "/:id",
   authentication,
   authorization("ADMIN"),
-  validateID,
+  validateID("tutors"),
   validateTutors,
   checkValidations,
   async (req, res) => {
     try {
       const id = Number(req.params.id);
+      const { first_name, last_name, phone, dni } = req.body;
+
       const [tutors] = await db.execute("SELECT * FROM tutors WHERE id=?", [
         id,
       ]);
-
-      if (tutors.length === 0) {
-        return res
-          .status(404)
-          .json({ success: false, error: "Tutor no encontrado" });
-      }
-
-      const { first_name, last_name, phone, dni } = req.body;
 
       const newFirstName = first_name ?? tutors[0].first_name;
       const newLastName = last_name ?? tutors[0].last_name;
@@ -130,19 +118,11 @@ router.delete(
   "/:id",
   authentication,
   authorization("ADMIN"),
-  validateID,
+  validateID("tutors"),
   checkValidations,
   async (req, res) => {
     try {
       const id = Number(req.params.id);
-
-      const [rows] = await db.execute("SELECT * FROM tutors WHERE id=?", [id]);
-
-      if (rows.length === 0) {
-        return res
-          .status(404)
-          .json({ success: false, error: "Tutor no encontrado" });
-      }
 
       await db.execute("DELETE FROM tutors WHERE id=?", [id]);
 

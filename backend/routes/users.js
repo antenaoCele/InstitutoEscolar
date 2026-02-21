@@ -1,5 +1,9 @@
 import express from "express";
+<<<<<<< HEAD:backend/routes/users.js
 import { db } from "../db.js";
+=======
+import { db } from "./db.js";
+>>>>>>> 4ef73462ccca644822779073ed12f427f5b4fcff:backend/users.js
 import { validateUsers, validateEditUsers } from "./validations.js";
 import { validateID, checkValidations } from "./helpers.js";
 import { authentication, authorization } from "./auth.js";
@@ -25,7 +29,7 @@ router.get(
   "/:id",
   authentication,
   authorization("ADMIN"),
-  validateID,
+  validateID("users"),
   checkValidations,
   async (req, res) => {
     try {
@@ -35,12 +39,6 @@ router.get(
         "SELECT id, first_name, last_name, username, role FROM users WHERE id = ?",
         [id],
       );
-
-      if (users.length === 0) {
-        return res
-          .status(404)
-          .json({ success: false, error: "Usuario no encontrado" });
-      }
 
       res.json({ success: true, data: users[0] });
     } catch (error) {
@@ -86,23 +84,17 @@ router.put(
   "/:id",
   authentication,
   authorization("ADMIN"),
-  validateID,
+  validateID("users"),
   validateEditUsers,
   checkValidations,
   async (req, res) => {
     try {
       const id = Number(req.params.id);
+      const { first_name, last_name, username, password, role } = req.body;
+
       const [users] = await db.execute("SELECT * FROM users WHERE id = ?", [
         id,
       ]);
-
-      if (users.length === 0) {
-        return res
-          .status(404)
-          .json({ success: false, error: "Usuario no encontrado" });
-      }
-
-      const { first_name, last_name, username, password, role } = req.body;
 
       const newFirstName = first_name ?? users[0].first_name;
       const newLastName = last_name ?? users[0].last_name;
@@ -143,21 +135,11 @@ router.delete(
   "/:id",
   authentication,
   authorization("ADMIN"),
-  validateID,
+  validateID("users"),
   checkValidations,
   async (req, res) => {
     try {
       const id = Number(req.params.id);
-
-      const [users] = await db.execute("SELECT id FROM users WHERE id = ?", [
-        id,
-      ]);
-
-      if (users.length === 0) {
-        return res
-          .status(404)
-          .json({ success: false, error: "Usuario no encontrado" });
-      }
 
       await db.execute("DELETE FROM users WHERE id = ?", [id]);
 

@@ -1,5 +1,9 @@
 import express from "express";
+<<<<<<< HEAD:backend/routes/subjects.js
 import { db } from "../db.js";
+=======
+import { db } from "./db.js";
+>>>>>>> 4ef73462ccca644822779073ed12f427f5b4fcff:backend/subjects.js
 import { validateSubjects, validateEditSubjects } from "./validations.js";
 import { validateID, checkValidations } from "./helpers.js";
 import { authentication, authorization } from "./auth.js";
@@ -21,7 +25,7 @@ router.get("/", authentication, async (req, res) => {
 router.get(
   "/:id",
   authentication,
-  validateID,
+  validateID("subjects"),
   checkValidations,
   async (req, res) => {
     try {
@@ -31,12 +35,6 @@ router.get(
         "SELECT * FROM subjects WHERE id = ?",
         [id],
       );
-
-      if (subjects.length === 0) {
-        return res
-          .status(404)
-          .json({ success: false, message: "Asignatura no encontrada" });
-      }
 
       res.json({ success: true, materia: subjects[0] });
     } catch (error) {
@@ -81,25 +79,18 @@ router.put(
   "/:id",
   authentication,
   authorization("ADMIN"),
-  validateID,
+  validateID("subjects"),
   validateEditSubjects,
   checkValidations,
   async (req, res) => {
     try {
       const id = Number(req.params.id);
+      const { name } = req.body;
 
       const [subjects] = await db.execute(
         "SELECT * FROM subjects WHERE id = ?",
         [id],
       );
-
-      if (subjects.length === 0) {
-        return res
-          .status(404)
-          .json({ success: false, message: "Asignatura no encontrada" });
-      }
-
-      const { name } = req.body;
 
       const newName = name ?? subjects[0].name;
 
@@ -126,22 +117,11 @@ router.delete(
   "/:id",
   authentication,
   authorization("ADMIN"),
-  validateID,
+  validateID("subjects"),
   checkValidations,
   async (req, res) => {
     try {
       const id = Number(req.params.id);
-
-      const [subjects] = await db.execute(
-        "SELECT * FROM subjects WHERE id = ?",
-        [id],
-      );
-
-      if (subjects.length === 0) {
-        return res
-          .status(404)
-          .json({ success: false, message: "Asignatura no encontrada" });
-      }
 
       const [registeredSubject] = await db.execute(
         "SELECT * FROM teacher_subjects WHERE subject_id = ?",
