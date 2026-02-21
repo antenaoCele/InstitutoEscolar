@@ -12,7 +12,14 @@ const router = express.Router();
 router.get("/", authentication, async (req, res) => {
   try {
     let sql =
-      "SELECT s.id AS student_id, p.id AS plan_id, paid_amount, start_date, t.id AS teacher_id\
+      "SELECT sp.id, \
+       s.first_name AS student_first_name, \
+       s.last_name AS student_last_name, \
+       p.name AS plan_name, \
+       sp.start_date \
+       t.id AS teacher_id \
+      t.first_name AS teacher_first_name, \
+      t.last_name AS teacher_last_name \
       FROM student_plans sp \
       JOIN students s ON sp.student_id = s.id \
       JOIN plans p ON sp.plan_id = p.id \
@@ -23,12 +30,11 @@ router.get("/", authentication, async (req, res) => {
   } catch (error) {
     res.status(500).json({
       success: false,
-      message: "Error al obtener planes",
+      message: "Error al obtener planes y estudiantes",
     });
   }
 });
 
-//acá me quede
 router.get(
   "/:id",
   authentication,
@@ -43,9 +49,10 @@ router.get(
        s.first_name AS student_first_name, \
        s.last_name AS student_last_name, \
        p.name AS plan_name, \
-       sp.paid_amount, \
        sp.start_date \
        t.id AS teacher_id \
+      t.first_name AS teacher_first_name, \
+      t.last_name AS teacher_last_name \
       FROM student_plans sp \
       JOIN students s ON sp.student_id = s.id \
       JOIN plans p ON sp.plan_id = p.id \
@@ -57,7 +64,7 @@ router.get(
     } catch (error) {
       res.status(500).json({
         success: false,
-        message: "Error al obtener plan y materia",
+        message: "Error al obtener plan y estudiante",
       });
     }
   },
@@ -70,26 +77,33 @@ router.post(
   validateStudentPlans,
   checkValidations,
   async (req, res) => {
-    const { student_id, plan_id, paid_amount, start_date, teacher_id } =
-      req.body;
+    try {
+      const { student_id, plan_id, paid_amount, start_date, teacher_id } =
+        req.body;
 
-    const [result] = await db.execute(
-      "INSERT INTO student_plans (student_id, plan_id, paid_amount, start_date, teacher_id) VALUES (?, ?, ?, ?, ?)",
-      [student_id, plan_id, paid_amount, start_date, teacher_id],
-    );
+      const [result] = await db.execute(
+        "INSERT INTO student_plans (student_id, plan_id, start_date, teacher_id) VALUES (?, ?, ?, ?)",
+        [student_id, plan_id, start_date, teacher_id],
+      );
 
-    res.status(201).json({
-      success: true,
-      data: {
-        id: result.insertId,
-        student_id,
-        plan_id,
-        paid_amount,
-        start_date,
-        teacher_id,
-      },
-      message: "Plan asignado al estudiante, exitosamente",
-    });
+      res.status(201).json({
+        success: true,
+        data: {
+          id: result.insertId,
+          student_id,
+          plan_id,
+          paid_amount,
+          start_date,
+          teacher_id,
+        },
+        message: "Plan asignado al estudiante, exitosamente",
+      });
+    } catch (error) {
+      res.status(500).json({
+        success: false,
+        message: "Error al crear plan y estudiante",
+      });
+    }
   },
 );
 
@@ -101,38 +115,42 @@ router.put(
   validateEditStudentPlans,
   checkValidations,
   async (req, res) => {
-    const id = Number(req.params.id);
+    try {
+      const id = Number(req.params.id);
+      const { student_id, plan_id, teacher_id, start_date } = req.body;
 
-    const [studentPlans] = await db.execute(
-      "SELECT * FROM student_plans WHERE id = ?",
-      [id],
-    );
+      const [studentPlans] = await db.execute(
+        "SELECT * FROM student_plans WHERE id = ?",
+        [id],
+      );
 
-    if (studentPlans.length === 0) {
-      return res
-        .status(404)
-        .json({ success: false, message: "Estudiante y plan no encontrados." });
+      const newStudentId = student_id ?? studentPlans[0].student_id;
+      const newPlanId = plan_id ?? studentPlans[0].plan_id;
+      const newTeacherId = teacher_id ?? studentPlans[0].teacher_id;
+      const newStartDate = start_date ?? studentPlans[0].start_date;
+
+      await db.execute(
+        "UPDATE student_plans SET student_id = ?, plan_id = ?, start_date = ?, teacher_id = ? WHERE id = ?",
+        [newStudentId, newPlanId, newStartDate, newTeacherId, id],
+      );
+
+      res.json({
+        success: true,
+        data: {
+          id,
+          student_id: newStudentId,
+          plan_id: newPlanId,
+          start_date: newStartDate,
+          teacher_id: newTeacherId,
+        },
+        message: "Registro actualizado exitosamente",
+      });
+    } catch (error) {
+      res.status(500).json({
+        success: false,
+        message: "Error al actualizar plan y estudiante",
+      });
     }
-
-    const { student_id, plan_id, paid_amount, start_date } = req.body;
-
-    await db.execute(
-      "UPDATE student_plans SET student_id = ?, plan_id = ?, paid_amount = ?, start_date = ?, teacher_id = ? WHERE id = ?",
-      [student_id, plan_id, paid_amount, start_date, teacher_id, id],
-    );
-
-    res.json({
-      success: true,
-      data: {
-        id,
-        student_id,
-        plan_id,
-        paid_amount,
-        start_date,
-        teacher_id,
-      },
-      message: "Registro actualizado exitosamente",
-    });
   },
 );
 
@@ -144,17 +162,6 @@ router.delete(
   checkValidations,
   async (req, res) => {
     const id = Number(req.params.id);
-
-    const [studentPlans] = await db.execute(
-      "SELECT * FROM student_plans WHERE id = ?",
-      [id],
-    );
-
-    if (studentPlans.length === 0) {
-      return res
-        .status(404)
-        .json({ success: false, message: "Alumno y plan no encontrados." });
-    }
 
     await db.execute("DELETE FROM student_plans WHERE id = ?", [id]);
 
