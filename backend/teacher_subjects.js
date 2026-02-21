@@ -1,6 +1,9 @@
 import express from "express";
 import { db } from "./db.js";
-import { validateTeacherSubjects, validateEditTeacherSubjects} from "./validations.js";
+import {
+  validateTeacherSubjects,
+  validateEditTeacherSubjects,
+} from "./validations.js";
 import { validateID, checkValidations } from "./helpers.js";
 import { authentication, authorization } from "./auth.js";
 
@@ -26,7 +29,7 @@ router.get("/", authentication, async (req, res) => {
 router.get(
   "/:id",
   authentication,
-  validateID,
+  validateID("teacher_subjects"),
   checkValidations,
   async (req, res) => {
     try {
@@ -42,12 +45,6 @@ router.get(
         `,
         [id],
       );
-
-      if (rows.length === 0) {
-        return res
-          .status(404)
-          .json({ success: false, error: "Asignación no encontrada" });
-      }
 
       res.json({ success: true, data: rows[0] });
     } catch (error) {
@@ -92,27 +89,21 @@ router.put(
   "/:id",
   authentication,
   authorization("ADMIN"),
-  validateID,
+  validateID("teacher_subjects"),
   validateEditTeacherSubjects,
   checkValidations,
   async (req, res) => {
     try {
       const id = Number(req.params.id);
-      const [exists] = await db.execute(
+      const { teacher_id, subject_id } = req.body;
+
+      const [rows] = await db.execute(
         "SELECT * FROM teacher_subjects WHERE id = ?",
         [id],
       );
 
-      if (exists.length === 0) {
-        return res
-          .status(404)
-          .json({ success: false, error: "Asignación no encontrada" });
-      }
-
-      const { teacher_id, subject_id } = req.body;
-
-      const newTeacherId = teacher_id ?? exists[0].teacher_id;
-      const newSubjectId = subject_id ?? exists[0].subject_id;
+      const newTeacherId = teacher_id ?? rows[0].teacher_id;
+      const newSubjectId = subject_id ?? rows[0].subject_id;
 
       await db.execute(
         "UPDATE teacher_subjects SET teacher_id = ?, subject_id = ? WHERE id = ?",
@@ -141,22 +132,11 @@ router.delete(
   "/:id",
   authentication,
   authorization("ADMIN"),
-  validateID,
+  validateID("teacher_subjects"),
   checkValidations,
   async (req, res) => {
     try {
       const id = Number(req.params.id);
-
-      const [exists] = await db.execute(
-        "SELECT id FROM teacher_subjects WHERE id = ?",
-        [id],
-      );
-
-      if (exists.length === 0) {
-        return res
-          .status(404)
-          .json({ success: false, error: "Asignación no encontrada" });
-      }
 
       await db.execute("DELETE FROM teacher_subjects WHERE id = ?", [id]);
 

@@ -1,27 +1,22 @@
 import express from "express";
 import { db } from "./db.js";
-import { validateTeachers} from "./validations.js";
+import { validateTeachers } from "./validations.js";
 import { validateID, checkValidations } from "./helpers.js";
 import { authentication, authorization } from "./auth.js";
 
 const router = express.Router();
 
-router.get(
-  "/",
-  authentication,
-  authorization("ADMIN"),
-  async (req, res) => {
-    try {
-      const [teachers] = await db.execute("SELECT * FROM teachers");
-      res.json({ success: true, teachers });
-    } catch (error) {
-      res.status(500).json({
-        success: false,
-        message: "Error al obtener los docentes",
-      });
-    }
-  },
-);
+router.get("/", authentication, authorization("ADMIN"), async (req, res) => {
+  try {
+    const [teachers] = await db.execute("SELECT * FROM teachers");
+    res.json({ success: true, teachers });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Error al obtener los docentes",
+    });
+  }
+});
 
 router.get(
   "/:id",
@@ -37,12 +32,6 @@ router.get(
         id,
       ]);
 
-      if (teacher.length === 0) {
-        return res
-          .status(404)
-          .json({ success: false, error: "Docente no encontrado" });
-      }
-
       res.json({ success: true, data: teacher[0] });
     } catch (error) {
       res.status(500).json({
@@ -53,13 +42,12 @@ router.get(
   },
 );
 
-
 //VER LIQUIDACIONES DE UN DOCENTE
 router.get(
   "/:id/liquidations",
   authentication,
   authorization("ADMIN"),
-  validateID,
+  validateID("teachers"),
   checkValidations,
   async (req, res) => {
     const { id } = req.params;
@@ -67,21 +55,18 @@ router.get(
     try {
       const [liquidations] = await db.execute(
         "SELECT * FROM teacher_liquidations WHERE teacher_id = ? ORDER BY id DESC",
-        [id]
+        [id],
       );
 
       res.json({ success: true, data: liquidations });
-
     } catch (error) {
       res.status(500).json({
         success: false,
         message: "Error al obtener liquidaciones",
       });
     }
-  }
+  },
 );
-
-
 
 router.post(
   "/",
@@ -91,16 +76,16 @@ router.post(
   checkValidations,
   async (req, res) => {
     try {
-      const { first_name, last_name, dni, phone, salary } = req.body;
+      const { first_name, last_name, dni, phone } = req.body;
 
       const [result] = await db.execute(
-        "INSERT INTO teachers (first_name, last_name, dni,phone, salary) VALUES (?,?,?,?,?)",
-        [first_name, last_name, dni, phone, salary],
+        "INSERT INTO teachers (first_name, last_name, dni, phone) VALUES (?,?,?,?)",
+        [first_name, last_name, dni, phone],
       );
 
       res.status(201).json({
         success: true,
-        data: { id: result.insertId, first_name, last_name, dni, phone, salary },
+        data: { id: result.insertId, first_name, last_name, dni, phone },
         message: "Docente creado exitosamente",
       });
     } catch (error) {
@@ -112,24 +97,20 @@ router.post(
   },
 );
 
-
-//ENDPOINT PARA LIQUIDAR UN MES DEL DOCENTE 
-router.post("/:id/liquidate", 
-  authentication, 
-  authorization("ADMIN"), 
-  validateID, 
-  checkValidations, 
+//ENDPOINT PARA LIQUIDAR UN MES DEL DOCENTE
+router.post(
+  "/:id/liquidate",
+  authentication,
+  authorization("ADMIN"),
+  validateID("teachers"),
+  checkValidations,
   async (req, res) => {
     console.log("ENTRO AL ENDPOINT NUEVO");
     const { id } = req.params;
     const { month } = req.body; // ejemplo: "2026-02"
 
-    console.log("Teacher ID:", id);
-    console.log("Month recibido:", month);
-
-
     const [debugRows] = await db.execute(
-  `
+      `
   SELECT 
     p.amount,
     p.payment_date,
@@ -138,16 +119,15 @@ router.post("/:id/liquidate",
   JOIN student_plans sp ON sp.id = p.student_plan_id
   WHERE sp.teacher_id = ?
   `,
-  [id]
-);
+      [id],
+    );
 
-console.log("DEBUG ROWS:", debugRows);
-
+    console.log("DEBUG ROWS:", debugRows);
 
     try {
       // Calcular total recaudado del docente en ese mes
       const [rows] = await db.execute(
-       `
+        `
         SELECT SUM(p.amount) AS total
         FROM payments p
         JOIN student_plans sp ON sp.id = p.student_plan_id
@@ -155,7 +135,7 @@ console.log("DEBUG ROWS:", debugRows);
         AND p.payment_date >= ?
         AND p.payment_date < DATE_ADD(?, INTERVAL 1 MONTH)
         `,
-        [id, `${month}-01`, `${month}-01`]
+        [id, `${month}-01`, `${month}-01`],
       );
       console.log("ROWS RESULT:", rows);
       const totalCollected = Number(rows[0].total) || 0;
@@ -171,7 +151,7 @@ console.log("DEBUG ROWS:", debugRows);
         (teacher_id, month, total_collected, net_salary)
         VALUES (?, ?, ?, ?)
         `,
-        [id, month, totalCollected, netSalary]
+        [id, month, totalCollected, netSalary],
       );
 
       res.status(201).json({
@@ -183,48 +163,39 @@ console.log("DEBUG ROWS:", debugRows);
           net_salary: netSalary,
         },
       });
-
     } catch (error) {
       res.status(500).json({
         success: false,
         message: "Error al liquidar sueldo",
       });
     }
-});
-
-
+  },
+);
 
 router.put(
   "/:id",
   authentication,
   authorization("ADMIN"),
-  validateID,
+  validateID("teachers"),
   validateTeachers,
   checkValidations,
   async (req, res) => {
     try {
       const id = Number(req.params.id);
+      const { first_name, last_name, dni, phone } = req.body;
+
       const [teachers] = await db.execute("SELECT * FROM teachers WHERE id=?", [
         id,
       ]);
-
-      if (teachers.length === 0) {
-        return res
-          .status(404)
-          .json({ success: false, error: "Docente no encontrado" });
-      }
-
-      const { first_name, last_name, dni, phone, salary } = req.body;
 
       const newFirstName = first_name ?? teachers[0].first_name;
       const newLastName = last_name ?? teachers[0].last_name;
       const newDni = dni ?? teachers[0].dni;
       const newPhone = phone ?? teachers[0].phone;
-      const newSalary = salary ?? teachers[0].salary;
 
       await db.execute(
-        "UPDATE teachers SET first_name=?, last_name=?, dni=?,phone=?,salary=? WHERE id=?",
-        [newFirstName, newLastName, newDni, newPhone, newSalary, id],
+        "UPDATE teachers SET first_name=?, last_name=?, dni=?,phone=? WHERE id=?",
+        [newFirstName, newLastName, newDni, newPhone, id],
       );
 
       return res.status(200).json({
@@ -235,7 +206,6 @@ router.put(
           last_name: newLastName,
           dni: newDni,
           phone: newPhone,
-          salary: newSalary,
         },
         message: "Docente actualizado exitosamente",
       });
@@ -252,19 +222,11 @@ router.delete(
   "/:id",
   authentication,
   authorization("ADMIN"),
-  validateID,
+  validateID("teachers"),
   checkValidations,
   async (req, res) => {
     try {
       const id = Number(req.params.id);
-
-      const [rows] = await db.execute("SELECT * FROM teachers WHERE id=?", [id]);
-
-      if (rows.length === 0) {
-        return res
-          .status(404)
-          .json({ success: false, error: "Docente no encontrado" });
-      }
 
       await db.execute("DELETE FROM teachers WHERE id=?", [id]);
 
