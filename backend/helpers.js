@@ -9,8 +9,16 @@ export const ALLOWED_TABLES = {
   teachers: "teachers",
   tutors: "tutors",
   plans: "plans",
+  plan_subjects: "plan_subjects",
   subjects: "subjects",
   schedules: "schedules",
+  schedule_students: "schedule_students",
+  payments: "payments",
+  student_plans: "student_plans",
+  teacher_liquidations: "teacher_liquidations",
+  teacher_subjects: "teacher_subjects",
+  users: "users",
+  student_tutors: "student_tutors",
 };
 
 /* =========================================================
