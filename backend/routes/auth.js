@@ -1,5 +1,5 @@
 import express from "express";
-import { db } from "./db.js";
+import { db } from "../db.js";
 import { checkValidations } from "./helpers.js";
 // import { validateLogin } from "./validators.js";
 import bcrypt from "bcrypt";

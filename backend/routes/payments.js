@@ -1,7 +1,7 @@
 //id, student_plan_id, amount, payment_method
 
 import express from "express";
-import { db } from "./db.js";
+import { db } from "../db.js";
 import { validatePayments, validateEditPayments } from "./validations.js";
 import { validateID, checkValidations } from "./helpers.js";
 import { authentication, authorization } from "./auth.js";

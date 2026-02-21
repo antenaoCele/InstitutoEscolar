@@ -1,12 +1,11 @@
 import express from "express";
-import { db } from "./db.js";
-import { validateUsers, validateEditUsers} from "./validations.js";
+import { db } from "../db.js";
+import { validateUsers, validateEditUsers } from "./validations.js";
 import { validateID, checkValidations } from "./helpers.js";
 import { authentication, authorization } from "./auth.js";
 import bcrypt from "bcrypt";
 
 const router = express.Router();
-
 
 router.get("/", authentication, authorization("ADMIN"), async (req, res) => {
   try {

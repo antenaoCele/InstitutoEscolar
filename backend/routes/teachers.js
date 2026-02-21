@@ -1,27 +1,22 @@
 import express from "express";
-import { db } from "./db.js";
-import { validateTeachers} from "./validations.js";
+import { db } from "../db.js";
+import { validateTeachers } from "./validations.js";
 import { validateID, checkValidations } from "./helpers.js";
 import { authentication, authorization } from "./auth.js";
 
 const router = express.Router();
 
-router.get(
-  "/",
-  authentication,
-  authorization("ADMIN"),
-  async (req, res) => {
-    try {
-      const [teachers] = await db.execute("SELECT * FROM teachers");
-      res.json({ success: true, teachers });
-    } catch (error) {
-      res.status(500).json({
-        success: false,
-        message: "Error al obtener los docentes",
-      });
-    }
-  },
-);
+router.get("/", authentication, authorization("ADMIN"), async (req, res) => {
+  try {
+    const [teachers] = await db.execute("SELECT * FROM teachers");
+    res.json({ success: true, teachers });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Error al obtener los docentes",
+    });
+  }
+});
 
 router.get(
   "/:id",
@@ -53,7 +48,6 @@ router.get(
   },
 );
 
-
 //VER LIQUIDACIONES DE UN DOCENTE
 router.get(
   "/:id/liquidations",
@@ -67,21 +61,18 @@ router.get(
     try {
       const [liquidations] = await db.execute(
         "SELECT * FROM teacher_liquidations WHERE teacher_id = ? ORDER BY id DESC",
-        [id]
+        [id],
       );
 
       res.json({ success: true, data: liquidations });
-
     } catch (error) {
       res.status(500).json({
         success: false,
         message: "Error al obtener liquidaciones",
       });
     }
-  }
+  },
 );
-
-
 
 router.post(
   "/",
@@ -100,7 +91,14 @@ router.post(
 
       res.status(201).json({
         success: true,
-        data: { id: result.insertId, first_name, last_name, dni, phone, salary },
+        data: {
+          id: result.insertId,
+          first_name,
+          last_name,
+          dni,
+          phone,
+          salary,
+        },
         message: "Docente creado exitosamente",
       });
     } catch (error) {
@@ -112,13 +110,13 @@ router.post(
   },
 );
 
-
-//ENDPOINT PARA LIQUIDAR UN MES DEL DOCENTE 
-router.post("/:id/liquidate", 
-  authentication, 
-  authorization("ADMIN"), 
-  validateID, 
-  checkValidations, 
+//ENDPOINT PARA LIQUIDAR UN MES DEL DOCENTE
+router.post(
+  "/:id/liquidate",
+  authentication,
+  authorization("ADMIN"),
+  validateID,
+  checkValidations,
   async (req, res) => {
     console.log("ENTRO AL ENDPOINT NUEVO");
     const { id } = req.params;
@@ -127,9 +125,8 @@ router.post("/:id/liquidate",
     console.log("Teacher ID:", id);
     console.log("Month recibido:", month);
 
-
     const [debugRows] = await db.execute(
-  `
+      `
   SELECT 
     p.amount,
     p.payment_date,
@@ -138,16 +135,15 @@ router.post("/:id/liquidate",
   JOIN student_plans sp ON sp.id = p.student_plan_id
   WHERE sp.teacher_id = ?
   `,
-  [id]
-);
+      [id],
+    );
 
-console.log("DEBUG ROWS:", debugRows);
-
+    console.log("DEBUG ROWS:", debugRows);
 
     try {
       // Calcular total recaudado del docente en ese mes
       const [rows] = await db.execute(
-       `
+        `
         SELECT SUM(p.amount) AS total
         FROM payments p
         JOIN student_plans sp ON sp.id = p.student_plan_id
@@ -155,7 +151,7 @@ console.log("DEBUG ROWS:", debugRows);
         AND p.payment_date >= ?
         AND p.payment_date < DATE_ADD(?, INTERVAL 1 MONTH)
         `,
-        [id, `${month}-01`, `${month}-01`]
+        [id, `${month}-01`, `${month}-01`],
       );
       console.log("ROWS RESULT:", rows);
       const totalCollected = Number(rows[0].total) || 0;
@@ -171,7 +167,7 @@ console.log("DEBUG ROWS:", debugRows);
         (teacher_id, month, total_collected, net_salary)
         VALUES (?, ?, ?, ?)
         `,
-        [id, month, totalCollected, netSalary]
+        [id, month, totalCollected, netSalary],
       );
 
       res.status(201).json({
@@ -183,16 +179,14 @@ console.log("DEBUG ROWS:", debugRows);
           net_salary: netSalary,
         },
       });
-
     } catch (error) {
       res.status(500).json({
         success: false,
         message: "Error al liquidar sueldo",
       });
     }
-});
-
-
+  },
+);
 
 router.put(
   "/:id",
@@ -258,7 +252,9 @@ router.delete(
     try {
       const id = Number(req.params.id);
 
-      const [rows] = await db.execute("SELECT * FROM teachers WHERE id=?", [id]);
+      const [rows] = await db.execute("SELECT * FROM teachers WHERE id=?", [
+        id,
+      ]);
 
       if (rows.length === 0) {
         return res

@@ -1,5 +1,5 @@
 import { param, validationResult } from "express-validator";
-import { db } from "./db.js";
+import { db } from "../db.js";
 
 /* =========================================================
 WHITELIST
@@ -73,4 +73,14 @@ export const validateID = (tableName) => {
         return true;
       }),
   ];
+};
+
+/* =========================================================
+BASE FIELD BUILDER
+========================================================= */
+export const baseField = (field, optional) => {
+  let v = body(field);
+
+  if (optional) return v.optional({ values: "falsy" });
+  return v.notEmpty().withMessage("Este campo es obligatorio.");
 };

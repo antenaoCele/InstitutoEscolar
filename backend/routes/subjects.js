@@ -1,6 +1,6 @@
 import express from "express";
-import { db } from "./db.js";
-import { validateSubjects, validateEditSubjects} from "./validations.js";
+import { db } from "../db.js";
+import { validateSubjects, validateEditSubjects } from "./validations.js";
 import { validateID, checkValidations } from "./helpers.js";
 import { authentication, authorization } from "./auth.js";
 
