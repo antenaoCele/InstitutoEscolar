@@ -17,9 +17,8 @@ import {
 } from "./validators.js";
 
 /* =========================================================
-   PAYMENTS
+PAYMENTS
 ========================================================= */
-
 export const validatePayments = [
   ...validateForeignId("student_id", "students"),
   ...validateDate("payment_date"),
@@ -35,9 +34,8 @@ export const validateEditPayments = [
 ];
 
 /* =========================================================
-   PLAN_SUBJECTS
+PLAN_SUBJECTS
 ========================================================= */
-
 export const validatePlanSubjects = [
   ...validateForeignId("plan_id", "plans"),
   ...validateForeignId("subject_id", "subjects"),
@@ -67,9 +65,8 @@ export const validateEditPlanSubjects = [
 ];
 
 /* =========================================================
-   PLANS
+PLANS
 ========================================================= */
-
 export const validatePlans = [
   ...validateName("name"),
   ...validateMoney("price"),
@@ -81,9 +78,8 @@ export const validateEditPlans = [
 ];
 
 /* =========================================================
-   SCHEDULE_STUDENTS
+SCHEDULE_STUDENTS
 ========================================================= */
-
 export const validateScheduleStudents = [
   ...validateForeignId("student_id", "students"),
   ...validateForeignId("schedule_id", "schedules"),
@@ -130,9 +126,8 @@ export const validateEditScheduleStudents = [
 ];
 
 /* =========================================================
-   SCHEDULES
+SCHEDULES
 ========================================================= */
-
 export const validateSchedules = [
   ...validateForeignId("teacher_id", "teachers"),
   body("teacher_id").custom(async (teacher_id, { req }) => {
@@ -180,9 +175,8 @@ export const validateEditSchedules = [
 ];
 
 /* =========================================================
-   STUDENT_PLANS
+STUDENT_PLANS
 ========================================================= */
-
 export const validateStudentPlans = [
   ...validateForeignId("student_id", "students"),
   ...validateForeignId("plan_id", "plans"),
@@ -230,9 +224,8 @@ export const validateEditStudentPlans = [
 ];
 
 /* =========================================================
-   STUDENT_TUTORS
+STUDENT_TUTORS
 ========================================================= */
-
 export const validateStudentTutors = [
   ...validateForeignId("student_id", "students"),
   ...validateForeignId("tutor_id", "tutors"),
@@ -262,9 +255,8 @@ export const validateEditStudentTutors = [
 ];
 
 /* =========================================================
-   STUDENTS
+STUDENTS
 ========================================================= */
-
 export const validateStudents = [
   ...validatePersonName("first_name"),
   ...validatePersonName("last_name"),
@@ -284,9 +276,8 @@ export const validateEditStudents = [
 ];
 
 /* =========================================================
-   SUBJECTS
+SUBJECTS
 ========================================================= */
-
 export const validateSubjects = [
   ...validateName("name"),
   body("name").custom(async (name) => {
@@ -311,9 +302,8 @@ export const validateEditSubjects = [
 ];
 
 /* =========================================================
-   TEACHER_SUBJECTS
+TEACHER_SUBJECTS
 ========================================================= */
-
 export const validateTeacherSubjects = [
   ...validateForeignId("teacher_id", "teachers"),
   ...validateForeignId("subject_id", "subjects"),
@@ -359,9 +349,8 @@ export const validateEditTeacherSubjects = [
 ];
 
 /* =========================================================
-   TEACHERS
+TEACHERS
 ========================================================= */
-
 export const validateTeachers = [
   ...validatePersonName("first_name"),
   ...validatePersonName("last_name"),
@@ -377,9 +366,8 @@ export const validateEditTeachers = [
 ];
 
 /* =========================================================
-   TUTORS
+TUTORS
 ========================================================= */
-
 export const validateTutors = [
   ...validatePersonName("first_name"),
   ...validatePersonName("last_name"),
@@ -395,9 +383,8 @@ export const validateEditTutors = [
 ];
 
 /* =========================================================
-   USERS
+USERS
 ========================================================= */
-
 export const validateUsers = [
   ...validatePersonName("first_name"),
   ...validatePersonName("last_name"),
@@ -411,5 +398,5 @@ export const validateEditUsers = [
   ...validatePersonName("last_name", true),
   ...validateUsername("username", true),
   ...validatePassword("password", true),
-  ...validateRole("role"),
+  ...validateRole("role", true),
 ];

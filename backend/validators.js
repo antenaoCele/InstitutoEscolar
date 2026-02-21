@@ -3,9 +3,8 @@ import { db } from "./db.js";
 import { ALLOWED_TABLES, isTruthy } from "./helpers.js";
 
 /* =========================================================
-   VALIDATE PERSON NAME (STUDENT, TEACHER, TUTOR)
+PERSON NAME
 ========================================================= */
-
 export const validatePersonName = (field, optional = false) => {
   let v = body(field).trim();
 
@@ -25,9 +24,8 @@ export const validatePersonName = (field, optional = false) => {
 };
 
 /* =========================================================
-   VALIDATE DNI
+DNI
 ========================================================= */
-
 const ALLOWED_DNI_FIELDS = ["dni"];
 
 export const validateDNI = (field, table, optional = false) => {
@@ -73,9 +71,8 @@ export const validateDNI = (field, table, optional = false) => {
 };
 
 /* =========================================================
-   VALIDATE NAME (PLAN, SUBJECT, SCHOOL)
+NAME
 ========================================================= */
-
 export const validateName = (field, optional = false) => {
   let v = body(field).trim();
 
@@ -93,9 +90,8 @@ export const validateName = (field, optional = false) => {
 };
 
 /* =========================================================
-   VALIDATE PHONE
+PHONE
 ========================================================= */
-
 export const validatePhone = (field, optional = false) => {
   let v = body(field).trim();
 
@@ -113,9 +109,8 @@ export const validatePhone = (field, optional = false) => {
 };
 
 /* =========================================================
-   VALIDATE STUDENT INFO (ENROLLED, LEVEL, GRADE)
+STUDENT INFO
 ========================================================= */
-
 export const validateStudentInfo = (
   fieldEnrolled,
   fieldLevel,
@@ -164,9 +159,8 @@ export const validateStudentInfo = (
 };
 
 /* =========================================================
-   VALIDATE DATE
+DATE
 ========================================================= */
-
 export const validateDate = (field, optional = false) => {
   let v = body(field).trim();
 
@@ -200,9 +194,8 @@ export const validateDate = (field, optional = false) => {
 };
 
 /* =========================================================
-   VALIDATE HOUR
+HOUR
 ========================================================= */
-
 export const validateHour = (field, optional = false) => {
   let v = body(field).trim();
 
@@ -217,9 +210,8 @@ export const validateHour = (field, optional = false) => {
 };
 
 /* =========================================================
-   VALIDATE MONEY
+MONEY
 ========================================================= */
-
 export const validateMoney = (field, optional = false) => {
   let v = body(field).customSanitizer((v) => {
     if (v === undefined || v === null || v === "") return undefined;
@@ -247,9 +239,8 @@ export const validateMoney = (field, optional = false) => {
 };
 
 /* =========================================================
-   VALIDATE PAYMENT METHOD
+PAYMENT METHOD
 ========================================================= */
-
 export const validatePaymentMethod = (field, optional = false) => {
   let v = body(field).trim();
 
@@ -271,9 +262,8 @@ export const validatePaymentMethod = (field, optional = false) => {
 };
 
 /* =========================================================
-   VALIDATE FOREIGN KEY
+FOREIGN KEY
 ========================================================= */
-
 export const validateForeignId = (field, table, optional = false) => {
   const safeTable = ALLOWED_TABLES[table];
   if (!safeTable) throw new Error("Tabla no permitida en validación");
@@ -306,9 +296,8 @@ export const validateForeignId = (field, table, optional = false) => {
 };
 
 /* =========================================================
-   USERNAME
+USERNAME
 ========================================================= */
-
 export const validateUsername = (field, optional = false) => {
   let v = body(field).trim();
 
@@ -343,9 +332,8 @@ export const validateUsername = (field, optional = false) => {
 };
 
 /* =========================================================
-   PASSWORD
+PASSWORD
 ========================================================= */
-
 export const validatePassword = (field, optional = false) => {
   let v = body(field);
 
@@ -368,9 +356,8 @@ export const validatePassword = (field, optional = false) => {
 };
 
 /* =========================================================
-   ROLE
+ROLE
 ========================================================= */
-
 export const validateRole = (field, optional = false) => {
   let v = body(field).trim();
 
