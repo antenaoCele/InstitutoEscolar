@@ -1,6 +1,6 @@
 import express from "express";
 import { db } from "./db.js";
-import { checkValidations, validateID } from "./validations.js";
+import { checkValidations, validateID } from "./helpers.js";
 import { authentication } from "./auth.js";
 
 const router = express.Router();
@@ -24,7 +24,9 @@ router.get("/", authentication, async (req, res) => {
 
     res.json({ success: true, data: liquidations });
   } catch (error) {
-    res.status(500).json({ success: false, message: "Error interno del servidor." });
+    res
+      .status(500)
+      .json({ success: false, message: "Error interno del servidor." });
   }
 });
 
@@ -54,12 +56,16 @@ router.get(
       const [rows] = await db.execute(sql, [id]);
 
       if (rows.length === 0) {
-        return res.status(404).json({ success: false, message: "Liquidación no encontrada." });
+        return res
+          .status(404)
+          .json({ success: false, message: "Liquidación no encontrada." });
       }
 
       res.json({ success: true, data: rows[0] });
     } catch (error) {
-      res.status(500).json({ success: false, message: "Error interno del servidor." });
+      res
+        .status(500)
+        .json({ success: false, message: "Error interno del servidor." });
     }
   },
 );
