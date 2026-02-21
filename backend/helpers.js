@@ -5,20 +5,20 @@ import { db } from "./db.js";
 WHITELIST
 ========================================================= */
 export const ALLOWED_TABLES = {
-  students: "students",
-  teachers: "teachers",
-  tutors: "tutors",
-  plans: "plans",
-  plan_subjects: "plan_subjects",
-  subjects: "subjects",
-  schedules: "schedules",
-  schedule_students: "schedule_students",
   payments: "payments",
+  plan_subjects: "plan_subjects",
+  plans: "plans",
+  schedule_students: "schedule_students",
+  schedules: "schedules",
   student_plans: "student_plans",
+  student_tutors: "student_tutors",
+  students: "students",
+  subjects: "subjects",
   teacher_liquidations: "teacher_liquidations",
   teacher_subjects: "teacher_subjects",
+  teachers: "teachers",
+  tutors: "tutors",
   users: "users",
-  student_tutors: "student_tutors",
 };
 
 /* =========================================================
@@ -49,21 +49,27 @@ export const checkValidations = (req, res, next) => {
 ID
 ========================================================= */
 export const validateID = (tableName) => {
-  const safeTable = ALLOWED_TABLES[tableName];
-  if (!safeTable) throw new Error("Tabla no permitida en validación");
-
   return [
     param("id")
       .isInt({ min: 1 })
       .withMessage("El ID debe ser un número entero mayor a 0.")
       .bail()
       .custom(async (value) => {
+        const safeTable = ALLOWED_TABLES[tableName];
+
+        if (!safeTable) {
+          throw new Error(`La tabla '${tableName}' no está permitida`);
+        }
+
         const [rows] = await db.execute(
           `SELECT id FROM ${safeTable} WHERE id = ?`,
           [Number(value)],
         );
 
-        if (rows.length === 0) throw new Error("No se encontró el registro.");
+        if (rows.length === 0) {
+          throw new Error("No se encontró el registro.");
+        }
+
         return true;
       }),
   ];
