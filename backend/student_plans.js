@@ -97,7 +97,7 @@ router.put(
   "/:id",
   authentication,
   authorization("ADMIN"),
-  validateID,
+  validateID("student_plans"),
   validateEditStudentPlans,
   checkValidations,
   async (req, res) => {
@@ -140,7 +140,7 @@ router.delete(
   "/:id",
   authentication,
   authorization("ADMIN"),
-  validateID,
+  validateID("student_plans"),
   checkValidations,
   async (req, res) => {
     const id = Number(req.params.id);

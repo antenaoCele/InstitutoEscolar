@@ -1,11 +1,10 @@
 import express from "express";
 import { db } from "./db.js";
 import {
-  checkValidations,
   validateStudentTutors,
-  validateID,
   validateEditStudentTutors,
 } from "./validations.js";
+import { validateID, checkValidations } from "./helpers.js";
 import { authentication, authorization } from "./auth.js";
 
 const router = express.Router();
@@ -51,7 +50,7 @@ router.put(
   "/:id",
   authentication,
   authorization("ADMIN"),
-  validateID,
+  validateID("student_tutors"),
   validateEditStudentTutors,
   checkValidations,
   async (req, res) => {
@@ -91,7 +90,7 @@ router.delete(
   "/:id",
   authentication,
   authorization("ADMIN"),
-  validateID,
+  validateID("student_tutors"),
   checkValidations,
   async (req, res) => {
     const id = Number(req.params.id);
