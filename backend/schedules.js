@@ -1,10 +1,7 @@
 import express from "express";
 import { db } from "./db.js";
-import {
-  validateID,
-  checkValidations,
-  validateSchedules,
-} from "./validations.js";
+import { validateEditSchedules, validateSchedules } from "./validations.js";
+import { validateID, checkValidations } from "./helpers.js";
 import { authentication, authorization } from "./auth.js";
 
 const router = express.Router();
@@ -29,7 +26,7 @@ router.get("/", authentication, async (req, res) => {
 router.get(
   "/:id",
   authentication,
-  validateID,
+  validateID("schedules"),
   checkValidations,
   async (req, res) => {
     try {
@@ -44,12 +41,6 @@ router.get(
     `,
         [id],
       );
-
-      if (schedules.length === 0) {
-        return res
-          .status(404)
-          .json({ success: false, error: "Horario no encontrado" });
-      }
 
       res.json({ success: true, data: schedules[0] });
     } catch (error) {
@@ -127,23 +118,12 @@ router.put(
   "/:id",
   authentication,
   authorization("ADMIN"),
-  validateID,
-  validateSchedules,
+  validateID("schedules"),
+  validateEditSchedules,
   checkValidations,
   async (req, res) => {
     try {
       const id = Number(req.params.id);
-      const [exists] = await db.execute(
-        "SELECT id FROM schedules WHERE id = ?",
-        [id],
-      );
-
-      if (exists.length === 0) {
-        return res.status(404).json({
-          success: false,
-          error: "Horario no encontrado",
-        });
-      }
 
       const {
         teacher_id,
@@ -222,21 +202,11 @@ router.delete(
   "/:id",
   authentication,
   authorization("ADMIN"),
-  validateID,
+  validateID("schedules"),
   checkValidations,
   async (req, res) => {
     try {
       const id = Number(req.params.id);
-
-      const [exists] = await db.execute("SELECT id FROM schedules WHERE id=?", [
-        id,
-      ]);
-      if (exists.length === 0) {
-        return res
-          .status(404)
-          .json({ success: false, error: "Horario no encontrado" });
-      }
-
       await db.execute("DELETE FROM schedules WHERE id=?", [id]);
 
       res.json({ success: true, message: "Horario eliminado correctamente" });

@@ -2,7 +2,7 @@
 
 import express from "express";
 import { db } from "./db.js";
-import { validatePayments } from "./validations.js";
+import { validatePayments, validateEditPayments } from "./validations.js";
 import { validateID, checkValidations } from "./helpers.js";
 import { authentication, authorization } from "./auth.js";
 
@@ -60,12 +60,6 @@ router.get(
         [id],
       );
 
-      if (rows.length === 0) {
-        return res
-          .status(404)
-          .json({ success: false, error: "Pago no registrado" });
-      }
-
       res.json({ success: true, data: rows[0] });
     } catch (error) {
       res.status(500).json({
@@ -80,23 +74,11 @@ router.get(
 router.get(
   "/students/:id/payments",
   authentication,
-  validateID,
+  validateID("students"),
   checkValidations,
   async (req, res) => {
     try {
       const studentId = Number(req.params.id);
-
-      const [student] = await db.execute(
-        "SELECT id FROM students WHERE id = ?",
-        [studentId],
-      );
-
-      if (student.length === 0) {
-        return res.status(404).json({
-          success: false,
-          error: "Alumno no encontrado",
-        });
-      }
 
       const [payments] = await db.execute(
         `
@@ -178,8 +160,8 @@ router.post(
 router.put(
   "/:id",
   authentication,
-  validateID,
-  validatePayments,
+  validateID("payments"),
+  validateEditPayments,
   checkValidations,
   async (req, res) => {
     try {
@@ -187,15 +169,9 @@ router.put(
         req.body;
       const id = Number(req.params.id);
 
-      const [payment] = await db.execute("SELECT id FROM payments WHERE id=?", [
+      const [payment] = await db.execute("SELECT * FROM payments WHERE id=?", [
         id,
       ]);
-
-      if (payment.length === 0) {
-        return res
-          .status(404)
-          .json({ success: false, error: "Pago no registrado" });
-      }
 
       const newStudentPlanId = student_plan_id ?? payment[0].student_plan_id;
       const newAmount = amount ?? payment[0].amount;
@@ -229,21 +205,11 @@ router.put(
 router.delete(
   "/:id",
   authentication,
-  validateID,
+  validateID("payments"),
   checkValidations,
   async (req, res) => {
     try {
-      const { id } = req.params;
-
-      const [rows] = await db.execute("SELECT * FROM payments WHERE id=?", [
-        id,
-      ]);
-
-      if (rows.length === 0) {
-        return res
-          .status(404)
-          .json({ success: false, error: "Pago no encontrado" });
-      }
+      const id = Number(req.params.id);
 
       await db.execute("DELETE FROM payments WHERE id=?", [id]);
 

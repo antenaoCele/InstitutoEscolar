@@ -1,11 +1,10 @@
 import express from "express";
 import { db } from "./db.js";
 import {
-  checkValidations,
   validateScheduleStudents,
   validateEditScheduleStudents,
-  validateID,
 } from "./validations.js";
+import { checkValidations, validateID } from "./helpers.js";
 import { authentication, authorization } from "./auth.js";
 
 const router = express.Router();
@@ -63,25 +62,18 @@ router.put(
   "/:id",
   authentication,
   authorization("ADMIN"),
-  validateID,
+  validateID("schedule_students"),
   validateEditScheduleStudents,
   checkValidations,
   async (req, res) => {
     try {
       const id = Number(req.params.id);
+      const { schedule_id, student_id } = req.body;
+
       const [scheduleStudents] = await db.execute(
         "SELECT * FROM schedule_students WHERE id = ?",
         [id],
       );
-
-      if (scheduleStudents.length === 0) {
-        return res.status(404).json({
-          success: false,
-          message: "Horario y estudiante no encontrados.",
-        });
-      }
-
-      const { schedule_id, student_id } = req.body;
 
       const newScheduleId = schedule_id ?? scheduleStudents[0].schedule_id;
       const newStudentId = student_id ?? scheduleStudents[0].student_id;
@@ -113,22 +105,11 @@ router.delete(
   "/:id",
   authentication,
   authorization("ADMIN"),
-  validateID,
+  validateID("schedule_students"),
   checkValidations,
   async (req, res) => {
     try {
       const id = Number(req.params.id);
-      const [scheduleStudents] = await db.execute(
-        "SELECT * FROM schedule_students WHERE id = ?",
-        [id],
-      );
-
-      if (scheduleStudents.length === 0) {
-        return res.status(404).json({
-          success: false,
-          message: "Horario y estudiante no encontrados.",
-        });
-      }
 
       await db.execute("DELETE FROM schedule_students WHERE id = ?", [id]);
 
