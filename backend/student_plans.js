@@ -1,58 +1,65 @@
 import express from "express";
 import { db } from "./db.js";
 import {
-  validateID,
-  checkValidations,
   validateStudentPlans,
   validateEditStudentPlans,
 } from "./validations.js";
+import { validateID, checkValidations } from "./helpers.js";
 import { authentication, authorization } from "./auth.js";
 
 const router = express.Router();
 
 router.get("/", authentication, async (req, res) => {
-  let sql =
-    "SELECT s.id AS student_id, p.id AS plan_id, paid_amount, start_date, t.id AS teacher_id\
-FROM student_plans sp \
-JOIN students s ON sp.student_id = s.id \
-JOIN plans p ON sp.plan_id = p.id \
-JOIN teachers t ON sp.teacher_id = t.id";
+  try {
+    let sql =
+      "SELECT s.id AS student_id, p.id AS plan_id, paid_amount, start_date, t.id AS teacher_id\
+      FROM student_plans sp \
+      JOIN students s ON sp.student_id = s.id \
+      JOIN plans p ON sp.plan_id = p.id \
+      JOIN teachers t ON sp.teacher_id = t.id";
 
-  const [studentPlans] = await db.execute(sql);
-  res.json({ success: true, studentPlans });
+    const [studentPlans] = await db.execute(sql);
+    res.json({ success: true, studentPlans });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Error al obtener planes",
+    });
+  }
 });
 
+//acá me quede
 router.get(
   "/:id",
   authentication,
-  validateID,
+  validateID("student_plans"),
   checkValidations,
   async (req, res) => {
-    const id = Number(req.params.id);
+    try {
+      const id = Number(req.params.id);
 
-    const [studentPlans] = await db.execute(
-      "SELECT sp.id, \
+      const [studentPlans] = await db.execute(
+        "SELECT sp.id, \
        s.first_name AS student_first_name, \
        s.last_name AS student_last_name, \
        p.name AS plan_name, \
        sp.paid_amount, \
        sp.start_date \
        t.id AS teacher_id \
-FROM student_plans sp \
-JOIN students s ON sp.student_id = s.id \
-JOIN plans p ON sp.plan_id = p.id \
-JOIN teachers t ON sp.teacher_id = t.id \
-WHERE sp.id = ?",
-      [id],
-    );
-
-    if (studentPlans.length === 0) {
-      return res
-        .status(404)
-        .json({ success: false, message: "Estudiante y plan no encontrados." });
+      FROM student_plans sp \
+      JOIN students s ON sp.student_id = s.id \
+      JOIN plans p ON sp.plan_id = p.id \
+      JOIN teachers t ON sp.teacher_id = t.id \
+      WHERE sp.id = ?",
+        [id],
+      );
+      res.json({ success: true, data: studentPlans[0] });
+    } catch (error) {
+      res.status(500).json({
+        success: false,
+        message: "Error al obtener plan y materia",
+      });
     }
-
-    res.json({ success: true, data: studentPlans[0] });
   },
 );
 

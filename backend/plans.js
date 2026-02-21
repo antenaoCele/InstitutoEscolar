@@ -1,6 +1,7 @@
 import express from "express";
 import { db } from "./db.js";
-import { validateID, checkValidations, validatePlans } from "./validations.js";
+import { validatePlans, validateEditPlans } from "./validations.js";
+import { validateID, checkValidations } from "./helpers.js";
 import { authentication, authorization } from "./auth.js";
 
 const router = express.Router();
@@ -20,30 +21,13 @@ router.get("/", authentication, async (req, res) => {
 router.get(
   "/:id",
   authentication,
-  validateID,
+  validateID("plans"),
   checkValidations,
   async (req, res) => {
     try {
       const id = Number(req.params.id);
 
-      const [exists] = await db.execute("SELECT * FROM plans WHERE id=?", [id]);
-
-      if (exists.length === 0) {
-        return res
-          .status(404)
-          .json({ success: false, error: "Plan no encontrado" });
-      }
-
-      const [rows] = await db.execute(
-        "SELECT id, name, price FROM plans WHERE id=?",
-        [id],
-      );
-
-      if (rows.length === 0) {
-        return res
-          .status(404)
-          .json({ success: false, error: "Usuario no encontrado" });
-      }
+      const [rows] = await db.execute("SELECT * FROM plans WHERE id=?", [id]);
 
       res.json({ success: true, data: rows[0] });
     } catch (error) {
@@ -63,7 +47,7 @@ router.post(
   checkValidations,
   async (req, res) => {
     try {
-      const { name, duration, price } = req.body;
+      const { name, price } = req.body;
 
       const [result] = await db.execute(
         "INSERT INTO plans (name, price) VALUES (?,?)",
@@ -87,21 +71,15 @@ router.put(
   "/:id",
   authentication,
   authorization("ADMIN"),
-  validateID,
-  validatePlans,
+  validateID("plans"),
+  validateEditPlans,
   checkValidations,
   async (req, res) => {
     try {
       const { name, price } = req.body;
-      const { id } = req.params;
+      const id = Number(req.params.id);
 
       const [rows] = await db.execute("SELECT * FROM plans WHERE id=?", [id]);
-
-      if (rows.length === 0) {
-        return res
-          .status(404)
-          .json({ success: false, error: "Plan no encontrado" });
-      }
 
       const newName = name ?? rows[0].name;
       const newPrice = price ?? rows[0].price;
@@ -133,18 +111,11 @@ router.delete(
   "/:id",
   authentication,
   authorization("ADMIN"),
-  validateID,
+  validateID("plans"),
   checkValidations,
   async (req, res) => {
     try {
-      const { id } = req.params;
-      const [rows] = await db.execute("SELECT * FROM plans WHERE id=?", [id]);
-
-      if (rows.length === 0) {
-        return res
-          .status(404)
-          .json({ success: false, error: "Plan no encontrado" });
-      }
+      const id = Number(req.params.id);
 
       await db.execute("DELETE FROM plans WHERE id=?", [id]);
       res.json({ success: true, message: "Plan eliminado con éxito" });
