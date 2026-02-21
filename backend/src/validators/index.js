@@ -1,6 +1,6 @@
 import express from "express";
 import cors from "cors";
-import { connectDB } from "./db.js";
+import { connectDB } from "../db.js";
 import authRouter, { authConfig } from "./auth.js";
 import tutorsRouter from "./tutors.js";
 import teachersRouter from "./teachers.js";
@@ -16,7 +16,6 @@ import paymentsRouter from "./payments.js";
 import teacher_subjectsRouter from "./teacher_subjects.js";
 import student_TutorsRouter from "./student_tutors.js";
 import teacher_liquidationsRouter from "./teacher_liquidations.js";
-
 
 await connectDB();
 
@@ -43,7 +42,6 @@ app.use("/schedules", schedulesRouter);
 app.use("/teacher_subjects", teacher_subjectsRouter);
 app.use("/student_tutors", student_TutorsRouter);
 app.use("/teacher_liquidations", teacher_liquidationsRouter);
-
 
 app.listen(port, () => {
   console.log(`La aplicación está funcionando en el puerto ${port}`);
