@@ -1,6 +1,6 @@
 import { body } from "express-validator";
 import { db } from "../db.js";
-import { ALLOWED_TABLES, isTruthy, baseField } from "../helpers.js";
+import { ALLOWED_TABLES, isTruthy, baseField } from "./helpers.js";
 
 /* =========================================================
 PERSON NAME
@@ -134,12 +134,6 @@ export const validateStudentInfo = (
         if (!enrolled) {
           if (value !== undefined && value !== "")
             throw new Error("No debe indicar grado si no está inscripto.");
-          return true;
-        }
-
-        if (!["primario", "secundario"].includes(level)) {
-          if (value !== undefined && value !== "")
-            throw new Error("El grado solo aplica a primaria o secundaria.");
           return true;
         }
 

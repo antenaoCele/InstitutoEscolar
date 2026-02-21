@@ -3,8 +3,8 @@ import { db } from "../db.js";
 import {
   validateScheduleStudents,
   validateEditScheduleStudents,
-} from "./validations.js";
-import { checkValidations, validateID } from "./helpers.js";
+} from "../validators/validations.js";
+import { checkValidations, validateID } from "../validators/helpers.js";
 import { authentication, authorization } from "./auth.js";
 
 const router = express.Router();

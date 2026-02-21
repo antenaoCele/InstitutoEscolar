@@ -1,11 +1,7 @@
 import express from "express";
-<<<<<<< HEAD:backend/routes/teachers.js
 import { db } from "../db.js";
-=======
-import { db } from "./db.js";
->>>>>>> 4ef73462ccca644822779073ed12f427f5b4fcff:backend/teachers.js
-import { validateTeachers } from "./validations.js";
-import { validateID, checkValidations } from "./helpers.js";
+import { validateTeachers } from "../validators/validations.js";
+import { validateID, checkValidations } from "../validators/helpers.js";
 import { authentication, authorization } from "./auth.js";
 
 const router = express.Router();
@@ -89,18 +85,8 @@ router.post(
 
       res.status(201).json({
         success: true,
-<<<<<<< HEAD:backend/routes/teachers.js
-        data: {
-          id: result.insertId,
-          first_name,
-          last_name,
-          dni,
-          phone,
-          salary,
-        },
-=======
+
         data: { id: result.insertId, first_name, last_name, dni, phone },
->>>>>>> 4ef73462ccca644822779073ed12f427f5b4fcff:backend/teachers.js
         message: "Docente creado exitosamente",
       });
     } catch (error) {
@@ -117,23 +103,16 @@ router.post(
   "/:id/liquidate",
   authentication,
   authorization("ADMIN"),
-<<<<<<< HEAD:backend/routes/teachers.js
-  validateID,
-=======
   validateID("teachers"),
->>>>>>> 4ef73462ccca644822779073ed12f427f5b4fcff:backend/teachers.js
   checkValidations,
   async (req, res) => {
     console.log("ENTRO AL ENDPOINT NUEVO");
     const { id } = req.params;
     const { month } = req.body; // ejemplo: "2026-02"
 
-<<<<<<< HEAD:backend/routes/teachers.js
     console.log("Teacher ID:", id);
     console.log("Month recibido:", month);
 
-=======
->>>>>>> 4ef73462ccca644822779073ed12f427f5b4fcff:backend/teachers.js
     const [debugRows] = await db.execute(
       `
   SELECT 
@@ -253,19 +232,6 @@ router.delete(
     try {
       const id = Number(req.params.id);
 
-<<<<<<< HEAD:backend/routes/teachers.js
-      const [rows] = await db.execute("SELECT * FROM teachers WHERE id=?", [
-        id,
-      ]);
-
-      if (rows.length === 0) {
-        return res
-          .status(404)
-          .json({ success: false, error: "Docente no encontrado" });
-      }
-
-=======
->>>>>>> 4ef73462ccca644822779073ed12f427f5b4fcff:backend/teachers.js
       await db.execute("DELETE FROM teachers WHERE id=?", [id]);
 
       res.json({ success: true, message: "Docente eliminado correctamente" });

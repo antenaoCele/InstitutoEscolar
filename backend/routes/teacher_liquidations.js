@@ -1,6 +1,6 @@
 import express from "express";
 import { db } from "../db.js";
-import { checkValidations, validateID } from "./helpers.js";
+import { checkValidations, validateID } from "../validators/helpers.js";
 import { authentication } from "./auth.js";
 
 const router = express.Router();
