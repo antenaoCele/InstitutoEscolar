@@ -1,6 +1,7 @@
 import express from "express";
 import { db } from "./db.js";
-import { checkValidations, validateLogin } from "./validations.js";
+import { checkValidations } from "./helpers.js";
+// import { validateLogin } from "./validators.js";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import passport from "passport";
@@ -40,7 +41,7 @@ export const authorization = (role) => {
   };
 };
 
-router.post("/login", validateLogin, checkValidations, async (req, res) => {
+router.post("/login", /*validateLogin,*/ checkValidations, async (req, res) => {
   const { username, password } = req.body;
 
   const [users] = await db.execute("SELECT * FROM users WHERE username = ?", [
