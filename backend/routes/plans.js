@@ -50,13 +50,13 @@ router.post(
       const { name, price } = req.body;
 
       const [result] = await db.execute(
-        "INSERT INTO plans (name, price) VALUES (?,?)",
+        "INSERT INTO plans (name) VALUES (?,?)",
         [name, price],
       );
 
       res.status(201).json({
         success: true,
-        data: { id: result.insertId, name, price },
+        data: { id: result.insertId, name },
       });
     } catch (error) {
       res.status(500).json({
@@ -82,20 +82,14 @@ router.put(
       const [rows] = await db.execute("SELECT * FROM plans WHERE id=?", [id]);
 
       const newName = name ?? rows[0].name;
-      const newPrice = price ?? rows[0].price;
 
-      await db.execute("UPDATE plans SET name=?, price=? WHERE id=?", [
-        newName,
-        newPrice,
-        id,
-      ]);
+      await db.execute("UPDATE plans SET name=? WHERE id=?", [newName, id]);
 
       return res.status(200).json({
         success: true,
         data: {
           id: Number(id),
           name: newName,
-          price: newPrice,
         },
       });
     } catch (error) {

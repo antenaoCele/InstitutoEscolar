@@ -10,9 +10,7 @@ import { authentication, authorization } from "./auth.js";
 const router = express.Router();
 
 router.get("/", authentication, async (req, res) => {
-  const [students] = await db.execute(
-    "SELECT id, first_name, last_name, dni, school, birth_date, enrolled, level, grade FROM students",
-  );
+  const [students] = await db.execute("SELECT * FROM students");
   res.json({ success: true, students });
 });
 
@@ -48,29 +46,12 @@ router.post(
   checkValidations,
   async (req, res) => {
     try {
-      const {
-        first_name,
-        last_name,
-        dni,
-        school,
-        birth_date,
-        enrolled,
-        level,
-        grade,
-      } = req.body;
+      const { first_name, last_name, dni, school, birth_date, level, grade } =
+        req.body;
 
       const [result] = await db.execute(
-        "INSERT INTO students (first_name, last_name, dni, school, birth_date, enrolled, level, grade) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
-        [
-          first_name,
-          last_name,
-          dni,
-          school,
-          birth_date,
-          enrolled,
-          level,
-          grade,
-        ],
+        "INSERT INTO students (first_name, last_name, dni, school, birth_date, level, grade) VALUES (?, ?, ?, ?, ?, ?, ?)",
+        [first_name, last_name, dni, school, birth_date, level, grade],
       );
 
       res.status(201).json({
@@ -82,7 +63,6 @@ router.post(
           dni,
           school,
           birth_date,
-          enrolled,
           level,
           grade,
         },
@@ -108,16 +88,8 @@ router.put(
     try {
       const id = Number(req.params.id);
 
-      const {
-        first_name,
-        last_name,
-        dni,
-        school,
-        birth_date,
-        enrolled,
-        level,
-        grade,
-      } = req.body;
+      const { first_name, last_name, dni, school, birth_date, level, grade } =
+        req.body;
 
       const [students] = await db.execute(
         "SELECT * FROM students WHERE id = ?",
@@ -129,19 +101,17 @@ router.put(
       const newDni = dni ?? students[0].dni;
       const newSchool = school ?? students[0].school;
       const newBirthDate = birth_date ?? students[0].birth_date;
-      const newEnrolled = enrolled ?? students[0].enrolled;
       const newLevel = level ?? students[0].level;
       const newGrade = grade ?? students[0].grade;
 
       await db.execute(
-        "UPDATE students SET first_name = ?, last_name = ?, dni = ?, school = ?, birth_date = ?, enrolled = ?, level = ?, grade = ? WHERE id = ?",
+        "UPDATE students SET first_name = ?, last_name = ?, dni = ?, school = ?, birth_date = ?, level = ?, grade = ? WHERE id = ?",
         [
           newFirstName,
           newLastName,
           newDni,
           newSchool,
           newBirthDate,
-          newEnrolled,
           newLevel,
           newGrade,
           id,
@@ -157,7 +127,6 @@ router.put(
           dni: newDni,
           school: newSchool,
           birth_date: newBirthDate,
-          enrolled: newEnrolled,
           level: newLevel,
           grade: newGrade,
           id,

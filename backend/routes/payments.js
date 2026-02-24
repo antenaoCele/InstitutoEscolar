@@ -34,6 +34,7 @@ router.get("/", authentication, authorization("ADMIN"), async (req, res) => {
   }
 });
 
+//GET POR ID
 router.get(
   "/:id",
   authentication,
@@ -71,10 +72,11 @@ router.get(
   },
 );
 
-//obtener todos los pagos de un alumno
+//OBTENER TODOS LOS PAGOS DE UN ALUMNO
 router.get(
   "/students/:id/payments",
   authentication,
+  authorization("ADMIN"),
   validateID("students"),
   checkValidations,
   async (req, res) => {
@@ -112,9 +114,11 @@ router.get(
   },
 );
 
+//POST
 router.post(
   "/",
   authentication,
+  authorization("ADMIN"),
   validatePayments,
   checkValidations,
   async (req, res) => {
@@ -161,6 +165,7 @@ router.post(
 router.put(
   "/:id",
   authentication,
+  authorization("ADMIN"),
   validateID("payments"),
   validateEditPayments,
   checkValidations,
@@ -206,6 +211,7 @@ router.put(
 router.delete(
   "/:id",
   authentication,
+  authorization("ADMIN"),
   validateID("payments"),
   checkValidations,
   async (req, res) => {

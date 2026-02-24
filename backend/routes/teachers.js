@@ -106,29 +106,25 @@ router.post(
   validateID("teachers"),
   checkValidations,
   async (req, res) => {
-    console.log("ENTRO AL ENDPOINT NUEVO");
-    const { id } = req.params;
-    const { month } = req.body; // ejemplo: "2026-02"
-
-    console.log("Teacher ID:", id);
-    console.log("Month recibido:", month);
-
-    const [debugRows] = await db.execute(
-      `
-  SELECT 
-    p.amount,
-    p.payment_date,
-    sp.teacher_id
-  FROM payments p
-  JOIN student_plans sp ON sp.id = p.student_plan_id
-  WHERE sp.teacher_id = ?
-  `,
-      [id],
-    );
-
-    console.log("DEBUG ROWS:", debugRows);
-
     try {
+      const { id } = req.params;
+      const { month } = req.body; // ejemplo: "2026-02"
+
+      const [exists] = await db.execute(
+        `
+        SELECT id FROM teacher_liquidations
+        WHERE teacher_id = ? AND month = ?
+        `,
+        [id, month],
+      );
+
+      if (exists.length > 0) {
+        return res.status(400).json({
+          success: false,
+          message: "Ese mes ya fue liquidado para este docente",
+        });
+      }
+
       // Calcular total recaudado del docente en ese mes
       const [rows] = await db.execute(
         `
@@ -143,7 +139,7 @@ router.post(
       );
       console.log("ROWS RESULT:", rows);
       const totalCollected = Number(rows[0].total) || 0;
-      const netSalary = Number(totalCollected) * 0.75;
+      const netSalary = Number(totalCollected) * (0.75).toFixed(2);
 
       console.log("TOTAL COLLECTED:", totalCollected);
       console.log("NET SALARY:", netSalary);

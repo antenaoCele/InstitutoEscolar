@@ -16,6 +16,9 @@ import paymentsRouter from "./routes/payments.js";
 import teacher_subjectsRouter from "./routes/teacher_subjects.js";
 import student_TutorsRouter from "./routes/student_tutors.js";
 import teacher_liquidationsRouter from "./routes/teacher_liquidations.js";
+import monthly_finances from "./routes/monthly_finances.js";
+import enrollments from "./routes/enrollments.js";
+
 
 await connectDB();
 
@@ -42,6 +45,8 @@ app.use("/schedules", schedulesRouter);
 app.use("/teacher_subjects", teacher_subjectsRouter);
 app.use("/student_tutors", student_TutorsRouter);
 app.use("/teacher_liquidations", teacher_liquidationsRouter);
+app.use("/monthly_finances", monthly_finances);
+app.use("/enrollments", enrollments);
 
 app.listen(port, () => {
   console.log(`La aplicación está funcionando en el puerto ${port}`);
