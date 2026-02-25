@@ -1,5 +1,10 @@
-import { body } from "express-validator";
-import { db } from "../db.js";
+import {
+  validateUnique,
+  validateUniqueRelation,
+  validateForeignId,
+  validateScheduleOverlap,
+  validateScheduleOverlapOnUpdate,
+} from "./databaseValidators.js";
 import {
   validatePersonName,
   validateDNI,
@@ -10,16 +15,17 @@ import {
   validateHour,
   validateMoney,
   validatePaymentMethod,
-  validateForeignId,
+  validateIdFormat,
   validateUsername,
   validatePassword,
   validateRole,
-} from "./validators.js";
+} from "./formatValidators.js";
 
 /* =========================================================
 PAYMENTS
 ========================================================= */
 export const validatePayments = [
+  ...validateIdFormat("student_id"),
   ...validateForeignId("student_id", "students"),
   ...validateDate("payment_date"),
   ...validateMoney("amount"),
@@ -27,6 +33,7 @@ export const validatePayments = [
 ];
 
 export const validateEditPayments = [
+  ...validateIdFormat("student_id", true),
   ...validateForeignId("student_id", "students", true),
   ...validateDate("payment_date", true),
   ...validateMoney("amount", true),
@@ -37,183 +44,92 @@ export const validateEditPayments = [
 PLAN_SUBJECTS
 ========================================================= */
 export const validatePlanSubjects = [
+  ...validateIdFormat("plan_id"),
   ...validateForeignId("plan_id", "plans"),
+  ...validateIdFormat("subject_id"),
   ...validateForeignId("subject_id", "subjects"),
-  body("subject_id").custom(async (subject_id, { req }) => {
-    const [relation] = await db.execute(
-      "SELECT id FROM plan_subjects WHERE plan_id = ? AND subject_id = ?",
-      [req.body.plan_id, subject_id],
-    );
-    if (relation.length > 0)
-      throw new Error("El plan ya tiene asignada esta materia.");
-    return true;
-  }),
+  ...validateUniqueRelation("plan_subjects", "plan_id", "subject_id"),
 ];
 
 export const validateEditPlanSubjects = [
+  ...validateIdFormat("plan_id", true),
   ...validateForeignId("plan_id", "plans", true),
+  ...validateIdFormat("subject_id", true),
   ...validateForeignId("subject_id", "subjects", true),
-  body("subject_id").custom(async (subject_id, { req }) => {
-    const [relation] = await db.execute(
-      "SELECT id FROM plan_subjects WHERE plan_id = ? AND subject_id = ?",
-      [req.body.plan_id, subject_id],
-    );
-    if (relation.length > 0)
-      throw new Error("El plan ya tiene asignada esta materia.");
-    return true;
-  }),
+  ...validateUniqueRelation("plan_subjects", "plan_id", "subject_id"),
 ];
 
 /* =========================================================
 PLANS
 ========================================================= */
-export const validatePlans = [...validateName("name")];
+export const validatePlans = [
+  ...validateName("name"),
+  ...validateUnique("name", "plans"),
+];
 
-export const validateEditPlans = [...validateName("name", true)];
+export const validateEditPlans = [
+  ...validateName("name", true),
+  ...validateUnique("name", "plans"),
+];
 
 /* =========================================================
 SCHEDULE_STUDENTS
 ========================================================= */
 export const validateScheduleStudents = [
+  ...validateIdFormat("student_id"),
   ...validateForeignId("student_id", "students"),
+  ...validateIdFormat("schedule_id"),
   ...validateForeignId("schedule_id", "schedules"),
-  body("schedule_id").custom(async (schedule_id, { req }) => {
-    const [relation] = await db.execute(
-      "SELECT id FROM schedule_students WHERE student_id = ? AND schedule_id = ?",
-      [req.body.student_id, schedule_id],
-    );
-    if (relation.length > 0)
-      throw new Error("El estudiante ya tiene asignado este horario.");
-    return true;
-  }),
+  ...validateUniqueRelation("schedule_students", "student_id", "schedule_id"),
 ];
 
 export const validateEditScheduleStudents = [
+  ...validateIdFormat("student_id", true),
   ...validateForeignId("student_id", "students", true),
+  ...validateIdFormat("schedule_id", true),
   ...validateForeignId("schedule_id", "schedules", true),
-  body("schedule_id").custom(async (schedule_id, { req }) => {
-    if (!schedule_id && !req.body.student_id) return true;
-
-    const id = Number(req.params.id);
-
-    const [current] = await db.execute(
-      "SELECT student_id, schedule_id FROM schedule_students WHERE id = ?",
-      [id],
-    );
-
-    if (current.length === 0) return true;
-
-    const student_id = req.body.student_id ?? current[0].student_id;
-    const resolvedScheduleId = schedule_id ?? current[0].schedule_id;
-
-    const [relation] = await db.execute(
-      `SELECT id FROM schedule_students
-       WHERE student_id = ? AND schedule_id = ? AND id != ?`,
-      [student_id, resolvedScheduleId, id],
-    );
-
-    if (relation.length > 0)
-      throw new Error("El estudiante ya tiene asignado este horario.");
-
-    return true;
-  }),
+  ...validateUniqueRelation("schedule_students", "student_id", "schedule_id"),
 ];
 
 /* =========================================================
 SCHEDULES
 ========================================================= */
 export const validateSchedules = [
+  ...validateIdFormat("teacher_id"),
   ...validateForeignId("teacher_id", "teachers"),
-  body("teacher_id").custom(async (teacher_id, { req }) => {
-    const { start_time, end_time, ...days } = req.body;
-
-    const activeDays = Object.keys(days).filter((day) => days[day] === true);
-    if (activeDays.length === 0) return true;
-
-    const conditions = activeDays.map((day) => `${day} = true`).join(" OR ");
-
-    const [rows] = await db.execute(
-      `SELECT id FROM schedules
-       WHERE teacher_id = ?
-       AND (${conditions})
-       AND ? < end_time
-       AND ? > start_time`,
-      [teacher_id, start_time, end_time],
-    );
-
-    if (rows.length > 0)
-      throw new Error("El docente ya tiene una clase en ese día y horario.");
-
-    return true;
-  }),
   ...validateHour("start_time"),
   ...validateHour("end_time"),
-  body("end_time").custom((value, { req }) => {
-    if (req.body.start_time >= value)
-      throw new Error("La hora de fin debe ser mayor a la hora de inicio.");
-    return true;
-  }),
+  ...validateTimeRange("start_time", "end_time"),
+  ...validateScheduleOverlap("schedules"),
 ];
 
 export const validateEditSchedules = [
+  ...validateIdFormat("teacher_id", true),
   ...validateForeignId("teacher_id", "teachers", true),
   ...validateHour("start_time", true),
   ...validateHour("end_time", true),
-  body("end_time")
-    .optional()
-    .custom((value, { req }) => {
-      if (req.body.start_time && value && req.body.start_time >= value)
-        throw new Error("La hora de fin debe ser mayor a la hora de inicio.");
-      return true;
-    }),
+  ...validateTimeRange("start_time", "end_time", true),
+  ...validateScheduleOverlapOnUpdate("schedules"),
 ];
 
 /* =========================================================
 STUDENT_PLANS
 ========================================================= */
 export const validateStudentPlans = [
+  ...validateIdFormat("student_id"),
   ...validateForeignId("student_id", "students"),
+  ...validateIdFormat("plan_id"),
   ...validateForeignId("plan_id", "plans"),
-  body("plan_id").custom(async (plan_id, { req }) => {
-    const [relation] = await db.execute(
-      "SELECT id FROM student_plans WHERE student_id = ? AND plan_id = ?",
-      [req.body.student_id, plan_id],
-    );
-    if (relation.length > 0)
-      throw new Error("El alumno ya tiene asignado este plan.");
-    return true;
-  }),
+  ...validateUniqueRelation("student_plans", "student_id", "plan_id"),
   ...validateDate("start_date"),
 ];
 
 export const validateEditStudentPlans = [
+  ...validateIdFormat("student_id", true),
   ...validateForeignId("student_id", "students", true),
+  ...validateIdFormat("plan_id", true),
   ...validateForeignId("plan_id", "plans", true),
-  body("plan_id").custom(async (plan_id, { req }) => {
-    if (!plan_id && !req.body.student_id) return true;
-
-    const id = req.params.id;
-
-    const [current] = await db.execute(
-      "SELECT student_id, plan_id FROM student_plans WHERE id = ?",
-      [id],
-    );
-
-    if (current.length === 0) return true;
-
-    const student_id = req.body.student_id ?? current[0].student_id;
-    const resolvedPlanId = plan_id ?? current[0].plan_id;
-
-    const [dup] = await db.execute(
-      "SELECT id FROM student_plans WHERE student_id = ? AND plan_id = ? AND id != ?",
-      [student_id, resolvedPlanId, id],
-    );
-
-    if (dup.length > 0)
-      throw new Error("El estudiante ya tiene asignado este plan.");
-
-    return true;
-  }),
+  ...validateUniqueRelation("student_plans", "student_id", "plan_id"),
   ...validateDate("start_date", true),
 ];
 
@@ -221,31 +137,19 @@ export const validateEditStudentPlans = [
 STUDENT_TUTORS
 ========================================================= */
 export const validateStudentTutors = [
+  ...validateIdFormat("student_id"),
   ...validateForeignId("student_id", "students"),
+  ...validateIdFormat("tutor_id"),
   ...validateForeignId("tutor_id", "tutors"),
-  body("tutor_id").custom(async (value, { req }) => {
-    const [relacion] = await db.execute(
-      "SELECT id FROM student_tutors WHERE student_id = ? AND tutor_id = ?",
-      [req.body.student_id, value],
-    );
-    if (relacion.length > 0)
-      throw new Error("El tutor ya está asignado a este estudiante.");
-    return true;
-  }),
+  ...validateUniqueRelation("student_tutors", "student_id", "tutor_id"),
 ];
 
 export const validateEditStudentTutors = [
+  ...validateIdFormat("student_id", true),
   ...validateForeignId("student_id", "students", true),
+  ...validateIdFormat("tutor_id", true),
   ...validateForeignId("tutor_id", "tutors", true),
-  body("tutor_id").custom(async (value, { req }) => {
-    const [relacion] = await db.execute(
-      "SELECT id FROM student_tutors WHERE student_id = ? AND tutor_id = ? AND id != ?",
-      [req.body.student_id, value, req.params.id],
-    );
-    if (relacion.length > 0)
-      throw new Error("El tutor ya está asignado a este estudiante.");
-    return true;
-  }),
+  ...validateUniqueRelation("student_tutors", "student_id", "tutor_id"),
 ];
 
 /* =========================================================
@@ -254,7 +158,8 @@ STUDENTS
 export const validateStudents = [
   ...validatePersonName("first_name"),
   ...validatePersonName("last_name"),
-  ...validateDNI("dni", "students"),
+  ...validateDNI("dni"),
+  ...validateUnique("dni", "students"),
   ...validateName("school"),
   ...validateDate("birth_date"),
   ...validateStudentInfo("level", "grade"),
@@ -263,7 +168,8 @@ export const validateStudents = [
 export const validateEditStudents = [
   ...validatePersonName("first_name", true),
   ...validatePersonName("last_name", true),
-  ...validateDNI("dni", "students", true),
+  ...validateDNI("dni", true),
+  ...validateUnique("dni", "students"),
   ...validateName("school", true),
   ...validateDate("birth_date", true),
   ...validateStudentInfo("level", "grade", true),
@@ -274,72 +180,31 @@ SUBJECTS
 ========================================================= */
 export const validateSubjects = [
   ...validateName("name"),
-  body("name").custom(async (name) => {
-    const [r] = await db.execute("SELECT id FROM subjects WHERE name = ?", [
-      name,
-    ]);
-    if (r.length > 0) throw new Error("Materia ya registrada.");
-    return true;
-  }),
+  ...validateUnique("name", "subjects"),
 ];
 
 export const validateEditSubjects = [
   ...validateName("name", true),
-  body("name").custom(async (name, { req }) => {
-    const [r] = await db.execute(
-      "SELECT id FROM subjects WHERE name = ? AND id != ?",
-      [name, req.params.id],
-    );
-    if (r.length > 0) throw new Error("Materia ya registrada.");
-    return true;
-  }),
+  ...validateUnique("name", "subjects"),
 ];
 
 /* =========================================================
 TEACHER_SUBJECTS
 ========================================================= */
 export const validateTeacherSubjects = [
+  ...validateIdFormat("teacher_id"),
   ...validateForeignId("teacher_id", "teachers"),
+  ...validateIdFormat("subject_id"),
   ...validateForeignId("subject_id", "subjects"),
-  body("subject_id").custom(async (value, { req }) => {
-    const [relacion] = await db.execute(
-      "SELECT id FROM teacher_subjects WHERE teacher_id = ? AND subject_id = ?",
-      [req.body.teacher_id, value],
-    );
-    if (relacion.length > 0)
-      throw new Error("La materia ya está asignada a este docente.");
-    return true;
-  }),
+  ...validateUniqueRelation("teacher_subjects", "teacher_id", "subject_id"),
 ];
 
 export const validateEditTeacherSubjects = [
+  ...validateIdFormat("teacher_id", true),
   ...validateForeignId("teacher_id", "teachers", true),
+  ...validateIdFormat("subject_id", true),
   ...validateForeignId("subject_id", "subjects", true),
-  body("subject_id").custom(async (subject_id, { req }) => {
-    if (!subject_id && !req.body.teacher_id) return true;
-
-    const id = req.params.id;
-
-    const [current] = await db.execute(
-      "SELECT teacher_id, subject_id FROM teacher_subjects WHERE id = ?",
-      [id],
-    );
-
-    if (current.length === 0) return true;
-
-    const teacher_id = req.body.teacher_id ?? current[0].teacher_id;
-    const resolvedSubjectId = subject_id ?? current[0].subject_id;
-
-    const [dup] = await db.execute(
-      "SELECT id FROM teacher_subjects WHERE teacher_id = ? AND subject_id = ? AND id != ?",
-      [teacher_id, resolvedSubjectId, id],
-    );
-
-    if (dup.length > 0)
-      throw new Error("La materia ya está asignada a este docente.");
-
-    return true;
-  }),
+  ...validateUniqueRelation("teacher_subjects", "teacher_id", "subject_id"),
 ];
 
 /* =========================================================
@@ -348,15 +213,19 @@ TEACHERS
 export const validateTeachers = [
   ...validatePersonName("first_name"),
   ...validatePersonName("last_name"),
-  ...validateDNI("dni", "teachers"),
+  ...validateDNI("dni"),
+  ...validateUnique("dni", "teachers"),
   ...validatePhone("phone"),
+  ...validateUnique("phone", "teachers"),
 ];
 
 export const validateEditTeachers = [
   ...validatePersonName("first_name", true),
   ...validatePersonName("last_name", true),
-  ...validateDNI("dni", "teachers", true),
+  ...validateDNI("dni", true),
+  ...validateUnique("dni", "teachers"),
   ...validatePhone("phone", true),
+  ...validateUnique("phone", "teachers"),
 ];
 
 /* =========================================================
@@ -365,15 +234,19 @@ TUTORS
 export const validateTutors = [
   ...validatePersonName("first_name"),
   ...validatePersonName("last_name"),
-  ...validateDNI("dni", "tutors"),
+  ...validateDNI("dni"),
+  ...validateUnique("dni", "tutors"),
   ...validatePhone("phone"),
+  ...validateUnique("phone", "tutors"),
 ];
 
 export const validateEditTutors = [
   ...validatePersonName("first_name", true),
   ...validatePersonName("last_name", true),
-  ...validateDNI("dni", "tutors", true),
+  ...validateDNI("dni", true),
+  ...validateUnique("dni", "tutors"),
   ...validatePhone("phone", true),
+  ...validateUnique("phone", "tutors"),
 ];
 
 /* =========================================================
@@ -383,6 +256,7 @@ export const validateUsers = [
   ...validatePersonName("first_name"),
   ...validatePersonName("last_name"),
   ...validateUsername("username"),
+  ...validateUnique("username", "users"),
   ...validatePassword("password"),
   ...validateRole("role"),
 ];
@@ -391,6 +265,7 @@ export const validateEditUsers = [
   ...validatePersonName("first_name", true),
   ...validatePersonName("last_name", true),
   ...validateUsername("username", true),
+  ...validateUnique("username", "users"),
   ...validatePassword("password", true),
   ...validateRole("role", true),
 ];
