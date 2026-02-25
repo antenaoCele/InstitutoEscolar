@@ -1,11 +1,7 @@
 import express from "express";
-<<<<<<< HEAD:backend/routes/users.js
 import { db } from "../db.js";
-=======
-import { db } from "./db.js";
->>>>>>> 4ef73462ccca644822779073ed12f427f5b4fcff:backend/users.js
-import { validateUsers, validateEditUsers } from "./validations.js";
-import { validateID, checkValidations } from "./helpers.js";
+import { validateUsers, validateEditUsers } from "../validators/validations.js";
+import { validateID, checkValidations } from "../validators/helpers.js";
 import { authentication, authorization } from "./auth.js";
 import bcrypt from "bcrypt";
 

@@ -1,7 +1,10 @@
 import express from "express";
 import { db } from "../db.js";
-import { validateEditSchedules, validateSchedules } from "./validations.js";
-import { validateID, checkValidations } from "./helpers.js";
+import {
+  validateEditSchedules,
+  validateSchedules,
+} from "../validators/validations.js";
+import { validateID, checkValidations } from "../validators/helpers.js";
 import { authentication, authorization } from "./auth.js";
 
 const router = express.Router();

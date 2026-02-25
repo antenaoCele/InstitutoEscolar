@@ -1,6 +1,6 @@
 import express from "express";
 import { db } from "../db.js";
-import { checkValidations } from "./helpers.js";
+import { checkValidations } from "../validators/helpers.js";
 // import { validateLogin } from "./validators.js";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";

@@ -1,21 +1,24 @@
 import express from "express";
 import cors from "cors";
-import { connectDB } from "../db.js";
-import authRouter, { authConfig } from "./auth.js";
-import tutorsRouter from "./tutors.js";
-import teachersRouter from "./teachers.js";
-import subjectsRouter from "./subjects.js";
-import usersRouter from "./users.js";
-import studentsRouter from "./students.js";
-import plan_subjectsRouter from "./plan_subjects.js";
-import schedule_studentsRouter from "./schedule_students.js";
-import student_plans from "./student_plans.js";
-import schedulesRouter from "./schedules.js";
-import plansRouter from "./plans.js";
-import paymentsRouter from "./payments.js";
-import teacher_subjectsRouter from "./teacher_subjects.js";
-import student_TutorsRouter from "./student_tutors.js";
-import teacher_liquidationsRouter from "./teacher_liquidations.js";
+import { connectDB } from "./db.js";
+import authRouter, { authConfig } from "./routes/auth.js";
+import tutorsRouter from "./routes/tutors.js";
+import teachersRouter from "./routes/teachers.js";
+import subjectsRouter from "./routes/subjects.js";
+import usersRouter from "./routes/users.js";
+import studentsRouter from "./routes/students.js";
+import plan_subjectsRouter from "./routes/plan_subjects.js";
+import schedule_studentsRouter from "./routes/schedule_students.js";
+import student_plans from "./routes/student_plans.js";
+import schedulesRouter from "./routes/schedules.js";
+import plansRouter from "./routes/plans.js";
+import paymentsRouter from "./routes/payments.js";
+import teacher_subjectsRouter from "./routes/teacher_subjects.js";
+import student_TutorsRouter from "./routes/student_tutors.js";
+import teacher_liquidationsRouter from "./routes/teacher_liquidations.js";
+import monthly_finances from "./routes/monthly_finances.js";
+import enrollments from "./routes/enrollments.js";
+
 
 await connectDB();
 
@@ -42,6 +45,8 @@ app.use("/schedules", schedulesRouter);
 app.use("/teacher_subjects", teacher_subjectsRouter);
 app.use("/student_tutors", student_TutorsRouter);
 app.use("/teacher_liquidations", teacher_liquidationsRouter);
+app.use("/monthly_finances", monthly_finances);
+app.use("/enrollments", enrollments);
 
 app.listen(port, () => {
   console.log(`La aplicación está funcionando en el puerto ${port}`);

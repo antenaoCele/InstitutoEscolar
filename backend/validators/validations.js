@@ -67,15 +67,9 @@ export const validateEditPlanSubjects = [
 /* =========================================================
 PLANS
 ========================================================= */
-export const validatePlans = [
-  ...validateName("name"),
-  ...validateMoney("price"),
-];
+export const validatePlans = [...validateName("name")];
 
-export const validateEditPlans = [
-  ...validateName("name", true),
-  ...validateMoney("price", true),
-];
+export const validateEditPlans = [...validateName("name", true)];
 
 /* =========================================================
 SCHEDULE_STUDENTS
@@ -263,7 +257,7 @@ export const validateStudents = [
   ...validateDNI("dni", "students"),
   ...validateName("school"),
   ...validateDate("birth_date"),
-  ...validateStudentInfo("enrolled", "level", "grade"),
+  ...validateStudentInfo("level", "grade"),
 ];
 
 export const validateEditStudents = [
@@ -272,7 +266,7 @@ export const validateEditStudents = [
   ...validateDNI("dni", "students", true),
   ...validateName("school", true),
   ...validateDate("birth_date", true),
-  ...validateStudentInfo("enrolled", "level", "grade", true),
+  ...validateStudentInfo("level", "grade", true),
 ];
 
 /* =========================================================
