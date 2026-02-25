@@ -1,7 +1,7 @@
 import express from "express";
 import { db } from "../db.js";
 import { checkValidations, validateID } from "../validators/helpers.js";
-import { authentication } from "./auth.js";
+import { authentication, authorization } from "./auth.js";
 
 const router = express.Router();
 
@@ -60,6 +60,31 @@ router.get(
       res
         .status(500)
         .json({ success: false, message: "Error interno del servidor." });
+    }
+  },
+);
+
+router.delete(
+  "/:id",
+  authentication,
+  authorization("ADMIN"),
+  validateID("teacher_liquidations"),
+  checkValidations,
+  async (req, res) => {
+    try {
+      const { id } = req.params;
+
+      await db.execute("DELETE FROM teacher_liquidations WHERE id = ?", [id]);
+
+      res.json({
+        success: true,
+        message: "Liquidación eliminada correctamente",
+      });
+    } catch (error) {
+      res.status(500).json({
+        success: false,
+        message: "Error al eliminar la liquidación",
+      });
     }
   },
 );

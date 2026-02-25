@@ -27,6 +27,36 @@ router.get("/", authentication, async (req, res) => {
   }
 });
 
+router.get(
+  "/:id",
+  authentication,
+  validateID("schedule_students"),
+  checkValidations,
+  async (req, res) => {
+    try {
+      const id = Number(req.params.id);
+
+      const [rows] = await db.execute(
+        `SELECT ss.id, ss.schedule_id, ss.student_id, 
+        st.first_name AS student_first_name, st.last_name AS student_last_name,
+        sc.start_time, sc.end_time
+        FROM schedule_students ss
+        JOIN schedules sc ON ss.schedule_id = sc.id
+        JOIN students st ON ss.student_id = st.id
+        WHERE ss.id = ?`,
+        [id],
+      );
+
+      res.json({ success: true, data: rows[0] });
+    } catch (error) {
+      res.status(500).json({
+        success: false,
+        message: "Error al obtener el horario del estudiante",
+      });
+    }
+  },
+);
+
 router.post(
   "/",
   authentication,
