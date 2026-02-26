@@ -35,12 +35,7 @@ router.get(
         [id],
       );
 
-      if (!subjects.length) {
-        return res.status(404).json({
-          success: false,
-          message: "Asignatura no encontrada",
-        });
-      }
+      res.json({ success: true, materia: subjects[0] });
     } catch (error) {
       res.status(500).json({
         success: false,
@@ -90,13 +85,6 @@ router.put(
     try {
       const id = Number(req.params.id);
       const { name } = req.body;
-
-      // const [subjects] = await db.execute(
-      //   "SELECT * FROM subjects WHERE id = ?",
-      //   [id],
-      // );
-
-      // const newName = name ?? subjects[0].name;
 
       await db.execute(
         "UPDATE subjects SET name = COALESCE(?, name) WHERE id = ?",
