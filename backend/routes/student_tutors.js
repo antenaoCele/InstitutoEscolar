@@ -12,11 +12,7 @@ const router = express.Router();
 router.get("/", authentication, async (req, res) => {
   try {
     let sql =
-      "SELECT st.id, st.student_id, st.tutor_id \
-    st.first_name AS student_first_name, \
-    st.last_name AS student_last_name, \
-    t.first_name AS tutor_first_name, \
-    t.last_name AS tutor_last_name \
+      "SELECT st.id, st.student_id AS, st.tutor_id \
     FROM student_tutors st \
     JOIN students s ON st.student_id = s.id \
     JOIN tutors t ON st.tutor_id = t.id";
