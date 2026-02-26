@@ -1,4 +1,4 @@
-import { param, validationResult, body } from "express-validator";
+import { body, param, validationResult } from "express-validator";
 import { db } from "../db.js";
 
 /* =========================================================

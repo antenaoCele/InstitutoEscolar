@@ -1,19 +1,71 @@
 import { body } from "express-validator";
-import { isTruthy, baseField } from "./helpers.js";
+import { baseField, isTruthy } from "./helpers.js";
 
 /* =========================================================
-PERSON NAME
+DATE
 ========================================================= */
-export const validatePersonName = (field, optional = false) => [
+export const validateDate = (field, optional = false) => [
   baseField(field, optional)
     .trim()
-    .matches(/^[a-zA-ZñÑáéíóúÁÉÍÓÚ\s]+$/)
-    .withMessage("Contiene caracteres inválidos.")
+    .isISO8601({ strict: true })
+    .withMessage("Formato debe ser YYYY-MM-DD.")
     .bail()
-    .isLength({ max: 45 })
-    .withMessage("Máximo 45 caracteres.")
-    .escape(),
+    .custom((value) => {
+      const [year, month, day] = value.split("-").map(Number);
+
+      const date = new Date(Date.UTC(year, month - 1, day));
+
+      if (
+        date.getUTCFullYear() !== year ||
+        date.getUTCMonth() !== month - 1 ||
+        date.getUTCDate() !== day
+      ) {
+        throw new Error("Fecha inválida.");
+      }
+
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+
+      const inputDate = new Date(year, month - 1, day);
+
+      if (inputDate > today) throw new Error("La fecha no puede ser futura.");
+
+      return true;
+    }),
 ];
+
+/* =========================================================
+DATE RANGE
+========================================================= */
+export const validateDateRange = (
+  startField,
+  endField,
+  optional = false,
+  message = "La fecha de cierre debe ser posterior a la fecha de inicio.",
+) => {
+  let validator = body(endField);
+
+  if (optional) {
+    validator = validator.optional();
+  }
+
+  return [
+    validator.custom((endValue, { req }) => {
+      const startValue = req.body[startField];
+
+      if (!startValue || !endValue) return true;
+
+      const startDate = new Date(startValue);
+      const endDate = new Date(endValue);
+
+      if (endDate < startDate) {
+        throw new Error(message);
+      }
+
+      return true;
+    }),
+  ];
+};
 
 /* =========================================================
 DNI
@@ -33,36 +85,64 @@ export const validateDNI = (field, optional = false) => [
 ];
 
 /* =========================================================
-NAME
+FOREIGN KEY FORMAT
 ========================================================= */
-export const validateName = (field, optional = false) => [
+export const validateFKFormat = (field, optional = false) => [
   baseField(field, optional)
-    .trim()
-    .matches(/^[a-zA-Z0-9ñÑáéíóúÁÉÍÓÚ\s°º().,+\-/#]+$/)
-    .withMessage("Contiene caracteres inválidos.")
-    .bail()
-    .isLength({ max: 45 })
-    .withMessage("Este campo no puede superar los 45 caracteres.")
-    .escape(),
+    .customSanitizer((value) => {
+      if (value === undefined || value === null || value === "")
+        return undefined;
+      return value;
+    })
+    .if((value) => value !== undefined)
+    .isInt({ min: 1 })
+    .withMessage("ID inválido.")
+    .toInt(),
 ];
 
 /* =========================================================
-PHONE
+HOUR
 ========================================================= */
-export const validatePhone = (field, optional = false) => [
+export const validateHour = (field, optional = false) => [
   baseField(field, optional)
     .trim()
-    .isLength({ max: 20 })
-    .withMessage("Este campo no puede superar los 20 caracteres.")
-    .bail()
-    .matches(/^[0-9+\- ]+$/)
-    .withMessage("Contiene caracteres inválidos."),
+    .matches(/^([0-1]?\d|2[0-3]):[0-5]\d$/)
+    .withMessage("Formato de hora inválido. Use hh:mm."),
 ];
+
+/* =========================================================
+HOUR RANGE
+========================================================= */
+export const validateHourRange = (
+  startField,
+  endField,
+  optional = false,
+  message = "La hora de fin debe ser mayor a la hora de inicio.",
+) => {
+  let validator = body(endField);
+
+  if (optional) {
+    validator = validator.optional();
+  }
+
+  return [
+    validator.custom((endValue, { req }) => {
+      const startValue = req.body[startField];
+
+      if (!startValue || !endValue) return true;
+
+      if (startValue >= endValue) {
+        throw new Error(message);
+      }
+
+      return true;
+    }),
+  ];
+};
 
 /* =========================================================
 INFO STUDENT
 ========================================================= */
-
 export const validateStudentInfo = (
   fieldEnrolled,
   fieldLevel,
@@ -130,79 +210,6 @@ export const validateStudentInfo = (
 };
 
 /* =========================================================
-DATE
-========================================================= */
-export const validateDate = (field, optional = false) => [
-  baseField(field, optional)
-    .trim()
-    .isISO8601({ strict: true })
-    .withMessage("Formato debe ser YYYY-MM-DD.")
-    .bail()
-    .custom((value) => {
-      const [year, month, day] = value.split("-").map(Number);
-
-      const date = new Date(Date.UTC(year, month - 1, day));
-
-      if (
-        date.getUTCFullYear() !== year ||
-        date.getUTCMonth() !== month - 1 ||
-        date.getUTCDate() !== day
-      ) {
-        throw new Error("Fecha inválida.");
-      }
-
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-
-      const inputDate = new Date(year, month - 1, day);
-
-      if (inputDate > today) throw new Error("La fecha no puede ser futura.");
-
-      return true;
-    }),
-];
-
-/* =========================================================
-HOUR
-========================================================= */
-export const validateHour = (field, optional = false) => [
-  baseField(field, optional)
-    .trim()
-    .matches(/^([0-1]?\d|2[0-3]):[0-5]\d$/)
-    .withMessage("Formato de hora inválido. Use hh:mm."),
-];
-
-/* =========================================================
-VALIDATE TIME RANGE
-========================================================= */
-export const validateTimeRange = (
-  startField,
-  endField,
-  optional = false,
-  message = "La hora de fin debe ser mayor a la hora de inicio.",
-) => {
-  let validator = body(endField);
-
-  if (optional) {
-    validator = validator.optional();
-  }
-
-  return [
-    validator.custom((endValue, { req }) => {
-      const startValue = req.body[startField];
-
-      if (!startValue || !endValue) return true;
-
-      if (startValue >= endValue) {
-        throw new Error(message);
-      }
-
-      return true;
-    }),
-  ];
-};
-
-/* =========================================================
 MONEY
 ========================================================= */
 export const validateMoney = (field, optional = false) => [
@@ -228,6 +235,30 @@ export const validateMoney = (field, optional = false) => [
 ];
 
 /* =========================================================
+MONTH
+========================================================= */
+export const validateMonth = (field, optional = false) => [
+  baseField(field, optional)
+    .trim()
+    .isInt({ min: 1, max: 12 })
+    .withMessage("Mes inválido. Debe ser un número entre 1 y 12."),
+];
+
+/* =========================================================
+NAME
+========================================================= */
+export const validateName = (field, optional = false) => [
+  baseField(field, optional)
+    .trim()
+    .matches(/^[a-zA-Z0-9ñÑáéíóúÁÉÍÓÚ\s°º().,+\-/#]+$/)
+    .withMessage("Contiene caracteres inválidos.")
+    .bail()
+    .isLength({ max: 45 })
+    .withMessage("Este campo no puede superar los 45 caracteres.")
+    .escape(),
+];
+
+/* =========================================================
 PAYMENT METHOD
 ========================================================= */
 export const validatePaymentMethod = (field, optional = false) => [
@@ -242,35 +273,6 @@ export const validatePaymentMethod = (field, optional = false) => [
       "otro",
     ])
     .withMessage("Método de pago no válido."),
-];
-
-/* =========================================================
-FOREIGN KEY FORMAT
-========================================================= */
-export const validateIdFormat = (field, optional = false) => [
-  baseField(field, optional)
-    .customSanitizer((value) => {
-      if (value === undefined || value === null || value === "")
-        return undefined;
-      return value;
-    })
-    .if((value) => value !== undefined)
-    .isInt({ min: 1 })
-    .withMessage("ID inválido.")
-    .toInt(),
-];
-
-/* =========================================================
-USERNAME
-========================================================= */
-export const validateUsername = (field, optional = false) => [
-  baseField(field, optional)
-    .trim()
-    .isAlphanumeric("es-ES")
-    .withMessage("Este campo es alfanumérico.")
-    .bail()
-    .isLength({ max: 45 })
-    .withMessage("Este campo no puede superar los 45 caracteres."),
 ];
 
 /* =========================================================
@@ -291,6 +293,33 @@ export const validatePassword = (field, optional = false) => [
 ];
 
 /* =========================================================
+PERSON NAME
+========================================================= */
+export const validatePersonName = (field, optional = false) => [
+  baseField(field, optional)
+    .trim()
+    .matches(/^[a-zA-ZñÑáéíóúÁÉÍÓÚ\s]+$/)
+    .withMessage("Contiene caracteres inválidos.")
+    .bail()
+    .isLength({ max: 45 })
+    .withMessage("Máximo 45 caracteres.")
+    .escape(),
+];
+
+/* =========================================================
+PHONE
+========================================================= */
+export const validatePhone = (field, optional = false) => [
+  baseField(field, optional)
+    .trim()
+    .isLength({ max: 20 })
+    .withMessage("Este campo no puede superar los 20 caracteres.")
+    .bail()
+    .matches(/^[0-9+\- ]+$/)
+    .withMessage("Contiene caracteres inválidos."),
+];
+
+/* =========================================================
 ROLE
 ========================================================= */
 export const validateRole = (field, optional = false) => [
@@ -298,4 +327,27 @@ export const validateRole = (field, optional = false) => [
     .trim()
     .isIn(["ADMIN", "DOCENTE"])
     .withMessage("Rol inválido."),
+];
+
+/* =========================================================
+USERNAME
+========================================================= */
+export const validateUsername = (field, optional = false) => [
+  baseField(field, optional)
+    .trim()
+    .isAlphanumeric("es-ES")
+    .withMessage("Este campo es alfanumérico.")
+    .bail()
+    .isLength({ max: 45 })
+    .withMessage("Este campo no puede superar los 45 caracteres."),
+];
+
+/* =========================================================
+YEAR
+========================================================= */
+export const validateYear = (field, optional = false) => [
+  baseField(field, optional)
+    .trim()
+    .isInt({ min: 2000, max: 2100 })
+    .withMessage("Año inválido."),
 ];
