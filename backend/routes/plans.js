@@ -47,12 +47,11 @@ router.post(
   checkValidations,
   async (req, res) => {
     try {
-      const { name, price } = req.body;
+      const { name } = req.body;
 
-      const [result] = await db.execute(
-        "INSERT INTO plans (name) VALUES (?,?)",
-        [name, price],
-      );
+      const [result] = await db.execute("INSERT INTO plans (name) VALUES (?)", [
+        name,
+      ]);
 
       res.status(201).json({
         success: true,
@@ -76,7 +75,7 @@ router.put(
   checkValidations,
   async (req, res) => {
     try {
-      const { name, price } = req.body;
+      const { name } = req.body;
       const id = Number(req.params.id);
 
       const [rows] = await db.execute("SELECT * FROM plans WHERE id=?", [id]);
