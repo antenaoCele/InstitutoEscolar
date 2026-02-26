@@ -4,8 +4,8 @@ import {
   validateScheduleOverlap,
   validateScheduleOverlapOnUpdate,
   validateUnique,
+  validateUniqueCombination,
   validateUniqueMonthYear,
-  validateUniqueRelation,
 } from "./databaseValidators.js";
 import {
   validateDate,
@@ -111,7 +111,7 @@ export const validatePlanSubjects = [
   ...validateForeignId("plan_id", "plans"),
   ...validateFKFormat("subject_id"),
   ...validateForeignId("subject_id", "subjects"),
-  ...validateUniqueRelation("plan_subjects", "plan_id", "subject_id"),
+  ...validateUniqueCombination("plan_subjects", ["plan_id", "subject_id"]),
 ];
 
 export const validateEditPlanSubjects = [
@@ -119,7 +119,7 @@ export const validateEditPlanSubjects = [
   ...validateForeignId("plan_id", "plans", true),
   ...validateFKFormat("subject_id", true),
   ...validateForeignId("subject_id", "subjects", true),
-  ...validateUniqueRelation("plan_subjects", "plan_id", "subject_id"),
+  ...validateUniqueCombination("plan_subjects", ["plan_id", "subject_id"]),
 ];
 
 /* =========================================================
@@ -143,7 +143,10 @@ export const validateScheduleStudents = [
   ...validateForeignId("student_id", "students"),
   ...validateFKFormat("schedule_id"),
   ...validateForeignId("schedule_id", "schedules"),
-  ...validateUniqueRelation("schedule_students", "student_id", "schedule_id"),
+  ...validateUniqueCombination("schedule_students", [
+    "student_id",
+    "schedule_id",
+  ]),
 ];
 
 export const validateEditScheduleStudents = [
@@ -151,7 +154,10 @@ export const validateEditScheduleStudents = [
   ...validateForeignId("student_id", "students", true),
   ...validateFKFormat("schedule_id", true),
   ...validateForeignId("schedule_id", "schedules", true),
-  ...validateUniqueRelation("schedule_students", "student_id", "schedule_id"),
+  ...validateUniqueCombination("schedule_students", [
+    "student_id",
+    "schedule_id",
+  ]),
 ];
 
 /* =========================================================
@@ -183,8 +189,16 @@ export const validateStudentPlans = [
   ...validateForeignId("student_id", "students"),
   ...validateFKFormat("plan_id"),
   ...validateForeignId("plan_id", "plans"),
-  ...validateUniqueRelation("student_plans", "student_id", "plan_id"),
+  ...validateFKFormat("teacher_id"),
+  ...validateForeignId("teacher_id", "teachers"),
   ...validateDate("start_date"),
+  ...validateDate("end_date"),
+  ...validateDateRange("start_date", "end_date"),
+  ...validateUniqueCombination("student_plans", [
+    "student_id",
+    "plan_id",
+    "teacher_id",
+  ]),
 ];
 
 export const validateEditStudentPlans = [
@@ -192,8 +206,16 @@ export const validateEditStudentPlans = [
   ...validateForeignId("student_id", "students", true),
   ...validateFKFormat("plan_id", true),
   ...validateForeignId("plan_id", "plans", true),
-  ...validateUniqueRelation("student_plans", "student_id", "plan_id"),
+  ...validateFKFormat("teacher_id", true),
+  ...validateForeignId("teacher_id", "teachers", true),
   ...validateDate("start_date", true),
+  ...validateDate("end_date", true),
+  ...validateDateRange("start_date", "end_date", true),
+  ...validateUniqueCombination("student_plans", [
+    "student_id",
+    "plan_id",
+    "teacher_id",
+  ]),
 ];
 
 /* =========================================================
@@ -204,7 +226,7 @@ export const validateStudentTutors = [
   ...validateForeignId("student_id", "students"),
   ...validateFKFormat("tutor_id"),
   ...validateForeignId("tutor_id", "tutors"),
-  ...validateUniqueRelation("student_tutors", "student_id", "tutor_id"),
+  ...validateUniqueCombination("student_tutors", ["student_id", "tutor_id"]),
 ];
 
 export const validateEditStudentTutors = [
@@ -212,7 +234,7 @@ export const validateEditStudentTutors = [
   ...validateForeignId("student_id", "students", true),
   ...validateFKFormat("tutor_id", true),
   ...validateForeignId("tutor_id", "tutors", true),
-  ...validateUniqueRelation("student_tutors", "student_id", "tutor_id"),
+  ...validateUniqueCombination("student_tutors", ["student_id", "tutor_id"]),
 ];
 
 /* =========================================================
@@ -259,7 +281,10 @@ export const validateTeacherSubjects = [
   ...validateForeignId("teacher_id", "teachers"),
   ...validateFKFormat("subject_id"),
   ...validateForeignId("subject_id", "subjects"),
-  ...validateUniqueRelation("teacher_subjects", "teacher_id", "subject_id"),
+  ...validateUniqueCombination("teacher_subjects", [
+    "teacher_id",
+    "subject_id",
+  ]),
 ];
 
 export const validateEditTeacherSubjects = [
@@ -267,7 +292,10 @@ export const validateEditTeacherSubjects = [
   ...validateForeignId("teacher_id", "teachers", true),
   ...validateFKFormat("subject_id", true),
   ...validateForeignId("subject_id", "subjects", true),
-  ...validateUniqueRelation("teacher_subjects", "teacher_id", "subject_id"),
+  ...validateUniqueCombination("teacher_subjects", [
+    "teacher_id",
+    "subject_id",
+  ]),
 ];
 
 /* =========================================================

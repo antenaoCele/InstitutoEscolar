@@ -35,7 +35,12 @@ router.get(
         [id],
       );
 
-      res.json({ success: true, materia: subjects[0] });
+      if (!subjects.length) {
+        return res.status(404).json({
+          success: false,
+          message: "Asignatura no encontrada",
+        });
+      }
     } catch (error) {
       res.status(500).json({
         success: false,
@@ -86,21 +91,21 @@ router.put(
       const id = Number(req.params.id);
       const { name } = req.body;
 
-      const [subjects] = await db.execute(
-        "SELECT * FROM subjects WHERE id = ?",
-        [id],
+      // const [subjects] = await db.execute(
+      //   "SELECT * FROM subjects WHERE id = ?",
+      //   [id],
+      // );
+
+      // const newName = name ?? subjects[0].name;
+
+      await db.execute(
+        "UPDATE subjects SET name = COALESCE(?, name) WHERE id = ?",
+        [name, id],
       );
-
-      const newName = name ?? subjects[0].name;
-
-      await db.execute("UPDATE subjects SET name = ? WHERE id = ?", [
-        newName,
-        id,
-      ]);
 
       res.json({
         success: true,
-        data: { id, name: newName },
+        data: { id, name },
         message: "Asignatura actualizada exitosamente",
       });
     } catch (error) {
