@@ -192,7 +192,7 @@ export const validateStudentPlans = [
   ...validateFKFormat("teacher_id"),
   ...validateForeignId("teacher_id", "teachers"),
   ...validateDate("start_date"),
-  ...validateDate("end_date"),
+  ...validateDate("end_date", true),
   ...validateDateRange("start_date", "end_date"),
   ...validateUniqueCombination("student_plans", [
     "student_id",
