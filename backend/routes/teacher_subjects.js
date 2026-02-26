@@ -21,7 +21,7 @@ router.get("/", authentication, async (req, res) => {
   } catch (error) {
     res.status(500).json({
       success: false,
-      message: "Error al obtener las asignaciones de materias",
+      message: "Error al obtener las materias",
     });
   }
 });
@@ -117,12 +117,12 @@ router.put(
           teacher_id: newTeacherId,
           subject_id: newSubjectId,
         },
-        message: "Asignación actualizada exitosamente",
+        message: "Materia actualizada exitosamente",
       });
     } catch (error) {
       res.status(500).json({
         success: false,
-        message: "Error al actualizar la asignación",
+        message: "Error al actualizar la materia",
       });
     }
   },
