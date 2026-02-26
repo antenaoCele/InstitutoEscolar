@@ -1,31 +1,71 @@
 import {
-  validateUnique,
-  validateUniqueRelation,
+  validateFinanceOverlap,
   validateForeignId,
   validateScheduleOverlap,
   validateScheduleOverlapOnUpdate,
+  validateUnique,
+  validateUniqueMonthYear,
+  validateUniqueRelation,
 } from "./databaseValidators.js";
 import {
-  validatePersonName,
-  validateDNI,
-  validateName,
-  validatePhone,
-  validateStudentInfo,
   validateDate,
+  validateDateRange,
+  validateDNI,
+  validateFKFormat,
   validateHour,
+  validateHourRange,
+  validateStudentInfo,
   validateMoney,
+  validateMonth,
+  validateName,
   validatePaymentMethod,
-  validateIdFormat,
-  validateUsername,
   validatePassword,
+  validatePersonName,
+  validatePhone,
   validateRole,
+  validateUsername,
+  validateYear,
 } from "./formatValidators.js";
+
+/* =========================================================
+ENROLLEMENT
+========================================================= */
+export const validateEnrollement = [
+  ...validateFKFormat("student_id"),
+  ...validateForeignId("student_id", "students"),
+  ...validateMoney("amount"),
+  ...validateDate("payment_date"),
+];
+
+export const validateEditEnrollement = [
+  ...validateFKFormat("student_id", true),
+  ...validateForeignId("student_id", "students", true),
+  ...validateMoney("amount", true),
+  ...validateDate("payment_date", true),
+];
+
+/* =========================================================
+MONTHLY_FINANCES
+========================================================= */
+export const validateMonthlyFinances = [
+  ...validateMonth("month"),
+  ...validateYear("year"),
+  ...validateMoney("other_expenses"),
+  ...validateUniqueMonthYear("monthly_finances"),
+];
+
+export const validateEditMonthlyFinances = [
+  ...validateMonth("month", true),
+  ...validateYear("year", true),
+  ...validateMoney("other_expenses", true),
+  ...validateUniqueMonthYear("monthly_finances"),
+];
 
 /* =========================================================
 PAYMENTS
 ========================================================= */
 export const validatePayments = [
-  ...validateIdFormat("student_id"),
+  ...validateFKFormat("student_id"),
   ...validateForeignId("student_id", "students"),
   ...validateDate("payment_date"),
   ...validateMoney("amount"),
@@ -33,7 +73,7 @@ export const validatePayments = [
 ];
 
 export const validateEditPayments = [
-  ...validateIdFormat("student_id", true),
+  ...validateFKFormat("student_id", true),
   ...validateForeignId("student_id", "students", true),
   ...validateDate("payment_date", true),
   ...validateMoney("amount", true),
@@ -41,20 +81,43 @@ export const validateEditPayments = [
 ];
 
 /* =========================================================
+PLAN_PRICES
+========================================================= */
+export const validatePlanPrices = [
+  ...validateFKFormat("plan_id"),
+  ...validateForeignId("plan_id", "plans"),
+  ...validateMoney("price"),
+  ...validateDate("start_date"),
+  ...validateDate("end_date"),
+  ...validateDateRange("start_date", "end_date"),
+  ...validateFinanceOverlap("plan_prices"),
+];
+
+export const validateEditPlanPrices = [
+  ...validateFKFormat("plan_id", true),
+  ...validateForeignId("plan_id", "plans", true),
+  ...validateMoney("price", true),
+  ...validateDate("start_date", true),
+  ...validateDate("end_date", true),
+  ...validateDateRange("start_date", "end_date", true),
+  ...validateFinanceOverlap("plan_prices"),
+];
+
+/* =========================================================
 PLAN_SUBJECTS
 ========================================================= */
 export const validatePlanSubjects = [
-  ...validateIdFormat("plan_id"),
+  ...validateFKFormat("plan_id"),
   ...validateForeignId("plan_id", "plans"),
-  ...validateIdFormat("subject_id"),
+  ...validateFKFormat("subject_id"),
   ...validateForeignId("subject_id", "subjects"),
   ...validateUniqueRelation("plan_subjects", "plan_id", "subject_id"),
 ];
 
 export const validateEditPlanSubjects = [
-  ...validateIdFormat("plan_id", true),
+  ...validateFKFormat("plan_id", true),
   ...validateForeignId("plan_id", "plans", true),
-  ...validateIdFormat("subject_id", true),
+  ...validateFKFormat("subject_id", true),
   ...validateForeignId("subject_id", "subjects", true),
   ...validateUniqueRelation("plan_subjects", "plan_id", "subject_id"),
 ];
@@ -76,17 +139,17 @@ export const validateEditPlans = [
 SCHEDULE_STUDENTS
 ========================================================= */
 export const validateScheduleStudents = [
-  ...validateIdFormat("student_id"),
+  ...validateFKFormat("student_id"),
   ...validateForeignId("student_id", "students"),
-  ...validateIdFormat("schedule_id"),
+  ...validateFKFormat("schedule_id"),
   ...validateForeignId("schedule_id", "schedules"),
   ...validateUniqueRelation("schedule_students", "student_id", "schedule_id"),
 ];
 
 export const validateEditScheduleStudents = [
-  ...validateIdFormat("student_id", true),
+  ...validateFKFormat("student_id", true),
   ...validateForeignId("student_id", "students", true),
-  ...validateIdFormat("schedule_id", true),
+  ...validateFKFormat("schedule_id", true),
   ...validateForeignId("schedule_id", "schedules", true),
   ...validateUniqueRelation("schedule_students", "student_id", "schedule_id"),
 ];
@@ -95,20 +158,20 @@ export const validateEditScheduleStudents = [
 SCHEDULES
 ========================================================= */
 export const validateSchedules = [
-  ...validateIdFormat("teacher_id"),
+  ...validateFKFormat("teacher_id"),
   ...validateForeignId("teacher_id", "teachers"),
   ...validateHour("start_time"),
   ...validateHour("end_time"),
-  ...validateTimeRange("start_time", "end_time"),
+  ...validateHourRange("start_time", "end_time"),
   ...validateScheduleOverlap("schedules"),
 ];
 
 export const validateEditSchedules = [
-  ...validateIdFormat("teacher_id", true),
+  ...validateFKFormat("teacher_id", true),
   ...validateForeignId("teacher_id", "teachers", true),
   ...validateHour("start_time", true),
   ...validateHour("end_time", true),
-  ...validateTimeRange("start_time", "end_time", true),
+  ...validateHourRange("start_time", "end_time", true),
   ...validateScheduleOverlapOnUpdate("schedules"),
 ];
 
@@ -116,18 +179,18 @@ export const validateEditSchedules = [
 STUDENT_PLANS
 ========================================================= */
 export const validateStudentPlans = [
-  ...validateIdFormat("student_id"),
+  ...validateFKFormat("student_id"),
   ...validateForeignId("student_id", "students"),
-  ...validateIdFormat("plan_id"),
+  ...validateFKFormat("plan_id"),
   ...validateForeignId("plan_id", "plans"),
   ...validateUniqueRelation("student_plans", "student_id", "plan_id"),
   ...validateDate("start_date"),
 ];
 
 export const validateEditStudentPlans = [
-  ...validateIdFormat("student_id", true),
+  ...validateFKFormat("student_id", true),
   ...validateForeignId("student_id", "students", true),
-  ...validateIdFormat("plan_id", true),
+  ...validateFKFormat("plan_id", true),
   ...validateForeignId("plan_id", "plans", true),
   ...validateUniqueRelation("student_plans", "student_id", "plan_id"),
   ...validateDate("start_date", true),
@@ -137,17 +200,17 @@ export const validateEditStudentPlans = [
 STUDENT_TUTORS
 ========================================================= */
 export const validateStudentTutors = [
-  ...validateIdFormat("student_id"),
+  ...validateFKFormat("student_id"),
   ...validateForeignId("student_id", "students"),
-  ...validateIdFormat("tutor_id"),
+  ...validateFKFormat("tutor_id"),
   ...validateForeignId("tutor_id", "tutors"),
   ...validateUniqueRelation("student_tutors", "student_id", "tutor_id"),
 ];
 
 export const validateEditStudentTutors = [
-  ...validateIdFormat("student_id", true),
+  ...validateFKFormat("student_id", true),
   ...validateForeignId("student_id", "students", true),
-  ...validateIdFormat("tutor_id", true),
+  ...validateFKFormat("tutor_id", true),
   ...validateForeignId("tutor_id", "tutors", true),
   ...validateUniqueRelation("student_tutors", "student_id", "tutor_id"),
 ];
@@ -192,19 +255,34 @@ export const validateEditSubjects = [
 TEACHER_SUBJECTS
 ========================================================= */
 export const validateTeacherSubjects = [
-  ...validateIdFormat("teacher_id"),
+  ...validateFKFormat("teacher_id"),
   ...validateForeignId("teacher_id", "teachers"),
-  ...validateIdFormat("subject_id"),
+  ...validateFKFormat("subject_id"),
   ...validateForeignId("subject_id", "subjects"),
   ...validateUniqueRelation("teacher_subjects", "teacher_id", "subject_id"),
 ];
 
 export const validateEditTeacherSubjects = [
-  ...validateIdFormat("teacher_id", true),
+  ...validateFKFormat("teacher_id", true),
   ...validateForeignId("teacher_id", "teachers", true),
-  ...validateIdFormat("subject_id", true),
+  ...validateFKFormat("subject_id", true),
   ...validateForeignId("subject_id", "subjects", true),
   ...validateUniqueRelation("teacher_subjects", "teacher_id", "subject_id"),
+];
+
+/* =========================================================
+TEACHERS_LIQUIDATIONS
+========================================================= */
+export const validateTeachersLiquidations = [
+  ...validateFKFormat("teacher_id"),
+  ...validateForeignId("teacher_id", "teachers"),
+  ...validateMonth("month"),
+];
+
+export const validateEditTeachersLiquidations = [
+  ...validateFKFormat("teacher_id", true),
+  ...validateForeignId("teacher_id", "teachers", true),
+  ...validateMonth("month", true),
 ];
 
 /* =========================================================
