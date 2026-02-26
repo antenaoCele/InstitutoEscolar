@@ -2,30 +2,13 @@ import { param, validationResult, body } from "express-validator";
 import { db } from "../db.js";
 
 /* =========================================================
-WHITELIST
+BASE FIELD BUILDER
 ========================================================= */
-export const ALLOWED_TABLES = {
-  payments: "payments",
-  plan_subjects: "plan_subjects",
-  plans: "plans",
-  schedule_students: "schedule_students",
-  schedules: "schedules",
-  student_plans: "student_plans",
-  student_tutors: "student_tutors",
-  students: "students",
-  subjects: "subjects",
-  teacher_liquidations: "teacher_liquidations",
-  teacher_subjects: "teacher_subjects",
-  teachers: "teachers",
-  tutors: "tutors",
-  users: "users",
-};
+export const baseField = (field, optional) => {
+  let v = body(field);
 
-/* =========================================================
-TRUTHY
-========================================================= */
-export const isTruthy = (v) => {
-  return v === true || v === "true" || v === 1 || v === "1";
+  if (optional) return v.optional({ values: "falsy" });
+  return v.notEmpty().withMessage("Este campo es obligatorio.");
 };
 
 /* =========================================================
@@ -76,11 +59,31 @@ export const validateID = (tableName) => {
 };
 
 /* =========================================================
-BASE FIELD BUILDER
+TRUTHY
 ========================================================= */
-export const baseField = (field, optional) => {
-  let v = body(field);
+export const isTruthy = (v) => {
+  return v === true || v === "true" || v === 1 || v === "1";
+};
 
-  if (optional) return v.optional({ values: "falsy" });
-  return v.notEmpty().withMessage("Este campo es obligatorio.");
+/* =========================================================
+WHITELIST
+========================================================= */
+export const ALLOWED_TABLES = {
+  enrollments: "enrollments",
+  monthly_finances: "monthly_finances",
+  payments: "payments",
+  plan_pices: "plan_pices",
+  plan_subjects: "plan_subjects",
+  plans: "plans",
+  schedule_students: "schedule_students",
+  schedules: "schedules",
+  student_plans: "student_plans",
+  student_tutors: "student_tutors",
+  students: "students",
+  subjects: "subjects",
+  teacher_liquidations: "teacher_liquidations",
+  teacher_subjects: "teacher_subjects",
+  teachers: "teachers",
+  tutors: "tutors",
+  users: "users",
 };
