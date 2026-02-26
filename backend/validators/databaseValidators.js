@@ -180,6 +180,56 @@ export const validateUnique = (
 ];
 
 /* =========================================================
+UNIQUE COMBINATION
+========================================================= */
+export const validateUniqueCombination = (
+  table,
+  fields,
+  message = "La combinación ya existe.",
+) => [
+  body(fields[0]).custom(async (_, { req }) => {
+    const safeTable = ALLOWED_TABLES[table];
+    if (!safeTable) throw new Error("Tabla no permitida");
+
+    const id = req.params?.id ? Number(req.params.id) : null;
+
+    const values = [];
+
+    for (const field of fields) {
+      let value = req.body[field];
+
+      if (id && value === undefined) {
+        const [current] = await db.execute(
+          `SELECT ${fields.join(", ")} FROM ${safeTable} WHERE id = ?`,
+          [id],
+        );
+
+        if (!current.length) return true;
+        value = current[0][field];
+      }
+
+      values.push(value);
+    }
+
+    const whereClause = fields.map((f) => `${f} = ?`).join(" AND ");
+
+    const sql = `
+      SELECT id FROM ${safeTable}
+      WHERE ${whereClause}
+      ${id ? "AND id != ?" : ""}
+    `;
+
+    const params = id ? [...values, id] : values;
+
+    const [rows] = await db.execute(sql, params);
+
+    if (rows.length) throw new Error(message);
+
+    return true;
+  }),
+];
+
+/* =========================================================
 UNIQUE MONTH + YEAR
 ========================================================= */
 export const validateUniqueMonthYear = (
@@ -202,52 +252,6 @@ export const validateUniqueMonthYear = (
     `;
 
     const params = id ? [year, month, id] : [year, month];
-
-    const [rows] = await db.execute(sql, params);
-
-    if (rows.length) throw new Error(message);
-
-    return true;
-  }),
-];
-
-/* =========================================================
-UNIQUE RELATION
-========================================================= */
-export const validateUniqueRelation = (
-  table,
-  fieldA,
-  fieldB,
-  message = "La combinación de registros ya está registrada.",
-) => [
-  body(fieldB).custom(async (_, { req }) => {
-    const safeTable = ALLOWED_TABLES[table];
-    if (!safeTable) throw new Error("Tabla no permitida");
-
-    const id = req.params?.id ? Number(req.params.id) : null;
-
-    let valueA = req.body[fieldA];
-    let valueB = req.body[fieldB];
-
-    if (id && (valueA === undefined || valueB === undefined)) {
-      const [current] = await db.execute(
-        `SELECT ${fieldA}, ${fieldB} FROM ${safeTable} WHERE id = ?`,
-        [id],
-      );
-
-      if (!current.length) return true;
-
-      valueA = valueA ?? current[0][fieldA];
-      valueB = valueB ?? current[0][fieldB];
-    }
-
-    const sql = `
-      SELECT id FROM ${safeTable}
-      WHERE ${fieldA} = ? AND ${fieldB} = ?
-      ${id ? "AND id != ?" : ""}
-    `;
-
-    const params = id ? [valueA, valueB, id] : [valueA, valueB];
 
     const [rows] = await db.execute(sql, params);
 
