@@ -1,8 +1,19 @@
 node_modules/
 .env
 http/
+
 controllers/
+
 utils/
+
+middlewares/
+
+config/
+
+validators/entities/
+validators/helpers/
+validators/rules/
+
 routes/auth.routes.js
 routes/enrollments.routes.js
 routes/monthly_finances.routes.js
@@ -21,3 +32,5 @@ routes/teacher_subjects.routes.js
 routes/teachers.routes.js
 routes/tutors.routes.js
 routes/users.routes.js
+
+/index-prueba
