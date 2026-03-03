@@ -1,0 +1,56 @@
+import express from "express";
+import { studentPlansController } from "../controllers/student_plans.controller.js";
+import {
+  validateStudentPlans,
+  validateEditStudentPlans,
+} from "../validators/entities/student_plans.validator.js";
+import {
+  validateID,
+  checkValidations,
+} from "../validators/helpers/validation.middleware.js";
+import {
+  authentication,
+  authorization,
+} from "../middlewares/auth.middleware.js";
+
+const router = express.Router();
+
+router.get("/", authentication, studentPlansController.getAll);
+
+router.get(
+  "/:id",
+  authentication,
+  ...validateID("student_plans"),
+  checkValidations,
+  studentPlansController.getById,
+);
+
+router.post(
+  "/",
+  authentication,
+  authorization("ADMIN"),
+  validateStudentPlans,
+  checkValidations,
+  studentPlansController.create,
+);
+
+router.put(
+  "/:id",
+  authentication,
+  authorization("ADMIN"),
+  ...validateID("student_plans"),
+  validateEditStudentPlans,
+  checkValidations,
+  studentPlansController.update,
+);
+
+router.delete(
+  "/:id",
+  authentication,
+  authorization("ADMIN"),
+  ...validateID("student_plans"),
+  checkValidations,
+  studentPlansController.delete,
+);
+
+export default router;
