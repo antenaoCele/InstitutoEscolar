@@ -21,6 +21,7 @@ router.get("/", authentication, teachersController.getAll);
 router.get(
   "/:id/liquidate",
   authentication,
+  authorization("ADMIN"),
   ...validateID("teachers"),
   checkValidations,
   teachersController.getLiquidations,

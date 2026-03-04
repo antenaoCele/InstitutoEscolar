@@ -17,6 +17,16 @@ const router = express.Router();
 
 router.get("/", authentication, studentPlansController.getAll);
 
+//OBTENER EL ESTADO DE PAGO DE LOS ALUMNOS Y FILTRARLOS POR DOCENTE(es opcional lo del docente)
+router.get(
+  "/account-status",
+  authentication,
+  authorization("ADMIN"),
+  ...validateID("student_plans"),
+  checkValidations,
+  studentPlansController.getAccountStatus,
+);
+
 router.get(
   "/:id",
   authentication,
