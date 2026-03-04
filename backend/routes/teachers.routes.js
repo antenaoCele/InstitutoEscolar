@@ -17,6 +17,16 @@ const router = express.Router();
 
 router.get("/", authentication, teachersController.getAll);
 
+//Obtener las liquidaciones de un docente
+router.get(
+  "/:id/liquidate",
+  authentication,
+  authorization("ADMIN"),
+  ...validateID("teachers"),
+  checkValidations,
+  teachersController.getLiquidations,
+);
+
 router.get(
   "/:id",
   authentication,
@@ -32,6 +42,16 @@ router.post(
   validateTeachers,
   checkValidations,
   teachersController.create,
+);
+
+//POST PARA LIQUIDAR SUELDO POR MES DE UN DOCENTE
+router.post(
+  "/:id/liquidate",
+  authentication,
+  authorization("ADMIN"),
+  validateTeachers,
+  checkValidations,
+  teachersController.createLiquidation,
 );
 
 router.put(
