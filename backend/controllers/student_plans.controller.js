@@ -9,15 +9,13 @@ export const studentPlansController = {
   getAll: async (req, res) => {
     try {
       const [rows] = await db.execute(`
-        SELECT sp.id, 
-        s.first_name AS student_first_name, 
-        s.last_name AS student_last_name, 
-        p.name AS plan_name, 
+        SELECT 
+        sp.id, 
+        s.id AS student_id,
+        p.id AS plan_id,
+        t.id AS teacher_id,
         sp.start_date,
-        sp.end_date, 
-        t.id AS teacher_id 
-        t.first_name AS teacher_first_name, 
-        t.last_name AS teacher_last_name 
+        sp.end_date
         FROM student_plans sp 
         JOIN students s ON sp.student_id = s.id 
         JOIN plans p ON sp.plan_id = p.id 
@@ -43,19 +41,17 @@ export const studentPlansController = {
 
       const [rows] = await db.execute(
         `
-        SELECT sp.id, 
-        s.first_name AS student_first_name, 
-        s.last_name AS student_last_name, 
-        p.name AS plan_name, 
-        sp.start_date,
-        sp.end_date, 
+        SELECT 
+        sp.id, 
+        s.id AS student_id,
+        p.id AS plan_id,
         t.id AS teacher_id,
-        t.first_name AS teacher_first_name, 
-        t.last_name AS teacher_last_name 
+        sp.start_date,
+        sp.end_date
         FROM student_plans sp 
         JOIN students s ON sp.student_id = s.id 
         JOIN plans p ON sp.plan_id = p.id 
-        JOIN teachers t ON sp.teacher_id = t.id 
+        JOIN teachers t ON sp.teacher_id = t.id
         WHERE sp.id = ?
         `,
         [id],
