@@ -7,7 +7,7 @@ import {
 } from "../rules/format.rules.js";
 
 export const validatePayments = [
-  ...validateFKFormat("student_id"),
+  ...validateFKFormat("student_plan_id"),
   ...validateForeignId("student_id", "students"),
   ...validateDate("payment_date"),
   ...validateMoney("amount"),
@@ -15,7 +15,7 @@ export const validatePayments = [
 ];
 
 export const validateEditPayments = [
-  ...validateFKFormat("student_id", true),
+  ...validateFKFormat("student_plan_id", true),
   ...validateForeignId("student_id", "students", true),
   ...validateDate("payment_date", true),
   ...validateMoney("amount", true),
