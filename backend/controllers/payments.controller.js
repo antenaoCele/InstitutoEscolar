@@ -10,16 +10,13 @@ export const paymentsController = {
     try {
       const [rows] = await db.execute(`
         SELECT 
-            p.id,
-            p.amount,
-            p.payment_method,
-            p.student_plan_id,
-            p.payment_date,
-            sp.student_id,
-            sp.plan_id
+        p.id,
+        sp.id AS student_plan_id,
+        p.amount,
+        p.payment_date,
+        p.payment_method
         FROM payments p
         JOIN student_plans sp ON p.student_plan_id = sp.id
-        ORDER BY p.id DESC
       `);
 
       res.json({ success: true, total: rows.length, data: rows });
@@ -38,13 +35,11 @@ export const paymentsController = {
       const [rows] = await db.execute(
         `
         SELECT 
-            p.id,
-            p.amount,
-            p.payment_method,
-            p.student_plan_id,
-            p.payment_date,
-            sp.student_id,
-            sp.plan_id
+        p.id,
+        sp.id AS student_plan_id,
+        p.amount,
+        p.payment_date,
+        p.payment_method
         FROM payments p
         JOIN student_plans sp ON p.student_plan_id = sp.id
         WHERE p.id = ?
