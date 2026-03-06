@@ -11,15 +11,11 @@ export const enrollmentsController = {
       const [rows] = await db.execute(`
         SELECT 
         e.id,
+        s.id AS student_id,
         e.amount,
-        e.student_id,
-        e.payment_date,
-        s.student_id AS student_code,
-        s.first_name,
-        s.last_name  
+        e.payment_date
         FROM enrollments e
         JOIN students s ON e.student_id = s.id
-        ORDER BY e.id ASC
       `);
 
       res.json({
@@ -43,12 +39,9 @@ export const enrollmentsController = {
         `
         SELECT 
         e.id,
+        s.id AS student_id,
         e.amount,
-        e.student_id,
-        e.payment_date,
-        s.student_id AS student_code,
-        s.first_name,
-        s.last_name  
+        e.payment_date
         FROM enrollments e
         JOIN students s ON e.student_id = s.id
         WHERE e.id = ?
