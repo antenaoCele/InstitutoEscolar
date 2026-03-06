@@ -1,4 +1,4 @@
-import { validateForeignId } from "../rules/database.rules.js";
+import { validateForeignId, validateUnique } from "../rules/database.rules.js";
 import {
   validateDate,
   validateFKFormat,
@@ -8,6 +8,7 @@ import {
 export const validateEnrollements = [
   ...validateFKFormat("student_id"),
   ...validateForeignId("student_id", "students"),
+  ...validateUnique("student_id", "enrollments"),
   ...validateMoney("amount"),
   ...validateDate("payment_date"),
 ];
@@ -15,6 +16,7 @@ export const validateEnrollements = [
 export const validateEditEnrollements = [
   ...validateFKFormat("student_id", true),
   ...validateForeignId("student_id", "students", true),
+  ...validateUnique("student_id", "enrollments"),
   ...validateMoney("amount", true),
   ...validateDate("payment_date", true),
 ];
