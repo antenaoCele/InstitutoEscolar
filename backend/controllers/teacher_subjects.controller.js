@@ -11,11 +11,8 @@ export const teacherSubjectsController = {
       const [rows] = await db.execute(`
         SELECT
         ts.id, 
-        ts.teacher_id, 
-        ts.subject_id, 
-        t.first_name, 
-        t.last_name, 
-        s.name as subject_name
+        t.id AS teacher_id, 
+        s.id AS subject_id 
         FROM teacher_subjects ts
         JOIN teachers t ON ts.teacher_id = t.id
         JOIN subjects s ON ts.subject_id = s.id
@@ -41,12 +38,9 @@ export const teacherSubjectsController = {
       const [rows] = await db.execute(
         `
         SELECT
-        ts.id,
-        ts.teacher_id,
-        ts.subject_id,
-        t.first_name,
-        t.last_name,
-        s.name as subject_name
+        ts.id, 
+        t.id AS teacher_id, 
+        s.id AS subject_id 
         FROM teacher_subjects ts
         JOIN teachers t ON ts.teacher_id = t.id
         JOIN subjects s ON ts.subject_id = s.id
