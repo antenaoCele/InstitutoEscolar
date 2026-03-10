@@ -9,16 +9,12 @@ export const teacherLiquidationsController = {
     try {
       const sql = `
         SELECT 
-          tl.id, 
-          tl.teacher_id,
-          t.first_name,
-          t.last_name,
-          tl.month, 
-          tl.total_collected, 
-          tl.net_salary 
+        t.id AS teacher_id, 
+        tl.month, 
+        tl.total_collected, 
+        tl.net_salary 
         FROM teacher_liquidations tl
         JOIN teachers t ON tl.teacher_id = t.id
-        ORDER BY tl.id DESC
       `;
 
       const [rows] = await db.execute(sql);
@@ -41,13 +37,10 @@ export const teacherLiquidationsController = {
 
       const sql = `
         SELECT 
-          tl.id, 
-          tl.teacher_id,
-          t.first_name,
-          t.last_name,
-          tl.month, 
-          tl.total_collected, 
-          tl.net_salary 
+        t.id AS teacher_id, 
+        tl.month, 
+        tl.total_collected, 
+        tl.net_salary 
         FROM teacher_liquidations tl
         JOIN teachers t ON tl.teacher_id = t.id
         WHERE tl.id = ?
