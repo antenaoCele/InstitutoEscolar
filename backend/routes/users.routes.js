@@ -30,8 +30,8 @@ router.post(
   "/",
   authentication,
   authorization("ADMIN"),
-  checkValidations,
   validateUsers,
+  checkValidations,
   usersController.create,
 );
 
