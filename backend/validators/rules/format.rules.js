@@ -253,10 +253,8 @@ export const validateName = (field, optional = false) => [
     .matches(/^[a-zA-Z0-9ñÑáéíóúÁÉÍÓÚ\s°º().,+\-/#]+$/)
     .withMessage("Contiene caracteres inválidos.")
     .bail()
-    .isLength({ min: 3 })
-    .withMessage("Este campo no puede tener menos de 3 caracteres.")
-    .isLength({ max: 45 })
-    .withMessage("Este campo no puede superar los 45 caracteres.")
+    .isLength({ min: 3, max: 45 })
+    .withMessage("Debes colocar entre 3 y 45 caracteres")
     .escape(),
 ];
 
@@ -303,8 +301,8 @@ export const validatePersonName = (field, optional = false) => [
     .matches(/^[a-zA-ZñÑáéíóúÁÉÍÓÚ\s]+$/)
     .withMessage("Contiene caracteres inválidos.")
     .bail()
-    .isLength({ max: 45 })
-    .withMessage("Máximo 45 caracteres.")
+    .isLength({ min: 3, max: 45 })
+    .withMessage("Debes colocar entre 3 y 45 caracteres.")
     .escape(),
 ];
 
