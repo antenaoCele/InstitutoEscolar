@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useAuth } from "../context/Auth";
+import { useAuth } from "../context/Auth.jsx";
 
 export const Login = () => {
   const { error, login, setError } = useAuth();

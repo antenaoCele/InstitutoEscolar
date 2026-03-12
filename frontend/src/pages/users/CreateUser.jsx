@@ -115,7 +115,7 @@ export const CreateUser = () => {
             >
               <option value="">Seleccione un rol</option>
               <option value="ADMIN">ADMIN</option>
-              <option value="TEACHER">TEACHER</option>
+              <option value="DOCENTE">DOCENTE</option>
             </select>
             {getError("role") && <small>{getError("role")}</small>}
           </label>

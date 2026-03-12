@@ -1,6 +1,6 @@
 // import { Outlet, Link } from "react-router";
-import { useAuth } from "../context/Auth";
-import { Login } from "./Login.jsx";
+import { useAuth } from "./context/Auth.jsx";
+import { Login } from "./pages/Login.jsx";
 import { Link, Outlet } from "react-router-dom";
 
 export const Layout = () => {

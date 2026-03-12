@@ -5,24 +5,24 @@ import { useParams } from "react-router";
 export const DetailsUser = () => {
   const { fetchAuth } = useAuth();
   const { id } = useParams();
-  const [usuario, setUsuario] = useState(null);
+  const [user, setUser] = useState(null);
 
-  const fetchUsuario = useCallback(async () => {
-    const response = await fetchAuth(`http://localhost:4000/usuarios/${id}`);
+  const fetchUser = useCallback(async () => {
+    const response = await fetchAuth(`http://localhost:3000/users/${id}`);
     const data = await response.json();
 
     if (!response.ok || !data.success) {
       console.log("Error al consultar por el usuario:", data.error);
       return;
     }
-    setUsuario(data.data);
+    setUser(data.data);
   }, [fetchAuth, id]);
 
   useEffect(() => {
-    fetchUsuario();
-  }, [fetchUsuario]);
+    fetchUser();
+  }, [fetchUser]);
 
-  if (!usuario) {
+  if (!user) {
     return null;
   }
 
@@ -30,10 +30,16 @@ export const DetailsUser = () => {
     <article>
       <h2>Detalles del usuario</h2>
       <p>
-        Nombre: <b>{usuario.nombre}</b>
+        Nombre: <b>{user.first_name}</b>
       </p>
       <p>
-        Email: <b>{usuario.email}</b>
+        Apellido: <b>{user.last_name}</b>
+      </p>
+      <p>
+        Nombre de usuario: <b>{user.username}</b>
+      </p>
+      <p>
+        Rol: <b>{user.role}</b>
       </p>
     </article>
   );

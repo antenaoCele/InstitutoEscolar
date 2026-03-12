@@ -11,10 +11,11 @@ export const UpdateUser = () => {
   const [values, setValues] = useState(null);
 
   const fetchUsuario = useCallback(async () => {
-    const response = await fetchAuth(`http://localhost:4000/usuarios/${id}`);
+    const response = await fetchAuth(`http://localhost:3000/users/${id}`);
     const data = await response.json();
 
     if (!response.ok || !data.success) {
+      3;
       console.log("Error al consultar por el usuario:", data.error);
       return;
     }
@@ -29,7 +30,7 @@ export const UpdateUser = () => {
     e.preventDefault();
     setErrores(null);
 
-    const response = await fetchAuth(`http://localhost:4000/usuarios/${id}`, {
+    const response = await fetchAuth(`http://localhost:3000/usuarios/${id}`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(values),

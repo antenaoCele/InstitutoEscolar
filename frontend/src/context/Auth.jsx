@@ -8,7 +8,9 @@ export const useAuth = () => {
 };
 
 export const AuthProvider = ({ children }) => {
-  const [token, setToken] = useState(null);
+  const [token, setToken] = useState(() => {
+    return localStorage.getItem("token");
+  });
   const [error, setError] = useState(null);
 
   const login = async (username, password) => {
@@ -38,6 +40,7 @@ export const AuthProvider = ({ children }) => {
       }
 
       setToken(session.token);
+      localStorage.setItem("token", session.token);
       return { success: true };
     } catch (error) {
       setError(error.message);
@@ -46,6 +49,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   const logout = () => {
+    localStorage.removeItem("token");
     setToken(null);
     setError(null);
   };
