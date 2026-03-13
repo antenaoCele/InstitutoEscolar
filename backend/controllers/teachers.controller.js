@@ -1,4 +1,5 @@
 import { createCrudController } from "../utils/crudFactory.js";
+import { db } from "../db.js";
 
 export const baseController = createCrudController("teachers");
 
@@ -57,7 +58,7 @@ export const teachersController = {
       );
       console.log("ROWS RESULT:", rows);
       const totalCollected = Number(rows[0].total) || 0;
-      const netSalary = Number(totalCollected) * (0.75).toFixed(2);
+      const netSalary = Number((totalCollected * 0.75).toFixed(2));
 
       console.log("TOTAL COLLECTED:", totalCollected);
       console.log("NET SALARY:", netSalary);

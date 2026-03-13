@@ -49,7 +49,8 @@ router.post(
   "/:id/liquidate",
   authentication,
   authorization("ADMIN"),
-  validateTeachers,
+  validateID("teachers"),
+  // validateTeachers,
   checkValidations,
   teachersController.createLiquidation,
 );
