@@ -8,15 +8,13 @@ export const planPricesController = {
     try {
       const sql = `
         SELECT 
-        pp.id, 
-        pp.plan_id, 
-        p.name AS plan_name, 
+        p.id, 
+        pp.plan_id,  
         pp.price, 
         pp.start_date, 
         pp.end_date
         FROM plan_prices pp
         JOIN plans p ON pp.plan_id = p.id
-        ORDER BY pp.start_date DESC
       `;
 
       const [rows] = await db.execute(sql);
@@ -36,9 +34,8 @@ export const planPricesController = {
 
       const sql = `
         SELECT 
-        pp.id, 
-        pp.plan_id, 
-        p.name AS plan_name, 
+        p.id, 
+        pp.plan_id,  
         pp.price, 
         pp.start_date, 
         pp.end_date

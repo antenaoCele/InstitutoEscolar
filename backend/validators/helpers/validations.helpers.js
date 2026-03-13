@@ -24,7 +24,7 @@ export const ALLOWED_TABLES = {
   enrollments: "enrollments",
   monthly_finances: "monthly_finances",
   payments: "payments",
-  plan_pices: "plan_pices",
+  plan_prices: "plan_prices",
   plan_subjects: "plan_subjects",
   plans: "plans",
   schedule_students: "schedule_students",
