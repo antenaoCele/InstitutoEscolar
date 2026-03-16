@@ -16,6 +16,13 @@ router.get(
   monthlyFinancesController.getAll,
 );
 
+router.get(
+  "/:id",
+  authentication,
+  ...validateID("monthly_finances"),
+  checkValidations,
+);
+
 router.post(
   "/",
   authentication,
