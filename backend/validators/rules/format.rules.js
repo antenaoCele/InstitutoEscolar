@@ -144,65 +144,32 @@ export const validateHourRange = (
 INFO STUDENT
 ========================================================= */
 export const validateStudentInfo = (
-  fieldEnrolled,
   fieldLevel,
   fieldGrade,
   optional = false,
 ) => {
-  const enrolledValidator = optional
-    ? body(fieldEnrolled).optional({ values: "falsy" })
-    : body(fieldEnrolled).notEmpty().withMessage("Este campo es obligatorio.");
+  const levelValidator = optional
+    ? body(fieldLevel).optional({ values: "falsy" })
+    : body(fieldLevel).notEmpty().withMessage("Este campo es obligatorio.");
 
   return [
-    /* ================ ENROLLED ================ */
-    enrolledValidator
-      .isIn(["true", "false", true, false, 1, 0, "1", "0"])
-      .withMessage("Valor inválido.")
-      .bail(),
-
     /* ================ LEVEL ================ */
-    body(fieldLevel)
-      .custom((value, { req }) => {
-        const enrolled = isTruthy(req.body[fieldEnrolled]);
-
-        if (!enrolled) {
-          if (value !== undefined && value !== "")
-            throw new Error("No debe especificar nivel si no está inscripto.");
-          return true;
-        }
-
-        if (!value) throw new Error("Debe indicar el nivel.");
-
-        if (
-          !["inicial", "primario", "secundario", "universitario"].includes(
-            value,
-          )
-        )
-          throw new Error("Elija un nivel válido.");
-
-        return true;
-      })
+    levelValidator
+      .isIn(["inicial", "primario", "secundario", "universitario"])
+      .withMessage("Elija un nivel válido.")
       .bail(),
 
     /* ================ GRADE ================ */
     body(fieldGrade)
-      // Solo evaluar grade si level es válido y requiere grado
-      .custom((value, { req }) => {
-        const enrolled = isTruthy(req.body[fieldEnrolled]);
-        const level = req.body[fieldLevel];
-
-        if (!enrolled) {
-          if (value !== undefined && value !== "")
-            throw new Error("No debe indicar grado si no está inscripto.");
-          return true;
-        }
-
-        if (!value) throw new Error("Debe indicar el grado.");
-
+      .notEmpty()
+      .withMessage("Debe indicar el grado.")
+      .bail()
+      .custom((value) => {
         const grade = Number(value);
 
-        if (!Number.isInteger(grade) || grade < 1 || grade > 7)
+        if (!Number.isInteger(grade) || grade < 1 || grade > 7) {
           throw new Error("Elija un grado válido (1 a 7).");
+        }
 
         return true;
       }),
