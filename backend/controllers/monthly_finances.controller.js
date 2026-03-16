@@ -126,7 +126,7 @@ export const monthlyFinancesController = {
       if (!numYear || numYear < 2020 || numYear > 2100) {
         return res.status(400).json({
           success: false,
-          message: "Año inválido. Debe ser un año real (ej. 2026).",
+          message: "Año inválido. Debe ser un año real.",
         });
       }
 
@@ -199,6 +199,26 @@ export const monthlyFinancesController = {
       const id = Number(req.params.id);
       const { year, month, other_expenses } = req.body;
 
+      if (year !== undefined) {
+        const numYear = Number(year);
+        if (isNaN(numYear) || numYear < 2020 || numYear > 2100) {
+          return res.status(400).json({
+            success: false,
+            message: "Año inválido. Debe ser un año real.",
+          });
+        }
+      }
+
+      if (month !== undefined) {
+        const numMonth = Number(month);
+        if (isNaN(numMonth) || numMonth < 1 || numMonth > 12) {
+          return res.status(400).json({
+            success: false,
+            message: "Mes inválido. Debe estar entre 1 y 12.",
+          });
+        }
+      }
+
       const [rows] = await db.execute(
         "SELECT * FROM monthly_finances WHERE id = ?",
         [id],
@@ -213,22 +233,22 @@ export const monthlyFinancesController = {
 
       const current = rows[0];
 
-      const newYear = year ?? current.year;
-      const newMonth = month ?? current.month;
-      const newOtherExpenses = other_expenses ?? current.other_expenses;
+      const newYear = year !== undefined ? Number(year) : current.year;
+      const newMonth = month !== undefined ? Number(month) : current.month;
+      const newOtherExpenses =
+        other_expenses !== undefined
+          ? Number(other_expenses)
+          : current.other_expenses;
 
       const [exists] = await db.execute(
-        `
-         SELECT id FROM monthly_finances
-         WHERE year = ? AND month = ? AND id != ?
-         `,
+        "SELECT id FROM monthly_finances WHERE year = ? AND month = ? AND id != ?",
         [newYear, newMonth, id],
       );
 
       if (exists.length > 0) {
         return res.status(400).json({
           success: false,
-          message: "Ya existe un cierre para ese mes",
+          message: "Ya existe un cierre para ese mes y año.",
         });
       }
 
@@ -237,19 +257,30 @@ export const monthlyFinancesController = {
 
       await db.execute(
         `
-         UPDATE monthly_finances
-         SET
-           year = ?,
-           month = ?,
-           other_expenses = ?
-         WHERE id = ?
-         `,
-        [newYear, newMonth, newOtherExpenses, id],
+      UPDATE monthly_finances
+      SET
+        year = ?,
+        month = ?,
+        total_income = ?,
+        total_salaries = ?,
+        other_expenses = ?,
+        net_profit = ?
+      WHERE id = ?
+      `,
+        [
+          newYear,
+          newMonth,
+          totalIncome,
+          totalSalaries,
+          newOtherExpenses,
+          netProfit,
+          id,
+        ],
       );
 
-      res.json({
+      return res.json({
         success: true,
-        message: "Cierre mensual actualizado correctamente",
+        message: "Cierre mensual actualizado y recalculado correctamente",
         data: {
           id,
           year: newYear,
@@ -261,7 +292,8 @@ export const monthlyFinancesController = {
         },
       });
     } catch (error) {
-      res.status(500).json({
+      console.error("Error en update:", error);
+      return res.status(500).json({
         success: false,
         message: "Error al actualizar el cierre mensual",
       });
