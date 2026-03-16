@@ -47,7 +47,7 @@ export const teachersController = {
       // Calcular total recaudado del docente en ese mes
       const [rows] = await db.execute(
         `
-        SELECT SUM(p.amount) AS total
+        SELECT SUM(p.plan_price) AS total
         FROM payments p
         JOIN student_plans sp ON sp.id = p.student_plan_id
         WHERE sp.teacher_id = ?

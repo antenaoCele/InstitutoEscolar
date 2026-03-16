@@ -76,6 +76,7 @@ export const studentPlansController = {
     }
   },
 
+  //REVISAR ESTO Y MODIFICAR ACORDE A PLAN_PRICES. falta calcular intereses.
   getAccountStatus: async (req, res) => {
     try {
       const { month, teacher_id } = req.query;
