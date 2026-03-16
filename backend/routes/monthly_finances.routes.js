@@ -21,6 +21,7 @@ router.get(
   authentication,
   ...validateID("monthly_finances"),
   checkValidations,
+  monthlyFinancesController.getById,
 );
 
 router.post(
