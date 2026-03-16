@@ -69,6 +69,53 @@ export const monthlyFinancesController = {
     }
   },
 
+  getById: async (req, res) => {
+    try {
+      const id = Number(req.params.id);
+
+      // if (isNaN(id)) {
+      //   return res.status(400).json({
+      //     success: false,
+      //     message: "El ID proporcionado no es válido",
+      //   });
+      // }
+
+      const [rows] = await db.execute(
+        `
+      SELECT 
+        id, 
+        year, 
+        month, 
+        total_income, 
+        total_salaries, 
+        other_expenses, 
+        net_profit 
+      FROM monthly_finances 
+      WHERE id = ?
+      `,
+        [id],
+      );
+
+      if (rows.length === 0) {
+        return res.status(404).json({
+          success: false,
+          message: "Registro no encontrado",
+        });
+      }
+
+      return res.json({
+        success: true,
+        data: rows[0],
+      });
+    } catch (error) {
+      console.error("Error en getById:", error);
+      return res.status(500).json({
+        success: false,
+        message: "Error al obtener el registro",
+      });
+    }
+  },
+
   create: async (req, res) => {
     try {
       const { year, month, other_expenses = 0 } = req.body;
@@ -114,8 +161,8 @@ export const monthlyFinancesController = {
 
       const [result] = await db.execute(
         `INSERT INTO monthly_finances 
-      (year, month, total_income, total_salaries, other_expenses, net_profit) 
-      VALUES (?, ?, ?, ?, ?, ?)`,
+        (year, month, total_income, total_salaries, other_expenses, net_profit) 
+        VALUES (?, ?, ?, ?, ?, ?)`,
         [
           Number(year),
           Number(month),
@@ -172,9 +219,9 @@ export const monthlyFinancesController = {
 
       const [exists] = await db.execute(
         `
-        SELECT id FROM monthly_finances
-        WHERE year = ? AND month = ? AND id != ?
-        `,
+         SELECT id FROM monthly_finances
+         WHERE year = ? AND month = ? AND id != ?
+         `,
         [newYear, newMonth, id],
       );
 
@@ -190,25 +237,14 @@ export const monthlyFinancesController = {
 
       await db.execute(
         `
-        UPDATE monthly_finances
-        SET 
-          year = ?,
-          month = ?,
-          total_income = ?,
-          total_salaries = ?,
-          other_expenses = ?,
-          net_profit = ?
-        WHERE id = ?
-        `,
-        [
-          newYear,
-          newMonth,
-          totalIncome,
-          totalSalaries,
-          newOtherExpenses,
-          netProfit,
-          id,
-        ],
+         UPDATE monthly_finances
+         SET
+           year = ?,
+           month = ?,
+           other_expenses = ?
+         WHERE id = ?
+         `,
+        [newYear, newMonth, newOtherExpenses, id],
       );
 
       res.json({
