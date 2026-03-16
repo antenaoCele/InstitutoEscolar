@@ -1,7 +1,7 @@
 import { db } from "../db.js";
 import { createCrudController } from "../utils/crudFactory.js";
 
-const baseController = createCrudController("teachers_liquidations");
+const baseController = createCrudController("teacher_liquidations");
 
 export const teacherLiquidationsController = {
   ...baseController,
@@ -66,32 +66,4 @@ export const teacherLiquidationsController = {
       });
     }
   },
-
-  // delete: async (req, res) => {
-  //   try {
-  //     const id = Number(req.params.id);
-
-  //     const [result] = await db.execute(
-  //       "DELETE FROM teacher_liquidations WHERE id = ?",
-  //       [id],
-  //     );
-
-  //     if (result.affectedRows === 0) {
-  //       return res.status(404).json({
-  //         success: false,
-  //         message: "Liquidación no encontrada",
-  //       });
-  //     }
-
-  //     res.json({
-  //       success: true,
-  //       message: "Liquidación eliminada correctamente",
-  //     });
-  //   } catch (error) {
-  //     res.status(500).json({
-  //       success: false,
-  //       message: "Error al eliminar la liquidación",
-  //     });
-  //   }
-  // },
 };
