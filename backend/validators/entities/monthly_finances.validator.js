@@ -1,20 +1,20 @@
-import { validateUniqueMonthYear } from "./databaseValidators.js";
+import { validateUniqueMonthYear } from "../rules/database.rules.js";
 import {
+  validateDate,
   validateMoney,
-  validateMonth,
   validateYear,
-} from "./formatValidators.js";
+} from "../rules/format.rules.js";
 
 export const validateMonthlyFinances = [
-  ...validateMonth("month"),
-  ...validateYear("year"),
+  ...validateDate("month"),
+  ...validateDate("year"),
   ...validateMoney("other_expenses"),
   ...validateUniqueMonthYear("monthly_finances"),
 ];
 
 export const validateEditMonthlyFinances = [
-  ...validateMonth("month", true),
-  ...validateYear("year", true),
+  ...validateDate("month", true),
+  ...validateDate("year", true),
   ...validateMoney("other_expenses", true),
   ...validateUniqueMonthYear("monthly_finances"),
 ];

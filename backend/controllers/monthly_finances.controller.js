@@ -1,8 +1,7 @@
 import { db } from "../db.js";
 
 const calculateMonthlyFinance = async (year, month, otherExpenses = 0) => {
-  const formattedMonth = String(month).padStart(2, "0");
-  const monthString = `${year}-${formattedMonth}`;
+  const monthString = `${year}-${String(month).padStart(2, "0")}`;
 
   const startDateObj = new Date(year, month - 1, 1);
   const endDateObj = new Date(year, month, 0);
@@ -10,7 +9,6 @@ const calculateMonthlyFinance = async (year, month, otherExpenses = 0) => {
   const startDate = startDateObj.toISOString().split("T")[0];
   const endDate = endDateObj.toISOString().split("T")[0];
 
-  // Pagos
   const [payments] = await db.execute(
     `
     SELECT COALESCE(SUM(amount), 0) AS total
@@ -29,18 +27,18 @@ const calculateMonthlyFinance = async (year, month, otherExpenses = 0) => {
     [startDate, endDate],
   );
 
-  const totalIncome = payments[0].total + enrollments[0].total;
+  const totalIncome = Number(payments[0].total) + Number(enrollments[0].total);
 
   const [salaries] = await db.execute(
     `
-    SELECT COALESCE(SUM(net_salary), 0) AS total
-    FROM teacher_liquidations
-    WHERE year = ? AND month = ?
-    `,
-    [year, month],
+  SELECT COALESCE(SUM(net_salary), 0) AS total
+  FROM teacher_liquidations
+  WHERE month = ?
+  `,
+    [monthString],
   );
 
-  const totalSalaries = salaries[0].total;
+  const totalSalaries = Number(salaries[0].total);
 
   const netProfit = totalIncome - totalSalaries - otherExpenses;
 
@@ -75,6 +73,23 @@ export const monthlyFinancesController = {
     try {
       const { year, month, other_expenses = 0 } = req.body;
 
+      const numYear = Number(year);
+      const numMonth = Number(month);
+
+      if (!numYear || numYear < 2020 || numYear > 2100) {
+        return res.status(400).json({
+          success: false,
+          message: "Año inválido. Debe ser un año real (ej. 2026).",
+        });
+      }
+
+      if (!numMonth || numMonth < 1 || numMonth > 12) {
+        return res.status(400).json({
+          success: false,
+          message: "Mes inválido. Debe estar entre 1 y 12.",
+        });
+      }
+
       if (!year || !month) {
         return res.status(400).json({
           success: false,
@@ -98,15 +113,20 @@ export const monthlyFinancesController = {
         await calculateMonthlyFinance(year, month, other_expenses);
 
       const [result] = await db.execute(
-        `
-        INSERT INTO monthly_finances
-        (year, month, total_income, total_salaries, other_expenses, net_profit)
-        VALUES (?, ?, ?, ?, ?, ?)
-        `,
-        [year, month, totalIncome, totalSalaries, other_expenses, netProfit],
+        `INSERT INTO monthly_finances 
+      (year, month, total_income, total_salaries, other_expenses, net_profit) 
+      VALUES (?, ?, ?, ?, ?, ?)`,
+        [
+          Number(year),
+          Number(month),
+          totalIncome,
+          totalSalaries,
+          Number(other_expenses),
+          netProfit,
+        ],
       );
 
-      res.status(201).json({
+      return res.status(201).json({
         success: true,
         message: "Cierre mensual generado correctamente",
         data: {
@@ -114,15 +134,15 @@ export const monthlyFinancesController = {
           year,
           month,
           total_income: totalIncome,
-          total_salaries: totalSalaries,
-          other_expenses,
           net_profit: netProfit,
         },
       });
     } catch (error) {
-      res.status(500).json({
+      console.error("ERROR EN CIERRE MENSUAL:", error);
+      return res.status(500).json({
         success: false,
         message: "Error al generar el cierre mensual",
+        error: error.message,
       });
     }
   },
