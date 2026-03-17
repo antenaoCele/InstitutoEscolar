@@ -1,4 +1,7 @@
 import { db } from "../db.js";
+import { createCrudController } from "../utils/crudFactory.js";
+
+const baseController = createCrudController("monthly_finances");
 
 const calculateMonthlyFinance = async (year, month, otherExpenses = 0) => {
   const monthString = `${year}-${String(month).padStart(2, "0")}`;
@@ -51,6 +54,7 @@ const calculateMonthlyFinance = async (year, month, otherExpenses = 0) => {
 };
 
 export const monthlyFinancesController = {
+  ...baseController,
   getAll: async (req, res) => {
     try {
       const [rows] = await db.execute(
@@ -296,34 +300,6 @@ export const monthlyFinancesController = {
       return res.status(500).json({
         success: false,
         message: "Error al actualizar el cierre mensual",
-      });
-    }
-  },
-
-  delete: async (req, res) => {
-    try {
-      const id = Number(req.params.id);
-
-      const [result] = await db.execute(
-        "DELETE FROM monthly_finances WHERE id = ?",
-        [id],
-      );
-
-      if (result.affectedRows === 0) {
-        return res.status(404).json({
-          success: false,
-          message: "Cierre mensual no encontrado",
-        });
-      }
-
-      res.json({
-        success: true,
-        message: "Cierre mensual eliminado correctamente",
-      });
-    } catch (error) {
-      res.status(500).json({
-        success: false,
-        message: "Error al eliminar el cierre mensual",
       });
     }
   },
