@@ -13,23 +13,26 @@ export const validateFinanceOverlap = (
     const safeTable = ALLOWED_TABLES[table];
     if (!safeTable) throw new Error("Tabla no permitida");
 
-    const { plan_id, start_date, end_date } = req.body;
+    let { plan_id, start_date, end_date } = req.body;
 
-    if (!plan_id || !start_date || !end_date) return true;
+    if (!plan_id || !start_date) return true;
 
     const id = req.params?.id ? Number(req.params.id) : null;
+
+    // MySQL no acepta undefined
+    const safeEndDate = end_date ?? null;
 
     const sql = `
       SELECT id FROM ${safeTable}
       WHERE plan_id = ?
-      AND start_date <= ?
-      AND end_date >= ?
+      AND start_date < COALESCE(?, '9999-12-31')
+      AND COALESCE(end_date, '9999-12-31') > ?
       ${id ? "AND id != ?" : ""}
     `;
 
     const params = id
-      ? [plan_id, end_date, start_date, id]
-      : [plan_id, end_date, start_date];
+      ? [plan_id, safeEndDate, start_date, id]
+      : [plan_id, safeEndDate, start_date];
 
     const [rows] = await db.execute(sql, params);
 

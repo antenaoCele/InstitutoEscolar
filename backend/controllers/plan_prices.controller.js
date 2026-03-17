@@ -62,7 +62,52 @@ export const planPricesController = {
     }
   },
 
-  create: baseCrud.create,
+  create: async (req, res) => {
+    try {
+      const { plan_id, price, start_date, end_date } = req.body;
+
+      const [rows] = await db.execute(
+        "SELECT * FROM plan_prices WHERE plan_id = ? AND end_date IS NULL",
+        [plan_id],
+      );
+
+      console.log(rows);
+
+      if (rows.length > 0) {
+        return res.status(400).json({
+          success: false,
+          message: "El plan ya tiene un precio asignado",
+        });
+      }
+
+      const [result] = await db.execute(
+        `
+        INSERT INTO plan_prices (plan_id, price, start_date, end_date)
+        VALUES (?, ?, ?, ?)
+        `,
+        [plan_id, price, start_date, end_date ?? null],
+      );
+
+      console.log(result);
+
+      res.status(201).json({
+        success: true,
+        data: {
+          id: result.insertId,
+          plan_id,
+          price,
+          start_date,
+          end_date,
+        },
+      });
+    } catch (error) {
+      console.log(error);
+      res.status(500).json({
+        success: false,
+        message: "Error al crear el precio del plan",
+      });
+    }
+  },
 
   update: async (req, res) => {
     try {
@@ -74,7 +119,7 @@ export const planPricesController = {
         [id],
       );
 
-      if (rows.length === 0) {
+      if (!rows.length) {
         return res.status(404).json({
           success: false,
           message: "Precio de plan no encontrado",
@@ -90,10 +135,10 @@ export const planPricesController = {
 
       await db.execute(
         `
-        UPDATE plan_prices
-        SET plan_id = ?, price = ?, start_date = ?, end_date = ?
-        WHERE id = ?
-        `,
+      UPDATE plan_prices
+      SET plan_id = ?, price = ?, start_date = ?, end_date = ?
+      WHERE id = ?
+      `,
         [newPlanId, newPrice, newStartDate, newEndDate, id],
       );
 
@@ -108,7 +153,9 @@ export const planPricesController = {
           end_date: newEndDate,
         },
       });
-    } catch {
+    } catch (error) {
+      console.error(error);
+
       res.status(500).json({
         success: false,
         message: "Error al actualizar el precio del plan",

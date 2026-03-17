@@ -1,6 +1,7 @@
 import {
   validateFinanceOverlap,
   validateForeignId,
+  validateUniqueCombination,
 } from "../rules/database.rules.js";
 import {
   validateDate,
@@ -14,7 +15,7 @@ export const validatePlanPrices = [
   ...validateForeignId("plan_id", "plans"),
   ...validateMoney("price"),
   ...validateDate("start_date"),
-  ...validateDate("end_date"),
+  ...validateDate("end_date", true),
   ...validateDateRange("start_date", "end_date"),
   ...validateFinanceOverlap("plan_prices"),
 ];
