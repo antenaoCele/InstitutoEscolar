@@ -77,13 +77,6 @@ export const monthlyFinancesController = {
     try {
       const id = Number(req.params.id);
 
-      // if (isNaN(id)) {
-      //   return res.status(400).json({
-      //     success: false,
-      //     message: "El ID proporcionado no es válido",
-      //   });
-      // }
-
       const [rows] = await db.execute(
         `
       SELECT 
