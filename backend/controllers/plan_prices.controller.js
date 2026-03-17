@@ -66,19 +66,19 @@ export const planPricesController = {
     try {
       const { plan_id, price, start_date, end_date } = req.body;
 
-      const [rows] = await db.execute(
-        "SELECT * FROM plan_prices WHERE plan_id = ? AND end_date IS NULL",
-        [plan_id],
-      );
+      // const [rows] = await db.execute(
+      //   "SELECT * FROM plan_prices WHERE plan_id = ? AND end_date IS NULL",
+      //   [plan_id],
+      // );
 
-      console.log(rows);
+      // console.log(rows);
 
-      if (rows.length > 0) {
-        return res.status(400).json({
-          success: false,
-          message: "El plan ya tiene un precio asignado",
-        });
-      }
+      // if (rows.length > 0) {
+      //   return res.status(400).json({
+      //     success: false,
+      //     message: "El plan ya tiene un precio asignado",
+      //   });
+      // }
 
       const [result] = await db.execute(
         `
