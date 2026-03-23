@@ -22,8 +22,6 @@ router.get(
   "/account-status",
   authentication,
   authorization("ADMIN"),
-  ...validateID("student_plans"),
-  checkValidations,
   studentPlansController.getAccountStatus,
 );
 

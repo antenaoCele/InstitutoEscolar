@@ -76,7 +76,6 @@ export const studentPlansController = {
     }
   },
 
-  //REVISAR ESTO Y MODIFICAR ACORDE A PLAN_PRICES. falta calcular intereses.
   getAccountStatus: async (req, res) => {
     try {
       const { month, teacher_id } = req.query;
@@ -88,30 +87,53 @@ export const studentPlansController = {
         });
       }
 
-      // Primer día del mes
+      // 📅 Fechas
       const firstDay = `${month}-01`;
 
-      // Último día del mes (MySQL lo calcula solo)
-      const lastDayQuery = `LAST_DAY(?)`;
+      const nextMonth = new Date(firstDay);
+      nextMonth.setMonth(nextMonth.getMonth() + 1);
+      const nextMonthStr = nextMonth.toISOString().slice(0, 10);
 
       let query = `
-        SELECT 
-          sp.id AS student_plan_id,
-          sp.student_id,
-          sp.teacher_id,
-          pp.price,
-          IFNULL(SUM(p.amount), 0) AS total_paid
-        FROM student_plans sp
-        JOIN plan_prices pp ON sp.plan_id = pp.plan_id
-        LEFT JOIN payments p 
-          ON p.student_plan_id = sp.id
-          AND DATE_FORMAT(p.payment_date, '%Y-%m') = ?
-        WHERE 
-          sp.start_date <= LAST_DAY(?)
-          AND (sp.end_date IS NULL OR sp.end_date >= ?)
-      `;
+      SELECT 
+        sp.id AS student_plan_id,
+        sp.student_id,
+        sp.teacher_id,
 
-      const params = [month, firstDay, firstDay];
+        -- ✅ precio vigente al FINAL del mes
+        pp.price,
+
+        -- pagos del mes
+        IFNULL(SUM(p.amount), 0) AS total_paid
+
+      FROM student_plans sp
+
+      -- 🔥 precio activo el último día del mes
+      LEFT JOIN plan_prices pp 
+        ON sp.plan_id = pp.plan_id
+        AND pp.start_date <= LAST_DAY(?)
+        AND (pp.end_date IS NULL OR pp.end_date >= LAST_DAY(?))
+
+      -- 💰 pagos dentro del mes
+      LEFT JOIN payments p 
+        ON p.student_plan_id = sp.id
+        AND p.payment_date >= ?
+        AND p.payment_date < ?
+
+      -- 👤 planes activos en el mes
+      WHERE 
+        sp.start_date <= LAST_DAY(?)
+        AND (sp.end_date IS NULL OR sp.end_date >= ?)
+    `;
+
+      const params = [
+        firstDay, // pp.start_date <= LAST_DAY(?)
+        firstDay, // pp.end_date >= LAST_DAY(?)
+        firstDay, // pagos desde
+        nextMonthStr, // pagos hasta
+        firstDay, // sp.start_date <= LAST_DAY(?)
+        firstDay, // sp.end_date >= ?
+      ];
 
       if (teacher_id) {
         query += " AND sp.teacher_id = ? ";
@@ -119,22 +141,24 @@ export const studentPlansController = {
       }
 
       query += `
-        GROUP BY sp.id, sp.student_id, sp.teacher_id, pp.price
-      `;
+      GROUP BY sp.id, sp.student_id, sp.teacher_id, pp.price
+    `;
 
       const [rows] = await db.execute(query, params);
 
       const result = rows.map((row) => {
-        const debt = row.price - row.total_paid;
+        const price = row.price || 0;
+        const debt = price - row.total_paid;
 
         return {
           student_plan_id: row.student_plan_id,
           student_id: row.student_id,
           teacher_id: row.teacher_id,
-          price: row.price,
+          price,
           total_paid: row.total_paid,
           debt: debt < 0 ? 0 : debt,
-          status: debt <= 0 ? "PAGADO" : "DEBE",
+          // status:
+          //   row.price == null ? "SIN_PRECIO" : debt <= 0 ? "PAGADO" : "DEBE",
         };
       });
 

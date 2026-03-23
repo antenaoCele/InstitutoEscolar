@@ -18,11 +18,7 @@ export const validateStudentPlans = [
   ...validateDate("start_date"),
   ...validateDate("end_date", true),
   ...validateDateRange("start_date", "end_date"),
-  ...validateUniqueCombination("student_plans", [
-    "student_id",
-    "plan_id",
-    "teacher_id",
-  ]),
+  ...validateUniqueCombination("student_plans", ["student_id", "plan_id"]),
 ];
 
 export const validateEditStudentPlans = [
@@ -35,9 +31,5 @@ export const validateEditStudentPlans = [
   ...validateDate("start_date", true),
   ...validateDate("end_date", true),
   ...validateDateRange("start_date", "end_date", true),
-  ...validateUniqueCombination("student_plans", [
-    "student_id",
-    "plan_id",
-    "teacher_id",
-  ]),
+  ...validateUniqueCombination("student_plans", ["student_id", "plan_id"]),
 ];
