@@ -1,9 +1,10 @@
 import { db } from "../db.js";
 import { createCrudController } from "../utils/crudFactory.js";
+import { calculatePaymentAmount } from "../utils/paymentUtils.js";
 import {
-  calculatePaymentAmount,
   getPlanPriceAtDate,
-} from "../utils/paymentUtils.js";
+  existingPayment,
+} from "../services/payments.service.js";
 
 const baseController = createCrudController("payments");
 
@@ -127,22 +128,15 @@ export const paymentsController = {
 
       // 1. Obtener precio del plan vigente)
       const planPrice = await getPlanPriceAtDate(student_plan_id, payment_date);
+      if (!planPrice) {
+        return res.status(400).json({
+          success: false,
+          message: "No existe un precio para esa fecha",
+        });
+      }
 
       // 2. Verificar si ya pagó ese mes
-      const paymentDateObj = new Date(payment_date);
-      const yearMonth = paymentDateObj.toISOString().slice(0, 7);
-
-      const [existingPayment] = await db.execute(
-        `
-      SELECT id
-      FROM payments
-      WHERE student_plan_id = ?
-      AND DATE_FORMAT(payment_date, '%Y-%m') = ?
-      `,
-        [student_plan_id, yearMonth],
-      );
-
-      if (existingPayment.length > 0) {
+      if (await existingPayment(student_plan_id, payment_date)) {
         return res.status(400).json({
           success: false,
           message: "El alumno ya pagó este mes",
@@ -156,17 +150,17 @@ export const paymentsController = {
       );
 
       // 4. Validar monto exacto
-      const roundedTotal = Math.round(total * 100) / 100;
+      // const roundedTotal = Math.round(total * 100) / 100;
       const roundedAmount = Math.round(Number(amount) * 100) / 100;
 
-      if (roundedAmount !== roundedTotal) {
+      if (roundedAmount !== total) {
         return res.status(400).json({
           success: false,
-          message: `El monto debe ser exactamente ${roundedTotal}`,
+          message: `El monto debe ser exactamente ${total}`,
         });
       }
 
-      // 4. Insertar pago
+      // 5. Insertar pago
       const [result] = await db.execute(
         `
       INSERT INTO payments
@@ -189,6 +183,7 @@ export const paymentsController = {
         },
       });
     } catch (error) {
+      console.log(error);
       res.status(500).json({
         success: false,
         message: "Error al crear el pago",
@@ -213,38 +208,36 @@ export const paymentsController = {
       const newPaymentMethod = payment_method ?? rows[0].payment_method;
 
       // 1. Obtener precio del plan vigente
-      const planPrice = await getPlanPriceAtDate(student_plan_id, payment_date);
-
-      // // 2. Verificar si ya pagó ese mes VER COMO SE HARIA EN UPDATE
-      // const paymentDateObj = new Date(payment_date);
-      // const yearMonth = paymentDateObj.toISOString().slice(0, 7);
-
-      // const [existingPayment] = await db.execute(
-      //   `
-      // SELECT id
-      // FROM payments
-      // WHERE student_plan_id = ?
-      // AND DATE_FORMAT(payment_date, '%Y-%m') = ?
-      // `,
-      //   [student_plan_id, yearMonth],
-      // );
-
-      // if (existingPayment.length > 0) {
-      //   return res.status(400).json({
-      //     success: false,
-      //     message: "El alumno ya pagó este mes",
-      //   });
-      // }
-
-      const { total, interest } = calculatePaymentAmount(
-        planPrice,
-        payment_date,
+      const planPrice = await getPlanPriceAtDate(
+        newStudentPlanId,
+        newPaymentDate,
       );
 
-      const roundedTotal = Math.round(total * 100) / 100;
-      const roundedAmount = Math.round(Number(amount) * 100) / 100;
+      if (!planPrice) {
+        return res.status(400).json({
+          success: false,
+          message: "No existe un precio para esa fecha",
+        });
+      }
+
+      // 2. Verificar si ya pagó ese mes
+      if (await existingPayment(newStudentPlanId, newPaymentDate, id)) {
+        return res.status(400).json({
+          success: false,
+          message: "El alumno ya pagó este mes",
+        });
+      }
+
+      // 3. Calcular interes del pago
+      const { total, interest } = calculatePaymentAmount(
+        planPrice,
+        newPaymentDate,
+      );
 
       // 3. Validar monto exacto
+      const roundedTotal = Math.round(total * 100) / 100;
+      const roundedAmount = Math.round(Number(newAmount) * 100) / 100;
+
       if (roundedAmount !== roundedTotal) {
         return res.status(400).json({
           success: false,
@@ -253,11 +246,14 @@ export const paymentsController = {
       }
 
       // 4. Actualizar pago
-      const [result] = await db.execute(
+      await db.execute(
         `
-      UPDATE payments
-      (student_plan_id, amount, plan_price, payment_date, payment_method)
-      VALUES (?, ?, ?, ?, ?)
+      UPDATE payments SET
+       student_plan_id = ?,
+       amount = ?,
+       plan_price = ?,
+       payment_date = ?,
+       payment_method = ?
       WHERE id = ?
       `,
         [
@@ -270,16 +266,16 @@ export const paymentsController = {
         ],
       );
 
-      res.status(201).json({
+      res.status(200).json({
         success: true,
         data: {
-          id: result.insertId,
-          student_plan_id,
-          amount,
+          id,
+          student_plan_id: newStudentPlanId,
+          amount: newAmount,
           plan_price: planPrice,
           interest,
-          payment_date,
-          payment_method,
+          payment_date: newPaymentDate,
+          payment_method: newPaymentMethod,
         },
       });
     } catch (error) {

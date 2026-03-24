@@ -1,5 +1,6 @@
 export function calculatePaymentAmount(planPrice, date) {
   //Obtengo la fecha que le mando por parametro
+  const price = Number(planPrice);
   const paymentDate = new Date(date);
   const yearMonth = paymentDate.toISOString().slice(0, 7); //la corta en año y mes
 
@@ -8,38 +9,24 @@ export function calculatePaymentAmount(planPrice, date) {
   const hasInterest = paymentDate > dueDate; //devuelve true o false sobre si debe haber interes
 
   let interest = 0;
-  let total = planPrice;
+  let total = price;
 
   if (hasInterest) {
-    interest = planPrice * 0.15;
-    total = planPrice + interest;
+    interest = price * 0.15;
+    // Redondear
+    interest = Math.round(interest * 100) / 100;
+
+    total = price + interest;
+
+    // Redondear
+    total = Math.round(total * 100) / 100;
   }
 
   return {
-    planPrice,
+    price,
     interest,
     total,
     hasInterest,
     dueDate,
   };
-}
-
-export async function getPlanPriceAtDate(student_plan_id, date) {
-  const [rows] = await db.execute(
-    `
-    SELECT pp.price
-    FROM student_plans sp
-    JOIN plan_prices pp ON pp.plan_id = sp.plan_id
-    WHERE sp.id = ?
-    AND pp.start_date <= ?
-    AND (pp.end_date IS NULL OR pp.end_date >= ?)
-    `,
-    [student_plan_id, date, date],
-  );
-
-  if (rows.length === 0) {
-    throw new Error("No se encontró precio para el plan en esa fecha");
-  }
-
-  return Number(rows[0].price);
 }

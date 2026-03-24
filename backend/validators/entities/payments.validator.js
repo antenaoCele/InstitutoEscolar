@@ -8,7 +8,7 @@ import {
 
 export const validatePayments = [
   ...validateFKFormat("student_plan_id"),
-  ...validateForeignId("student_id", "students"),
+  ...validateForeignId("student_plan_id", "student_plans"),
   ...validateDate("payment_date"),
   ...validateMoney("amount"),
   ...validatePaymentMethod("payment_method"),
@@ -16,7 +16,7 @@ export const validatePayments = [
 
 export const validateEditPayments = [
   ...validateFKFormat("student_plan_id", true),
-  ...validateForeignId("student_id", "students", true),
+  ...validateForeignId("student_plan_id", "student_plans", true),
   ...validateDate("payment_date", true),
   ...validateMoney("amount", true),
   ...validatePaymentMethod("payment_method", true),
