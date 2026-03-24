@@ -14,7 +14,6 @@ export const studentsController = {
       // Mes actual
       const today = new Date();
       const yearMonth = today.toISOString().slice(0, 7);
-      const firstDay = `${yearMonth}-01`;
 
       let query = `
       SELECT 
