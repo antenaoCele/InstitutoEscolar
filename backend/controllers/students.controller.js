@@ -5,7 +5,7 @@ import { calculateAccountStatus } from "../utils/accountStatus.js";
 import { db } from "../db.js";
 
 export const studentsController = {
-  ...baseController("students"),
+  ...baseController,
 
   getAllWithStatus: async (req, res) => {
     try {
@@ -81,6 +81,7 @@ export const studentsController = {
     `;
 
       const [rows] = await db.execute(query, params);
+      console.log(rows);
 
       // Procesamiento
       const result = rows.map((row) => {

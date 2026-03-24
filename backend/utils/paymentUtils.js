@@ -23,3 +23,23 @@ export function calculatePaymentAmount(planPrice, date) {
     dueDate,
   };
 }
+
+export async function getPlanPriceAtDate(student_plan_id, date) {
+  const [rows] = await db.execute(
+    `
+    SELECT pp.price
+    FROM student_plans sp
+    JOIN plan_prices pp ON pp.plan_id = sp.plan_id
+    WHERE sp.id = ?
+    AND pp.start_date <= ?
+    AND (pp.end_date IS NULL OR pp.end_date >= ?)
+    `,
+    [student_plan_id, date, date],
+  );
+
+  if (rows.length === 0) {
+    throw new Error("No se encontró precio para el plan en esa fecha");
+  }
+
+  return Number(rows[0].price);
+}

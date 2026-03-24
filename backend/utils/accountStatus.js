@@ -1,3 +1,5 @@
+import { calculatePaymentAmount } from "../utils/paymentUtils.js";
+
 export const calculateAccountStatus = ({
   price,
   total_paid,
