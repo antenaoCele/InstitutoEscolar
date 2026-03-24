@@ -1,5 +1,6 @@
 import { db } from "../db.js";
 import { createCrudController } from "../utils/crudFactory.js";
+import { calculateAccountStatus } from "../utils/accountStatus.js";
 
 const baseController = createCrudController("student_plans");
 
@@ -87,7 +88,7 @@ export const studentPlansController = {
         });
       }
 
-      // 📅 Fechas
+      // Fechas
       const firstDay = `${month}-01`;
 
       const nextMonth = new Date(firstDay);
@@ -100,7 +101,7 @@ export const studentPlansController = {
         sp.student_id,
         sp.teacher_id,
 
-        -- ✅ precio vigente al FINAL del mes
+        -- precio vigente al FINAL del mes
         pp.price,
 
         -- pagos del mes
@@ -108,31 +109,28 @@ export const studentPlansController = {
 
       FROM student_plans sp
 
-      -- 🔥 precio activo el último día del mes
       LEFT JOIN plan_prices pp 
         ON sp.plan_id = pp.plan_id
         AND pp.start_date <= LAST_DAY(?)
         AND (pp.end_date IS NULL OR pp.end_date >= LAST_DAY(?))
 
-      -- 💰 pagos dentro del mes
       LEFT JOIN payments p 
         ON p.student_plan_id = sp.id
         AND p.payment_date >= ?
         AND p.payment_date < ?
 
-      -- 👤 planes activos en el mes
       WHERE 
         sp.start_date <= LAST_DAY(?)
         AND (sp.end_date IS NULL OR sp.end_date >= ?)
     `;
 
       const params = [
-        firstDay, // pp.start_date <= LAST_DAY(?)
-        firstDay, // pp.end_date >= LAST_DAY(?)
-        firstDay, // pagos desde
-        nextMonthStr, // pagos hasta
-        firstDay, // sp.start_date <= LAST_DAY(?)
-        firstDay, // sp.end_date >= ?
+        firstDay,
+        firstDay,
+        firstDay,
+        nextMonthStr,
+        firstDay,
+        firstDay,
       ];
 
       if (teacher_id) {
@@ -146,19 +144,28 @@ export const studentPlansController = {
 
       const [rows] = await db.execute(query, params);
 
+      const today = new Date();
+
       const result = rows.map((row) => {
-        const price = row.price || 0;
-        const debt = price - row.total_paid;
+        const { interest, total_paid, price, expected_total, debt, status } =
+          calculateAccountStatus({
+            price: row.price,
+            total_paid: row.total_paid,
+            today,
+            yearMonth: month,
+          });
 
         return {
           student_plan_id: row.student_plan_id,
           student_id: row.student_id,
           teacher_id: row.teacher_id,
+
           price,
-          total_paid: row.total_paid,
-          debt: debt < 0 ? 0 : debt,
-          // status:
-          //   row.price == null ? "SIN_PRECIO" : debt <= 0 ? "PAGADO" : "DEBE",
+          total_paid,
+          interest,
+          expected_total,
+          debt,
+          status,
         };
       });
 
