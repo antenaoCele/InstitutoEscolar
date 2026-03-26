@@ -150,7 +150,6 @@ export const paymentsController = {
       );
 
       // 4. Validar monto exacto
-      // const roundedTotal = Math.round(total * 100) / 100;
       const roundedAmount = Math.round(Number(amount) * 100) / 100;
 
       if (roundedAmount !== total) {

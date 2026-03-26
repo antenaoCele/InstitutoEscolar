@@ -13,12 +13,9 @@ export function calculatePaymentAmount(planPrice, date) {
 
   if (hasInterest) {
     interest = price * 0.15;
-    // Redondear
     interest = Math.round(interest * 100) / 100;
 
     total = price + interest;
-
-    // Redondear
     total = Math.round(total * 100) / 100;
   }
 
