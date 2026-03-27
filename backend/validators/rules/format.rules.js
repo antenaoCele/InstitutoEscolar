@@ -68,6 +68,16 @@ export const validateDateRange = (
 };
 
 /* =========================================================
+DAY
+========================================================= */
+export const validateDay = (field, optional = false) => [
+  baseField(field, optional)
+    .toInt()
+    .isInt({ min: 1, max: 6 })
+    .withMessage("Ingrese un número válido (del 1 al 6)."),
+];
+
+/* =========================================================
 DNI
 ========================================================= */
 export const validateDNI = (field, optional = false) => [
@@ -82,6 +92,17 @@ export const validateDNI = (field, optional = false) => [
     .bail()
     .isLength({ min: 7, max: 8 })
     .withMessage("Ingrese un DNI válido."),
+];
+
+/* =========================================================
+CLASSROOM
+========================================================= */
+export const validateClassroom = (field, optional = false) => [
+  baseField(field, optional)
+    .trim()
+    .toUpperCase()
+    .matches(/^[A-Z]$/)
+    .withMessage("Debe ingresar una sola letra (A-Z)."),
 ];
 
 /* =========================================================
@@ -228,23 +249,6 @@ export const validateName = (field, optional = false) => [
 ];
 
 /* =========================================================
-PAYMENT METHOD
-========================================================= */
-export const validatePaymentMethod = (field, optional = false) => [
-  baseField(field, optional)
-    .trim()
-    .isIn([
-      "transferencia",
-      "efectivo",
-      "tarjeta de crédito",
-      "tarjeta de débito",
-      "qr",
-      "otro",
-    ])
-    .withMessage("Método de pago no válido."),
-];
-
-/* =========================================================
 PASSWORD
 ========================================================= */
 export const validatePassword = (field, optional = false) => [
@@ -259,6 +263,23 @@ export const validatePassword = (field, optional = false) => [
     .withMessage(
       "La contraseña debe contener 8 caracteres como mínimo, una mayúscula, una minúscula, un número y un símbolo.",
     ),
+];
+
+/* =========================================================
+PAYMENT METHOD
+========================================================= */
+export const validatePaymentMethod = (field, optional = false) => [
+  baseField(field, optional)
+    .trim()
+    .isIn([
+      "transferencia",
+      "efectivo",
+      "tarjeta de crédito",
+      "tarjeta de débito",
+      "qr",
+      "otro",
+    ])
+    .withMessage("Método de pago no válido."),
 ];
 
 /* =========================================================
@@ -298,6 +319,27 @@ export const validateRole = (field, optional = false) => [
     .trim()
     .isIn(["ADMIN", "DOCENTE"])
     .withMessage("Rol inválido."),
+];
+
+/* =========================================================
+START TIME
+========================================================= */
+export const validateStartTime = (field, optional = false) => [
+  baseField(field, optional).custom((value) => {
+    if (value === undefined) return true;
+
+    const [h, m] = value.split(":").map(Number);
+    const totalMinutes = h * 60 + m;
+
+    const min = 8 * 60;
+    const max = 21 * 60 + 30;
+
+    if (totalMinutes < min || totalMinutes > max) {
+      throw new Error("El horario debe estar entre 08:00 y 21:30.");
+    }
+
+    return true;
+  }),
 ];
 
 /* =========================================================
