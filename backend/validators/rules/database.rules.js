@@ -14,25 +14,27 @@ export const validateFinanceOverlap = (
     if (!safeTable) throw new Error("Tabla no permitida");
 
     let { plan_id, start_date, end_date } = req.body;
-
     if (!plan_id || !start_date) return true;
 
     const id = req.params?.id ? Number(req.params.id) : null;
 
-    // MySQL no acepta undefined
-    const safeEndDate = end_date ?? null;
+    const safeEndDate = end_date ?? "9999-12-31";
 
     const sql = `
       SELECT id FROM ${safeTable}
       WHERE plan_id = ?
-      AND start_date < COALESCE(?, '9999-12-31')
-      AND COALESCE(end_date, '9999-12-31') > ?
-      ${id ? "AND id != ?" : ""}
-    `;
+      AND start_date < ?
+      AND (
+        end_date IS NULL OR end_date > ?
+      )
+      `;
 
-    const params = id
-      ? [plan_id, safeEndDate, start_date, id]
-      : [plan_id, safeEndDate, start_date];
+    const params = [plan_id, safeEndDate, start_date];
+
+    if (id) {
+      sql += " AND id != ?";
+      params.push(id);
+    }
 
     const [rows] = await db.execute(sql, params);
 
@@ -45,9 +47,9 @@ export const validateFinanceOverlap = (
 /* =========================================================
 FOREIGN KEY EXISTENCE
 ========================================================= */
-export const validateForeignId = (field, table, optional = false) => [
+export const validateForeignId = (field, table) => [
   body(field)
-    .if((value) => value !== undefined)
+    .optional({ values: "null" })
     .custom(async (value) => {
       const safeTable = ALLOWED_TABLES[table];
       if (!safeTable) throw new Error("Tabla no permitida");
@@ -57,94 +59,64 @@ export const validateForeignId = (field, table, optional = false) => [
         [value],
       );
 
-      if (!rows.length) throw new Error("El registro asociado no existe.");
+      if (!rows.length) {
+        throw new Error("El registro asociado no existe.");
+      }
 
       return true;
     }),
 ];
 
 /* =========================================================
-SCHEDULE OVERLAP (CREATE)
+SCHEDULE OVERLAP (CREATE + UPDATE)
 ========================================================= */
 export const validateScheduleOverlap = (
   table = "schedules",
   message = "Ya existe un horario que se superpone.",
 ) => [
   body("teacher_id").custom(async (teacher_id, { req }) => {
-    const { start_time, end_time, ...days } = req.body;
+    const safeTable = ALLOWED_TABLES[table];
+    if (!safeTable) throw new Error("Tabla no permitida");
 
-    if (!teacher_id || !start_time || !end_time) return true;
+    let { start_time, end_time, day } = req.body;
+    const { id } = req.params;
 
-    const activeDays = Object.keys(days).filter((day) => days[day] === true);
+    if (id) {
+      const [rows] = await db.execute(
+        `SELECT teacher_id, start_time, end_time, day
+         FROM ${safeTable}
+         WHERE id = ?`,
+        [id],
+      );
 
-    if (!activeDays.length) return true;
+      if (!rows.length) throw new Error("Horario no encontrado");
 
-    const conditions = activeDays.map((day) => `${day} = true`).join(" OR ");
+      const current = rows[0];
 
-    const [rows] = await db.execute(
-      `SELECT id FROM ${table}
-       WHERE teacher_id = ?
-       AND (${conditions})
-       AND ? < end_time
-       AND ? > start_time`,
-      [teacher_id, start_time, end_time],
-    );
+      teacher_id = teacher_id ?? current.teacher_id;
+      start_time = start_time ?? current.start_time;
+      end_time = end_time ?? current.end_time;
+      day = day ?? current.day;
+    }
 
-    if (rows.length) throw new Error(message);
+    if (!teacher_id || !start_time || !end_time || !day) return true;
 
-    return true;
-  }),
-];
+    let sql = `
+      SELECT id FROM ${safeTable}
+      WHERE teacher_id = ?
+      AND day = ?
+      AND ? < end_time
+      AND ? > start_time
+    `;
 
-/* =========================================================
-SCHEDULE OVERLAP (UPDATE)
-========================================================= */
-export const validateScheduleOverlapOnUpdate = (
-  table = "schedules",
-  message = "Ya existe un horario que se superpone.",
-) => [
-  body("teacher_id").custom(async (_, { req }) => {
-    const id = Number(req.params.id);
-    if (!id) return true;
+    const params = [teacher_id, day, start_time, end_time];
 
-    const [current] = await db.execute(`SELECT * FROM ${table} WHERE id = ?`, [
-      id,
-    ]);
+    if (id) {
+      sql += " AND id != ?";
+      params.push(id);
+    }
 
-    if (!current.length) return true;
-
-    const base = current[0];
-
-    const teacher_id = req.body.teacher_id ?? base.teacher_id;
-    const start_time = req.body.start_time ?? base.start_time;
-    const end_time = req.body.end_time ?? base.end_time;
-
-    const days = {
-      monday: req.body.monday ?? base.monday,
-      tuesday: req.body.tuesday ?? base.tuesday,
-      wednesday: req.body.wednesday ?? base.wednesday,
-      thursday: req.body.thursday ?? base.thursday,
-      friday: req.body.friday ?? base.friday,
-      saturday: req.body.saturday ?? base.saturday,
-      sunday: req.body.sunday ?? base.sunday,
-    };
-
-    const activeDays = Object.keys(days).filter(
-      (d) => days[d] === 1 || days[d] === true,
-    );
-    if (!activeDays.length) return true;
-
-    const conditions = activeDays.map((day) => `${day} = true`).join(" OR ");
-
-    const [rows] = await db.execute(
-      `SELECT id FROM ${table}
-       WHERE teacher_id = ?
-       AND (${conditions})
-       AND ? < end_time
-       AND ? > start_time
-       AND id != ?`,
-      [teacher_id, start_time, end_time, id],
-    );
+    const [rows] = await db.execute(sql, params);
 
     if (rows.length) throw new Error(message);
 
@@ -160,26 +132,26 @@ export const validateUnique = (
   table,
   message = "El valor ya está registrado.",
 ) => [
-  body(field).custom(async (value, { req }) => {
-    if (value === undefined) return true;
+  body(field)
+    .optional({ values: "null" })
+    .custom(async (value, { req }) => {
+      const safeTable = ALLOWED_TABLES[table];
+      if (!safeTable) throw new Error("Tabla no permitida");
 
-    const safeTable = ALLOWED_TABLES[table];
-    if (!safeTable) throw new Error("Tabla no permitida");
+      let sql = `SELECT id FROM ${safeTable} WHERE ${field}=?`;
+      const params = [value];
 
-    let sql = `SELECT id FROM ${safeTable} WHERE ${field}=?`;
-    const params = [value];
+      if (req.params?.id) {
+        sql += " AND id != ?";
+        params.push(req.params.id);
+      }
 
-    if (req.params?.id) {
-      sql += " AND id!=?";
-      params.push(req.params.id);
-    }
+      const [rows] = await db.execute(sql, params);
 
-    const [rows] = await db.execute(sql, params);
+      if (rows.length) throw new Error(message);
 
-    if (rows.length) throw new Error(message);
-
-    return true;
-  }),
+      return true;
+    }),
 ];
 
 /* =========================================================
@@ -196,19 +168,25 @@ export const validateUniqueCombination = (
 
     const id = req.params?.id ? Number(req.params.id) : null;
 
+    let currentData = null;
+
+    if (id) {
+      const [current] = await db.execute(
+        `SELECT ${fields.join(", ")} FROM ${safeTable} WHERE id = ?`,
+        [id],
+      );
+
+      if (!current.length) return true;
+      currentData = current[0];
+    }
+
     const values = [];
 
     for (const field of fields) {
       let value = req.body[field];
 
-      if (id && value === undefined) {
-        const [current] = await db.execute(
-          `SELECT ${fields.join(", ")} FROM ${safeTable} WHERE id = ?`,
-          [id],
-        );
-
-        if (!current.length) return true;
-        value = current[0][field];
+      if (value === undefined && currentData) {
+        value = currentData[field];
       }
 
       values.push(value);
@@ -216,13 +194,17 @@ export const validateUniqueCombination = (
 
     const whereClause = fields.map((f) => `${f} = ?`).join(" AND ");
 
-    const sql = `
+    let sql = `
       SELECT id FROM ${safeTable}
       WHERE ${whereClause}
-      ${id ? "AND id != ?" : ""}
     `;
 
-    const params = id ? [...values, id] : values;
+    const params = [...values];
+
+    if (id) {
+      sql += " AND id != ?";
+      params.push(id);
+    }
 
     const [rows] = await db.execute(sql, params);
 
@@ -248,13 +230,17 @@ export const validateUniqueMonthYear = (
 
     const id = req.params?.id ? Number(req.params.id) : null;
 
-    const sql = `
+    let sql = `
       SELECT id FROM ${safeTable}
       WHERE year = ? AND month = ?
-      ${id ? "AND id != ?" : ""}
     `;
 
-    const params = id ? [year, month, id] : [year, month];
+    const params = [year, month];
+
+    if (id) {
+      sql += " AND id != ?";
+      params.push(id);
+    }
 
     const [rows] = await db.execute(sql, params);
 
