@@ -1,9 +1,5 @@
 import { validateUniqueMonthYear } from "../rules/database.rules.js";
-import {
-  validateDate,
-  validateMoney,
-  validateYear,
-} from "../rules/format.rules.js";
+import { validateDate, validateMoney } from "../rules/format.rules.js";
 
 export const validateMonthlyFinances = [
   ...validateDate("month"),
