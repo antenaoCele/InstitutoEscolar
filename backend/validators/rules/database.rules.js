@@ -70,55 +70,52 @@ export const validateForeignId = (field, table) => [
 /* =========================================================
 SCHEDULE OVERLAP (CREATE + UPDATE)
 ========================================================= */
-export const validateScheduleOverlap = (
+export const validateScheduleConflict = (
   table = "schedules",
-  message = "Ya existe un horario que se superpone.",
+  message = "Conflicto de horario",
 ) => [
-  body("teacher_id").custom(async (teacher_id, { req }) => {
-    const safeTable = ALLOWED_TABLES[table];
-    if (!safeTable) throw new Error("Tabla no permitida");
+  body("start_time").custom(async (start_time, { req }) => {
+    const { teacher_id, day, classroom } = req.body;
+    const id = req.params?.id;
 
-    let { start_time, end_time, day } = req.body;
-    const { id } = req.params;
+    if (!start_time || !day) return true;
 
-    if (id) {
-      const [rows] = await db.execute(
-        `SELECT teacher_id, start_time, end_time, day
-         FROM ${safeTable}
-         WHERE id = ?`,
-        [id],
+    const [rows] = await db.execute(
+      `
+      SELECT id FROM ${table}
+      WHERE day = ?
+      AND id != COALESCE(?, id)
+      AND (
+        (
+          teacher_id = ?
+          AND ? < end_time
+          AND ADDTIME(?, '01:30:00') > start_time
+        )
+        OR
+        (
+          classroom = ?
+          AND ? < end_time
+          AND ADDTIME(?, '01:30:00') > start_time
+        )
+      )
+      `,
+      [
+        day,
+        id ?? null,
+        teacher_id,
+        start_time,
+        start_time,
+        classroom,
+        start_time,
+        start_time,
+      ],
+    );
+
+    if (rows.length) {
+      throw new Error(
+        "El horario se superpone con otro del mismo docente o aula.",
       );
-
-      if (!rows.length) throw new Error("Horario no encontrado");
-
-      const current = rows[0];
-
-      teacher_id = teacher_id ?? current.teacher_id;
-      start_time = start_time ?? current.start_time;
-      end_time = end_time ?? current.end_time;
-      day = day ?? current.day;
     }
-
-    if (!teacher_id || !start_time || !end_time || !day) return true;
-
-    let sql = `
-      SELECT id FROM ${safeTable}
-      WHERE teacher_id = ?
-      AND day = ?
-      AND ? < end_time
-      AND ? > start_time
-    `;
-
-    const params = [teacher_id, day, start_time, end_time];
-
-    if (id) {
-      sql += " AND id != ?";
-      params.push(id);
-    }
-
-    const [rows] = await db.execute(sql, params);
-
-    if (rows.length) throw new Error(message);
 
     return true;
   }),
