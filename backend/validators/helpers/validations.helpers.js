@@ -11,6 +11,19 @@ export const baseField = (field, optional) => {
 };
 
 /* =========================================================
+DURATION TIME
+========================================================= */
+export function addDurationToTime(time, minutesToAdd = 90) {
+  const [h, m, s] = time.split(":").map(Number);
+
+  const date = new Date();
+  date.setHours(h, m, s || 0);
+  date.setMinutes(date.getMinutes() + minutesToAdd);
+
+  return date.toTimeString().slice(0, 8);
+}
+
+/* =========================================================
 TRUTHY
 ========================================================= */
 export const isTruthy = (v) => {
