@@ -134,6 +134,64 @@ export const validateScheduleConflict = (table = "schedules") => [
 ];
 
 /* =========================================================
+SCHEDULES_STUDEMTS CONFLICT
+========================================================= */
+export const validateStudentScheduleConflict = () => [
+  body("student_id").custom(async (student_id, { req }) => {
+    const { schedule_id } = req.body;
+    const id = req.params?.id ?? null;
+
+    if (!student_id || !schedule_id) return true;
+
+    const [scheduleRows] = await db.execute(
+      `
+      SELECT day, start_time, end_time
+      FROM schedules
+      WHERE id = ?
+      `,
+      [schedule_id],
+    );
+
+    if (!scheduleRows.length) return true;
+
+    const newSchedule = scheduleRows[0];
+
+    const [rows] = await db.execute(
+      `
+      SELECT ss.id
+      FROM schedule_students ss
+      JOIN schedules s ON ss.schedule_id = s.id
+      WHERE ss.student_id = ?
+      AND ss.schedule_id != ?
+      AND s.day = ?
+      AND (? IS NULL OR ss.id != ?)
+      AND (
+        ? < s.end_time
+        AND ? > s.start_time
+      )
+      `,
+      [
+        student_id,
+        schedule_id,
+        newSchedule.day,
+        id,
+        id,
+        newSchedule.start_time,
+        newSchedule.end_time,
+      ],
+    );
+
+    if (rows.length) {
+      throw new Error(
+        "El alumno ya está inscripto en otra clase en ese mismo horario.",
+      );
+    }
+
+    return true;
+  }),
+];
+
+/* =========================================================
 SCHEDULE-STUDENT MAX
 ========================================================= */
 export const validateScheduleStudentRules = (

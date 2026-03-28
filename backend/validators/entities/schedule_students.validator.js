@@ -1,6 +1,7 @@
 import {
   validateForeignId,
   validateUniqueCombination,
+  validateStudentScheduleConflict,
   validateScheduleStudentRules,
 } from "../rules/database.rules.js";
 import { validateFKFormat } from "../rules/format.rules.js";
@@ -15,6 +16,7 @@ export const validateScheduleStudents = [
     "schedule_id",
   ]),
   validateScheduleStudentRules("schedule_students", 5),
+  validateStudentScheduleConflict(),
 ];
 
 export const validateEditScheduleStudents = [
@@ -27,4 +29,5 @@ export const validateEditScheduleStudents = [
     "schedule_id",
   ]),
   validateScheduleStudentRules("schedule_students", 5),
+  validateStudentScheduleConflict(),
 ];
