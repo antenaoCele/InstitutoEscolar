@@ -134,6 +134,46 @@ export const validateScheduleConflict = (table = "schedules") => [
 ];
 
 /* =========================================================
+SCHEDULE-STUDENT MAX
+========================================================= */
+export const validateScheduleStudentRules = (
+  table = "schedule_students",
+  max = 5,
+) => [
+  body("student_id").custom(async (student_id, { req }) => {
+    const { schedule_id } = req.body;
+    const id = req.params?.id ?? null;
+
+    if (!student_id || !schedule_id) return true;
+
+    const [rows] = await db.execute(
+      `
+      SELECT 
+        COUNT(*) as total,
+        SUM(CASE WHEN student_id = ? THEN 1 ELSE 0 END) as existsStudent
+      FROM ${table}
+      WHERE schedule_id = ?
+      AND (? IS NULL OR id != ?)
+      `,
+      [student_id, schedule_id, id, id],
+    );
+
+    const total = rows[0].total;
+    const existsStudent = rows[0].existsStudent;
+
+    if (existsStudent > 0) {
+      throw new Error("El alumno ya está inscripto en esta clase.");
+    }
+
+    if (total >= max) {
+      throw new Error(`La clase ya alcanzó el máximo de ${max} alumnos.`);
+    }
+
+    return true;
+  }),
+];
+
+/* =========================================================
 UNIQUE
 ========================================================= */
 export const validateUnique = (
