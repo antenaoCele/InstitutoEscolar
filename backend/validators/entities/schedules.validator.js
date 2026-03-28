@@ -8,7 +8,6 @@ import {
   validateClassroom,
   validateFKFormat,
   validateHour,
-  validateHourRange,
   validateStartTime,
 } from "../rules/format.rules.js";
 
@@ -17,7 +16,6 @@ export const validateSchedules = [
   ...validateForeignId("teacher_id", "teachers"),
   ...validateHour("start_time"),
   ...validateStartTime("start_time"),
-  ...validateHourRange("start_time", "start_time"),
   ...validateScheduleConflict("schedules"),
   ...validateDay("day"),
   ...validateClassroom("classroom"),

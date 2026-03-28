@@ -70,21 +70,32 @@ export const validateForeignId = (field, table) => [
 /* =========================================================
 SCHEDULE OVERLAP (CREATE + UPDATE)
 ========================================================= */
-export const validateScheduleConflict = (
-  table = "schedules",
-  message = "Conflicto de horario",
-) => [
+export const validateScheduleConflict = (table = "schedules") => [
   body("start_time").custom(async (start_time, { req }) => {
-    const { teacher_id, day, classroom } = req.body;
-    const id = req.params?.id;
+    const id = req.params?.id ?? null;
 
-    if (!start_time || !day) return true;
+    let { teacher_id, day, classroom } = req.body;
+
+    if (id) {
+      const [currentRows] = await db.execute(
+        `SELECT teacher_id, day, classroom FROM ${table} WHERE id = ?`,
+        [id],
+      );
+
+      const current = currentRows[0];
+
+      teacher_id = teacher_id ?? current.teacher_id;
+      day = day ?? current.day;
+      classroom = classroom ?? current.classroom;
+    }
+
+    if (!start_time || !day || !teacher_id || !classroom) return true;
 
     const [rows] = await db.execute(
       `
       SELECT id FROM ${table}
       WHERE day = ?
-      AND id != COALESCE(?, id)
+      AND (? IS NULL OR id != ?)
       AND (
         (
           teacher_id = ?
@@ -101,7 +112,8 @@ export const validateScheduleConflict = (
       `,
       [
         day,
-        id ?? null,
+        id,
+        id,
         teacher_id,
         start_time,
         start_time,

@@ -131,35 +131,36 @@ export const validateHour = (field, optional = false) => [
     .withMessage("Formato de hora inválido. Use hh:mm."),
 ];
 
-/* =========================================================
-HOUR RANGE
-========================================================= */
-export const validateHourRange = (
-  startField,
-  endField,
-  optional = false,
-  message = "La hora de fin debe ser mayor a la hora de inicio.",
-) => {
-  let validator = body(endField);
+// /* =========================================================
+// HOUR RANGE
+// ========================================================= */
+// export const validateHourRange = (
+//   startField,
+//   endField,
+//   optional = false,
+//   optional = false,
+//   message = "La hora de fin debe ser mayor a la hora de inicio.",
+// ) => {
+//   let validator = body(endField);
 
-  if (optional) {
-    validator = validator.optional();
-  }
+//   if (optional) {
+//     validator = validator.optional();
+//   }
 
-  return [
-    validator.custom((endValue, { req }) => {
-      const startValue = req.body[startField];
+//   return [
+//     validator.custom((endValue, { req }) => {
+//       const startValue = req.body[startField];
 
-      if (!startValue || !endValue) return true;
+//       if (!startValue || !endValue) return true;
 
-      if (startValue >= endValue) {
-        throw new Error(message);
-      }
+//       if (startValue >= endValue) {
+//         throw new Error(message);
+//       }
 
-      return true;
-    }),
-  ];
-};
+//       return true;
+//     }),
+//   ];
+// };
 
 /* =========================================================
 INFO STUDENT

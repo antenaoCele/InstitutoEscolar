@@ -78,29 +78,34 @@ export const schedulesController = {
       const { teacher_id, start_time, day, classroom } = req.body;
 
       const [result] = await db.execute(
-        `INSERT INTO schedules (teacher_id, start_time, end_time, day, classroom) 
+        `INSERT INTO schedules 
+       (teacher_id, start_time, end_time, day, classroom) 
        VALUES (?, ?, ADDTIME(?, '01:30:00'), ?, ?)`,
         [teacher_id, start_time, start_time, day, classroom],
       );
 
       const [rows] = await db.execute(
-        `SELECT end_time FROM schedules WHERE id = ?`,
+        `
+      SELECT 
+        id,
+        teacher_id,
+        start_time,
+        end_time,
+        day,
+        classroom
+      FROM schedules
+      WHERE id = ?
+      `,
         [result.insertId],
       );
 
-      const end_time = rows[0].end_time;
-      const newEndTime = end_time.slice(0, 5);
+      const data = rows[0];
 
-      res.json({
+      data.end_time = data.end_time.slice(0, 5);
+
+      res.status(201).json({
         success: true,
-        data: {
-          id: result.insertId,
-          teacher_id,
-          start_time,
-          end_time: newEndTime,
-          day,
-          classroom,
-        },
+        data,
         message: "Registro creado",
       });
     } catch (error) {
@@ -122,7 +127,7 @@ export const schedulesController = {
       const newDay = day ?? rows[0].day;
       const newClassroom = classroom ?? rows[0].classroom;
 
-      const [result] = await db.execute(
+      await db.execute(
         `
       UPDATE schedules 
       SET teacher_id = ?, 
@@ -135,9 +140,29 @@ export const schedulesController = {
         [newTeacherId, newStartTime, newStartTime, newDay, newClassroom, id],
       );
 
+      const [updatedRows] = await db.execute(
+        `
+      SELECT 
+        id,
+        teacher_id,
+        start_time,
+        end_time,
+        day,
+        classroom
+      FROM schedules
+      WHERE id = ?
+      `,
+        [id],
+      );
+
+      const data = updatedRows[0];
+
+      data.start_time = data.start_time.slice(0, 5);
+      data.end_time = data.end_time.slice(0, 5);
+
       res.json({
         success: true,
-        data: result[0],
+        data,
         message: "Registro actualizado",
       });
     } catch (error) {
