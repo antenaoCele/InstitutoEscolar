@@ -46,13 +46,4 @@ router.put(
   studentsController.update,
 );
 
-router.delete(
-  "/:id",
-  authentication,
-  authorization("ADMIN"),
-  ...validateID("students"),
-  checkValidations,
-  studentsController.delete,
-);
-
 export default router;
