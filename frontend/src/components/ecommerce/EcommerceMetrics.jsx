@@ -3,68 +3,98 @@ import {
   ArrowDownIcon,
   ArrowUpIcon,
   BoxIconLine,
+  GroupIcon,
 } from "../../icons";
 import Badge from "../ui/badge/Badge";
 
 export default function EcommerceMetrics() {
-  const [finances, setFinances] = useState([]);
+  const [studentsCount, setStudentsCount] = useState(0);
+  const [income, setIncome] = useState(0);
+  const [prevIncome, setPrevIncome] = useState(0);
 
   useEffect(() => {
-    fetch("http://localhost:3000/monthly_finances.js")
+    // 🔹 alumnos del mes actual
+    fetch("http://localhost:3000/students")
       .then((res) => res.json())
-      .then((data) => setFinances(data.data))
-      .catch((err) => console.error(err));
+      .then((data) => {
+        setStudentsCount(data.total);
+      })
+      .catch(console.error);
+
+    // 🔹 ingresos mensuales
+    fetch("http://localhost:3000/monthly_finances")
+      .then((res) => res.json())
+      .then((data) => {
+        const sorted = data.data.sort(
+          (a, b) => b.year - a.year || b.month - a.month
+        );
+
+        const current = sorted[0];
+        const previous = sorted[1];
+
+        setIncome(current?.total_income || 0);
+        setPrevIncome(previous?.total_income || 0);
+      })
+      .catch(console.error);
   }, []);
 
-  const getMonthName = (month) => {
-    const months = [
-      "Enero", "Febrero", "Marzo", "Abril",
-      "Mayo", "Junio", "Julio", "Agosto",
-      "Septiembre", "Octubre", "Noviembre", "Diciembre",
-    ];
-    return months[month - 1];
-  };
+  const incomeChange =
+    prevIncome > 0
+      ? ((income - prevIncome) / prevIncome) * 100
+      : 0;
+
+  const isIncomeUp = incomeChange >= 0;
 
   return (
     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:gap-6">
-      {finances.map((item) => {
-        const isPositive = item.net_profit >= 0;
+      
+      {/* 👥 ALUMNOS */}
+      <div className="rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03] md:p-6">
+        <div className="flex items-center justify-center w-12 h-12 bg-gray-100 rounded-xl dark:bg-gray-800">
+          <GroupIcon className="text-gray-800 size-6 dark:text-white/90" />
+        </div>
 
-        return (
-          <div
-            key={item.id}
-            className="rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03] md:p-6"
-          >
-            {/* Icono */}
-            <div className="flex items-center justify-center w-12 h-12 bg-gray-100 rounded-xl dark:bg-gray-800">
-              <BoxIconLine className="text-gray-800 size-6 dark:text-white/90" />
-            </div>
+        <div className="flex items-end justify-between mt-5">
+          <div>
+            <span className="text-sm text-gray-500 dark:text-gray-400">
+              Alumnos (mes actual)
+            </span>
 
-            {/* Contenido */}
-            <div className="flex items-end justify-between mt-5">
-              <div>
-                <span className="text-sm text-gray-500 dark:text-gray-400">
-                  {getMonthName(item.month)} {item.year}
-                </span>
-
-                <h4 className="mt-2 font-bold text-gray-800 text-title-sm dark:text-white/90">
-                  ${item.total_income.toLocaleString()}
-                </h4>
-
-                <p className="text-xs text-gray-500 dark:text-gray-400">
-                  Ganancia: ${item.net_profit.toLocaleString()}
-                </p>
-              </div>
-
-              {/* Badge dinámico */}
-              <Badge color={isPositive ? "success" : "error"}>
-                {isPositive ? <ArrowUpIcon /> : <ArrowDownIcon />}
-                {item.net_profit.toLocaleString()}
-              </Badge>
-            </div>
+            <h4 className="mt-2 font-bold text-gray-800 text-title-sm dark:text-white/90">
+              {studentsCount}
+            </h4>
           </div>
-        );
-      })}
+
+          <Badge color="success">
+            <ArrowUpIcon />
+            Activos
+          </Badge>
+        </div>
+      </div>
+
+      {/* INGRESOS */}
+      <div className="rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03] md:p-6">
+        <div className="flex items-center justify-center w-12 h-12 bg-gray-100 rounded-xl dark:bg-gray-800">
+          <BoxIconLine className="text-gray-800 size-6 dark:text-white/90" />
+        </div>
+
+        <div className="flex items-end justify-between mt-5">
+          <div>
+            <span className="text-sm text-gray-500 dark:text-gray-400">
+              Ingresos Mensuales
+            </span>
+
+            <h4 className="mt-2 font-bold text-gray-800 text-title-sm dark:text-white/90">
+              ${income.toLocaleString()}
+            </h4>
+          </div>
+
+          <Badge color={isIncomeUp ? "success" : "error"}>
+            {isIncomeUp ? <ArrowUpIcon /> : <ArrowDownIcon />}
+            {Math.abs(incomeChange).toFixed(1)}%
+          </Badge>
+        </div>
+      </div>
     </div>
   );
 }
