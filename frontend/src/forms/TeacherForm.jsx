@@ -2,28 +2,52 @@ import useForm from "../hooks/useForm";
 import Input from "../components/form/Input";
 import SubmitButton from "../components/form/SubmitButton";
 
+//Rama, validamos de nuevo para mejorar experiencia de usuario.
+//No es por seguridad, eso lo hacemos en el Backend.
+//Aquí solo vamos a validar cosas simples, para no estar yendo a la base de datos.
+const validateTeacher = (data) => {
+  const errors = {};
+
+  if (!data.first_name) errors.first_name = "Requerido";
+  if (!data.last_name) errors.last_name = "Requerido";
+
+  if (!data.dni) errors.dni = "Requerido";
+  else if (data.dni.length < 7) errors.dni = "DNI inválido";
+
+  if (!data.phone) errors.phone = "Requerido";
+
+  return errors;
+};
+
 export default function TeacherForm() {
   const {
     formData,
+    errors,
     handleChange,
     handleSubmit,
     loading,
     error,
     success,
-  } = useForm({
-    first_name: "",
-    last_name: "",
-    dni: "",
-    phone: "",
-  });
+  } = useForm(
+    {
+      first_name: "",
+      last_name: "",
+      dni: "",
+      phone: "",
+    },
+    validateTeacher
+  );
 
   return (
     <form onSubmit={(e) => handleSubmit(e, "/teachers")}>
+
       <Input
         label="Nombre"
         name="first_name"
         value={formData.first_name}
         onChange={handleChange}
+        error={errors.first_name}
+        hint={errors.first_name}
       />
 
       <Input
@@ -31,6 +55,8 @@ export default function TeacherForm() {
         name="last_name"
         value={formData.last_name}
         onChange={handleChange}
+        error={errors.last_name}
+        hint={errors.last_name}
       />
 
       <Input
@@ -39,6 +65,8 @@ export default function TeacherForm() {
         value={formData.dni}
         onChange={handleChange}
         type="number"
+        error={errors.dni}
+        hint={errors.dni}
       />
 
       <Input
@@ -46,6 +74,8 @@ export default function TeacherForm() {
         name="phone"
         value={formData.phone}
         onChange={handleChange}
+        error={errors.phone}
+        hint={errors.phone}
       />
 
       <SubmitButton loading={loading} text="Guardar Docente" />
