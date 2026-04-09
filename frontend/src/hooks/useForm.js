@@ -1,44 +1,71 @@
 import { useState } from "react";
 
-export default function useForm(initialValues) {
+export default function useForm(initialValues, validate) {
   const [formData, setFormData] = useState(initialValues);
+  const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(false);
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
+  const token = localStorage.getItem("token");
 
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
+  const handleChange = (e) => {
+    setFormData({
+      ...formData,
+      [e.target.name]: e.target.value,
+    });
+
+    setErrors({
+      ...errors,
+      [e.target.name]: null,
+    });
   };
 
   const handleSubmit = async (e, endpoint) => {
     e.preventDefault();
 
-    try {
-      setLoading(true);
-      setError(null);
-      setSuccess(false);
+    if (validate) {
+      const validationErrors = validate(formData);
+      if (Object.keys(validationErrors).length > 0) {
+        setErrors(validationErrors);
+        return;
+      }
+    }
 
-      const response = await fetch(endpoint, {
+    setLoading(true);
+    setError(null);
+    setSuccess(false);
+
+    try {
+      const res = await fetch(`http://localhost:3000${endpoint}`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify(formData),
       });
 
-      if (!response.ok) {
-        throw new Error("Error al guardar");
+      const data = await res.json();
+
+      if (!data.success) {
+        if (data.errors) {
+          const backendErrors = {};
+          data.errors.forEach((err) => {
+            backendErrors[err.path] = err.msg;
+          });
+          setErrors(backendErrors);
+        } else {
+          setError(data.message);
+        }
+        return;
       }
 
       setSuccess(true);
       setFormData(initialValues);
     } catch (err) {
-      setError(err.message);
+      console.error(err);
+      setError("Error de conexión");
     } finally {
       setLoading(false);
     }
@@ -46,6 +73,7 @@ export default function useForm(initialValues) {
 
   return {
     formData,
+    errors,
     handleChange,
     handleSubmit,
     loading,
