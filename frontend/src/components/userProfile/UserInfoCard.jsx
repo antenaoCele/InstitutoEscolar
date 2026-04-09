@@ -2,8 +2,8 @@ import { useEffect, useState } from "react";
 import { useModal } from "../../hooks/useModal.js";
 import { Modal } from "../ui/modal.jsx";
 import Button from "../ui/Button.jsx";
-import Input from "../form/input/InputField";
-import Label from "../form/Label";
+import Input from "../form/input/InputField.jsx";
+import Label from "../form/Label.jsx";
 
 export default function UserInfoCard({ userId }) {
   const { isOpen, openModal, closeModal } = useModal();
