@@ -76,7 +76,7 @@ export default function TutorForm() {
         hint={errors.dni}
       />
 
-      <SubmitButton loading={loading} text="Guardar Docente" />
+      <SubmitButton loading={loading} text="Guardar Tutor" />
 
       {error && <p className="text-red-500">{error}</p>}
       {success && (
