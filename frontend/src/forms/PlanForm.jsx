@@ -2,9 +2,6 @@ import useForm from "../hooks/useForm";
 import Input from "../components/form/Input";
 import SubmitButton from "../components/form/SubmitButton";
 
-//Rama, validamos de nuevo para mejorar experiencia de usuario.
-//No es por seguridad, eso lo hacemos en el Backend.
-//Aquí solo vamos a validar cosas simples, para no estar yendo a la base de datos.
 const validatePlan = (data) => {
   const errors = {};
 
