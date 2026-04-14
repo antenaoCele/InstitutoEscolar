@@ -1,20 +1,24 @@
 import useForm from "../hooks/useForm";
 import Input from "../components/form/Input";
 import SubmitButton from "../components/form/SubmitButton";
+import { isAdmin } from "../utils/auth";
 
-export default function PlanForm() {
-  const validate = (data, isEdit) => {
+export default function SubjectForm() {
+  if (!isAdmin()) {
+    return <p className="text-red-500">No autorizado</p>;
+  }
+
+  const validate = (data) => {
     const errors = {};
 
-    if (!isEdit) {
-      if (!data.name) errors.name = "Nombre requerido";
-    }
+    if (!data.name) errors.name = "Nombre requerido";
 
     return errors;
   };
 
   const {
     formData,
+    errors,
     handleChange,
     handleSubmit,
     loading,
@@ -24,17 +28,18 @@ export default function PlanForm() {
     {
       name: "",
     },
-    validate,
-    false
+    validate
   );
 
   return (
-    <form onSubmit={(e) => handleSubmit(e, "/subjects", "POST")}>
+    <form onSubmit={(e) => handleSubmit(e, "/subjects")}>
       <Input
-        label="Nombre de la Materia"
+        label="Materia"
         name="name"
         value={formData.name}
         onChange={handleChange}
+        error={errors.name}
+        hint={errors.name}
       />
 
       <SubmitButton loading={loading} text="Guardar Materia" />

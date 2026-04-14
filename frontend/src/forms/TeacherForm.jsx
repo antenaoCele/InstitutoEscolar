@@ -1,23 +1,27 @@
 import useForm from "../hooks/useForm";
 import Input from "../components/form/Input";
 import SubmitButton from "../components/form/SubmitButton";
+import { isAdmin } from "../utils/auth";
 
 export default function TeacherForm() {
-  const validate = (data, isEdit) => {
+  if (!isAdmin()) {
+    return <p className="text-red-500">No autorizado</p>;
+  }
+
+  const validate = (data) => {
     const errors = {};
 
-    if (!isEdit) {
-      if (!data.first_name) errors.first_name = "Nombre requerido";
-      if (!data.last_name) errors.last_name = "Apellido requerido";
-      if (!data.dni) errors.dni = "DNI requerido";
-      if (!data.phone) errors.phone = "Teléfono requerido";
-    }
+    if (!data.first_name) errors.first_name = "Nombre requerido";
+    if (!data.last_name) errors.last_name = "Apellido requerido";
+    if (!data.dni) errors.dni = "DNI requerido";
+    if (!data.phone) errors.phone = "Teléfono requerido";
 
     return errors;
   };
 
   const {
     formData,
+    errors,
     handleChange,
     handleSubmit,
     loading,
@@ -30,17 +34,18 @@ export default function TeacherForm() {
       dni: "",
       phone: "",
     },
-    validate,
-    false
+    validate
   );
 
   return (
-    <form onSubmit={(e) => handleSubmit(e, "/teachers", "POST")}>
+    <form onSubmit={(e) => handleSubmit(e, "/teachers")}>
       <Input
         label="Nombre"
         name="first_name"
         value={formData.first_name}
         onChange={handleChange}
+        error={errors.first_name}
+        hint={errors.first_name}
       />
 
       <Input
@@ -48,14 +53,18 @@ export default function TeacherForm() {
         name="last_name"
         value={formData.last_name}
         onChange={handleChange}
+        error={errors.last_name}
+        hint={errors.last_name}
       />
 
       <Input
         label="DNI"
         name="dni"
+        type="number"
         value={formData.dni}
         onChange={handleChange}
-        type="number"
+        error={errors.dni}
+        hint={errors.dni}
       />
 
       <Input
@@ -63,6 +72,8 @@ export default function TeacherForm() {
         name="phone"
         value={formData.phone}
         onChange={handleChange}
+        error={errors.phone}
+        hint={errors.phone}
       />
 
       <SubmitButton loading={loading} text="Guardar Docente" />
