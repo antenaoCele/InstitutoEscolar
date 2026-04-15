@@ -3,8 +3,12 @@ import useForm from "../hooks/useForm";
 import Select from "../components/form/Select";
 import Input from "../components/form/Input";
 import SubmitButton from "../components/form/SubmitButton";
-import api from "../utils/api";
 import { isAdmin } from "../utils/auth";
+
+import { studentService } from "../services/student.service";
+import { planService } from "../services/plan.service";
+import { teacherService } from "../services/teacher.service";
+import { studentPlanService } from "../services/studentPlan.service";
 
 export default function StudentPlanForm({ initialData = {}, isEdit = false }) {
   if (!isAdmin()) {
@@ -19,9 +23,9 @@ export default function StudentPlanForm({ initialData = {}, isEdit = false }) {
     const fetchData = async () => {
       try {
         const [s, p, t] = await Promise.all([
-          api.get("/students"),
-          api.get("/plans"),
-          api.get("/teachers"),
+          studentService.getAll(),
+          planService.getAll(),
+          teacherService.getAll(),
         ]);
 
         setStudents(s.data);
@@ -52,7 +56,6 @@ export default function StudentPlanForm({ initialData = {}, isEdit = false }) {
     formData,
     errors,
     handleChange,
-    handleSubmit,
     loading,
     error,
     success,
@@ -67,14 +70,25 @@ export default function StudentPlanForm({ initialData = {}, isEdit = false }) {
     validate
   );
 
-  const endpoint = isEdit
-    ? `/student_plans/${initialData.id}`
-    : "/student_plans";
+  const handleSubmitCustom = async (e) => {
+    e.preventDefault();
 
-  const method = isEdit ? "PUT" : "POST";
+    const validationErrors = validate(formData);
+    if (Object.keys(validationErrors).length > 0) return;
+
+    try {
+      if (isEdit) {
+        await studentPlanService.update(initialData.id, formData);
+      } else {
+        await studentPlanService.create(formData);
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
 
   return (
-    <form onSubmit={(e) => handleSubmit(e, endpoint, method)}>
+    <form onSubmit={handleSubmitCustom}>
       <Select
         label="Alumno"
         name="student_id"
