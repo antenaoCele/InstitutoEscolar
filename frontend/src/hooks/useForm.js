@@ -7,8 +7,6 @@ export default function useForm(initialValues, validate) {
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(false);
 
-  const token = localStorage.getItem("token");
-
   const handleChange = (e) => {
     setFormData({
       ...formData,
@@ -21,7 +19,7 @@ export default function useForm(initialValues, validate) {
     });
   };
 
-  const handleSubmit = async (e, endpoint, method = "POST") => {
+  const handleSubmit = async (e, submitFn) => {
     e.preventDefault();
 
     if (validate) {
@@ -37,35 +35,23 @@ export default function useForm(initialValues, validate) {
     setSuccess(false);
 
     try {
-      const res = await fetch(`http://localhost:3000${endpoint}`, {
-        method,
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify(formData),
-      });
+      const res = await submitFn(formData);
 
-      const data = await res.json();
-
-      if (!data.success) {
-        if (data.errors) {
+      if (!res.success) {
+        if (res.errors) {
           const backendErrors = {};
-          data.errors.forEach((err) => {
+          res.errors.forEach((err) => {
             backendErrors[err.path] = err.msg;
           });
           setErrors(backendErrors);
         } else {
-          setError(data.message);
+          setError(res.message);
         }
         return;
       }
 
       setSuccess(true);
-
-      if (method === "POST") {
-        setFormData(initialValues);
-      }
+      setFormData(initialValues);
     } catch (err) {
       console.error(err);
       setError("Error de conexión");
@@ -76,6 +62,7 @@ export default function useForm(initialValues, validate) {
 
   return {
     formData,
+    setFormData,
     errors,
     handleChange,
     handleSubmit,
