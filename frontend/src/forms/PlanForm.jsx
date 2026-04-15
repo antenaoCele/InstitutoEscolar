@@ -3,6 +3,8 @@ import Input from "../components/form/Input";
 import SubmitButton from "../components/form/SubmitButton";
 import { isAdmin } from "../utils/auth";
 
+import { planService } from "../services/plan.service";
+
 export default function PlanForm({ initialData = {}, isEdit = false }) {
   if (!isAdmin()) {
     return <p className="text-red-500">No autorizado</p>;
@@ -33,14 +35,16 @@ export default function PlanForm({ initialData = {}, isEdit = false }) {
     validate
   );
 
-  const endpoint = isEdit
-    ? `/plans/${initialData.id}`
-    : "/plans";
-
-  const method = isEdit ? "PUT" : "POST";
+  const submitFn = async (data) => {
+    if (isEdit) {
+      return await planService.update(initialData.id, data);
+    } else {
+      return await planService.create(data);
+    }
+  };
 
   return (
-    <form onSubmit={(e) => handleSubmit(e, endpoint, method)}>
+    <form onSubmit={(e) => handleSubmit(e, submitFn)}>
       <Input
         label="Plan"
         name="name"

@@ -5,9 +5,8 @@ import SubmitButton from "../components/form/SubmitButton";
 import { isAdmin } from "../utils/auth";
 
 import { studentService } from "../services/student.service";
-import { tutorService } from "../services/tutor.service"; 
+import { tutorService } from "../services/tutor.service";
 import { studentTutorService } from "../services/studentTutor.service";
-
 
 export default function StudentTutorForm({ initialData = {}, isEdit = false }) {
   if (!isAdmin()) {
@@ -62,25 +61,16 @@ export default function StudentTutorForm({ initialData = {}, isEdit = false }) {
     validate
   );
 
-  const handleSubmitCustom = async (e) => {
-    e.preventDefault();
-
-    const validationErrors = validate(formData);
-    if (Object.keys(validationErrors).length > 0) return;
-
-    try {
-      if (isEdit) {
-        await studentTutorService.update(initialData.id, formData);
-      } else {
-        await studentTutorService.create(formData);
-      }
-    } catch (err) {
-      console.error(err);
+  const submitFn = async (data) => {
+    if (isEdit) {
+      return await studentTutorService.update(initialData.id, data);
+    } else {
+      return await studentTutorService.create(data);
     }
   };
 
   return (
-    <form onSubmit={handleSubmitCustom}>
+    <form onSubmit={(e) => handleSubmit(e, submitFn)}>
       <Select
         label="Alumno"
         name="student_id"
