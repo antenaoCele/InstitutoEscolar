@@ -2,8 +2,12 @@ import { useEffect, useState } from "react";
 import useForm from "../hooks/useForm";
 import Select from "../components/form/Select";
 import SubmitButton from "../components/form/SubmitButton";
-import api from "../utils/api";
 import { isAdmin } from "../utils/auth";
+
+import { studentService } from "../services/student.service";
+import { tutorService } from "../services/tutor.service"; 
+import { studentTutorService } from "../services/studentTutor.service";
+
 
 export default function StudentTutorForm({ initialData = {}, isEdit = false }) {
   if (!isAdmin()) {
@@ -17,8 +21,8 @@ export default function StudentTutorForm({ initialData = {}, isEdit = false }) {
     const fetchData = async () => {
       try {
         const [s, t] = await Promise.all([
-          api.get("/students"),
-          api.get("/tutors"),
+          studentService.getAll(),
+          tutorService.getAll(),
         ]);
 
         setStudents(s.data);
@@ -58,14 +62,25 @@ export default function StudentTutorForm({ initialData = {}, isEdit = false }) {
     validate
   );
 
-  const endpoint = isEdit
-    ? `/student_tutors/${initialData.id}`
-    : "/student_tutors";
+  const handleSubmitCustom = async (e) => {
+    e.preventDefault();
 
-  const method = isEdit ? "PUT" : "POST";
+    const validationErrors = validate(formData);
+    if (Object.keys(validationErrors).length > 0) return;
+
+    try {
+      if (isEdit) {
+        await studentTutorService.update(initialData.id, formData);
+      } else {
+        await studentTutorService.create(formData);
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
 
   return (
-    <form onSubmit={(e) => handleSubmit(e, endpoint, method)}>
+    <form onSubmit={handleSubmitCustom}>
       <Select
         label="Alumno"
         name="student_id"
