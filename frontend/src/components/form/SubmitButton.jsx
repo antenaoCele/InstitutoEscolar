@@ -1,3 +1,4 @@
+// Agregar Button (el componente)
 export default function SubmitButton({ loading, text }) {
   return (
     <button
