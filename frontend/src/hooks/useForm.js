@@ -21,7 +21,7 @@ export default function useForm(initialValues, validate) {
     });
   };
 
-  const handleSubmit = async (e, endpoint) => {
+  const handleSubmit = async (e, endpoint, method = "POST") => {
     e.preventDefault();
 
     if (validate) {
@@ -38,7 +38,7 @@ export default function useForm(initialValues, validate) {
 
     try {
       const res = await fetch(`http://localhost:3000${endpoint}`, {
-        method: "POST",
+        method,
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
@@ -62,7 +62,10 @@ export default function useForm(initialValues, validate) {
       }
 
       setSuccess(true);
-      setFormData(initialValues);
+
+      if (method === "POST") {
+        setFormData(initialValues);
+      }
     } catch (err) {
       console.error(err);
       setError("Error de conexión");
