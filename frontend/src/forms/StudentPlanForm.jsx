@@ -56,6 +56,7 @@ export default function StudentPlanForm({ initialData = {}, isEdit = false }) {
     formData,
     errors,
     handleChange,
+    handleSubmit,
     loading,
     error,
     success,
@@ -70,25 +71,16 @@ export default function StudentPlanForm({ initialData = {}, isEdit = false }) {
     validate
   );
 
-  const handleSubmitCustom = async (e) => {
-    e.preventDefault();
-
-    const validationErrors = validate(formData);
-    if (Object.keys(validationErrors).length > 0) return;
-
-    try {
-      if (isEdit) {
-        await studentPlanService.update(initialData.id, formData);
-      } else {
-        await studentPlanService.create(formData);
-      }
-    } catch (err) {
-      console.error(err);
+  const submitFn = async (data) => {
+    if (isEdit) {
+      return await studentPlanService.update(initialData.id, data);
+    } else {
+      return await studentPlanService.create(data);
     }
   };
 
   return (
-    <form onSubmit={handleSubmitCustom}>
+    <form onSubmit={(e) => handleSubmit(e, submitFn)}>
       <Select
         label="Alumno"
         name="student_id"

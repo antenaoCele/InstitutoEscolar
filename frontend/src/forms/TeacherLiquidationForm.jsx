@@ -55,6 +55,7 @@ export default function TeacherLiquidationForm({
     formData,
     errors,
     handleChange,
+    handleSubmit,
     loading,
     error,
     success,
@@ -68,25 +69,16 @@ export default function TeacherLiquidationForm({
     validate
   );
 
-  const handleSubmitCustom = async (e) => {
-    e.preventDefault();
-
-    const validationErrors = validate(formData);
-    if (Object.keys(validationErrors).length > 0) return;
-
-    try {
-      if (isEdit) {
-        await teacherLiquidationService.update(initialData.id, formData);
-      } else {
-        await teacherLiquidationService.create(formData);
-      }
-    } catch (err) {
-      console.error(err);
+  const submitFn = async (data) => {
+    if (isEdit) {
+      return await teacherLiquidationService.update(initialData.id, data);
+    } else {
+      return await teacherLiquidationService.create(data);
     }
   };
 
   return (
-    <form onSubmit={handleSubmitCustom}>
+    <form onSubmit={(e) => handleSubmit(e, submitFn)}>
       <Select
         label="Docente"
         name="teacher_id"
@@ -136,6 +128,7 @@ export default function TeacherLiquidationForm({
       />
 
       {error && <p className="text-red-500">{error}</p>}
+
       {success && (
         <p className="text-green-500">
           {isEdit ? "Actualizado correctamente" : "Guardado correctamente"}

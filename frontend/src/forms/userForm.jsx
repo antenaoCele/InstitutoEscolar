@@ -4,8 +4,10 @@ import Select from "../components/form/Select";
 import SubmitButton from "../components/form/SubmitButton";
 import { isAdmin, getUser } from "../utils/auth";
 
+import { userService } from "../services/user.service";
+
 export default function UserForm({ initialData = {}, isEdit = false }) {
-  const user = getUser(); 
+  const user = getUser();
 
   const validate = (data) => {
     const errors = {};
@@ -34,18 +36,34 @@ export default function UserForm({ initialData = {}, isEdit = false }) {
       first_name: initialData.first_name || "",
       last_name: initialData.last_name || "",
       username: initialData.username || "",
-      password: "",
+      password: "", // ⚠️ nunca precargar password
       role: initialData.role || "DOCENTE",
     },
     validate
   );
 
-  const endpoint = isEdit
-    ? `/users/${initialData.id}`
-    : "/users";
+  const submitFn = async (data) => {
+    // ⚠️ si está editando y no manda password → no lo enviamos
+    const payload = { ...data };
+
+    if (isEdit && !payload.password) {
+      delete payload.password;
+    }
+
+    // ⚠️ si NO es admin → no puede cambiar rol
+    if (!isAdmin()) {
+      delete payload.role;
+    }
+
+    if (isEdit) {
+      return await userService.update(initialData.id, payload);
+    }
+
+    return await userService.create(payload);
+  };
 
   return (
-    <form onSubmit={(e) => handleSubmit(e, endpoint)}>
+    <form onSubmit={(e) => handleSubmit(e, submitFn)}>
       
       <Input
         label="Nombre"
@@ -81,7 +99,10 @@ export default function UserForm({ initialData = {}, isEdit = false }) {
         value={formData.password}
         onChange={handleChange}
         error={errors.password}
-        hint={errors.password || "Dejar vacío para no cambiar"}
+        hint={
+          errors.password ||
+          (isEdit ? "Dejar vacío para no cambiar" : "")
+        }
       />
 
       {isAdmin() && (
@@ -95,6 +116,7 @@ export default function UserForm({ initialData = {}, isEdit = false }) {
             { value: "DOCENTE", label: "Docente" },
           ]}
           error={errors.role}
+          hint={errors.role}
         />
       )}
 
@@ -104,6 +126,7 @@ export default function UserForm({ initialData = {}, isEdit = false }) {
       />
 
       {error && <p className="text-red-500">{error}</p>}
+
       {success && (
         <p className="text-green-500">
           {isEdit ? "Actualizado correctamente" : "Creado correctamente"}

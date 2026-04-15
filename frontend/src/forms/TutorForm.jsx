@@ -2,6 +2,7 @@ import useForm from "../hooks/useForm";
 import Input from "../components/form/Input";
 import SubmitButton from "../components/form/SubmitButton";
 import { isAdmin } from "../utils/auth";
+import { teacherService } from "../services/tutor.service";
 
 export default function TutorForm({ initialData = {}, isEdit = false }) {
   if (!isAdmin()) {
@@ -14,8 +15,8 @@ export default function TutorForm({ initialData = {}, isEdit = false }) {
     if (!isEdit) {
       if (!data.first_name) errors.first_name = "Nombre requerido";
       if (!data.last_name) errors.last_name = "Apellido requerido";
-      if (!data.phone) errors.phone = "Teléfono requerido";
       if (!data.dni) errors.dni = "DNI requerido";
+      if (!data.phone) errors.phone = "Teléfono requerido";
     }
 
     return errors;
@@ -33,21 +34,22 @@ export default function TutorForm({ initialData = {}, isEdit = false }) {
     {
       first_name: initialData.first_name || "",
       last_name: initialData.last_name || "",
-      phone: initialData.phone || "",
       dni: initialData.dni || "",
+      phone: initialData.phone || "",
     },
     validate
   );
 
-  const endpoint = isEdit
-    ? `/tutors/${initialData.id}`
-    : "/tutors";
-
-  const method = isEdit ? "PUT" : "POST";
+  const submitFn = async (data) => {
+    if (isEdit) {
+      return await teacherService.update(initialData.id, data);
+    } else {
+      return await teacherService.create(data);
+    }
+  };
 
   return (
-    <form onSubmit={(e) => handleSubmit(e, endpoint, method)}>
-      
+    <form onSubmit={(e) => handleSubmit(e, submitFn)}>
       <Input
         label="Nombre"
         name="first_name"
@@ -74,6 +76,15 @@ export default function TutorForm({ initialData = {}, isEdit = false }) {
         onChange={handleChange}
         error={errors.dni}
         hint={errors.dni}
+      />
+
+      <Input
+        label="Teléfono"
+        name="phone"
+        value={formData.phone}
+        onChange={handleChange}
+        error={errors.phone}
+        hint={errors.phone}
       />
 
       <SubmitButton

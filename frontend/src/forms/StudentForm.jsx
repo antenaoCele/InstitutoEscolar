@@ -3,6 +3,7 @@ import Input from "../components/form/Input";
 import SubmitButton from "../components/form/SubmitButton";
 import Select from "../components/form/Select";
 import { isAdmin } from "../utils/auth";
+import { studentService } from "../services/student.service";
 
 export default function StudentForm({ initialData = {}, isEdit = false }) {
   if (!isAdmin()) {
@@ -46,14 +47,16 @@ export default function StudentForm({ initialData = {}, isEdit = false }) {
     validate
   );
 
-  const endpoint = isEdit
-    ? `/students/${initialData.id}`
-    : "/students";
-
-  const method = isEdit ? "PUT" : "POST";
+  const submitFn = async (data) => {
+    if (isEdit) {
+      return await studentService.update(initialData.id, data);
+    } else {
+      return await studentService.create(data);
+    }
+  };
 
   return (
-    <form onSubmit={(e) => handleSubmit(e, endpoint, method)}>
+    <form onSubmit={(e) => handleSubmit(e, submitFn)}>
       <Input
         label="Nombre"
         name="first_name"
@@ -132,6 +135,7 @@ export default function StudentForm({ initialData = {}, isEdit = false }) {
       />
 
       {error && <p className="text-red-500">{error}</p>}
+
       {success && (
         <p className="text-green-500">
           {isEdit ? "Actualizado correctamente" : "Creado correctamente"}

@@ -2,6 +2,7 @@ import useForm from "../hooks/useForm";
 import Input from "../components/form/Input";
 import SubmitButton from "../components/form/SubmitButton";
 import { isAdmin } from "../utils/auth";
+import { teacherService } from "../services/teacher.service";
 
 export default function TeacherForm({ initialData = {}, isEdit = false }) {
   if (!isAdmin()) {
@@ -39,15 +40,16 @@ export default function TeacherForm({ initialData = {}, isEdit = false }) {
     validate
   );
 
-  const endpoint = isEdit
-    ? `/teachers/${initialData.id}`
-    : "/teachers";
-
-  const method = isEdit ? "PUT" : "POST";
+  const submitFn = async (data) => {
+    if (isEdit) {
+      return await teacherService.update(initialData.id, data);
+    } else {
+      return await teacherService.create(data);
+    }
+  };
 
   return (
-    <form onSubmit={(e) => handleSubmit(e, endpoint, method)}>
-      
+    <form onSubmit={(e) => handleSubmit(e, submitFn)}>
       <Input
         label="Nombre"
         name="first_name"
