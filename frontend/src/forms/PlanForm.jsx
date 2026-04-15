@@ -1,6 +1,6 @@
 import useForm from "../hooks/useForm";
 import Input from "../components/form/Input";
-import SubmitButton from "../components/form/SubmitButton";
+import Button from "../components/ui/Button";
 import { isAdmin } from "../utils/auth";
 
 import { planService } from "../services/plan.service";
@@ -54,12 +54,12 @@ export default function PlanForm({ initialData = {}, isEdit = false }) {
         hint={errors.name}
       />
 
-      <SubmitButton
-        loading={loading}
-        text={isEdit ? "Actualizar Plan" : "Crear Plan"}
-      />
+      <Button type="submit" loading={loading} className="w-full">
+        {isEdit ? "Actualizar Plan" : "Crear Plan"}
+      </Button>
 
       {error && <p className="text-red-500">{error}</p>}
+
       {success && (
         <p className="text-green-500">
           {isEdit ? "Actualizado correctamente" : "Creado correctamente"}
