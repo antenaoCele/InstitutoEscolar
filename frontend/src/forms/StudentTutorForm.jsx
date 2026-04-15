@@ -5,7 +5,7 @@ import SubmitButton from "../components/form/SubmitButton";
 import api from "../utils/api";
 import { isAdmin } from "../utils/auth";
 
-export default function StudentTutorForm() {
+export default function StudentTutorForm({ initialData = {}, isEdit = false }) {
   if (!isAdmin()) {
     return <p className="text-red-500">No autorizado</p>;
   }
@@ -34,8 +34,10 @@ export default function StudentTutorForm() {
   const validate = (data) => {
     const errors = {};
 
-    if (!data.student_id) errors.student_id = "Alumno requerido";
-    if (!data.tutor_id) errors.tutor_id = "Tutor requerido";
+    if (!isEdit) {
+      if (!data.student_id) errors.student_id = "Alumno requerido";
+      if (!data.tutor_id) errors.tutor_id = "Tutor requerido";
+    }
 
     return errors;
   };
@@ -50,15 +52,20 @@ export default function StudentTutorForm() {
     success,
   } = useForm(
     {
-      student_id: "",
-      tutor_id: "",
+      student_id: initialData.student_id || "",
+      tutor_id: initialData.tutor_id || "",
     },
     validate
   );
 
+  const endpoint = isEdit
+    ? `/student_tutors/${initialData.id}`
+    : "/student_tutors";
+
+  const method = isEdit ? "PUT" : "POST";
+
   return (
-    <form onSubmit={(e) => handleSubmit(e, "/student_tutors")}>
-      
+    <form onSubmit={(e) => handleSubmit(e, endpoint, method)}>
       <Select
         label="Alumno"
         name="student_id"
@@ -85,10 +92,17 @@ export default function StudentTutorForm() {
         hint={errors.tutor_id}
       />
 
-      <SubmitButton loading={loading} text="Asignar Tutor" />
+      <SubmitButton
+        loading={loading}
+        text={isEdit ? "Actualizar Tutor" : "Asignar Tutor"}
+      />
 
       {error && <p className="text-red-500">{error}</p>}
-      {success && <p className="text-green-500">Guardado correctamente</p>}
+      {success && (
+        <p className="text-green-500">
+          {isEdit ? "Actualizado correctamente" : "Creado correctamente"}
+        </p>
+      )}
     </form>
   );
 }

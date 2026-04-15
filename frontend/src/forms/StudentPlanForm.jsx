@@ -6,7 +6,7 @@ import SubmitButton from "../components/form/SubmitButton";
 import api from "../utils/api";
 import { isAdmin } from "../utils/auth";
 
-export default function StudentPlanForm() {
+export default function StudentPlanForm({ initialData = {}, isEdit = false }) {
   if (!isAdmin()) {
     return <p className="text-red-500">No autorizado</p>;
   }
@@ -38,10 +38,12 @@ export default function StudentPlanForm() {
   const validate = (data) => {
     const errors = {};
 
-    if (!data.student_id) errors.student_id = "Alumno requerido";
-    if (!data.plan_id) errors.plan_id = "Plan requerido";
-    if (!data.teacher_id) errors.teacher_id = "Docente requerido";
-    if (!data.start_date) errors.start_date = "Fecha inicio requerida";
+    if (!isEdit) {
+      if (!data.student_id) errors.student_id = "Alumno requerido";
+      if (!data.plan_id) errors.plan_id = "Plan requerido";
+      if (!data.teacher_id) errors.teacher_id = "Docente requerido";
+      if (!data.start_date) errors.start_date = "Fecha de inicio requerida";
+    }
 
     return errors;
   };
@@ -56,18 +58,23 @@ export default function StudentPlanForm() {
     success,
   } = useForm(
     {
-      student_id: "",
-      plan_id: "",
-      teacher_id: "",
-      start_date: "",
-      end_date: "",
+      student_id: initialData.student_id || "",
+      plan_id: initialData.plan_id || "",
+      teacher_id: initialData.teacher_id || "",
+      start_date: initialData.start_date || "",
+      end_date: initialData.end_date || "",
     },
     validate
   );
 
+  const endpoint = isEdit
+    ? `/student_plans/${initialData.id}`
+    : "/student_plans";
+
+  const method = isEdit ? "PUT" : "POST";
+
   return (
-    <form onSubmit={(e) => handleSubmit(e, "/student_plans")}>
-      
+    <form onSubmit={(e) => handleSubmit(e, endpoint, method)}>
       <Select
         label="Alumno"
         name="student_id"
@@ -125,10 +132,17 @@ export default function StudentPlanForm() {
         onChange={handleChange}
       />
 
-      <SubmitButton loading={loading} text="Asignar Plan" />
+      <SubmitButton
+        loading={loading}
+        text={isEdit ? "Actualizar Plan del Alumno" : "Asignar Plan"}
+      />
 
       {error && <p className="text-red-500">{error}</p>}
-      {success && <p className="text-green-500">Guardado correctamente</p>}
+      {success && (
+        <p className="text-green-500">
+          {isEdit ? "Actualizado correctamente" : "Creado correctamente"}
+        </p>
+      )}
     </form>
   );
 }

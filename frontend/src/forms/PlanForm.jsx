@@ -3,7 +3,7 @@ import Input from "../components/form/Input";
 import SubmitButton from "../components/form/SubmitButton";
 import { isAdmin } from "../utils/auth";
 
-export default function PlanForm() {
+export default function PlanForm({ initialData = {}, isEdit = false }) {
   if (!isAdmin()) {
     return <p className="text-red-500">No autorizado</p>;
   }
@@ -11,7 +11,9 @@ export default function PlanForm() {
   const validate = (data) => {
     const errors = {};
 
-    if (!data.name) errors.name = "Nombre requerido";
+    if (!isEdit) {
+      if (!data.name) errors.name = "Nombre del plan requerido";
+    }
 
     return errors;
   };
@@ -26,13 +28,19 @@ export default function PlanForm() {
     success,
   } = useForm(
     {
-      name: "",
+      name: initialData.name || "",
     },
     validate
   );
 
+  const endpoint = isEdit
+    ? `/plans/${initialData.id}`
+    : "/plans";
+
+  const method = isEdit ? "PUT" : "POST";
+
   return (
-    <form onSubmit={(e) => handleSubmit(e, "/plans")}>
+    <form onSubmit={(e) => handleSubmit(e, endpoint, method)}>
       <Input
         label="Plan"
         name="name"
@@ -42,11 +50,16 @@ export default function PlanForm() {
         hint={errors.name}
       />
 
-      <SubmitButton loading={loading} text="Guardar Plan" />
+      <SubmitButton
+        loading={loading}
+        text={isEdit ? "Actualizar Plan" : "Crear Plan"}
+      />
 
       {error && <p className="text-red-500">{error}</p>}
       {success && (
-        <p className="text-green-500">Guardado correctamente</p>
+        <p className="text-green-500">
+          {isEdit ? "Actualizado correctamente" : "Creado correctamente"}
+        </p>
       )}
     </form>
   );

@@ -3,7 +3,7 @@ import Input from "../components/form/Input";
 import SubmitButton from "../components/form/SubmitButton";
 import { isAdmin } from "../utils/auth";
 
-export default function TeacherForm() {
+export default function TeacherForm({ initialData = {}, isEdit = false }) {
   if (!isAdmin()) {
     return <p className="text-red-500">No autorizado</p>;
   }
@@ -11,10 +11,12 @@ export default function TeacherForm() {
   const validate = (data) => {
     const errors = {};
 
-    if (!data.first_name) errors.first_name = "Nombre requerido";
-    if (!data.last_name) errors.last_name = "Apellido requerido";
-    if (!data.dni) errors.dni = "DNI requerido";
-    if (!data.phone) errors.phone = "Teléfono requerido";
+    if (!isEdit) {
+      if (!data.first_name) errors.first_name = "Nombre requerido";
+      if (!data.last_name) errors.last_name = "Apellido requerido";
+      if (!data.dni) errors.dni = "DNI requerido";
+      if (!data.phone) errors.phone = "Teléfono requerido";
+    }
 
     return errors;
   };
@@ -29,16 +31,23 @@ export default function TeacherForm() {
     success,
   } = useForm(
     {
-      first_name: "",
-      last_name: "",
-      dni: "",
-      phone: "",
+      first_name: initialData.first_name || "",
+      last_name: initialData.last_name || "",
+      dni: initialData.dni || "",
+      phone: initialData.phone || "",
     },
     validate
   );
 
+  const endpoint = isEdit
+    ? `/teachers/${initialData.id}`
+    : "/teachers";
+
+  const method = isEdit ? "PUT" : "POST";
+
   return (
-    <form onSubmit={(e) => handleSubmit(e, "/teachers")}>
+    <form onSubmit={(e) => handleSubmit(e, endpoint, method)}>
+      
       <Input
         label="Nombre"
         name="first_name"
@@ -76,11 +85,17 @@ export default function TeacherForm() {
         hint={errors.phone}
       />
 
-      <SubmitButton loading={loading} text="Guardar Docente" />
+      <SubmitButton
+        loading={loading}
+        text={isEdit ? "Actualizar Docente" : "Crear Docente"}
+      />
 
       {error && <p className="text-red-500">{error}</p>}
+
       {success && (
-        <p className="text-green-500">Guardado correctamente</p>
+        <p className="text-green-500">
+          {isEdit ? "Actualizado correctamente" : "Creado correctamente"}
+        </p>
       )}
     </form>
   );

@@ -3,7 +3,7 @@ import Input from "../components/form/Input";
 import SubmitButton from "../components/form/SubmitButton";
 import { isAdmin } from "../utils/auth";
 
-export default function TutorForm() {
+export default function TutorForm({ initialData = {}, isEdit = false }) {
   if (!isAdmin()) {
     return <p className="text-red-500">No autorizado</p>;
   }
@@ -11,10 +11,12 @@ export default function TutorForm() {
   const validate = (data) => {
     const errors = {};
 
-    if (!data.first_name) errors.first_name = "Nombre requerido";
-    if (!data.last_name) errors.last_name = "Apellido requerido";
-    if (!data.phone) errors.phone = "Teléfono requerido";
-    if (!data.dni) errors.dni = "DNI requerido";
+    if (!isEdit) {
+      if (!data.first_name) errors.first_name = "Nombre requerido";
+      if (!data.last_name) errors.last_name = "Apellido requerido";
+      if (!data.phone) errors.phone = "Teléfono requerido";
+      if (!data.dni) errors.dni = "DNI requerido";
+    }
 
     return errors;
   };
@@ -29,16 +31,23 @@ export default function TutorForm() {
     success,
   } = useForm(
     {
-      first_name: "",
-      last_name: "",
-      phone: "",
-      dni: "",
+      first_name: initialData.first_name || "",
+      last_name: initialData.last_name || "",
+      phone: initialData.phone || "",
+      dni: initialData.dni || "",
     },
     validate
   );
 
+  const endpoint = isEdit
+    ? `/tutors/${initialData.id}`
+    : "/tutors";
+
+  const method = isEdit ? "PUT" : "POST";
+
   return (
-    <form onSubmit={(e) => handleSubmit(e, "/teachers")}>
+    <form onSubmit={(e) => handleSubmit(e, endpoint, method)}>
+      
       <Input
         label="Nombre"
         name="first_name"
@@ -58,15 +67,6 @@ export default function TutorForm() {
       />
 
       <Input
-        label="Teléfono"
-        name="phone"
-        value={formData.phone}
-        onChange={handleChange}
-        error={errors.phone}
-        hint={errors.phone}
-      />
-
-      <Input
         label="DNI"
         name="dni"
         type="number"
@@ -76,11 +76,17 @@ export default function TutorForm() {
         hint={errors.dni}
       />
 
-      <SubmitButton loading={loading} text="Guardar Tutor" />
+      <SubmitButton
+        loading={loading}
+        text={isEdit ? "Actualizar Tutor" : "Crear Tutor"}
+      />
 
       {error && <p className="text-red-500">{error}</p>}
+
       {success && (
-        <p className="text-green-500">Guardado correctamente</p>
+        <p className="text-green-500">
+          {isEdit ? "Actualizado correctamente" : "Creado correctamente"}
+        </p>
       )}
     </form>
   );

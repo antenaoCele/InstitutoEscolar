@@ -4,7 +4,7 @@ import SubmitButton from "../components/form/SubmitButton";
 import Select from "../components/form/Select";
 import { isAdmin } from "../utils/auth";
 
-export default function StudentForm() {
+export default function StudentForm({ initialData = {}, isEdit = false }) {
   if (!isAdmin()) {
     return <p className="text-red-500">No autorizado</p>;
   }
@@ -12,13 +12,15 @@ export default function StudentForm() {
   const validate = (data) => {
     const errors = {};
 
-    if (!data.first_name) errors.first_name = "Nombre requerido";
-    if (!data.last_name) errors.last_name = "Apellido requerido";
-    if (!data.dni) errors.dni = "DNI requerido";
-    if (!data.school) errors.school = "Escuela requerida";
-    if (!data.birth_date) errors.birth_date = "Fecha requerida";
-    if (!data.level) errors.level = "Nivel requerido";
-    if (!data.grade) errors.grade = "Grado requerido";
+    if (!isEdit) {
+      if (!data.first_name) errors.first_name = "Nombre requerido";
+      if (!data.last_name) errors.last_name = "Apellido requerido";
+      if (!data.dni) errors.dni = "DNI requerido";
+      if (!data.school) errors.school = "Escuela requerida";
+      if (!data.birth_date) errors.birth_date = "Fecha requerida";
+      if (!data.level) errors.level = "Nivel requerido";
+      if (!data.grade) errors.grade = "Grado requerido";
+    }
 
     return errors;
   };
@@ -33,20 +35,25 @@ export default function StudentForm() {
     success,
   } = useForm(
     {
-      first_name: "",
-      last_name: "",
-      dni: "",
-      school: "",
-      birth_date: "",
-      level: "",
-      grade: "",
+      first_name: initialData.first_name || "",
+      last_name: initialData.last_name || "",
+      dni: initialData.dni || "",
+      school: initialData.school || "",
+      birth_date: initialData.birth_date || "",
+      level: initialData.level || "",
+      grade: initialData.grade || "",
     },
     validate
   );
 
+  const endpoint = isEdit
+    ? `/students/${initialData.id}`
+    : "/students";
+
+  const method = isEdit ? "PUT" : "POST";
+
   return (
-    <form onSubmit={(e) => handleSubmit(e, "/students")}>
-      
+    <form onSubmit={(e) => handleSubmit(e, endpoint, method)}>
       <Input
         label="Nombre"
         name="first_name"
@@ -119,10 +126,17 @@ export default function StudentForm() {
         hint={errors.grade}
       />
 
-      <SubmitButton loading={loading} text="Guardar Alumno" />
+      <SubmitButton
+        loading={loading}
+        text={isEdit ? "Actualizar Alumno" : "Crear Alumno"}
+      />
 
       {error && <p className="text-red-500">{error}</p>}
-      {success && <p className="text-green-500">Guardado correctamente</p>}
+      {success && (
+        <p className="text-green-500">
+          {isEdit ? "Actualizado correctamente" : "Creado correctamente"}
+        </p>
+      )}
     </form>
   );
 }

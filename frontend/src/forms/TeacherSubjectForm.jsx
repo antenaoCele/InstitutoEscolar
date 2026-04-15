@@ -5,7 +5,7 @@ import SubmitButton from "../components/form/SubmitButton";
 import api from "../utils/api";
 import { isAdmin } from "../utils/auth";
 
-export default function TeacherSubjectForm() {
+export default function TeacherSubjectForm({ initialData = {}, isEdit = false }) {
   if (!isAdmin()) {
     return <p className="text-red-500">No autorizado</p>;
   }
@@ -34,8 +34,10 @@ export default function TeacherSubjectForm() {
   const validate = (data) => {
     const errors = {};
 
-    if (!data.teacher_id) errors.teacher_id = "Docente requerido";
-    if (!data.subject_id) errors.subject_id = "Materia requerida";
+    if (!isEdit) {
+      if (!data.teacher_id) errors.teacher_id = "Docente requerido";
+      if (!data.subject_id) errors.subject_id = "Materia requerida";
+    }
 
     return errors;
   };
@@ -50,15 +52,20 @@ export default function TeacherSubjectForm() {
     success,
   } = useForm(
     {
-      teacher_id: "",
-      subject_id: "",
+      teacher_id: initialData.teacher_id || "",
+      subject_id: initialData.subject_id || "",
     },
     validate
   );
 
+  const endpoint = isEdit
+    ? `/teacher_subjects/${initialData.id}`
+    : "/teacher_subjects";
+
+  const method = isEdit ? "PUT" : "POST";
+
   return (
-    <form onSubmit={(e) => handleSubmit(e, "/teacher_subjects")}>
-      
+    <form onSubmit={(e) => handleSubmit(e, endpoint, method)}>
       <Select
         label="Docente"
         name="teacher_id"
@@ -85,10 +92,17 @@ export default function TeacherSubjectForm() {
         hint={errors.subject_id}
       />
 
-      <SubmitButton loading={loading} text="Asignar Materia" />
+      <SubmitButton
+        loading={loading}
+        text={isEdit ? "Actualizar Materia" : "Asignar Materia"}
+      />
 
       {error && <p className="text-red-500">{error}</p>}
-      {success && <p className="text-green-500">Guardado correctamente</p>}
+      {success && (
+        <p className="text-green-500">
+          {isEdit ? "Actualizado correctamente" : "Creado correctamente"}
+        </p>
+      )}
     </form>
   );
 }
