@@ -4,7 +4,9 @@ import Input from "../components/form/Input";
 import Select from "../components/form/Select";
 import SubmitButton from "../components/form/SubmitButton";
 import { isAdmin } from "../utils/auth";
-import api from "../utils/api";
+
+import { teacherService } from "../services/teacher.service";
+import { teacherLiquidationService } from "../services/teacherLiquidation.service";
 
 export default function TeacherLiquidationForm({
   initialData = {},
@@ -17,17 +19,17 @@ export default function TeacherLiquidationForm({
   const [teachers, setTeachers] = useState([]);
 
   useEffect(() => {
+    const fetchTeachers = async () => {
+      try {
+        const res = await teacherService.getAll();
+        setTeachers(res.data);
+      } catch (err) {
+        console.error(err);
+      }
+    };
+
     fetchTeachers();
   }, []);
-
-  const fetchTeachers = async () => {
-    try {
-      const res = await api.get("/teachers");
-      setTeachers(res.data);
-    } catch (err) {
-      console.error(err);
-    }
-  };
 
   const validate = (data) => {
     const errors = {};
@@ -53,7 +55,6 @@ export default function TeacherLiquidationForm({
     formData,
     errors,
     handleChange,
-    handleSubmit,
     loading,
     error,
     success,
@@ -67,15 +68,25 @@ export default function TeacherLiquidationForm({
     validate
   );
 
-  const endpoint = isEdit
-    ? `/teacher_liquidations/${initialData.id}`
-    : "/teacher_liquidations";
+  const handleSubmitCustom = async (e) => {
+    e.preventDefault();
 
-  const method = isEdit ? "PUT" : "POST";
+    const validationErrors = validate(formData);
+    if (Object.keys(validationErrors).length > 0) return;
+
+    try {
+      if (isEdit) {
+        await teacherLiquidationService.update(initialData.id, formData);
+      } else {
+        await teacherLiquidationService.create(formData);
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
 
   return (
-    <form onSubmit={(e) => handleSubmit(e, endpoint, method)}>
-      
+    <form onSubmit={handleSubmitCustom}>
       <Select
         label="Docente"
         name="teacher_id"

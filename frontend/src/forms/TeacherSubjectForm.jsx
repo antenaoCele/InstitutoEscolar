@@ -2,8 +2,11 @@ import { useEffect, useState } from "react";
 import useForm from "../hooks/useForm";
 import Select from "../components/form/Select";
 import SubmitButton from "../components/form/SubmitButton";
-import api from "../utils/api";
 import { isAdmin } from "../utils/auth";
+
+import { teacherService } from "../services/teacher.service";
+import { subjectService } from "../services/subject.service";
+import { teacherSubjectService } from "../services/teacherSubject.service";
 
 export default function TeacherSubjectForm({ initialData = {}, isEdit = false }) {
   if (!isAdmin()) {
@@ -17,8 +20,8 @@ export default function TeacherSubjectForm({ initialData = {}, isEdit = false })
     const fetchData = async () => {
       try {
         const [t, s] = await Promise.all([
-          api.get("/teachers"),
-          api.get("/subjects"),
+          teacherService.getAll(),
+          subjectService.getAll(),
         ]);
 
         setTeachers(t.data);
@@ -46,7 +49,6 @@ export default function TeacherSubjectForm({ initialData = {}, isEdit = false })
     formData,
     errors,
     handleChange,
-    handleSubmit,
     loading,
     error,
     success,
@@ -58,14 +60,25 @@ export default function TeacherSubjectForm({ initialData = {}, isEdit = false })
     validate
   );
 
-  const endpoint = isEdit
-    ? `/teacher_subjects/${initialData.id}`
-    : "/teacher_subjects";
+  const handleSubmitCustom = async (e) => {
+    e.preventDefault();
 
-  const method = isEdit ? "PUT" : "POST";
+    const validationErrors = validate(formData);
+    if (Object.keys(validationErrors).length > 0) return;
+
+    try {
+      if (isEdit) {
+        await teacherSubjectService.update(initialData.id, formData);
+      } else {
+        await teacherSubjectService.create(formData);
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
 
   return (
-    <form onSubmit={(e) => handleSubmit(e, endpoint, method)}>
+    <form onSubmit={handleSubmitCustom}>
       <Select
         label="Docente"
         name="teacher_id"
