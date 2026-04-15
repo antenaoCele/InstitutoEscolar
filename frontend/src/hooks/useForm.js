@@ -1,73 +1,69 @@
-import { useState } from "react";
+import useForm from "../hooks/useForm";
+import Input from "../components/form/Input";
+import SubmitButton from "../components/form/SubmitButton";
+import { isAdmin } from "../utils/auth";
+import { planService } from "../services/plan.service";
 
-export default function useForm(initialValues, validate) {
-  const [formData, setFormData] = useState(initialValues);
-  const [errors, setErrors] = useState({});
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
-  const [success, setSuccess] = useState(false);
+export default function PlanForm({ initialData = {}, isEdit = false }) {
+  if (!isAdmin()) {
+    return <p className="text-red-500">No autorizado</p>;
+  }
 
-  const handleChange = (e) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value,
-    });
+  const validate = (data) => {
+    const errors = {};
 
-    setErrors({
-      ...errors,
-      [e.target.name]: null,
-    });
-  };
-
-  const handleSubmit = async (e, submitFn) => {
-    e.preventDefault();
-
-    if (validate) {
-      const validationErrors = validate(formData);
-      if (Object.keys(validationErrors).length > 0) {
-        setErrors(validationErrors);
-        return;
-      }
+    if (!isEdit) {
+      if (!data.name) errors.name = "Nombre del plan requerido";
     }
 
-    setLoading(true);
-    setError(null);
-    setSuccess(false);
-
-    try {
-      const res = await submitFn(formData);
-
-      if (!res.success) {
-        if (res.errors) {
-          const backendErrors = {};
-          res.errors.forEach((err) => {
-            backendErrors[err.path] = err.msg;
-          });
-          setErrors(backendErrors);
-        } else {
-          setError(res.message);
-        }
-        return;
-      }
-
-      setSuccess(true);
-      setFormData(initialValues);
-    } catch (err) {
-      console.error(err);
-      setError("Error de conexión");
-    } finally {
-      setLoading(false);
-    }
+    return errors;
   };
 
-  return {
+  const {
     formData,
-    setFormData,
     errors,
     handleChange,
     handleSubmit,
     loading,
     error,
     success,
+  } = useForm(
+    {
+      name: initialData.name || "",
+    },
+    validate,
+  );
+
+  const submitFn = async (data) => {
+    if (isEdit) {
+      return await planService.update(initialData.id, data);
+    } else {
+      return await planService.create(data);
+    }
   };
+
+  return (
+    <form onSubmit={(e) => handleSubmit(e, submitFn)}>
+      <Input
+        label="Plan"
+        name="name"
+        value={formData.name}
+        onChange={handleChange}
+        error={errors.name}
+        hint={errors.name}
+      />
+
+      <SubmitButton
+        loading={loading}
+        text={isEdit ? "Actualizar Plan" : "Crear Plan"}
+      />
+
+      {error && <p className="text-red-500">{error}</p>}
+      {success && (
+        <p className="text-green-500">
+          {isEdit ? "Actualizado correctamente" : "Creado correctamente"}
+        </p>
+      )}
+    </form>
+  );
 }
