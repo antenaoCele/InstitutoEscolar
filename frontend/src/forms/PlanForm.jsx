@@ -2,14 +2,13 @@ import useForm from "../hooks/useForm";
 import Input from "../components/form/Input";
 import SubmitButton from "../components/form/SubmitButton";
 import { isAdmin } from "../utils/auth";
-// No se debe importar el modal!
 
 import { planService } from "../services/plan.service";
 
 export default function PlanForm({
   initialData = {},
   isEdit = false,
-  onSuccess, // Rama, se agregó esto
+  onSuccess,
 }) {
   if (!isAdmin()) {
     return <p className="text-red-500">No autorizado</p>;
@@ -45,7 +44,6 @@ export default function PlanForm({
       ? await planService.update(initialData.id, data)
       : await planService.create(data);
 
-    // Rama, se agregó esto. Es para cerrar el modal automáticamente...
     if (res.success && onSuccess) {
       onSuccess();
     }
@@ -55,7 +53,6 @@ export default function PlanForm({
 
   return (
     <form onSubmit={(e) => handleSubmit(e, submitFn)}>
-      
       <h2 className="text-lg font-semibold mb-4">
         {isEdit ? "Editar Plan" : "Nuevo Plan"}
       </h2>

@@ -6,24 +6,40 @@ import { isAdmin } from "../utils/auth";
 
 import { studentService } from "../services/student.service";
 
-export default function StudentForm({ initialData = {}, isEdit = false,  onSuccess, }) {
+export default function StudentForm({ 
+  initialData = {}, 
+  isEdit = false,  
+  onSuccess, 
+}) {
   if (!isAdmin()) {
     return <p className="text-red-500">No autorizado</p>;
   }
 
   const validate = (data) => {
     const errors = {};
-
-    if (!isEdit) {
-      if (!data.first_name) errors.first_name = "Nombre requerido";
-      if (!data.last_name) errors.last_name = "Apellido requerido";
-      if (!data.dni) errors.dni = "DNI requerido";
-      if (!data.school) errors.school = "Escuela requerida";
-      if (!data.birth_date) errors.birth_date = "Fecha requerida";
-      if (!data.level) errors.level = "Nivel requerido";
-      if (!data.grade) errors.grade = "Grado requerido";
-    }
-
+  
+      if (!data.first_name) {
+        errors.first_name = "Nombre requerido";
+      } 
+      if (!data.last_name) {
+        errors.last_name = "Apellido requerido";
+      }
+      if (!data.dni) {
+        errors.dni = "DNI requerido";
+      }
+      if (!data.school) {
+        errors.school = "Escuela requerida";
+      }
+      if (!data.birth_date) {
+        errors.birth_date = "Fecha requerida";
+      }
+      if (!data.level) {
+        errors.level = "Nivel requerido";
+      }
+      if (!data.grade) {
+        errors.grade = "Grado requerido";
+      }
+   
     return errors;
   };
 
@@ -49,19 +65,25 @@ export default function StudentForm({ initialData = {}, isEdit = false,  onSucce
   );
 
   const submitFn = async (data) => {
-    if (isEdit) {
-      return await studentService.update(initialData.id, data);
-    } else {
-      return await studentService.create(data);
-    }
-  };
+    const res = isEdit
+      ? await studentService.update(initialData.id, data)
+      : await studentService.create(data);
 
-      if (res.success && onSuccess) {
+    if (res.success && onSuccess) {
       onSuccess();
     }
 
+    return res;
+  };
+
+  
   return (
     <form onSubmit={(e) => handleSubmit(e, submitFn)}>
+
+      <h2 className="text-lg font-semibold mb-4">
+        {isEdit ? "Editar Alumno" : "Nuevo Alumno"}
+      </h2>
+
       <Input
         label="Nombre"
         name="first_name"
