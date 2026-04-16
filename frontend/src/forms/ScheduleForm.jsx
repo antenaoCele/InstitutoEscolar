@@ -1,18 +1,44 @@
+import { useEffect, useState } from "react";
 import useForm from "../hooks/useForm";
-import Input from "../components/form/Input";
 import Select from "../components/form/Select";
-import SubmitButton from "../components/form/SubmitButton";
+import Input from "../components/form/Input";
+import Button from "../components/ui/Button";
+import { isAdmin } from "../utils/auth";
 
-const validateSchedule = (data) => {
-  const errors = {};
-  if (!data.teacher_id) errors.teacher_id = "Requerido";
-  if (!data.start_time) errors.start_time = "Requerido";
-  if (!data.day) errors.day = "Requerido";
-  if (!data.classroom) errors.classroom = "Requerido";
-  return errors;
-};
+import { teacherService } from "../services/teacher.service";
+import { ScheduleService } from "../services/schedule.service";
 
-export default function ScheduleForm() {
+export default function ScheduleForm({ initialData = {}, isEdit = false }) {
+  if (!isAdmin()) {
+    return <p className="text-red-500">No autorizado</p>;
+  }
+
+  const [teachers, setTeachers] = useState([]);
+
+  useEffect(() => {
+    const fetchTeachers = async () => {
+      try {
+        const res = await teacherService.getAll();
+        setTeachers(res.data);
+      } catch (err) {
+        console.error(err);
+      }
+    };
+
+    fetchTeachers();
+  }, []);
+
+  const validate = (data) => {
+    const errors = {};
+
+    if (!data.teacher_id) errors.teacher_id = "Profesor requerido";
+    if (!data.start_time) errors.start_time = "Hora requerida";
+    if (!data.day) errors.day = "Día requerido";
+    if (!data.classroom) errors.classroom = "Aula requerida";
+
+    return errors;
+  };
+
   const {
     formData,
     errors,
@@ -22,30 +48,42 @@ export default function ScheduleForm() {
     error,
     success,
   } = useForm(
-    { teacher_id: "", start_time: "", day: "", classroom: "" },
-    validateSchedule
+    {
+      teacher_id: initialData.teacher_id || "",
+      start_time: initialData.start_time || "",
+      day: initialData.day || "",
+      classroom: initialData.classroom || "",
+    },
+    validate
   );
 
-  const days = [
-    { id: "lunes", name: "Lunes" },
-    { id: "martes", name: "Martes" },
-    { id: "miércoles", name: "Miércoles" },
-  ];
+  const submitFn = async (data) => {
+    if (isEdit) {
+      return await ScheduleService.update(initialData.id, data);
+    } else {
+      return await ScheduleService.create(data);
+    }
+  };
 
   return (
-    <form onSubmit={(e) => handleSubmit(e, "/schedules")}>
-
-      <Input
-        label="Teacher ID"
+    <form onSubmit={(e) => handleSubmit(e, submitFn)}>
+  
+      <Select
+        label="Profesor"
         name="teacher_id"
         value={formData.teacher_id}
         onChange={handleChange}
+        options={teachers.map((t) => ({
+          value: t.id,
+          label: `${t.first_name} ${t.last_name}`,
+        }))}
         error={errors.teacher_id}
         hint={errors.teacher_id}
       />
 
+      
       <Input
-        label="Hora Inicio"
+        label="Hora inicio"
         name="start_time"
         type="time"
         value={formData.start_time}
@@ -54,15 +92,25 @@ export default function ScheduleForm() {
         hint={errors.start_time}
       />
 
+      
       <Select
         label="Día"
         name="day"
         value={formData.day}
         onChange={handleChange}
-        options={days}
+        options={[
+          { value: "lunes", label: "Lunes" },
+          { value: "martes", label: "Martes" },
+          { value: "miercoles", label: "Miércoles" },
+          { value: "jueves", label: "Jueves" },
+          { value: "viernes", label: "Viernes" },
+          { value: "sabado", label: "Sábado" },
+        ]}
         error={errors.day}
+        hint={errors.day}
       />
 
+      
       <Input
         label="Aula"
         name="classroom"
@@ -72,10 +120,19 @@ export default function ScheduleForm() {
         hint={errors.classroom}
       />
 
-      <SubmitButton loading={loading} text="Crear Horario" />
+      <Button>
+        loading={loading}
+        text={isEdit ? "Actualizar Horario" : "Crear Horario"}
+      </Button>
+        
+      
 
       {error && <p className="text-red-500">{error}</p>}
-      {success && <p className="text-green-500">Horario creado</p>}
+      {success && (
+        <p className="text-green-500">
+          {isEdit ? "Actualizado correctamente" : "Creado correctamente"}
+        </p>
+      )}
     </form>
   );
 }

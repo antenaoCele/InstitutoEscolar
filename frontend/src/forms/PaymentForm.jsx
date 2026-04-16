@@ -1,18 +1,50 @@
+import { useEffect, useState } from "react";
 import useForm from "../hooks/useForm";
-import Input from "../components/form/Input";
 import Select from "../components/form/Select";
-import SubmitButton from "../components/form/SubmitButton";
+import Button from "../components/ui/Button";
+import { isAdmin } from "../utils/auth";
 
-const validatePayment = (data) => {
-  const errors = {};
-  if (!data.student_plan_id) errors.student_plan_id = "Requerido";
-  if (!data.amount) errors.amount = "Requerido";
-  if (!data.payment_date) errors.payment_date = "Requerido";
-  if (!data.payment_method) errors.payment_method = "Requerido";
-  return errors;
-};
+import { studentPlanService } from "../services/studentPlan.service";
+import { PaymentService } from "../services/payment.service";
 
-export default function PaymentForm() {
+export default function PaymentForm({ initialData = {}, isEdit = false }) {
+  if (!isAdmin()) {
+    return <p className="text-red-500">No autorizado</p>;
+  }
+
+  const [studentPlans, setStudentPlans] = useState([]);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const res = await studentPlanService.getAll();
+        setStudentPlans(res.data);
+      } catch (err) {
+        console.error(err);
+      }
+    };
+
+    fetchData();
+  }, []);
+
+  const validate = (data) => {
+    const errors = {};
+
+    if (!data.student_plan_id)
+      errors.student_plan_id = "Plan requerido";
+
+    if (!data.amount)
+      errors.amount = "Monto requerido";
+
+    if (!data.payment_date)
+      errors.payment_date = "Fecha requerida";
+
+    if (!data.payment_method)
+      errors.payment_method = "Método requerido";
+
+    return errors;
+  };
+
   const {
     formData,
     errors,
@@ -22,61 +54,101 @@ export default function PaymentForm() {
     error,
     success,
   } = useForm(
-    { student_plan_id: "", amount: "", payment_date: "", payment_method: "" },
-    validatePayment
+    {
+      student_plan_id: initialData.student_plan_id || "",
+      amount: initialData.amount || "",
+      payment_date: initialData.payment_date || "",
+      payment_method: initialData.payment_method || "",
+    },
+    validate
   );
 
-  const methods = [
-    { id: "efectivo", name: "Efectivo" },
-    { id: "transferencia", name: "Transferencia" },
-    { id: "tarjeta", name: "Tarjeta" },
-  ];
+  const submitFn = async (data) => {
+    if (isEdit) {
+      return await PaymentService.update(initialData.id, data);
+    } else {
+      return await PaymentService.create(data);
+    }
+  };
 
   return (
-    <form onSubmit={(e) => handleSubmit(e, "/payments")}>
-
-      <Input
-        label="Student Plan ID"
+    <form onSubmit={(e) => handleSubmit(e, submitFn)}>
+      
+      <Select
+        label="Plan del alumno"
         name="student_plan_id"
         value={formData.student_plan_id}
         onChange={handleChange}
+        options={studentPlans.map((sp) => ({
+          value: sp.id,
+          label: `Alumno ${sp.student_id} - Profe ${sp.teacher_id}`,
+        }))}
         error={errors.student_plan_id}
         hint={errors.student_plan_id}
       />
 
-      <Input
-        label="Monto"
-        name="amount"
-        type="number"
-        value={formData.amount}
-        onChange={handleChange}
-        error={errors.amount}
-        hint={errors.amount}
-      />
+     
+      <div className="mb-3">
+        <label className="block text-sm font-medium mb-1">Monto</label>
+        <input
+          type="number"
+          name="amount"
+          value={formData.amount}
+          onChange={handleChange}
+          className="w-full border rounded-lg p-2"
+        />
+        {errors.amount && (
+          <p className="text-xs text-red-500">{errors.amount}</p>
+        )}
+      </div>
 
-      <Input
-        label="Fecha"
-        name="payment_date"
-        type="date"
-        value={formData.payment_date}
-        onChange={handleChange}
-        error={errors.payment_date}
-        hint={errors.payment_date}
-      />
+      
+      <div className="mb-3">
+        <label className="block text-sm font-medium mb-1">
+          Fecha de pago
+        </label>
+        <input
+          type="date"
+          name="payment_date"
+          value={formData.payment_date}
+          onChange={handleChange}
+          className="w-full border rounded-lg p-2"
+        />
+        {errors.payment_date && (
+          <p className="text-xs text-red-500">
+            {errors.payment_date}
+          </p>
+        )}
+      </div>
 
+      
       <Select
-        label="Método de Pago"
+        label="Método de pago"
         name="payment_method"
         value={formData.payment_method}
         onChange={handleChange}
-        options={methods}
+        options={[
+          { value: "cash", label: "Efectivo" },
+          { value: "transfer", label: "Transferencia" },
+          { value: "card", label: "Tarjeta" },
+        ]}
         error={errors.payment_method}
+        hint={errors.payment_method}
       />
 
-      <SubmitButton loading={loading} text="Registrar Pago" />
+      <Button>
+        loading={loading}
+        text={isEdit ? "Actualizar Pago" : "Registrar Pago"}
+      </Button>
+        
+    
 
       {error && <p className="text-red-500">{error}</p>}
-      {success && <p className="text-green-500">Pago registrado</p>}
+      {success && (
+        <p className="text-green-500">
+          {isEdit ? "Actualizado correctamente" : "Creado correctamente"}
+        </p>
+      )}
     </form>
   );
 }
