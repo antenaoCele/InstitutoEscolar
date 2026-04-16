@@ -1,6 +1,6 @@
 export default function Button({
   children,
-  type = "button", // 🔥 clave para forms
+  type = "button",
   size = "md",
   variant = "primary",
   startIcon,
@@ -8,7 +8,6 @@ export default function Button({
   onClick,
   className = "",
   disabled = false,
-  loading = false, // 🔥 reemplaza SubmitButton
 }) {
   // Sizes
   const sizeClasses = {
@@ -28,23 +27,20 @@ export default function Button({
     <button
       type={type}
       onClick={onClick}
-      disabled={disabled || loading}
-      className={`inline-flex items-center justify-center gap-2 rounded-lg transition 
-      ${sizeClasses[size]} 
-      ${variantClasses[variant]} 
-      ${disabled || loading ? "opacity-50 cursor-not-allowed" : ""} 
-      ${className}`}
+      disabled={disabled}
+      className={`inline-flex items-center justify-center gap-2 rounded-lg transition
+        ${sizeClasses[size]}
+        ${variantClasses[variant]}
+        ${disabled ? "opacity-50 cursor-not-allowed" : ""}
+        ${className}`}
     >
-      {/* Icono izquierdo */}
-      {startIcon && !loading && (
+      {startIcon && (
         <span className="flex items-center">{startIcon}</span>
       )}
 
-      {/* Texto */}
-      {loading ? "Guardando..." : children}
+      {children}
 
-      {/* Icono derecho */}
-      {endIcon && !loading && (
+      {endIcon && (
         <span className="flex items-center">{endIcon}</span>
       )}
     </button>
