@@ -45,7 +45,6 @@ export default function PlanForm({
       ? await planService.update(initialData.id, data)
       : await planService.create(data);
 
-
     // Rama, se agregó esto. Es para cerrar el modal automáticamente...
     if (res.success && onSuccess) {
       onSuccess();

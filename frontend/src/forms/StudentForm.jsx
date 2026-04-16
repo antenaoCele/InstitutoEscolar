@@ -3,9 +3,10 @@ import Input from "../components/form/Input";
 import SubmitButton from "../components/form/SubmitButton";
 import Select from "../components/form/Select";
 import { isAdmin } from "../utils/auth";
+
 import { studentService } from "../services/student.service";
 
-export default function StudentForm({ initialData = {}, isEdit = false }) {
+export default function StudentForm({ initialData = {}, isEdit = false,  onSuccess, }) {
   if (!isAdmin()) {
     return <p className="text-red-500">No autorizado</p>;
   }
@@ -54,6 +55,10 @@ export default function StudentForm({ initialData = {}, isEdit = false }) {
       return await studentService.create(data);
     }
   };
+
+      if (res.success && onSuccess) {
+      onSuccess();
+    }
 
   return (
     <form onSubmit={(e) => handleSubmit(e, submitFn)}>

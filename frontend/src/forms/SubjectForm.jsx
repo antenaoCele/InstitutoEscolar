@@ -3,9 +3,9 @@ import Input from "../components/form/Input";
 import SubmitButton from "../components/form/SubmitButton";
 import { isAdmin } from "../utils/auth";
 
-import { planService, subjectService } from "../services/subject.service";
+import { subjectService } from "../services/subject.service";
 
-export default function SubjectForm({ initialData = {}, isEdit = false }) {
+export default function SubjectForm({ initialData = {}, isEdit = false, onSuccess,}) {
   if (!isAdmin()) {
     return <p className="text-red-500">No autorizado</p>;
   }
@@ -42,6 +42,10 @@ export default function SubjectForm({ initialData = {}, isEdit = false }) {
       return await subjectService.create(data);
     }
   };
+
+    if (res.success && onSuccess) {
+    onSuccess();
+    }
 
   return (
     <form onSubmit={(e) => handleSubmit(e, submitFn)}>
