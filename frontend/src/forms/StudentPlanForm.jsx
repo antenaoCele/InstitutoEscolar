@@ -10,7 +10,11 @@ import { planService } from "../services/plan.service";
 import { teacherService } from "../services/teacher.service";
 import { studentPlanService } from "../services/studentPlan.service";
 
-export default function StudentPlanForm({ initialData = {}, isEdit = false }) {
+export default function StudentPlanForm({
+  initialData = {},
+  isEdit = false,
+  onSuccess,
+}) {
   if (!isAdmin()) {
     return <p className="text-red-500">No autorizado</p>;
   }
@@ -18,8 +22,11 @@ export default function StudentPlanForm({ initialData = {}, isEdit = false }) {
   const [students, setStudents] = useState([]);
   const [plans, setPlans] = useState([]);
   const [teachers, setTeachers] = useState([]);
+  const [loadingData, setLoadingData] = useState(true);
 
   useEffect(() => {
+    let mounted = true;
+
     const fetchData = async () => {
       try {
         const [s, p, t] = await Promise.all([
@@ -28,26 +35,34 @@ export default function StudentPlanForm({ initialData = {}, isEdit = false }) {
           teacherService.getAll(),
         ]);
 
-        setStudents(s.data);
-        setPlans(p.data);
-        setTeachers(t.data);
+        if (mounted) {
+          setStudents(s.data);
+          setPlans(p.data);
+          setTeachers(t.data);
+        }
       } catch (err) {
         console.error(err);
+      } finally {
+        if (mounted) setLoadingData(false);
       }
     };
 
     fetchData();
+
+    return () => {
+      mounted = false;
+    };
   }, []);
 
+  // 🔥 VALIDACIÓN CORRECTA (sin isEdit)
   const validate = (data) => {
     const errors = {};
 
-    if (!isEdit) {
-      if (!data.student_id) errors.student_id = "Alumno requerido";
-      if (!data.plan_id) errors.plan_id = "Plan requerido";
-      if (!data.teacher_id) errors.teacher_id = "Docente requerido";
-      if (!data.start_date) errors.start_date = "Fecha de inicio requerida";
-    }
+    if (!data.student_id) errors.student_id = "Alumno requerido";
+    if (!data.plan_id) errors.plan_id = "Plan requerido";
+    if (!data.teacher_id) errors.teacher_id = "Docente requerido";
+    if (!data.start_date)
+      errors.start_date = "Fecha de inicio requerida";
 
     return errors;
   };
@@ -72,15 +87,29 @@ export default function StudentPlanForm({ initialData = {}, isEdit = false }) {
   );
 
   const submitFn = async (data) => {
-    if (isEdit) {
-      return await studentPlanService.update(initialData.id, data);
-    } else {
-      return await studentPlanService.create(data);
+    const res = isEdit
+      ? await studentPlanService.update(initialData.id, data)
+      : await studentPlanService.create(data);
+
+    if (res.success && onSuccess) {
+      onSuccess();
     }
+
+    return res;
   };
+
+  if (loadingData) {
+    return <p className="text-gray-500">Cargando datos...</p>;
+  }
 
   return (
     <form onSubmit={(e) => handleSubmit(e, submitFn)}>
+      <h2 className="text-lg font-semibold mb-4">
+        {isEdit
+          ? "Editar Asignación de Plan"
+          : "Nueva asignación de Plan"}
+      </h2>
+
       <Select
         label="Alumno"
         name="student_id"
@@ -140,13 +169,20 @@ export default function StudentPlanForm({ initialData = {}, isEdit = false }) {
 
       <SubmitButton
         loading={loading}
-        text={isEdit ? "Actualizar Plan del Alumno" : "Asignar Plan"}
+        text={
+          isEdit
+            ? "Actualizar Plan del Alumno"
+            : "Asignar Plan"
+        }
       />
 
-      {error && <p className="text-red-500">{error}</p>}
+      {error && <p className="text-red-500 mt-2">{error}</p>}
+
       {success && (
-        <p className="text-green-500">
-          {isEdit ? "Actualizado correctamente" : "Creado correctamente"}
+        <p className="text-green-500 mt-2">
+          {isEdit
+            ? "Actualizado correctamente"
+            : "Creado correctamente"}
         </p>
       )}
     </form>

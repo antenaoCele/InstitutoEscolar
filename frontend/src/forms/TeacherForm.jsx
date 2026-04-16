@@ -2,9 +2,13 @@ import useForm from "../hooks/useForm";
 import Input from "../components/form/Input";
 import SubmitButton from "../components/form/SubmitButton";
 import { isAdmin } from "../utils/auth";
+
 import { teacherService } from "../services/teacher.service";
 
-export default function TeacherForm({ initialData = {}, isEdit = false }) {
+export default function TeacherForm({ 
+  initialData = {}, 
+  isEdit = false,
+  onSuccess, }) {
   if (!isAdmin()) {
     return <p className="text-red-500">No autorizado</p>;
   }
@@ -41,15 +45,23 @@ export default function TeacherForm({ initialData = {}, isEdit = false }) {
   );
 
   const submitFn = async (data) => {
-    if (isEdit) {
-      return await teacherService.update(initialData.id, data);
-    } else {
-      return await teacherService.create(data);
+    const res = isEdit
+      ? await teacherService.update(initialData.id, data)
+      : await teacherService.create(data);
+
+    if (res.success && onSuccess) {
+      onSuccess();
     }
+
+    return res;
   };
 
   return (
     <form onSubmit={(e) => handleSubmit(e, submitFn)}>
+      <h2 className="text-lg font-semibold mb-4">
+        {isEdit ? "Editar Profesor" : "Nuevo Profesor"}
+      </h2>
+
       <Input
         label="Nombre"
         name="first_name"

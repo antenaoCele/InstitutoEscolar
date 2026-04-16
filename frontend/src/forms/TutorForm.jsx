@@ -4,7 +4,10 @@ import SubmitButton from "../components/form/SubmitButton";
 import { isAdmin } from "../utils/auth";
 import { teacherService } from "../services/tutor.service";
 
-export default function TutorForm({ initialData = {}, isEdit = false }) {
+export default function TutorForm({ 
+  initialData = {}, 
+  isEdit = false,
+  onSuccess, }) {
   if (!isAdmin()) {
     return <p className="text-red-500">No autorizado</p>;
   }
