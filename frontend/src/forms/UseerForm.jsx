@@ -2,22 +2,38 @@ import useForm from "../hooks/useForm";
 import Input from "../components/form/Input";
 import Select from "../components/form/Select";
 import SubmitButton from "../components/form/SubmitButton";
-import { isAdmin, getUser } from "../utils/auth";
+import { isAdmin } from "../utils/auth";
 
 import { userService } from "../services/user.service";
 
-export default function UserForm({ initialData = {}, isEdit = false }) {
-  const user = getUser();
+export default function UserForm({
+  initialData = {},
+  isEdit = false,
+  onSuccess,
+}) {
 
   const validate = (data) => {
     const errors = {};
 
-    if (!isEdit) {
-      if (!data.first_name) errors.first_name = "Nombre requerido";
-      if (!data.last_name) errors.last_name = "Apellido requerido";
-      if (!data.username) errors.username = "Username requerido";
-      if (!data.password) errors.password = "Contraseña requerida";
-      if (isAdmin() && !data.role) errors.role = "Rol requerido";
+    if (!data.first_name) {
+      errors.first_name = "Nombre requerido";
+    }
+
+    if (!data.last_name) {
+      errors.last_name = "Apellido requerido";
+    }
+
+    if (!data.username) {
+      errors.username = "Username requerido";
+    }
+
+    // ⚠️ SOLO obligatorio en create
+    if (!isEdit && !data.password) {
+      errors.password = "Contraseña requerida";
+    }
+
+    if (isAdmin() && !data.role) {
+      errors.role = "Rol requerido";
     }
 
     return errors;
@@ -36,35 +52,43 @@ export default function UserForm({ initialData = {}, isEdit = false }) {
       first_name: initialData.first_name || "",
       last_name: initialData.last_name || "",
       username: initialData.username || "",
-      password: "", // ⚠️ nunca precargar password
+      password: "", // nunca precargar
       role: initialData.role || "DOCENTE",
     },
     validate
   );
 
   const submitFn = async (data) => {
-    // ⚠️ si está editando y no manda password → no lo enviamos
     const payload = { ...data };
 
+    // ⚠️ no mandar password vacío en edición
     if (isEdit && !payload.password) {
       delete payload.password;
     }
 
-    // ⚠️ si NO es admin → no puede cambiar rol
+    // ⚠️ no admin no puede tocar rol
     if (!isAdmin()) {
       delete payload.role;
     }
 
+    let res;
+
     if (isEdit) {
-      return await userService.update(initialData.id, payload);
+      res = await userService.update(initialData.id, payload);
+    } else {
+      res = await userService.create(payload);
     }
 
-    return await userService.create(payload);
+    if (res.success && onSuccess) {
+      onSuccess();
+    }
+
+    return res;
   };
 
   return (
     <form onSubmit={(e) => handleSubmit(e, submitFn)}>
-      
+
       <Input
         label="Nombre"
         name="first_name"
