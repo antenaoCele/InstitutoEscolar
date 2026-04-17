@@ -8,7 +8,10 @@ import { studentService } from "../services/student.service";
 import { tutorService } from "../services/tutor.service";
 import { studentTutorService } from "../services/studentTutor.service";
 
-export default function StudentTutorForm({ initialData = {}, isEdit = false }) {
+export default function StudentTutorForm({ 
+  initialData = {}, 
+  isEdit = false,
+  onSuccess, }) {
   if (!isAdmin()) {
     return <p className="text-red-500">No autorizado</p>;
   }
@@ -17,30 +20,39 @@ export default function StudentTutorForm({ initialData = {}, isEdit = false }) {
   const [tutors, setTutors] = useState([]);
 
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const [s, t] = await Promise.all([
-          studentService.getAll(),
-          tutorService.getAll(),
-        ]);
+    let mounted = true;
 
-        setStudents(s.data);
-        setTutors(t.data);
+    const fetchData = async () => {
+          try {
+            const [s, t] = await Promise.all([
+              studentService.getAll(),
+              tutorService.getAll(),
+            ]);
+
+            if (mounted) {
+          setStudents(s.data);
+          setTutors(t.data);
+
+        }
       } catch (err) {
         console.error(err);
+      } finally {
+        if (mounted) setLoadingData(false);
       }
     };
 
     fetchData();
+
+    return () => {
+      mounted = false;
+    };
   }, []);
 
   const validate = (data) => {
     const errors = {};
 
-    if (!isEdit) {
-      if (!data.student_id) errors.student_id = "Alumno requerido";
-      if (!data.tutor_id) errors.tutor_id = "Tutor requerido";
-    }
+    if (!data.student_id) errors.student_id = "Alumno requerido";
+    if (!data.tutorService) errors.tutor_id = "Tutor requerido";
 
     return errors;
   };
@@ -66,6 +78,11 @@ export default function StudentTutorForm({ initialData = {}, isEdit = false }) {
       return await studentTutorService.update(initialData.id, data);
     } else {
       return await studentTutorService.create(data);
+
+    if (res.success && onSuccess) {
+      onSuccess();
+    }
+
     }
   };
 

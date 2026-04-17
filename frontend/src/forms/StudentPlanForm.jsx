@@ -54,7 +54,6 @@ export default function StudentPlanForm({
     };
   }, []);
 
-  // 🔥 VALIDACIÓN CORRECTA (sin isEdit)
   const validate = (data) => {
     const errors = {};
 
