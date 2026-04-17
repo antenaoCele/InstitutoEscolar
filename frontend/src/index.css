@@ -1,8 +1,19 @@
 @import url("https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&display=swap");
 
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
+
+@theme {
+  --font-outfit: "Outfit", sans-serif;
+
+  /* Definición de colores brand (ejemplos, ajusta a tus códigos reales) */
+  --color-brand-50: #f0f7ff;
+  --color-brand-100: #e0effe;
+  --color-brand-400: #38bdf8;
+  --color-brand-500: #0ea5e9;
+
+  /* Definición de tamaños personalizados si los usas */
+  --text-theme-sm: 0.875rem;
+}
 
 @layer base {
   body {
@@ -29,7 +40,7 @@
     @apply text-brand-500 dark:text-brand-400;
   }
   .menu-item-icon-size svg {
-    @apply size-6 !important;
+    @apply !size-6;
   }
   .menu-item-icon-inactive {
     @apply text-gray-500 group-hover:text-gray-700 dark:text-gray-400 dark:group-hover:text-gray-300;
