@@ -1,7 +1,6 @@
 import { createContext, useContext } from "react";
 import { useState } from "react";
 
-//contexto para compartir el estado de auth
 const AuthContext = createContext(null);
 export const useAuth = () => {
   return useContext(AuthContext);
@@ -23,19 +22,22 @@ export const AuthProvider = ({ children }) => {
       });
 
       const session = await response.json();
+
       if (!response.ok) {
         let errorMessage = "Ocurrió un error inesperado.";
-        if (response.status === 401 && session.error) {
+
+        if (response.status === 400) {
+          if (session.error) {
+            errorMessage = session.error; // 👈 esto es lo que se agregó
+          } else if (session.message) {
+            errorMessage = session.message;
+          }
+        } else if (response.status === 401 && session.error) {
           errorMessage = session.error;
-        } else if (
-          response.status === 400 &&
-          session.errores &&
-          session.errores.length > 0
-        ) {
-          errorMessage = session.errores.map((err) => err.msg).join(", ");
         } else if (session.message) {
           errorMessage = session.message;
         }
+
         throw new Error(errorMessage);
       }
 
