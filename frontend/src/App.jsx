@@ -1,11 +1,12 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 
-import { Home } from "./pages/Home.jsx";
+// import { Home } from "./pages/Home.jsx";
 
-import { Users } from "./pages/users/Users.jsx";
-import { DetailsUser } from "./pages/users/DetailsUser.jsx";
-import { UpdateUser } from "./pages/users/UpdateUser.jsx";
-import { CreateUser } from "./pages/users/CreateUser.jsx";
+// import { Users } from "./pages/users/Users.jsx";
+// import { DetailsUser } from "./pages/users/DetailsUser.jsx";
+// import { UpdateUser } from "./pages/users/UpdateUser.jsx";
+// import { CreateUser } from "./pages/users/CreateUser.jsx";
+import { Login } from "./pages/Login.jsx";
 
 import { Layout } from "./Layout.jsx";
 import PrivateRoute from "./routes/PrivateRoute.jsx";
@@ -20,15 +21,7 @@ export default function App() {
       <Routes>
         {/* Layout general */}
         <Route path="/" element={<Layout />}>
-          <Route index element={<Home />} />
-
-          {/* RUTAS PROTEGIDAS */}
-          <Route element={<PrivateRoute />}>
-            <Route path="users" element={<Users />} />
-            <Route path="users/:id" element={<DetailsUser />} />
-            <Route path="users/:id/update" element={<UpdateUser />} />
-            <Route path="users/create" element={<CreateUser />} />
-          </Route>
+          <Route path="login" element={<Login />} />
         </Route>
       </Routes>
     </BrowserRouter>

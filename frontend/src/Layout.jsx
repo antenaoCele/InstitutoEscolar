@@ -44,8 +44,8 @@ export function Layout() {
             Dashboard
           </Link>
 
-          <Link to="/users" className="block hover:text-blue-500">
-            Usuarios
+          <Link to="/login" className="block hover:text-blue-500">
+            Login
           </Link>
         </nav>
       </aside>

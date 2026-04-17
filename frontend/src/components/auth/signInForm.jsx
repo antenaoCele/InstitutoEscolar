@@ -4,8 +4,7 @@ import { useAuth } from "../../context/Auth";
 import { ChevronLeftIcon, EyeCloseIcon, EyeIcon } from "../../icons";
 import Label from "../form/Label";
 import Input from "../form/input/InputField";
-import Checkbox from "../form/input/Checkbox";
-import Button from "../ui/button/Button";
+import Button from "../ui/Button";
 
 export default function SignInForm() {
   const [showPassword, setShowPassword] = useState(false);
@@ -88,14 +87,6 @@ export default function SignInForm() {
                     {showPassword ? <EyeIcon /> : <EyeCloseIcon />}
                   </span>
                 </div>
-              </div>
-
-              {/* CHECKBOX */}
-              <div className="flex items-center gap-3">
-                <Checkbox checked={isChecked} onChange={setIsChecked} />
-                <span className="text-sm text-gray-700">
-                  Mantener mi sesión iniciada
-                </span>
               </div>
 
               {/* BOTÓN */}
