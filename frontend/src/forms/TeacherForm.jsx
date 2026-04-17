@@ -16,11 +16,17 @@ export default function TeacherForm({
   const validate = (data) => {
     const errors = {};
 
-    if (!isEdit) {
-      if (!data.first_name) errors.first_name = "Nombre requerido";
-      if (!data.last_name) errors.last_name = "Apellido requerido";
-      if (!data.dni) errors.dni = "DNI requerido";
-      if (!data.phone) errors.phone = "Teléfono requerido";
+    if (!data.first_name) {
+      errors.nafirst_nameme = "Nombre requerido";
+    }
+    if (!data.last_name) {
+      errors.last_name = "Apellido requerido";
+    }
+    if (!data.dni) {
+      errors.dni = "DNI requerido";
+    }
+    if (!data.phone) {
+      errors.phone = "Teléfono requerido";
     }
 
     return errors;
@@ -59,7 +65,7 @@ export default function TeacherForm({
   return (
     <form onSubmit={(e) => handleSubmit(e, submitFn)}>
       <h2 className="text-lg font-semibold mb-4">
-        {isEdit ? "Editar Profesor" : "Nuevo Profesor"}
+        {isEdit ? "Editar Docente" : "Nuevo Docente"}
       </h2>
 
       <Input

@@ -14,11 +14,11 @@ export default function SubjectForm({
     return <p className="text-red-500">No autorizado</p>;
   }
 
-  const validate = (data) => {
+const validate = (data) => {
     const errors = {};
 
-    if (!isEdit) {
-      if (!data.name) errors.name = "Nombre de la materia requerido";
+    if (!data.name) {
+      errors.name = "Nombre del plan requerido";
     }
 
     return errors;
@@ -53,7 +53,6 @@ export default function SubjectForm({
 
   return (
     <form onSubmit={(e) => handleSubmit(e, submitFn)}>
-
       <h2 className="text-lg font-semibold mb-4">
         {isEdit ? "Editar Materia" : "Nueva Materia"}
       </h2>

@@ -2,7 +2,7 @@ import useForm from "../hooks/useForm";
 import Input from "../components/form/Input";
 import SubmitButton from "../components/form/SubmitButton";
 import { isAdmin } from "../utils/auth";
-import { teacherService } from "../services/tutor.service";
+import { teacherService, tutorService } from "../services/tutor.service";
 
 export default function TutorForm({ 
   initialData = {}, 
@@ -15,11 +15,17 @@ export default function TutorForm({
   const validate = (data) => {
     const errors = {};
 
-    if (!isEdit) {
-      if (!data.first_name) errors.first_name = "Nombre requerido";
-      if (!data.last_name) errors.last_name = "Apellido requerido";
-      if (!data.dni) errors.dni = "DNI requerido";
-      if (!data.phone) errors.phone = "Teléfono requerido";
+    if (!data.first_name) {
+      errors.nafirst_nameme = "Nombre requerido";
+    }
+    if (!data.last_name) {
+      errors.last_name = "Apellido requerido";
+    }
+    if (!data.dni) {
+      errors.dni = "DNI requerido";
+    }
+    if (!data.phone) {
+      errors.phone = "Teléfono requerido";
     }
 
     return errors;
@@ -44,11 +50,15 @@ export default function TutorForm({
   );
 
   const submitFn = async (data) => {
-    if (isEdit) {
-      return await teacherService.update(initialData.id, data);
-    } else {
-      return await teacherService.create(data);
+    const res = isEdit
+      ? await tutorService.update(initialData.id, data)
+      : await tutorService.create(data);
+
+    if (res.success && onSuccess) {
+      onSuccess();
     }
+
+    return res;
   };
 
   return (
