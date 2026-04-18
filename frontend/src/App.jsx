@@ -6,7 +6,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 // import { DetailsUser } from "./pages/users/DetailsUser.jsx";
 // import { UpdateUser } from "./pages/users/UpdateUser.jsx";
 // import { CreateUser } from "./pages/users/CreateUser.jsx";
-import { Login } from "./pages/Login.jsx";
+import Login from "./pages/login/Login.jsx";
 
 import { Layout } from "./Layout.jsx";
 import PrivateRoute from "./routes/PrivateRoute.jsx";
