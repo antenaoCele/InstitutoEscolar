@@ -1,67 +1,40 @@
-// // import { Outlet, Link } from "react-router";
-// import { useAuth } from "./context/Auth.jsx";
-// import { Login } from "./pages/Login.jsx";
-// import { Link, Outlet } from "react-router-dom";
-
-// export const Layout = () => {
-//   const { isAuthenticated, logout } = useAuth();
-
-//   return (
-//     <main className="container">
-//       <nav>
-//         <ul>
-//           <li>
-//             <Link to="/">Home</Link>
-//           </li>
-//           <li>
-//             <Link to="/users">Usuarios</Link>
-//           </li>
-//         </ul>
-//         <li>
-//           {isAuthenticated ? (
-//             <button onClick={() => logout()}>Salir</button>
-//           ) : (
-//             <Login />
-//           )}
-//         </li>
-//       </nav>
-//       <Outlet />
-//     </main>
-//   );
-// };
-
 import { Outlet, Link } from "react-router-dom";
 
-export function Layout() {
+export const Layout = () => {
+  const token = localStorage.getItem("token");
+
   return (
-    <div className="flex h-screen bg-gray-100 dark:bg-gray-900">
-      {/* SIDEBAR */}
-      <aside className="w-64 bg-white dark:bg-gray-800 border-r">
-        <div className="p-4 font-bold text-lg">Mi Sistema</div>
+    <div className="flex min-h-screen">
+      
+      {/* Sidebar */}
+      <aside className="w-64 p-4 border-r bg-gray-100 dark:bg-gray-900">
+        <h2 className="mb-4 font-bold text-lg">Mi Sistema</h2>
 
-        <nav className="p-4 space-y-2">
-          <Link to="/" className="block hover:text-blue-500">
-            Dashboard
-          </Link>
+        <nav className="flex flex-col gap-3">
+          <Link to="/">Dashboard</Link>
 
-          <Link to="/login" className="block hover:text-blue-500">
-            Login
-          </Link>
+          {!token && <Link to="/login">Login</Link>}
+
+          {token && <Link to="/profile">Profile</Link>}
+
+          {token && (
+            <button
+              onClick={() => {
+                localStorage.removeItem("token");
+                window.location.href = "/login";
+              }}
+              className="text-left text-red-500"
+            >
+              Logout
+            </button>
+          )}
         </nav>
       </aside>
 
-      {/* CONTENIDO */}
-      <div className="flex-1 flex flex-col">
-        {/* HEADER */}
-        <header className="h-16 bg-white dark:bg-gray-800 border-b flex items-center px-6">
-          <h1 className="font-semibold text-lg">Panel de Administración</h1>
-        </header>
-
-        {/* MAIN */}
-        <main className="flex-1 p-6 overflow-y-auto">
-          <Outlet />
-        </main>
-      </div>
+      {/* Contenido */}
+      <main className="flex-1 p-6 bg-white dark:bg-gray-800">
+        <Outlet />
+      </main>
     </div>
   );
-}
+};

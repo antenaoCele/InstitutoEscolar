@@ -17,6 +17,10 @@ export const login = async (req, res) => {
       });
     }
 
+    const user = users[0];
+
+    const passwordMatch = await bcrypt.compare(password, user.password);
+
     if (!passwordMatch) {
       return res.status(400).json({
         success: false,
@@ -37,7 +41,7 @@ export const login = async (req, res) => {
       success: true,
       token,
       nombre: user.first_name,
-      message: "Inicio de sesion exitoso",
+      message: "Inicio de sesión exitoso",
     });
   } catch (error) {
     console.error("Error en login:", error);
