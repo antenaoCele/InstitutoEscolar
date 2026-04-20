@@ -27,7 +27,7 @@ export default function SignInForm() {
 
         localStorage.setItem("token", data.token);
 
-        // 🔥 redirige y fuerza render
+        // redirige y fuerza render
         window.location.href = "/profile";
       } else {
         setError(data.error || "Error en login");
@@ -40,6 +40,9 @@ export default function SignInForm() {
 
   return (
     <div className="flex flex-col justify-center w-full lg:w-1/2 p-6">
+      <h1 className="mb-4 text-2xl font-semibold">
+        MATECITOS GRUPO DE ESTUDIO
+      </h1>
       <h2 className="mb-4 text-2xl font-semibold">Ingresar</h2>
 
       <form onSubmit={handleSubmit}>
@@ -66,7 +69,7 @@ export default function SignInForm() {
 
         <button
           type="submit"
-          className="w-full p-2 text-white bg-blue-500 rounded"
+          className="w-full p-2 text-white bg-[#0cc0df] hover:bg-[#0aa3bf] transition rounded shadow-md"
         >
           Ingresar
         </button>
