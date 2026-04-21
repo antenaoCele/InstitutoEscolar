@@ -21,7 +21,7 @@ export function Users() {
     fetchUsers();
   }, [fetchAuth]);
 
-  const handleEliminar = async (id) => {
+  const handleDelete = async (id) => {
     if (!window.confirm("¿Estás seguro de que quieres eliminar este usuario?"))
       return;
 
