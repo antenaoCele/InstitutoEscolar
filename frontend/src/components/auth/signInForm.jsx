@@ -25,7 +25,7 @@ export default function SignInForm() {
     const result = await login(username, password); //  usamos el contexto
 
     if (result.success) {
-      navigate("/profile"); //  redirección
+      navigate("/me"); //  redirección
     } else {
       setErrorLocal(result.error);
     }
