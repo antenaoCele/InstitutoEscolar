@@ -14,7 +14,9 @@ export const Layout = () => {
 
           {!token && <Link to="/login">Login</Link>}
 
-          {token && <Link to="/profile">Mi perfil</Link>}
+          {token && <Link to="/me">Mi perfil</Link>}
+
+          {token && <Link to="/users">Usuarios</Link>}
 
           {token && (
             <button
