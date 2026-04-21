@@ -8,8 +8,11 @@ export default function App() {
   return (
     <BrowserRouter>
       <Routes>
+        {/*  Ruta SIN layout */}
+        <Route path="/login" element={<Login />} />
+
+        {/*  Rutas CON layout */}
         <Route path="/" element={<Layout />}>
-          <Route path="login" element={<Login />} />
           <Route path="profile" element={<UserProfiles />} />
         </Route>
       </Routes>

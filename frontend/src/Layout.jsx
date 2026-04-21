@@ -5,17 +5,16 @@ export const Layout = () => {
 
   return (
     <div className="flex min-h-screen">
-      
       {/* Sidebar */}
       <aside className="w-64 p-4 border-r bg-gray-100 dark:bg-gray-900">
-        <h2 className="mb-4 font-bold text-lg">Mi Sistema</h2>
+        <h2 className="mb-4 font-bold text-lg">Matecitos Grupo de Estudio</h2>
 
         <nav className="flex flex-col gap-3">
-          <Link to="/">Dashboard</Link>
+          {token && <Link to="/">Inicio</Link>}
 
           {!token && <Link to="/login">Login</Link>}
 
-          {token && <Link to="/profile">Profile</Link>}
+          {token && <Link to="/profile">Mi perfil</Link>}
 
           {token && (
             <button
