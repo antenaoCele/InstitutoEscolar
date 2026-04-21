@@ -18,6 +18,8 @@ export const Layout = () => {
 
           {token && <Link to="/users">Usuarios</Link>}
 
+          {token && <Link to="/teachers">Docentes</Link>}
+
           {token && (
             <button
               onClick={() => {

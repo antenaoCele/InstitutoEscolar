@@ -5,6 +5,7 @@ import UserProfiles from "./pages/UserProfiles.jsx";
 import Users from "./pages/Users.jsx";
 import { Layout } from "./Layout.jsx";
 import PrivateRoute from "./routes/PrivateRoute.jsx";
+import { Teachers } from "./pages/users/Teachers.jsx";
 
 export default function App() {
   return (
@@ -22,6 +23,7 @@ export default function App() {
           <Route path="/" element={<Layout />}>
             <Route path="me" element={<UserProfiles />} />
             <Route path="/users" element={<Users />} />
+            <Route path="/teachers" element={<Teachers />} />
           </Route>
 
         </Route>
