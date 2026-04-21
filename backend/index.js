@@ -22,6 +22,7 @@ import teachersRouter from "./routes/teachers.routes.js";
 import teacherLiquidationsRouter from "./routes/teacher_liquidations.routes.js";
 import teacherSubjectsRouter from "./routes/teacher_subjects.routes.js";
 import tutorsRouter from "./routes/tutors.routes.js";
+import userRoutes from "./routes/user.routes.js";
 import usersRouter from "./routes/users.routes.js";
 
 const app = express();
@@ -36,6 +37,9 @@ app.use(cors());
 app.use(express.json());
 
 app.use("/login", loginRouter);
+
+app.use("/", userRoutes);
+
 app.use("/enrollments", enrollmentsRouter);
 app.use("/monthly_finances", monthlyFinancesRouter);
 app.use("/payments", paymentsRouter);
@@ -55,5 +59,5 @@ app.use("/tutors", tutorsRouter);
 app.use("/users", usersRouter);
 
 app.listen(port, () => {
-  console.log(`La aplicación está funcionando en el puerto ${port}`);
+  console.log(`Servidor corriendo en puerto ${port}`);
 });

@@ -8,12 +8,12 @@ export default function App() {
   return (
     <BrowserRouter>
       <Routes>
-        {/*  Ruta SIN layout */}
+        {/* Login sin layout */}
         <Route path="/login" element={<Login />} />
 
-        {/*  Rutas CON layout */}
+        {/* Con layout */}
         <Route path="/" element={<Layout />}>
-          <Route path="profile" element={<UserProfiles />} />
+          <Route path="me" element={<UserProfiles />} />
         </Route>
       </Routes>
     </BrowserRouter>
