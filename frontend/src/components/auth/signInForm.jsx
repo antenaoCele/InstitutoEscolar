@@ -1,77 +1,82 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "../../context/Auth.jsx";
 
 export default function SignInForm() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
+  const [errorLocal, setErrorLocal] = useState("");
+  const [loading, setLoading] = useState(false);
 
   const navigate = useNavigate();
+  const { login, error } = useAuth(); // usamos error del contexto
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setErrorLocal("");
 
-    try {
-      const res = await fetch("http://localhost:3000/login", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ username, password }),
-      });
-
-      const data = await res.json();
-
-      if (data.success) {
-        console.log("Inicio de sesión exitoso");
-
-        localStorage.setItem("token", data.token);
-
-        // redirige y fuerza render
-        window.location.href = "/profile";
-      } else {
-        setError(data.error || "Error en login");
-      }
-    } catch (err) {
-      console.error(err);
-      setError("Error del servidor");
+    if (!username || !password) {
+      setErrorLocal("Completá todos los campos");
+      return;
     }
+
+    setLoading(true);
+
+    const result = await login(username, password); //  usamos el contexto
+
+    if (result.success) {
+      navigate("/profile"); //  redirección
+    } else {
+      setErrorLocal(result.error);
+    }
+
+    setLoading(false);
   };
 
   return (
     <div className="flex flex-col justify-center w-full lg:w-1/2 p-6">
-      <h1 className="mb-4 text-2xl font-semibold">
+      <h1 className="mb-2 text-2xl font-semibold">
         MATECITOS GRUPO DE ESTUDIO
       </h1>
-      <h2 className="mb-4 text-2xl font-semibold">Ingresar</h2>
+      <h2 className="mb-6 text-xl text-gray-600">Ingresar</h2>
 
-      <form onSubmit={handleSubmit}>
-        <div className="mb-4">
-          <label className="block mb-1">Nombre de usuario</label>
+      <form onSubmit={handleSubmit} className="space-y-4">
+        {/* USERNAME */}
+        <div>
+          <label className="block mb-1 text-sm font-medium">
+            Nombre de usuario
+          </label>
           <input
-            className="w-full p-2 border rounded"
+            type="text"
+            className="w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-[#0cc0df]"
             value={username}
             onChange={(e) => setUsername(e.target.value)}
           />
         </div>
 
-        <div className="mb-4">
-          <label className="block mb-1">Contraseña</label>
+        {/* PASSWORD */}
+        <div>
+          <label className="block mb-1 text-sm font-medium">Contraseña</label>
           <input
             type="password"
-            className="w-full p-2 border rounded"
+            className="w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-[#0cc0df]"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
           />
         </div>
 
-        {error && <p className="text-red-500 mb-2">{error}</p>}
+        {/* ERROR */}
+        {(errorLocal || error) && (
+          <p className="text-red-500 text-sm">{errorLocal || error}</p>
+        )}
 
+        {/* BUTTON */}
         <button
           type="submit"
-          className="w-full p-2 text-white bg-[#0cc0df] hover:bg-[#0aa3bf] transition rounded shadow-md"
+          disabled={loading}
+          className="w-full p-2 text-white bg-[#0cc0df] hover:bg-[#0aa3bf] transition rounded shadow-md disabled:opacity-50"
         >
-          Ingresar
+          {loading ? "Ingresando..." : "Ingresar"}
         </button>
       </form>
     </div>
