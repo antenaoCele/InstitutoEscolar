@@ -6,7 +6,7 @@ import { Users } from "./pages/users/AllUsers.jsx";
 import { Layout } from "./Layout.jsx";
 import PrivateRoute from "./routes/PrivateRoute.jsx";
 import { Teachers } from "./pages/teachers/Teachers.jsx";
-import { Students } from "./pages/students/AllStudents.jsx";
+import { Students } from "./pages/students/Students.jsx";
 import { Tutors } from "./pages/tutors/Tutors.jsx";
 
 export default function App() {
@@ -42,7 +42,6 @@ export default function App() {
             <Route path="me" element={<UserProfiles />} />
             <Route path="users" element={<Users />} />
             <Route path="students" element={<Students />} />
-            {/* <Route path="students/active" element={<StudentsActive />} /> */}
             <Route path="teachers" element={<Teachers />} />
             <Route path="tutors" element={<Tutors />} />
           </Route>
