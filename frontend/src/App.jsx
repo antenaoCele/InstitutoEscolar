@@ -4,16 +4,11 @@ import Login from "./pages/login/Login.jsx";
 import UserProfiles from "./pages/me/UserProfiles.jsx";
 import { Users } from "./pages/users/AllUsers.jsx";
 import { Layout } from "./Layout.jsx";
-import PrivateRoute from "./routes/PrivateRoute.jsx";
-<<<<<<< HEAD
-import { Teachers } from "./pages/users/Teachers.jsx";
-import { Tutors } from "./pages/users/Tutors.jsx";
-import { Schedules } from "./pages/users/Schedules.jsx";
-=======
+import PrivateRoute from "./routes/PrivateRoute.jsx"
 import { Teachers } from "./pages/teachers/Teachers.jsx";
 import { Students } from "./pages/students/AllStudents.jsx";
 import { Tutors } from "./pages/tutors/Tutors.jsx";
->>>>>>> ea81539c278253a470560821c9cd7a80698a0749
+import { Schedules } from "./pages/users/Schedules.jsx";
 
 export default function App() {
   const token = localStorage.getItem("token");
