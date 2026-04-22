@@ -63,8 +63,8 @@ export function Schedules() {
                 {s.last_name}, {s.first_name}
               </td>
               <td>{getDayName(s.day)}</td>
-              <td>{s.start_time}</td>
-              <td>{s.end_time}</td>
+              <td>{s.start_time?.slice(0, 5)}</td>
+              <td>{s.end_time?.slice(0, 5)}</td>
               <td>{s.classroom}</td>
             </tr>
           ))}
