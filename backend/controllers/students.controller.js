@@ -62,13 +62,11 @@ export const studentsController = {
 
       const params = [yearMonth];
 
-      // 🔽 filtro por docente
       if (teacher_id) {
         query += ` AND sp.teacher_id = ? `;
         params.push(teacher_id);
       }
 
-      // 🔽 filtro por estado
       if (status === "active") {
         query += ` AND sp.id IS NOT NULL `;
       }
