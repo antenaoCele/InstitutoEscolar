@@ -15,8 +15,6 @@ import {
 
 const router = express.Router();
 
-router.get("/", authentication, studentsController.getAll);
-
 router.get("/", authentication, studentsController.getAllWithStatus);
 
 router.get(
@@ -24,7 +22,7 @@ router.get(
   authentication,
   ...validateID("students"),
   checkValidations,
-  studentsController.getById,
+  studentsController.getByStudentIdWithStatus,
 );
 
 router.post(
