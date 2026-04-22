@@ -31,9 +31,9 @@ export default function AuthLayout({ children }) {
         </div>
 
         {/* 🔹 Botón tema */}
-        <div className="fixed z-50 hidden bottom-6 right-6 sm:block">
+        {/* <div className="fixed z-50 hidden bottom-6 right-6 sm:block">
           <ThemeTogglerTwo />
-        </div>
+        </div> */}
       </div>
     </div>
   );
