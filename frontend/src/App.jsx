@@ -9,28 +9,45 @@ import { Teachers } from "./pages/users/Teachers.jsx";
 import { Tutors } from "./pages/users/Tutors.jsx";
 
 export default function App() {
+  const token = localStorage.getItem("token");
+
   return (
     <BrowserRouter>
       <Routes>
-<Route path="/" element={<Navigate to="/login" replace />} />
 
-<Route
-  path="/login"
-  element={
-    localStorage.getItem("token")
-      ? <Navigate to="/me" replace />
-      : <Login />
-  }
-/>
+        {/* Ruta raíz */}
+        <Route
+          path="/"
+          element={
+            token ? (
+              <Navigate to="/me" replace />
+            ) : (
+              <Navigate to="/login" replace />
+            )
+          }
+        />
 
-<Route element={<PrivateRoute />}>
-  <Route path="/" element={<Layout />}>
-    <Route path="me" element={<UserProfiles />} />
-    <Route path="users" element={<Users />} />
-    <Route path="teachers" element={<Teachers />} />
-    <Route path="tutors" element={<Tutors />} />
-  </Route>
-</Route>
+        {/* Login */}
+        <Route
+          path="/login"
+          element={
+            token ? <Navigate to="/me" replace /> : <Login />
+          }
+        />
+
+        {/* Rutas protegidas */}
+        <Route element={<PrivateRoute />}>
+          <Route path="/" element={<Layout />}>
+            <Route path="me" element={<UserProfiles />} />
+            <Route path="users" element={<Users />} />
+            <Route path="teachers" element={<Teachers />} />
+            <Route path="tutors" element={<Tutors />} />
+          </Route>
+        </Route>
+
+        {/* Cualquier otra cosa */}
+        <Route path="*" element={<Navigate to="/" replace />} />
+
       </Routes>
     </BrowserRouter>
   );
