@@ -1,34 +1,35 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "../../context/Auth.jsx";
-import { Link } from "react-router-dom";
 
-export function Teachers() {
+export function Tutors() {
   const { fetchAuth } = useAuth();
-  const [teachers, setTeachers] = useState([]);
+  const [tutors, setTutors] = useState([]);
 
   useEffect(() => {
-    const fetchTeachers = async () => {
+    const fetchTutors = async () => {
       try {
-        const response = await fetchAuth("http://localhost:3000/teachers");
+        const response = await fetchAuth("http://localhost:3000/tutors");
         const data = await response.json();
 
         if (!response.ok || !data.success) {
           console.log("Error:", data.message || data.error);
+          setTutors([]);
           return;
         }
 
-        setTeachers(data.data);
+        setTutors(data.data || []);
       } catch (error) {
         console.log("Error de conexión:", error);
+        setTutors([]);
       }
     };
 
-    fetchTeachers();
+    fetchTutors();
   }, [fetchAuth]);
 
   return (
     <article>
-      <h2>Docentes</h2>
+      <h2>Tutores</h2>
 
       <table>
         <thead>
@@ -42,21 +43,23 @@ export function Teachers() {
         </thead>
 
         <tbody>
-          {teachers.map((t) => (
-            <tr key={t.id}>
-              <td>{t.id}</td>
-              <td>{t.last_name}</td>
-              <td>{t.first_name}</td>
-              <td>{t.dni}</td>
-              <td>{t.phone}</td>
+          {tutors.length > 0 ? (
+            tutors.map((t) => (
+              <tr key={t.id}>
+                <td>{t.id}</td>
+                <td>{t.last_name}</td>
+                <td>{t.first_name}</td>
+                <td>{t.dni}</td>
+                <td>{t.phone}</td>
+              </tr>
+            ))
+          ) : (
+            <tr>
+              <td colSpan="5">No hay tutores cargados</td>
             </tr>
-          ))}
+          )}
         </tbody>
       </table>
-
-      {/* <Link to="/teachers/create" role="button">
-        Crear nuevo docente
-      </Link> */}
     </article>
   );
 }
