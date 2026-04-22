@@ -1,12 +1,13 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 
 import Login from "./pages/login/Login.jsx";
-import UserProfiles from "./pages/UserProfiles.jsx";
-import Users from "./pages/Users.jsx";
+import UserProfiles from "./pages/me/UserProfiles.jsx";
+import { Users } from "./pages/users/AllUsers.jsx";
 import { Layout } from "./Layout.jsx";
 import PrivateRoute from "./routes/PrivateRoute.jsx";
-import { Teachers } from "./pages/users/Teachers.jsx";
-import { Tutors } from "./pages/users/Tutors.jsx";
+import { Teachers } from "./pages/teachers/Teachers.jsx";
+import { Students } from "./pages/students/AllStudents.jsx";
+import { Tutors } from "./pages/tutors/Tutors.jsx";
 
 export default function App() {
   const token = localStorage.getItem("token");
@@ -40,6 +41,8 @@ export default function App() {
           <Route path="/" element={<Layout />}>
             <Route path="me" element={<UserProfiles />} />
             <Route path="users" element={<Users />} />
+            <Route path="students" element={<Students />} />
+            {/* <Route path="students/active" element={<StudentsActive />} /> */}
             <Route path="teachers" element={<Teachers />} />
             <Route path="tutors" element={<Tutors />} />
           </Route>
