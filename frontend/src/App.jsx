@@ -6,27 +6,31 @@ import Users from "./pages/Users.jsx";
 import { Layout } from "./Layout.jsx";
 import PrivateRoute from "./routes/PrivateRoute.jsx";
 import { Teachers } from "./pages/users/Teachers.jsx";
+import { Tutors } from "./pages/users/Tutors.jsx";
 
 export default function App() {
   return (
     <BrowserRouter>
       <Routes>
+<Route path="/" element={<Navigate to="/login" replace />} />
 
-        {/* Ruta inicial → login */}
-        <Route path="/" element={<Navigate to="/login" />} />
+<Route
+  path="/login"
+  element={
+    localStorage.getItem("token")
+      ? <Navigate to="/me" replace />
+      : <Login />
+  }
+/>
 
-        {/* Login */}
-        <Route path="/login" element={<Login />} />
-
-        {/* Rutas protegidas */}
-        <Route element={<PrivateRoute />}>
-          <Route path="/" element={<Layout />}>
-            <Route path="me" element={<UserProfiles />} />
-            <Route path="/users" element={<Users />} />
-            <Route path="/teachers" element={<Teachers />} />
-          </Route>
-
-        </Route>
+<Route element={<PrivateRoute />}>
+  <Route path="/" element={<Layout />}>
+    <Route path="me" element={<UserProfiles />} />
+    <Route path="users" element={<Users />} />
+    <Route path="teachers" element={<Teachers />} />
+    <Route path="tutors" element={<Tutors />} />
+  </Route>
+</Route>
       </Routes>
     </BrowserRouter>
   );
