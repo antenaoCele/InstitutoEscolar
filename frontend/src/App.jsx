@@ -8,7 +8,7 @@ import PrivateRoute from "./routes/PrivateRoute.jsx"
 import { Teachers } from "./pages/teachers/Teachers.jsx";
 import { Students } from "./pages/students/AllStudents.jsx";
 import { Tutors } from "./pages/tutors/Tutors.jsx";
-import { Schedules } from "./pages/users/Schedules.jsx";
+import { Schedules } from "./pages/schedules/Schedules.jsx";
 
 export default function App() {
   const token = localStorage.getItem("token");
