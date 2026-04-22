@@ -12,6 +12,8 @@ export const schedulesController = {
         SELECT
         s.id,
         t.id AS teacher_id,
+        t.first_name,
+        t.last_name,
         s.start_time,
         s.end_time,
         s.day, 
@@ -43,6 +45,8 @@ export const schedulesController = {
         SELECT
         s.id,
         t.id AS teacher_id,
+        t.first_name,
+        t.last_name,
         s.start_time,
         s.end_time,
         s.day, 

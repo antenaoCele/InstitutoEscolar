@@ -7,6 +7,7 @@ import { Layout } from "./Layout.jsx";
 import PrivateRoute from "./routes/PrivateRoute.jsx";
 import { Teachers } from "./pages/users/Teachers.jsx";
 import { Tutors } from "./pages/users/Tutors.jsx";
+import { Schedules } from "./pages/users/Schedules.jsx";
 
 export default function App() {
   const token = localStorage.getItem("token");
@@ -42,6 +43,7 @@ export default function App() {
             <Route path="users" element={<Users />} />
             <Route path="teachers" element={<Teachers />} />
             <Route path="tutors" element={<Tutors />} />
+            <Route path="schedules" element={<Schedules />} />
           </Route>
         </Route>
 
