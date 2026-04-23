@@ -1,9 +1,8 @@
 import { useEffect, useState } from "react";
-import { useAuth } from "../../context/Auth.jsx";
 import { useLocation } from "react-router-dom";
+import { studentService } from "../../services/student.service";
 
 export function Students() {
-  const { fetchAuth } = useAuth();
   const [students, setStudents] = useState([]);
   const location = useLocation();
 
@@ -13,29 +12,26 @@ export function Students() {
         const params = new URLSearchParams(location.search);
         const status = params.get("status") || "all";
 
-        const response = await fetchAuth(
-          `http://localhost:3000/students?status=${status}`
-        );
+        const { data } = await studentService.getAll({ status });
 
-        const data = await response.json();
-
-        if (!response.ok || !data.success) {
+        if (!data.success) {
           setStudents([]);
           return;
         }
 
         setStudents(data.data || []);
-      } catch {
+      } catch (error) {
+        console.error("Error al obtener alumnos:", error);
         setStudents([]);
       }
     };
 
     fetchStudents();
-  }, [fetchAuth, location.search]);
+  }, [location.search]);
 
   return (
     <article>
-      <h2>Estudiantes</h2>
+      <h2>Alumnos</h2>
 
       <table>
         <thead>
@@ -60,14 +56,18 @@ export function Students() {
                 <td>{s.first_name}</td>
                 <td>{s.dni}</td>
                 <td>{s.school || "-"}</td>
-                <td>{s.birth_date ? new Date(s.birth_date).toLocaleDateString("es-AR"): "-"}</td>
+                <td>
+                  {s.birth_date
+                    ? new Date(s.birth_date).toLocaleDateString("es-AR")
+                    : "-"}
+                </td>
                 <td>{s.level}</td>
                 <td>{s.grade}</td>
               </tr>
             ))
           ) : (
             <tr>
-              <td colSpan="6">No hay estudiantes</td>
+              <td colSpan="8">No hay estudiantes</td>
             </tr>
           )}
         </tbody>
