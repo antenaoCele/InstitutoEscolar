@@ -10,6 +10,7 @@ import { Teachers } from "./pages/teachers/Teachers.jsx";
 import { Students } from "./pages/students/Students.jsx";
 import { Tutors } from "./pages/tutors/Tutors.jsx";
 import { Schedules } from "./pages/schedules/Schedules.jsx";
+import { Subjects } from "./pages/subjects/Subjects.jsx";
 
 export default function App() {
   const { isAuthenticated } = useAuth();
@@ -45,6 +46,7 @@ export default function App() {
             <Route path="/users" element={<Users />} />
             <Route path="/students" element={<Students />} />
             <Route path="/teachers" element={<Teachers />} />
+            <Route path="/subjects" element={<Subjects />} />
             <Route path="/tutors" element={<Tutors />} />
             <Route path="/schedules" element={<Schedules />} />
           </Route>

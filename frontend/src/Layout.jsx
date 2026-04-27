@@ -21,7 +21,9 @@ export const Layout = () => {
 
           {token && <Link to="/teachers">Docentes</Link>}
 
-           {token && <Link to="/schedules">Horarios</Link>}
+          {token && <Link to="/subjects">Materias</Link>}
+
+          {token && <Link to="/schedules">Horarios</Link>}
 
 
           {token && (
