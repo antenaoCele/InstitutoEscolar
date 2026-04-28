@@ -19,19 +19,12 @@ export const Layout = () => {
 
           {token && <Link to="/me">Mi perfil</Link>}
 
-          {token && <Link to="/teachers">Docentes</Link>}
-
-          {token && <Link to="/subjects">Materias</Link>}
-
-          {token && <Link to="/schedules">Horarios</Link>}
-
-
           {token && (
             <>
               <button
                 onClick={() => setOpenStudents(!openStudents)}
                 className="text-left cursor-pointer">
-                Estudiantes ▾
+                Alumnos ▾
               </button>
               {openStudents && (
                 <div className="ml-4 flex flex-col gap-2">
@@ -41,6 +34,14 @@ export const Layout = () => {
               )}
             </>
           )}
+
+          {token && <Link to="/teachers">Docentes</Link>}
+
+          {token && <Link to="/subjects">Materias</Link>}
+
+          {token && <Link to="/plans">Planes</Link>}
+
+          {token && <Link to="/schedules">Horarios</Link>}
 
           {token && <Link to="/tutors">Tutores</Link>}
 
