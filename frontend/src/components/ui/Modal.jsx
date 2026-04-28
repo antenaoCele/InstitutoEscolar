@@ -33,7 +33,6 @@ export const Modal = ({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
       
-      {/* Overlay */}
       {!isFullscreen && (
         <div
           className="absolute inset-0 bg-black/40 backdrop-blur-sm"
@@ -41,7 +40,6 @@ export const Modal = ({
         />
       )}
 
-      {/* Modal */}
       <div
         className={`
           ${contentClasses}
@@ -51,7 +49,6 @@ export const Modal = ({
         `}
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Close button */}
         {showCloseButton && (
           <button
             onClick={onClose}
