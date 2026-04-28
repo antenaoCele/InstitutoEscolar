@@ -61,10 +61,17 @@ export const AuthProvider = ({ children }) => {
       throw new Error("Debes iniciar sesion");
     }
 
-    return fetch(url, {
+    const response = await fetch(url, {
       ...options,
       headers: { ...options.headers, Authorization: `Bearer ${token}` },
     });
+
+    if (response.status === 401) {
+      logout(); // 🔥 clave
+      throw new Error("Sesion expirada");
+    }
+
+    return response;
   };
 
   return (

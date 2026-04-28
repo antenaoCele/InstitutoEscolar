@@ -13,9 +13,9 @@ import {
   PlugInIcon,
   TableIcon,
   UserCircleIcon,
-} from "../icons";
+} from "../../icons";
 
-import { useSidebar } from "../context/SidebarContext";
+import { useSidebar } from "../../context/SidebarContext";
 import SidebarWidget from "./SidebarWidget";
 
 const navItems = [
@@ -95,7 +95,7 @@ const AppSidebar = () => {
 
   const isActive = useCallback(
     (path) => location.pathname === path,
-    [location.pathname]
+    [location.pathname],
   );
 
   useEffect(() => {
@@ -139,11 +139,7 @@ const AppSidebar = () => {
 
   const handleSubmenuToggle = (index, menuType) => {
     setOpenSubmenu((prev) => {
-      if (
-        prev &&
-        prev.type === menuType &&
-        prev.index === index
-      ) {
+      if (prev && prev.type === menuType && prev.index === index) {
         return null;
       }
       return { type: menuType, index };
@@ -158,8 +154,7 @@ const AppSidebar = () => {
             <button
               onClick={() => handleSubmenuToggle(index, menuType)}
               className={`menu-item group ${
-                openSubmenu?.type === menuType &&
-                openSubmenu?.index === index
+                openSubmenu?.type === menuType && openSubmenu?.index === index
                   ? "menu-item-active"
                   : "menu-item-inactive"
               }`}
@@ -183,9 +178,7 @@ const AppSidebar = () => {
               <Link
                 to={nav.path}
                 className={`menu-item ${
-                  isActive(nav.path)
-                    ? "menu-item-active"
-                    : "menu-item-inactive"
+                  isActive(nav.path) ? "menu-item-active" : "menu-item-inactive"
                 }`}
               >
                 {nav.icon}
@@ -196,13 +189,10 @@ const AppSidebar = () => {
 
           {nav.subItems && (isExpanded || isHovered || isMobileOpen) && (
             <div
-              ref={(el) =>
-                (subMenuRefs.current[`${menuType}-${index}`] = el)
-              }
+              ref={(el) => (subMenuRefs.current[`${menuType}-${index}`] = el)}
               style={{
                 height:
-                  openSubmenu?.type === menuType &&
-                  openSubmenu?.index === index
+                  openSubmenu?.type === menuType && openSubmenu?.index === index
                     ? `${subMenuHeight[`${menuType}-${index}`]}px`
                     : "0px",
               }}
@@ -210,9 +200,7 @@ const AppSidebar = () => {
               <ul className="ml-9">
                 {nav.subItems.map((subItem) => (
                   <li key={subItem.name}>
-                    <Link to={subItem.path}>
-                      {subItem.name}
-                    </Link>
+                    <Link to={subItem.path}>{subItem.name}</Link>
                   </li>
                 ))}
               </ul>
