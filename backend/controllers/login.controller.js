@@ -40,7 +40,11 @@ export const login = async (req, res) => {
     res.json({
       success: true,
       token,
-      nombre: user.first_name,
+      user: {
+        id: user.id,
+        username: user.username,
+        role: user.role,
+      },
       message: "Inicio de sesión exitoso",
     });
   } catch (error) {
