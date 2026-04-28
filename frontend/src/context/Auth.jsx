@@ -1,7 +1,7 @@
-import { createContext, useContext } from "react";
-import { useState } from "react";
+import { createContext, useContext, useState } from "react";
 
 const AuthContext = createContext(null);
+
 export const useAuth = () => {
   return useContext(AuthContext);
 };
@@ -10,14 +10,21 @@ export const AuthProvider = ({ children }) => {
   const [token, setToken] = useState(() => {
     return localStorage.getItem("token");
   });
+
   const [error, setError] = useState(null);
 
+  // =========================
+  // LOGIN
+  // =========================
   const login = async (username, password) => {
     setError(null);
+
     try {
       const response = await fetch("http://localhost:3000/login", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+        },
         body: JSON.stringify({ username, password }),
       });
 
@@ -27,13 +34,9 @@ export const AuthProvider = ({ children }) => {
         let errorMessage = "Ocurrió un error inesperado.";
 
         if (response.status === 400) {
-          if (session.error) {
-            errorMessage = session.error; // 👈 esto es lo que se agregó
-          } else if (session.message) {
-            errorMessage = session.message;
-          }
-        } else if (response.status === 401 && session.error) {
-          errorMessage = session.error;
+          errorMessage = session.error || session.message || errorMessage;
+        } else if (response.status === 401) {
+          errorMessage = session.error || errorMessage;
         } else if (session.message) {
           errorMessage = session.message;
         }
@@ -41,34 +44,55 @@ export const AuthProvider = ({ children }) => {
         throw new Error(errorMessage);
       }
 
+      // =========================
+      // 🔥 GUARDAR TOKEN + USER
+      // =========================
       setToken(session.token);
       localStorage.setItem("token", session.token);
+
+      if (session.user) {
+        localStorage.setItem("user", JSON.stringify(session.user));
+      } else {
+        console.warn("⚠️ El backend no envía el user");
+      }
+
       return { success: true };
+
     } catch (error) {
       setError(error.message);
       return { success: false, error: error.message };
     }
   };
 
+  // =========================
+  // LOGOUT
+  // =========================
   const logout = () => {
     localStorage.removeItem("token");
+    localStorage.removeItem("user"); // 🔥 importante
     setToken(null);
     setError(null);
   };
 
+  // =========================
+  // FETCH AUTH
+  // =========================
   const fetchAuth = async (url, options = {}) => {
     if (!token) {
-      throw new Error("Debes iniciar sesion");
+      throw new Error("Debes iniciar sesión");
     }
 
     const response = await fetch(url, {
       ...options,
-      headers: { ...options.headers, Authorization: `Bearer ${token}` },
+      headers: {
+        ...options.headers,
+        Authorization: `Bearer ${token}`,
+      },
     });
 
     if (response.status === 401) {
-      logout(); // 🔥 clave
-      throw new Error("Sesion expirada");
+      logout();
+      throw new Error("Sesión expirada");
     }
 
     return response;
@@ -91,11 +115,14 @@ export const AuthProvider = ({ children }) => {
   );
 };
 
+// =========================
+// PROTECCIÓN DE RUTAS
+// =========================
 export const AuthPage = ({ children }) => {
   const { isAuthenticated } = useAuth();
 
   if (!isAuthenticated) {
-    return <h2>Ingrese para ver esta pagina</h2>;
+    return <h2>Ingrese para ver esta página</h2>;
   }
 
   return children;
