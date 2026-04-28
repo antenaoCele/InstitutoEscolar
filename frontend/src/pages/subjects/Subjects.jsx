@@ -131,12 +131,16 @@ export function Subjects() {
           Editar Materia
         </h2>
 
-        <input
-          type="text"
-          className="w-full border p-2 rounded mb-3"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-        />
+        <div className="mb-3"> 
+          <label className="block text-sm font-medium mb-1"> 
+            Materia 
+          </label> 
+          <input 
+            type="text" 
+            className="w-full border p-2 rounded" 
+            value={name} onChange={(e) => setName(e.target.value)} 
+          /> 
+        </div>
 
         {/* 🔥 ERROR */}
         {errorEdit && (
