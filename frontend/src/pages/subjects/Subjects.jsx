@@ -1,4 +1,6 @@
+
 import { useEffect, useState } from "react";
+import BasicTable from "../../components/tables/BasicTables/BasicTablesOne";
 import { subjectService } from "../../services/subject.service";
 
 export function Subjects() {
@@ -9,7 +11,7 @@ export function Subjects() {
       try {
         const { data } = await subjectService.getAll();
 
-        if (!data.success) {
+        if (!data?.success) {
           setSubjects([]);
           return;
         }
@@ -24,33 +26,16 @@ export function Subjects() {
     fetchSubjects();
   }, []);
 
+  const columns = [
+    { header: "ID", accessor: "id" },
+    { header: "Nombre", accessor: "name" },
+  ];
+
   return (
-    <article>
-      <h2>Materias</h2>
-
-      <table>
-        <thead>
-          <tr>
-            <th>ID</th>
-            <th>Materia</th>
-          </tr>
-        </thead>
-
-        <tbody>
-          {subjects.length > 0 ? (
-            subjects.map((s) => (
-              <tr key={s.id}>
-                <td>{s.id}</td>
-                <td>{s.name}</td>
-              </tr>
-            ))
-          ) : (
-            <tr>
-              <td colSpan="2">No hay materias</td>
-            </tr>
-          )}
-        </tbody>
-      </table>
-    </article>
+    <BasicTable
+      title="Materias"
+      columns={columns}
+      data={subjects}
+    />
   );
 }
