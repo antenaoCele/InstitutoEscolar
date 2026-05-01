@@ -60,7 +60,9 @@ export default function SignInForm() {
           </label>
           <input
             type="text"
-            className="w-full p-2 border rounded bg-white text-black border-gray-300 dark:bg-gray-800 dark:text-white dark:border-gray-600"
+            className="w-full p-2 border rounded bg-white text-black border-gray-300 
+            dark:bg-gray-800 dark:text-white dark:border-gray-600
+            focus:outline-none focus:ring-1 focus:ring-[#0cc0df] focus:border-[#0cc0df]"
             value={username}
             onChange={(e) => setUsername(e.target.value)}
           />
@@ -72,16 +74,16 @@ export default function SignInForm() {
           </label>
           <input
             type="password"
-            className="w-full p-2 border rounded bg-white text-black border-gray-300 dark:bg-gray-800 dark:text-white dark:border-gray-600"
+            className="w-full p-2 border rounded bg-white text-black border-gray-300 
+            dark:bg-gray-800 dark:text-white dark:border-gray-600
+            focus:outline-none focus:ring-1 focus:ring-[#0cc0df] focus:border-[#0cc0df]"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
           />
         </div>
 
         {(errorLocal || error) && (
-          <p className="text-red-500 text-sm">
-            {errorLocal || error}
-          </p>
+          <p className="text-red-500 text-sm">{errorLocal || error}</p>
         )}
 
         <button
