@@ -11,7 +11,7 @@ export const checkValidations = (req, res, next) => {
   if (!validation.isEmpty()) {
     return res.status(400).json({
       success: false,
-      message: "Falla de validación",
+      // message: "Falla de validación",
       errors: validation.array(),
     });
   }

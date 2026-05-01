@@ -83,7 +83,7 @@ DNI
 export const validateDNI = (field, optional = false) => [
   baseField(field, optional)
     .isNumeric()
-    .withMessage("Ingrese un DNI válido.")
+    .withMessage("Este campo está vacío o el DNI no es válido.")
     .customSanitizer((v) =>
       v === undefined || v === null || v === ""
         ? undefined
@@ -178,19 +178,19 @@ export const validateStudentInfo = (
     /* ================ LEVEL ================ */
     levelValidator
       .isIn(["inicial", "primario", "secundario", "universitario"])
-      .withMessage("Elija un nivel válido.")
+      .withMessage("Seleccione una opción válida.")
       .bail(),
 
     /* ================ GRADE ================ */
     body(fieldGrade)
       .notEmpty()
-      .withMessage("Debe indicar el grado.")
+      .withMessage("Seleccione una opción válida.")
       .bail()
       .custom((value) => {
         const grade = Number(value);
 
         if (!Number.isInteger(grade) || grade < 1 || grade > 7) {
-          throw new Error("Elija un grado válido (1 a 7).");
+          throw new Error("El grado no es válido.");
         }
 
         return true;
@@ -240,7 +240,7 @@ export const validateName = (field, optional = false) => [
   baseField(field, optional)
     .trim()
     .matches(/^[a-zA-Z0-9ñÑáéíóúÁÉÍÓÚ\s°º().,+\-/#]+$/)
-    .withMessage("Contiene caracteres inválidos.")
+    .withMessage("Este campo está vacío o contiene caracteres no válidos.")
     .bail()
     .isLength({ min: 3 })
     .withMessage("Este campo debe superar los 3 caracteres.")
@@ -290,7 +290,7 @@ export const validatePersonName = (field, optional = false) => [
   baseField(field, optional)
     .trim()
     .matches(/^[a-zA-ZñÑáéíóúÁÉÍÓÚ\s]+$/)
-    .withMessage("Contiene caracteres inválidos.")
+    .withMessage("Este campo está vacío o contiene caracteres no válidos.")
     .bail()
     .isLength({ min: 3 })
     .withMessage("Este campo debe superar los 3 caracteres.")
