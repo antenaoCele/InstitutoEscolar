@@ -14,6 +14,10 @@ export function Students() {
   const [openDeleteModal, setOpenDeleteModal] = useState(false);
   const [openCreateModal, setOpenCreateModal] = useState(false);
 
+  const [searchFirstLastName, setSearchFirstLastName] = useState("");
+  const [searchDNI, setSearchDNI] = useState("");
+  const [searchSchool, setSearchSchool] = useState("");
+
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [dni, setDni] = useState("");
@@ -23,7 +27,7 @@ export function Students() {
   const [grade, setGrade] = useState("");
 
   const [errorsCreate, setErrorsCreate] = useState({});
-  const [errorEdit, setErrorEdit] = useState("");
+  const [errorsEdit, setErrorsEdit] = useState({});
 
   const location = useLocation();
   const isTeacher = !isAdmin();
@@ -33,8 +37,7 @@ export function Students() {
 
   const inputClass = (error) =>
     `w-full p-2 border rounded mb-1 
-    bg-white text-black border-gray-300
-    dark:bg-gray-800 dark:text-white dark:border-gray-600
+    border-gray-300
     focus:outline-none focus:ring-1 focus:ring-[#0cc0df] focus:border-[#0cc0df]
     ${error ? "border-red-500 focus:ring-red-500 focus:border-red-500" : ""}`;
 
@@ -49,6 +52,15 @@ export function Students() {
     setLevel("");
     setGrade("");
     setErrorsCreate({});
+    setErrorsEdit({});
+  };
+
+  const mapErrors = (errors) => {
+    const formatted = {};
+    errors.forEach((e) => {
+      formatted[e.path] = e.msg;
+    });
+    return formatted;
   };
 
   const fetchStudents = async () => {
@@ -64,47 +76,31 @@ export function Students() {
     fetchStudents();
   }, [location.search]);
 
-  const handleEdit = (student) => {
-    setSelectedStudent(student);
 
-    setFirstName(student.first_name || "");
-    setLastName(student.last_name || "");
-    setDni(student.dni || "");
-    setSchool(student.school || "");
-    setBirthDate(student.birth_date ? student.birth_date.split("T")[0] : "");
-    setLevel(student.level || "");
-    setGrade(student.grade || "");
+    // ================= BUSCADOR =================
+  const filteredStudents = students.filter((s) => {
+    const textName = searchFirstLastName.toLowerCase();
+    const textDNI = searchDNI;
+    const textSchool = searchSchool.toLowerCase();
 
-    setErrorEdit("");
-    setOpenEditModal(true);
-  };
+    const matchName =
+      !textName ||
+      s.first_name?.toLowerCase().includes(textName) ||
+      s.last_name?.toLowerCase().includes(textName);
 
-  const handleUpdate = async () => {
-    try {
-      setErrorEdit("");
+    const matchDNI =
+      !textDNI ||
+      s.dni?.toString().includes(textDNI);
 
-      await studentService.update(selectedStudent.student_id, {
-        first_name: firstName,
-        last_name: lastName,
-        dni,
-        school,
-        birth_date: birthDate,
-        level,
-        grade,
-      });
+    const matchSchool =
+      !textSchool ||
+      s.school?.toLowerCase().includes(textSchool);
 
-      setOpenEditModal(false);
-      fetchStudents();
-    } catch (error) {
-      const message =
-        error.response?.data?.error ||
-        error.response?.data?.message ||
-        "Error al actualizar";
+    return matchName && matchDNI && matchSchool;
+  });
 
-      setErrorEdit(message);
-    }
-  };
 
+  // ================= CREATE =================
   const handleCreate = async () => {
     try {
       setErrorsCreate({});
@@ -124,38 +120,91 @@ export function Students() {
       resetForm();
     } catch (error) {
       const backendErrors = error.response?.data?.errors;
-
-      if (backendErrors) {
-        const formatted = {};
-        backendErrors.forEach((err) => {
-          formatted[err.path] = err.msg;
-        });
-        setErrorsCreate(formatted);
-      }
+      if (backendErrors) setErrorsCreate(mapErrors(backendErrors));
     }
   };
 
+  // ================= EDIT =================
+  const handleEdit = (student) => {
+    setSelectedStudent(student);
+
+    setFirstName(student.first_name || "");
+    setLastName(student.last_name || "");
+    setDni(student.dni || "");
+    setSchool(student.school || "");
+    setBirthDate(student.birth_date?.split("T")[0] || "");
+    setLevel(student.level || "");
+    setGrade(student.grade || "");
+
+    setErrorsEdit({});
+    setOpenEditModal(true);
+  };
+
+  const handleUpdate = async () => {
+    const newErrors = {};
+
+    if (!firstName.trim()) newErrors.first_name = "Este campo está vacío o contiene caracteres no válidos.";
+    if (!lastName.trim()) newErrors.last_name = "Este campo está vacío o contiene caracteres no válidos.";
+    if (!dni.trim()) newErrors.dni = "Este campo está vacío o contiene caracteres no válidos.";
+    if (!school.trim()) newErrors.school = "Este campo está vacío o contiene caracteres no válidos.";
+    if (!birthDate) newErrors.birth_date = "Seleccione una fecha válida.";
+    if (!level) newErrors.level = "Seleccione una opción válida.";
+    if (!grade) newErrors.grade = "Seleccione una opción válida.";
+
+    if (Object.keys(newErrors).length > 0) {
+      setErrorsEdit(newErrors);
+      return;
+    }
+
+    try {
+      setErrorsEdit({});
+
+      await studentService.update(selectedStudent.student_id, {
+        first_name: firstName,
+        last_name: lastName,
+        dni,
+        school,
+        birth_date: birthDate,
+        level,
+        grade,
+      });
+
+      setOpenEditModal(false);
+      fetchStudents();
+    } catch (error) {
+      const backendErrors = error.response?.data?.errors;
+      if (backendErrors) setErrorsEdit(mapErrors(backendErrors));
+    }
+  };
+
+  // ================= DELETE =================
   const handleDelete = (student) => {
     setSelectedStudent(student);
     setOpenDeleteModal(true);
   };
 
-  const confirmDelete = async () => {
+const confirmDelete = async () => {
+  try {
     await studentService.delete(selectedStudent.student_id);
     setOpenDeleteModal(false);
     fetchStudents();
-  };
+  } catch (error) {
+    console.error(error.response?.data || error.message);
+    alert(error.response?.data?.message || "Error al eliminar");
+  }
+};
 
   const openCreate = () => {
     resetForm();
     setOpenCreateModal(true);
   };
 
+  // ================= TABLE =================
   let columns = [
     { header: "ID", accessor: "student_id" },
     { header: "Apellido", accessor: "last_name" },
     { header: "Nombre", accessor: "first_name" },
-    { header: "Escuela", accessor: "school" },
+    { header: "Colegio o Universidad", accessor: "school" },
     {
       header: "Fecha Nac.",
       render: (row) =>
@@ -176,19 +225,10 @@ export function Students() {
       header: "Acciones",
       render: (row) => (
         <div className="flex gap-2">
-          <Button
-            size="sm"
-            onClick={() => handleEdit(row)}
-            className={buttonClass}
-          >
+          <Button size="sm" onClick={() => handleEdit(row)} className={buttonClass}>
             Editar
           </Button>
-          <Button
-            size="sm"
-            variant="outline"
-            onClick={() => handleDelete(row)}
-            className={buttonClass}
-          >
+          <Button size="sm" variant="outline" onClick={() => handleDelete(row)} className={buttonClass}>
             Eliminar
           </Button>
         </div>
@@ -199,9 +239,8 @@ export function Students() {
   const showCreateButtons = !(isAdmin() && status === "active");
 
   const tableTitle = (
-    <div className="flex items-center justify-between">
+    <div className="flex justify-between items-center">
       <span>Alumnos</span>
-
       {showCreateButtons && (
         <Button size="sm" onClick={openCreate} className={buttonClass}>
           +
@@ -211,108 +250,167 @@ export function Students() {
   );
 
   return (
-    <>
-      <BasicTable title={tableTitle} columns={columns} data={students} />
+  <>
+ {/* 🔍 BUSCADORES */}
+      <div className="flex gap-3 mb-4 flex-wrap">
+        <input
+          placeholder=" 🔍 Buscar por Nombre o Apellido"
+          value={searchFirstLastName}
+          onChange={(e) => setSearchFirstLastName(e.target.value)}
+          className="p-2 border border-gray-300 rounded w-60"
+        />
 
-      {showCreateButtons && (
-        <div className="mt-4">
-          <Button onClick={openCreate} className={buttonClass}>
-            Crear Alumno
-          </Button>
-        </div>
-      )}
+        <input
+          placeholder="🔍 Buscar por DNI"
+          value={searchDNI}
+          onChange={(e) => setSearchDNI(e.target.value)}
+          className="p-2 border border-gray-300 rounded w-40"
+        />
 
-      {/* CREATE */}
-      <Modal isOpen={openCreateModal} onClose={() => setOpenCreateModal(false)}>
-        <h2 className="text-lg font-semibold mb-4">Crear Alumno</h2>
+        <input
+          placeholder="🔍 Buscar por Colegio o Universidad"
+          value={searchSchool}
+          onChange={(e) => setSearchSchool(e.target.value)}
+          className="p-2 border border-gray-300 rounded w-60"
+        />
+      </div>
 
-        <label>Nombre</label>
+    <BasicTable title={tableTitle} columns={columns}  data={filteredStudents} />
+
+    {showCreateButtons && (
+      <div className="mt-8">
+        <Button onClick={openCreate} className={buttonClass}>
+          Crear Alumno
+        </Button>
+      </div>
+    )}
+
+    {/* CREATE MODAL */}
+    <Modal isOpen={openCreateModal} onClose={() => setOpenCreateModal(false)}>
+      <h2 className="text-xl font-bold mb-8">Crear Alumno</h2>
+
+      <div className="flex flex-col mb-6">
+        <label className="font-semibold mb-2">Nombre</label>
         <input className={inputClass(errorsCreate.first_name)} value={firstName} onChange={(e) => setFirstName(e.target.value)} />
-        {errorsCreate.first_name && <p className="text-red-500 text-sm mb-2">{errorsCreate.first_name}</p>}
+        {errorsCreate.first_name && <p className="text-red-500 text-sm mt-1">{errorsCreate.first_name}</p>}
+      </div>
 
-        <label>Apellido</label>
+      <div className="flex flex-col mb-6">
+        <label className="font-semibold mb-2">Apellido</label>
         <input className={inputClass(errorsCreate.last_name)} value={lastName} onChange={(e) => setLastName(e.target.value)} />
-        {errorsCreate.last_name && <p className="text-red-500 text-sm mb-2">{errorsCreate.last_name}</p>}
+        {errorsCreate.last_name && <p className="text-red-500 text-sm mt-1">{errorsCreate.last_name}</p>}
+      </div>
 
-        <label>DNI</label>
+      <div className="flex flex-col mb-6">
+        <label className="font-semibold mb-2">DNI</label>
         <input className={inputClass(errorsCreate.dni)} value={dni} onChange={(e) => setDni(e.target.value)} />
-        {errorsCreate.dni && <p className="text-red-500 text-sm mb-2">{errorsCreate.dni}</p>}
+        {errorsCreate.dni && <p className="text-red-500 text-sm mt-1">{errorsCreate.dni}</p>}
+      </div>
 
-        <label>Escuela</label>
+      <div className="flex flex-col mb-6">
+        <label className="font-semibold mb-2">Colegio o Universidad</label>
         <input className={inputClass(errorsCreate.school)} value={school} onChange={(e) => setSchool(e.target.value)} />
-        {errorsCreate.school && <p className="text-red-500 text-sm mb-2">{errorsCreate.school}</p>}
+        {errorsCreate.school && <p className="text-red-500 text-sm mt-1">{errorsCreate.school}</p>}
+      </div>
 
-        <label>Fecha de nacimiento</label>
+      <div className="flex flex-col mb-6">
+        <label className="font-semibold mb-2">Fecha de nacimiento</label>
         <input type="date" className={inputClass(errorsCreate.birth_date)} value={birthDate} onChange={(e) => setBirthDate(e.target.value)} />
-        {errorsCreate.birth_date && <p className="text-red-500 text-sm mb-2">{errorsCreate.birth_date}</p>}
+        {errorsCreate.birth_date && <p className="text-red-500 text-sm mt-1">{errorsCreate.birth_date}</p>}
+      </div>
 
-        <label>Nivel</label>
+      <div className="flex flex-col mb-6">
+        <label className="font-semibold mb-2">Nivel</label>
         <select className={inputClass(errorsCreate.level)} value={level} onChange={(e) => setLevel(e.target.value)}>
-          <option value="">Seleccionar</option>
-          <option value="inicial">Inicial</option>
-          <option value="primario">Primario</option>
-          <option value="secundario">Secundario</option>
-          <option value="universitario">Universitario</option>
+          <option value="" disabled>Seleccionar</option>
+          <option value="Inicial">Inicial</option>
+          <option value="Primario">Primario</option>
+          <option value="Secundario">Secundario</option>
+          <option value="Universitario">Universitario</option>
         </select>
-        {errorsCreate.level && <p className="text-red-500 text-sm mb-2">{errorsCreate.level}</p>}
+        {errorsCreate.level && <p className="text-red-500 text-sm mt-1">{errorsCreate.level}</p>}
+      </div>
 
-        <label>Grado</label>
+      <div className="flex flex-col mb-6">
+        <label className="font-semibold mb-2">Grado</label>
         <select className={inputClass(errorsCreate.grade)} value={grade} onChange={(e) => setGrade(e.target.value)}>
-          <option value="">Seleccionar</option>
-          {[1,2,3,4,5,6,7].map((g) => (
+          <option value="" disabled>Seleccionar</option>
+          {[1, 2, 3, 4, 5, 6, 7].map((g) => (
             <option key={g} value={g}>{g}</option>
           ))}
         </select>
-        {errorsCreate.grade && <p className="text-red-500 text-sm mb-2">{errorsCreate.grade}</p>}
+        {errorsCreate.grade && <p className="text-red-500 text-sm mt-1">{errorsCreate.grade}</p>}
+      </div>
 
-        <div className="flex justify-end gap-2 mt-3">
-          <Button variant="outline" onClick={() => setOpenCreateModal(false)} className={buttonClass}>
-            Cancelar
-          </Button>
-          <Button onClick={handleCreate} className={buttonClass}>
-            Crear
-          </Button>
-        </div>
-      </Modal>
+      <div className="flex justify-end gap-4 mt-10">
+        <Button variant="outline" onClick={() => setOpenCreateModal(false)}>Cancelar</Button>
+        <Button onClick={handleCreate}>Crear</Button>
+      </div>
+    </Modal>
 
-      {/* EDIT */}
-      <Modal isOpen={openEditModal} onClose={() => setOpenEditModal(false)}>
-        <h2 className="text-lg font-semibold mb-4">Editar Alumno</h2>
+    {/* EDIT MODAL */}
+    <Modal isOpen={openEditModal} onClose={() => setOpenEditModal(false)}>
+      <h2 className="text-xl font-bold mb-8">Editar Alumno</h2>
 
-        <input className={inputClass()} value={firstName} onChange={(e) => setFirstName(e.target.value)} />
-        <input className={inputClass()} value={lastName} onChange={(e) => setLastName(e.target.value)} />
-        <input className={inputClass()} value={dni} onChange={(e) => setDni(e.target.value)} />
-        <input className={inputClass()} value={school} onChange={(e) => setSchool(e.target.value)} />
-        <input type="date" className={inputClass()} value={birthDate} onChange={(e) => setBirthDate(e.target.value)} />
+      <div className="flex flex-col mb-6">
+        <label className="font-semibold mb-2">Nombre</label>
+        <input className={inputClass(errorsEdit.first_name)} value={firstName} onChange={(e) => setFirstName(e.target.value)} />
+        {errorsEdit.first_name && <p className="text-red-500 text-sm mt-1">{errorsEdit.first_name}</p>}
+      </div>
 
-        <select className={inputClass()} value={level} onChange={(e) => setLevel(e.target.value)}>
-          <option value="">Seleccionar</option>
-          <option value="inicial">Inicial</option>
-          <option value="primario">Primario</option>
-          <option value="secundario">Secundario</option>
-          <option value="universitario">Universitario</option>
+      <div className="flex flex-col mb-6">
+        <label className="font-semibold mb-2">Apellido</label>
+        <input className={inputClass(errorsEdit.last_name)} value={lastName} onChange={(e) => setLastName(e.target.value)} />
+        {errorsEdit.last_name && <p className="text-red-500 text-sm mt-1">{errorsEdit.last_name}</p>}
+      </div>
+
+      <div className="flex flex-col mb-6">
+        <label className="font-semibold mb-2">DNI</label>
+        <input className={inputClass(errorsEdit.dni)} value={dni} onChange={(e) => setDni(e.target.value)} />
+        {errorsEdit.dni && <p className="text-red-500 text-sm mt-1">{errorsEdit.dni}</p>}
+      </div>
+
+      <div className="flex flex-col mb-6">
+        <label className="font-semibold mb-2">Colegio o Universidad</label>
+        <input className={inputClass(errorsEdit.school)} value={school} onChange={(e) => setSchool(e.target.value)} />
+        {errorsEdit.school && <p className="text-red-500 text-sm mt-1">{errorsEdit.school}</p>}
+      </div>
+
+      <div className="flex flex-col mb-6">
+        <label className="font-semibold mb-2">Fecha de nacimiento</label>
+        <input type="date" className={inputClass(errorsEdit.birth_date)} value={birthDate} onChange={(e) => setBirthDate(e.target.value)} />
+        {errorsEdit.birth_date && <p className="text-red-500 text-sm mt-1">{errorsEdit.birth_date}</p>}
+      </div>
+
+      <div className="flex flex-col mb-6">
+        <label className="font-semibold mb-2">Nivel</label>
+        <select className={inputClass(errorsEdit.level)} value={level} onChange={(e) => setLevel(e.target.value)}>
+          <option value="" disabled>Seleccionar</option>
+          <option value="Inicial">Inicial</option>
+          <option value="Primario">Primario</option>
+          <option value="Secundario">Secundario</option>
+          <option value="Universitario">Universitario</option>
         </select>
+        {errorsEdit.level && <p className="text-red-500 text-sm mt-1">{errorsEdit.level}</p>}
+      </div>
 
-        <select className={inputClass()} value={grade} onChange={(e) => setGrade(e.target.value)}>
-          <option value="">Seleccionar</option>
-          {[1,2,3,4,5,6,7].map((g) => (
+      <div className="flex flex-col mb-6">
+        <label className="font-semibold mb-2">Grado</label>
+        <select className={inputClass(errorsEdit.grade)} value={grade} onChange={(e) => setGrade(e.target.value)}>
+          <option value="" disabled>Seleccionar</option>
+          {[1, 2, 3, 4, 5, 6, 7].map((g) => (
             <option key={g} value={g}>{g}</option>
           ))}
         </select>
+        {errorsEdit.grade && <p className="text-red-500 text-sm mt-1">{errorsEdit.grade}</p>}
+      </div>
 
-        {errorEdit && <p className="text-red-500 text-sm">{errorEdit}</p>}
+      <div className="flex justify-end gap-4 mt-10">
+        <Button variant="outline" onClick={() => setOpenEditModal(false)}>Cancelar</Button>
+        <Button onClick={handleUpdate}>Guardar</Button>
+      </div>
+    </Modal>
 
-        <div className="flex justify-end gap-2 mt-3">
-          <Button variant="outline" onClick={() => setOpenEditModal(false)} className={buttonClass}>
-            Cancelar
-          </Button>
-          <Button onClick={handleUpdate} className={buttonClass}>
-            Guardar
-          </Button>
-        </div>
-      </Modal>
-
-      {/* DELETE */}
       <Modal isOpen={openDeleteModal} onClose={() => setOpenDeleteModal(false)}>
         <h2 className="text-lg font-semibold mb-4">¿Eliminar alumno?</h2>
 
@@ -325,6 +423,6 @@ export function Students() {
           </Button>
         </div>
       </Modal>
-    </>
-  );
+  </>
+);
 }
