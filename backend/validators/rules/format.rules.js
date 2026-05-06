@@ -8,7 +8,7 @@ export const validateDate = (field, optional = false) => [
   baseField(field, optional)
     .trim()
     .isISO8601({ strict: true })
-    .withMessage("Formato debe ser YYYY-MM-DD.")
+    .withMessage("Ingrese una fecha válida.")
     .bail()
     .custom((value) => {
       const [year, month, day] = value.split("-").map(Number);
@@ -177,7 +177,7 @@ export const validateStudentInfo = (
   return [
     /* ================ LEVEL ================ */
     levelValidator
-      .isIn(["inicial", "primario", "secundario", "universitario"])
+      .isIn(["Inicial", "Primario", "Secundario", "Universitario"])
       .withMessage("Seleccione una opción válida.")
       .bail(),
 
