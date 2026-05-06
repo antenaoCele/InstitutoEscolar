@@ -179,5 +179,3 @@ export const studentsController = {
     }
   },
 };
-
-delete studentsController.delete;
