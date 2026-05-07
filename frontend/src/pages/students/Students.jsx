@@ -2,6 +2,8 @@ import { useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
 import BasicTable from "../../components/tables/BasicTables/BasicTablesOne";
 import { studentService } from "../../services/student.service";
+import { teacherService } from "../../services/teacher.service";
+import { planService } from "../../services/plan.service";
 import Button from "../../components/ui/Button";
 import { Modal } from "../../components/ui/Modal";
 import { isAdmin } from "../../utils/auth";
@@ -17,6 +19,12 @@ export function Students() {
   const [searchFirstLastName, setSearchFirstLastName] = useState("");
   const [searchDNI, setSearchDNI] = useState("");
   const [searchSchool, setSearchSchool] = useState("");
+
+  const [teachers, setTeachers] = useState([]);
+  const [plans, setPlans] = useState([]);
+
+  const [selectedTeacher, setSelectedTeacher] = useState("");
+  const [selectedPlan, setSelectedPlan] = useState("");
 
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
@@ -65,7 +73,17 @@ export function Students() {
 
   const fetchStudents = async () => {
     try {
-      const { data } = await studentService.getAll({ status });
+      const params = { status };
+
+    if (selectedTeacher) {
+      params.teacher_id = selectedTeacher;
+    }
+
+    if (selectedPlan) {
+      params.plan_id = selectedPlan;
+    }
+
+const { data } = await studentService.getAll(params);
       setStudents(data?.data || []);
     } catch {
       setStudents([]);
@@ -74,10 +92,25 @@ export function Students() {
 
   useEffect(() => {
     fetchStudents();
-  }, [location.search]);
+  }, [location.search, selectedTeacher, selectedPlan]);
+
+  useEffect(() => {
+  const fetchFilters = async () => {
+    try {
+      const teachersRes = await teacherService.getAll();
+      const plansRes = await planService.getAll();
+
+      setTeachers(teachersRes.data.data || []);
+      setPlans(plansRes.data.data || []);
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  fetchFilters();
+}, []);
 
 
-    // ================= BUSCADOR =================
   const filteredStudents = students.filter((s) => {
     const textName = searchFirstLastName.toLowerCase();
     const textDNI = searchDNI;
@@ -100,7 +133,6 @@ export function Students() {
   });
 
 
-  // ================= CREATE =================
   const handleCreate = async () => {
     try {
       setErrorsCreate({});
@@ -124,7 +156,6 @@ export function Students() {
     }
   };
 
-  // ================= EDIT =================
   const handleEdit = (student) => {
     setSelectedStudent(student);
 
@@ -177,7 +208,6 @@ export function Students() {
     }
   };
 
-  // ================= DELETE =================
   const handleDelete = (student) => {
     setSelectedStudent(student);
     setOpenDeleteModal(true);
@@ -199,7 +229,6 @@ const confirmDelete = async () => {
     setOpenCreateModal(true);
   };
 
-  // ================= TABLE =================
   let columns = [
     { header: "ID", accessor: "student_id" },
     { header: "Apellido", accessor: "last_name" },
@@ -251,7 +280,7 @@ const confirmDelete = async () => {
 
   return (
   <>
- {/* 🔍 BUSCADORES */}
+ {/* BUSCADORES */}
       <div className="flex gap-3 mb-4 flex-wrap">
         <input
           placeholder=" 🔍 Buscar por Nombre o Apellido"
@@ -273,8 +302,38 @@ const confirmDelete = async () => {
           onChange={(e) => setSearchSchool(e.target.value)}
           className="p-2 border border-gray-300 rounded w-60"
         />
+
+        <select
+  value={selectedTeacher}
+  onChange={(e) => setSelectedTeacher(e.target.value)}
+  className="p-2 border border-gray-300 rounded w-60"
+>
+  <option value="">👨‍🏫 Todos los docentes</option>
+
+  {teachers.map((teacher) => (
+    <option key={teacher.id} value={teacher.id}>
+      {teacher.first_name} {teacher.last_name}
+    </option>
+  ))}
+</select>
+
+<select
+  value={selectedPlan}
+  onChange={(e) => setSelectedPlan(e.target.value)}
+  className="p-2 border border-gray-300 rounded w-60"
+>
+  <option value="">📘 Todos los planes</option>
+
+  {plans.map((plan) => (
+    <option key={plan.id} value={plan.id}>
+      {plan.name}
+    </option>
+  ))}
+</select>
+
       </div>
 
+      
     <BasicTable title={tableTitle} columns={columns}  data={filteredStudents} />
 
     {showCreateButtons && (
