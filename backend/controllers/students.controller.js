@@ -9,7 +9,7 @@ export const studentsController = {
 
   getAllWithStatus: async (req, res) => {
     try {
-      const { status = "all", teacher_id } = req.query;
+      const { status = "all", teacher_id, plan_id } = req.query;
 
       const today = new Date();
       const yearMonth = today.toISOString().slice(0, 7);
@@ -24,39 +24,30 @@ export const studentsController = {
           s.birth_date,
           s.level,
           s.grade,
-
           sp.id AS student_plan_id,
           sp.teacher_id,
-
+          sp.plan_id,
           pp.price,
-
           IFNULL(SUM(p.amount), 0) AS total_paid,
-
           t.id AS tutor_id,
           t.first_name AS tutor_first_name,
           t.last_name AS tutor_last_name,
           t.dni AS tutor_dni,
           t.phone AS tutor_phone
-
         FROM students s
-
         LEFT JOIN student_tutors st ON st.student_id = s.id
         LEFT JOIN tutors t ON t.id = st.tutor_id
-
-        LEFT JOIN student_plans sp 
+        LEFT JOIN student_plans sp  
           ON sp.student_id = s.id
           AND sp.start_date <= CURDATE()
           AND (sp.end_date IS NULL OR sp.end_date >= CURDATE())
-
         LEFT JOIN plan_prices pp 
           ON pp.plan_id = sp.plan_id
           AND pp.start_date <= CURDATE()
           AND (pp.end_date IS NULL OR pp.end_date >= CURDATE())
-
         LEFT JOIN payments p 
           ON p.student_plan_id = sp.id
           AND DATE_FORMAT(p.payment_date, '%Y-%m') = ?
-
         WHERE 1=1
       `;
 
@@ -65,6 +56,11 @@ export const studentsController = {
       if (teacher_id) {
         query += ` AND sp.teacher_id = ? `;
         params.push(teacher_id);
+      }
+
+      if (plan_id) {
+        query += ` AND sp.plan_id = ? `;
+        params.push(plan_id);
       }
 
       if (status === "active") {
@@ -101,6 +97,7 @@ export const studentsController = {
           level: row.level,
           grade: row.grade,
           teacher_id: row.teacher_id,
+          plan_id: row.plan_id,
           tutor: row.tutor_id
             ? {
                 id: row.tutor_id,
@@ -148,6 +145,7 @@ export const studentsController = {
           s.last_name,
           s.dni,
           sp.teacher_id,
+          sp.plan_id,
           pp.price,
           IFNULL(SUM(p.amount), 0) AS total_paid
         FROM students s
