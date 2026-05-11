@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
+import { useLocation } from "react-router-dom";
 import BasicTable from "../../components/tables/BasicTables/BasicTablesOne";
 import { teacherService } from "../../services/teacher.service";
+import { planService } from "../../services/plan.service";
 import Button from "../../components/ui/Button";
 import { Modal } from "../../components/ui/Modal";
 import { isAdmin } from "../../utils/auth";
@@ -9,29 +11,124 @@ export function Teachers() {
   const [teachers, setTeachers] = useState([]);
   const [selectedTeacher, setSelectedTeacher] = useState(null);
 
+  const [plans, setPlans] = useState([]);
+  const [selectedPlan, setSelectedPlan] = useState("");
+
   const [openEditModal, setOpenEditModal] = useState(false);
   const [openDeleteModal, setOpenDeleteModal] = useState(false);
+  const [openCreateModal, setOpenCreateModal] = useState(false);
+   
+  const [searchFirstLastName, setSearchFirstLastName] = useState("");
+  const [searchDNI, setSearchDNI] = useState("");
 
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [dni, setDni] = useState("");
   const [phone, setPhone] = useState("");
 
-  const [errorEdit, setErrorEdit] = useState("");
+  const [errorsCreate, setErrorsCreate] = useState({});
+  const [errorsEdit, setErrorsEdit] = useState({});
 
-  const fetchTeachers = async () => {
+  const location = useLocation();
+  const isTeacher = !isAdmin();
+
+  const params = new URLSearchParams(location.search);
+  const status = params.get("status") || "all";
+
+  const inputClass = (error) =>
+    `w-full p-2 border rounded mb-1 
+    border-gray-300
+    focus:outline-none focus:ring-1 focus:ring-[#0cc0df] focus:border-[#0cc0df]
+    ${error ? "border-red-500 focus:ring-red-500 focus:border-red-500" : ""}`;
+
+  const buttonClass = "cursor-pointer transition transform hover:scale-105";
+
+  const resetForm = () => {
+    setFirstName("");
+    setLastName("");
+    setDni("");
+    setPhone("");
+    setErrorsCreate({});
+    setErrorsEdit({});
+  };
+
+  const mapErrors = (errors) => {
+    const formatted = {};
+    errors.forEach((e) => {
+      formatted[e.path] = e.msg;
+    });
+    return formatted;
+  };
+
+const fetchTeachers = async () => {
+  try {
+    const queryParams = {};
+
+    if (selectedPlan) {
+      queryParams.plan_id = selectedPlan;
+    }
+
+    const { data } = await teacherService.getAll(queryParams);
+
+    setTeachers(data?.data || []);
+  } catch {
+    setTeachers([]);
+  }
+};
+
+  useEffect(() => {
+  fetchTeachers();
+  }, [selectedPlan]);
+
+  useEffect(() => {
+  const fetchFilters = async () => {
     try {
-      const { data } = await teacherService.getAll();
-      setTeachers(data?.data || []);
+      const plansRes = await planService.getAll();
+
+      setPlans(plansRes.data.data || []);
     } catch (error) {
-      console.error("Error al obtener docentes:", error);
-      setTeachers([]);
+      console.error(error);
     }
   };
 
-  useEffect(() => {
-    fetchTeachers();
-  }, []);
+  fetchFilters();
+}, []);
+
+  const filteredTeachers = teachers.filter((t) => {
+    const textName = searchFirstLastName.toLowerCase();
+    const textDNI = searchDNI;
+
+    const matchName =
+      !textName ||
+      t.first_name?.toLowerCase().includes(textName) ||
+      t.last_name?.toLowerCase().includes(textName);
+
+    const matchDNI =
+      !textDNI ||
+      t.dni?.toString().includes(textDNI);
+
+    return matchName && matchDNI;
+  });
+
+  const handleCreate = async () => {
+    try {
+      setErrorsCreate({});
+
+      await teacherService.create({
+        first_name: firstName,
+        last_name: lastName,
+        dni,
+        phone,
+      });
+
+      setOpenCreateModal(false);
+      fetchTeachers();
+      resetForm();
+    } catch (error) {
+      const backendErrors = error.response?.data?.errors;
+      if (backendErrors) setErrorsCreate(mapErrors(backendErrors));
+    }
+  };
 
   const handleEdit = (teacher) => {
     setSelectedTeacher(teacher);
@@ -41,33 +138,39 @@ export function Teachers() {
     setDni(teacher.dni || "");
     setPhone(teacher.phone || "");
 
-    setErrorEdit("");
+    setErrorsEdit({});
     setOpenEditModal(true);
   };
 
   const handleUpdate = async () => {
-    try {
-      setErrorEdit("");
-
-      await teacherService.update(selectedTeacher.id, {
-        first_name: firstName,
-        last_name: lastName,
-        dni,
-        phone,
-      });
-
-      setOpenEditModal(false);
-      fetchTeachers();
-    } catch (error) {
-      console.error("Error al actualizar:", error);
-
-      const message =
-        error.response?.data?.error ||
-        error.response?.data?.message ||
-        "Error al actualizar";
-
-      setErrorEdit(message);
-    }
+      const newErrors = {};
+  
+      if (!firstName.trim()) newErrors.first_name = "Este campo está vacío.";
+      if (!lastName.trim()) newErrors.last_name = "Este campo está vacío.";
+      if (!dni.trim()) newErrors.dni = "Este campo está vacío.";
+      if (!phone.trim()) newErrors.phone = "Este campo está vacío.";
+  
+      if (Object.keys(newErrors).length > 0) {
+        setErrorsEdit(newErrors);
+        return;
+      }
+  
+      try {
+        setErrorsEdit({});
+  
+        await teacherService.update(selectedTeacher.id, {
+          first_name: firstName,
+          last_name: lastName,
+          dni,
+          phone,
+        });
+  
+        setOpenEditModal(false);
+        fetchTeachers();
+      } catch (error) {
+        const backendErrors = error.response?.data?.errors;
+        if (backendErrors) setErrorsEdit(mapErrors(backendErrors));
+      }
   };
 
   const handleDelete = (teacher) => {
@@ -81,149 +184,181 @@ export function Teachers() {
       setOpenDeleteModal(false);
       fetchTeachers();
     } catch (error) {
-      console.error("Error al eliminar:", error);
+      console.error(error.response?.data || error.message);
+      alert(error.response?.data?.message || "Error al eliminar");
     }
   };
 
-  const columns = [
+  const openCreate = () => {
+    resetForm();
+    setOpenCreateModal(true);
+  };
+
+  let columns = [
     { header: "ID", accessor: "id" },
     { header: "Apellido", accessor: "last_name" },
     { header: "Nombre", accessor: "first_name" },
-    { header: "DNI", accessor: "dni" },
     { header: "Teléfono", accessor: "phone" },
-    {
-      header: "Acciones",
-      render: (row) =>
-        isAdmin() ? (
-          <div className="flex gap-2">
-            <Button size="sm" onClick={() => handleEdit(row)}>
-              Editar
-            </Button>
-
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={() => handleDelete(row)}
-            >
-              Eliminar
-            </Button>
-          </div>
-        ) : (
-          <span className="text-gray-400 text-sm">Sin permisos</span>
-        ),
-    },
   ];
 
+  if (!isTeacher) {
+    columns.splice(3, 0, { header: "DNI", accessor: "dni" });
+  }
+
+  if (!isTeacher) {
+    columns.push({
+      header: "Acciones",
+      render: (row) => (
+        <div className="flex gap-2">
+          <Button size="sm" onClick={() => handleEdit(row)} className={buttonClass}>
+            Editar
+          </Button>
+          <Button size="sm" variant="outline" onClick={() => handleDelete(row)} className={buttonClass}>
+            Eliminar
+          </Button>
+        </div>
+      ),
+    });
+  }
+
+  const showCreateButtons = isAdmin();
+
+  const tableTitle = (
+    <div className="flex justify-between items-center">
+      <span>Docentes</span>
+      {showCreateButtons && (
+        <Button size="sm" onClick={openCreate} className={buttonClass}>
+          +
+        </Button>
+      )}
+    </div>
+  );
+
   return (
-    <>
-      <BasicTable title="Docentes" columns={columns} data={teachers} />
+<>
+ {/* BUSCADORES */}
+      <div className="flex gap-3 mb-4 flex-wrap">
+        <input
+          placeholder=" 🔍 Buscar por Nombre o Apellido"
+          value={searchFirstLastName}
+          onChange={(e) => setSearchFirstLastName(e.target.value)}
+          className="p-2 border border-gray-300 rounded w-60"
+        />
 
-      <Modal
-        isOpen={openEditModal}
-        onClose={() => {
-          setOpenEditModal(false);
-          setErrorEdit("");
-        }}
-      >
-        <h2 className="text-lg font-semibold mb-4">Editar Docente</h2>
+        <input
+          placeholder="🔍 Buscar por DNI"
+          value={searchDNI}
+          onChange={(e) => setSearchDNI(e.target.value)}
+          className="p-2 border border-gray-300 rounded w-40"
+        />
+        
+        <select
+          value={selectedPlan}
+          onChange={(e) => setSelectedPlan(e.target.value)}
+          className="p-2 border border-gray-300 rounded w-60"
+        >
+        <option value="">📘 Todos los planes</option>
 
-        <div className="mb-3"> 
-          <label className="block text-sm font-medium mb-1"> 
-            Apellido 
-          </label> 
-          <input 
-            type="text" 
-            className="w-full border p-2 rounded" 
-            value={lastName} onChange={(e) => setLastName(e.target.value)} 
-          /> 
-        </div>
+        {plans.map((plan) => (
+          <option key={plan.id} value={plan.id}>
+          {plan.name}
+        </option>
+        ))}
+        </select>
+      </div>
 
-        <div className="mb-3"> 
-          <label className="block text-sm font-medium mb-1"> 
-            Nombre 
-          </label> 
-          <input 
-            type="text" 
-            className="w-full border p-2 rounded" 
-            value={firstName} onChange={(e) => setFirstName(e.target.value)} 
-          /> 
-        </div>
+      
+    <BasicTable title={tableTitle} columns={columns}  data={filteredTeachers} />
 
-        <div className="mb-3"> 
-          <label className="block text-sm font-medium mb-1"> 
-            DNI 
-          </label> 
-          <input 
-            type="text" 
-            className="w-full border p-2 rounded" 
-            value={dni} onChange={(e) => setDni(e.target.value)} 
-          /> 
-        </div>
+    {showCreateButtons && (
+      <div className="mt-8">
+        <Button onClick={openCreate} className={buttonClass}>
+          Crear Docente
+        </Button>
+      </div>
+    )}
 
-        <div className="mb-3"> 
-          <label className="block text-sm font-medium mb-1"> 
-            Teléfono 
-          </label> 
-          <input 
-            type="text" 
-            className="w-full border p-2 rounded" 
-            value={phone} onChange={(e) => setPhone(e.target.value)} 
-          /> 
-        </div>
+    {/* CREATE MODAL */}
+    <Modal isOpen={openCreateModal} onClose={() => setOpenCreateModal(false)}>
+      <h2 className="text-xl font-bold mb-8">Crear Docente</h2>
 
-        {errorEdit && (
-          <p className="text-red-500 text-sm mb-3">{errorEdit}</p>
-        )}
+      <div className="flex flex-col mb-6">
+        <label className="font-semibold mb-2">Nombre</label>
+        <input className={inputClass(errorsCreate.first_name)} value={firstName} onChange={(e) => setFirstName(e.target.value)} />
+        {errorsCreate.first_name && <p className="text-red-500 text-sm mt-1">{errorsCreate.first_name}</p>}
+      </div>
+
+      <div className="flex flex-col mb-6">
+        <label className="font-semibold mb-2">Apellido</label>
+        <input className={inputClass(errorsCreate.last_name)} value={lastName} onChange={(e) => setLastName(e.target.value)} />
+        {errorsCreate.last_name && <p className="text-red-500 text-sm mt-1">{errorsCreate.last_name}</p>}
+      </div>
+
+      <div className="flex flex-col mb-6">
+        <label className="font-semibold mb-2">DNI</label>
+        <input className={inputClass(errorsCreate.dni)} value={dni} onChange={(e) => setDni(e.target.value)} />
+        {errorsCreate.dni && <p className="text-red-500 text-sm mt-1">{errorsCreate.dni}</p>}
+      </div>
+
+      <div className="flex flex-col mb-6">
+        <label className="font-semibold mb-2">Teléfono</label>
+        <input className={inputClass(errorsCreate.phone)} value={phone} onChange={(e) => setPhone(e.target.value)} />
+        {errorsCreate.phone && <p className="text-red-500 text-sm mt-1">{errorsCreate.phone}</p>}
+      </div>
+
+      <div className="flex justify-end gap-4 mt-10">
+        <Button variant="outline" onClick={() => setOpenCreateModal(false)}>Cancelar</Button>
+        <Button onClick={handleCreate}>Crear</Button>
+      </div>
+    </Modal>
+
+    {/* EDIT MODAL */}
+    <Modal isOpen={openEditModal} onClose={() => setOpenEditModal(false)}>
+      <h2 className="text-xl font-bold mb-8">Editar Alumno</h2>
+
+      <div className="flex flex-col mb-6">
+        <label className="font-semibold mb-2">Nombre</label>
+        <input className={inputClass(errorsEdit.first_name)} value={firstName} onChange={(e) => setFirstName(e.target.value)} />
+        {errorsEdit.first_name && <p className="text-red-500 text-sm mt-1">{errorsEdit.first_name}</p>}
+      </div>
+
+      <div className="flex flex-col mb-6">
+        <label className="font-semibold mb-2">Apellido</label>
+        <input className={inputClass(errorsEdit.last_name)} value={lastName} onChange={(e) => setLastName(e.target.value)} />
+        {errorsEdit.last_name && <p className="text-red-500 text-sm mt-1">{errorsEdit.last_name}</p>}
+      </div>
+
+      <div className="flex flex-col mb-6">
+        <label className="font-semibold mb-2">DNI</label>
+        <input className={inputClass(errorsEdit.dni)} value={dni} onChange={(e) => setDni(e.target.value)} />
+        {errorsEdit.dni && <p className="text-red-500 text-sm mt-1">{errorsEdit.dni}</p>}
+      </div>
+
+      <div className="flex flex-col mb-6">
+        <label className="font-semibold mb-2">Teléfono</label>
+        <input className={inputClass(errorsEdit.phone)} value={phone} onChange={(e) => setPhone(e.target.value)} />
+        {errorsEdit.phone && <p className="text-red-500 text-sm mt-1">{errorsEdit.phone}</p>}
+      </div>
+
+      <div className="flex justify-end gap-4 mt-10">
+        <Button variant="outline" onClick={() => setOpenEditModal(false)}>Cancelar</Button>
+        <Button onClick={handleUpdate}>Guardar</Button>
+      </div>
+    </Modal>
+
+      <Modal isOpen={openDeleteModal} onClose={() => setOpenDeleteModal(false)}>
+        <h2 className="text-lg font-semibold mb-4">¿Eliminar docente?</h2>
 
         <div className="flex justify-end gap-2">
-          <Button
-            variant="outline"
-            onClick={() => {
-              setOpenEditModal(false);
-              setErrorEdit("");
-            }}
-          >
+          <Button variant="outline" onClick={() => setOpenDeleteModal(false)} className={buttonClass}>
             Cancelar
           </Button>
-
-          <Button
-            onClick={handleUpdate}
-            disabled={
-              !firstName.trim() ||
-              !lastName.trim() ||
-              !dni.trim()
-            }
-          >
-            Guardar
-          </Button>
-        </div>
-      </Modal>
-
-      <Modal
-        isOpen={openDeleteModal}
-        onClose={() => setOpenDeleteModal(false)}
-      >
-        <h2 className="text-lg font-semibold mb-4">
-          ¿Eliminar docente?
-        </h2>
-
-        <p className="text-gray-600 mb-4">
-          Esta acción no se puede deshacer.
-        </p>
-
-        <div className="flex justify-end gap-2">
-          <Button
-            variant="outline"
-            onClick={() => setOpenDeleteModal(false)}
-          >
-            Cancelar
-          </Button>
-
-          <Button onClick={confirmDelete}>
+          <Button onClick={confirmDelete} className={buttonClass}>
             Eliminar
           </Button>
         </div>
       </Modal>
-    </>
+  </>
+
   );
 }
