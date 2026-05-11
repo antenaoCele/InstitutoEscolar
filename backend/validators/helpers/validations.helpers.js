@@ -7,7 +7,7 @@ export const baseField = (field, optional) => {
   let v = body(field);
 
   if (optional) return v.optional({ values: "falsy" });
-  return v.notEmpty().withMessage("Este campo es obligatorio.");
+  return v.notEmpty().withMessage("Este campo no puede estar vacío.");
 };
 
 /* =========================================================

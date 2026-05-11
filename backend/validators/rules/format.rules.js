@@ -83,7 +83,7 @@ DNI
 export const validateDNI = (field, optional = false) => [
   baseField(field, optional)
     .isNumeric()
-    .withMessage("Este campo está vacío o el DNI no es válido.")
+    .withMessage("Este campo no puede estar vacío o contener un DNI no válido.")
     .customSanitizer((v) =>
       v === undefined || v === null || v === ""
         ? undefined
@@ -172,7 +172,9 @@ export const validateStudentInfo = (
 ) => {
   const levelValidator = optional
     ? body(fieldLevel).optional({ values: "falsy" })
-    : body(fieldLevel).notEmpty().withMessage("Este campo es obligatorio.");
+    : body(fieldLevel)
+        .notEmpty()
+        .withMessage("Este campo no puede estar vacío.");
 
   return [
     /* ================ LEVEL ================ */
@@ -240,7 +242,9 @@ export const validateName = (field, optional = false) => [
   baseField(field, optional)
     .trim()
     .matches(/^[a-zA-Z0-9ñÑáéíóúÁÉÍÓÚ\s°º().,+\-/#]+$/)
-    .withMessage("Este campo está vacío o contiene caracteres no válidos.")
+    .withMessage(
+      "Este campo no puede estar vacío o contener caracteres no válidos.",
+    )
     .bail()
     .isLength({ min: 3 })
     .withMessage("Este campo debe superar los 3 caracteres.")
@@ -290,7 +294,9 @@ export const validatePersonName = (field, optional = false) => [
   baseField(field, optional)
     .trim()
     .matches(/^[a-zA-ZñÑáéíóúÁÉÍÓÚ\s]+$/)
-    .withMessage("Este campo está vacío o contiene caracteres no válidos.")
+    .withMessage(
+      "Este campo no puede estar vacío o contener caracteres no válidos.",
+    )
     .bail()
     .isLength({ min: 3 })
     .withMessage("Este campo debe superar los 3 caracteres.")
@@ -309,7 +315,9 @@ export const validatePhone = (field, optional = false) => [
     .withMessage("Este campo no puede superar los 20 caracteres.")
     .bail()
     .matches(/^[0-9+\- ]+$/)
-    .withMessage("Contiene caracteres inválidos."),
+    .withMessage(
+      "Este campo no puede estar vacío o contener caracteres no válidos.",
+    ),
 ];
 
 /* =========================================================

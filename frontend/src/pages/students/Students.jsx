@@ -132,7 +132,6 @@ const { data } = await studentService.getAll(params);
     return matchName && matchDNI && matchSchool;
   });
 
-
   const handleCreate = async () => {
     try {
       setErrorsCreate({});
@@ -174,10 +173,10 @@ const { data } = await studentService.getAll(params);
   const handleUpdate = async () => {
     const newErrors = {};
 
-    if (!firstName.trim()) newErrors.first_name = "Este campo está vacío o contiene caracteres no válidos.";
-    if (!lastName.trim()) newErrors.last_name = "Este campo está vacío o contiene caracteres no válidos.";
-    if (!dni.trim()) newErrors.dni = "Este campo está vacío o contiene caracteres no válidos.";
-    if (!school.trim()) newErrors.school = "Este campo está vacío o contiene caracteres no válidos.";
+    if (!firstName.trim()) newErrors.first_name = "Este campo está vacío.";
+    if (!lastName.trim()) newErrors.last_name = "Este campo está vacío.";
+    if (!dni.trim()) newErrors.dni = "Este campo está vacío.";
+    if (!school.trim()) newErrors.school = "Este campo está vacío.";
     if (!birthDate) newErrors.birth_date = "Seleccione una fecha válida.";
     if (!level) newErrors.level = "Seleccione una opción válida.";
     if (!grade) newErrors.grade = "Seleccione una opción válida.";
@@ -235,7 +234,7 @@ const confirmDelete = async () => {
     { header: "Nombre", accessor: "first_name" },
     { header: "Colegio o Universidad", accessor: "school" },
     {
-      header: "Fecha Nac.",
+      header: "Fecha de Nacimiento",
       render: (row) =>
         row.birth_date
           ? new Date(row.birth_date).toLocaleDateString("es-AR")
