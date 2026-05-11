@@ -9,14 +9,16 @@ export const teacherSubjectsController = {
   getAll: async (req, res) => {
     try {
       const [rows] = await db.execute(`
-        SELECT
-        ts.id, 
-        t.id AS teacher_id, 
-        s.id AS subject_id 
-        FROM teacher_subjects ts
-        JOIN teachers t ON ts.teacher_id = t.id
-        JOIN subjects s ON ts.subject_id = s.id
-      `);
+      SELECT
+        ts.id,
+        t.id AS teacher_id,
+        CONCAT(t.last_name, ' ', t.first_name) AS teacher_name,
+        s.id AS subject_id,
+        s.name AS subject_name
+      FROM teacher_subjects ts
+      JOIN teachers t ON ts.teacher_id = t.id
+      JOIN subjects s ON ts.subject_id = s.id
+    `);
 
       res.json({
         success: true,
@@ -37,15 +39,17 @@ export const teacherSubjectsController = {
 
       const [rows] = await db.execute(
         `
-        SELECT
-        ts.id, 
-        t.id AS teacher_id, 
-        s.id AS subject_id 
-        FROM teacher_subjects ts
-        JOIN teachers t ON ts.teacher_id = t.id
-        JOIN subjects s ON ts.subject_id = s.id
-        WHERE ts.id = ?
-        `,
+      SELECT
+        ts.id,
+        t.id AS teacher_id,
+        CONCAT(t.last_name, ' ', t.first_name) AS teacher_name,
+        s.id AS subject_id,
+        s.name AS subject_name
+      FROM teacher_subjects ts
+      JOIN teachers t ON ts.teacher_id = t.id
+      JOIN subjects s ON ts.subject_id = s.id
+      WHERE ts.id = ?
+      `,
         [id],
       );
 
