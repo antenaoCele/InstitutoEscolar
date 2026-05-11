@@ -6,6 +6,52 @@ export const baseController = createCrudController("teachers");
 export const teachersController = {
   ...baseController,
 
+  getAll: async (req, res) => {
+    try {
+      const { plan_id } = req.query;
+
+      let query = `
+        SELECT DISTINCT
+          t.id,
+          t.first_name,
+          t.last_name,
+          t.dni,
+          t.phone
+        FROM teachers t
+      `;
+
+      const params = [];
+
+      if (plan_id) {
+        query += `
+          INNER JOIN student_plans sp
+            ON sp.teacher_id = t.id
+        `;
+
+        query += `
+          WHERE sp.plan_id = ?
+        `;
+
+        params.push(plan_id);
+      }
+
+      const [rows] = await db.execute(query, params);
+
+      res.json({
+        success: true,
+        total: rows.length,
+        data: rows,
+      });
+    } catch (error) {
+      console.error(error);
+
+      res.status(500).json({
+        success: false,
+        message: "Error al obtener docentes",
+      });
+    }
+  },
+
   getLiquidations: async (req, res) => {
     const id = Number(req.params.id);
 
