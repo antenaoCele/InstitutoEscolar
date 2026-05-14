@@ -9,20 +9,18 @@ import { isAdmin } from "../../utils/auth";
 
 export function Subjects() {
   const [subjects, setSubjects] = useState([]);
-  const [teachers, setTeachers] = useState([]);
-  const [teacherSubjects, setTeacherSubjects] = useState([]);
-
   const [selectedSubject, setSelectedSubject] = useState(null);
 
+  const [teachers, setTeachers] = useState([]);
   const [selectedTeacher, setSelectedTeacher] = useState("");
 
+  const [teacherId, setTeacherId] = useState("");
   const [selectedTeacherId, setSelectedTeacherId] = useState("");
 
-  const [teacherId, setTeacherId] = useState("");
-
-  const [searchName, setSearchName] = useState("");
+  const [teacherSubjects, setTeacherSubjects] = useState([]);
 
   const [name, setName] = useState("");
+  const [searchName, setSearchName] = useState("");
 
   const [openCreateModal, setOpenCreateModal] = useState(false);
   const [openEditModal, setOpenEditModal] = useState(false);
@@ -97,7 +95,7 @@ export function Subjects() {
 
   useEffect(() => {
   fetchSubjects();
-}, [selectedTeacher]);
+  }, [selectedTeacher]);
 
   useEffect(() => {
     fetchTeachers();
@@ -271,7 +269,6 @@ export function Subjects() {
 
   const handleDelete = (subject) => {
     setSelectedSubject(subject);
-
     setOpenDeleteModal(true);
   };
 
@@ -297,6 +294,10 @@ export function Subjects() {
   { header: "Materia", accessor: "name" },
   { header: "Docente", accessor: "teacher_name" },
   ];
+
+  if (!isTeacher) {
+    columns.splice(3, 0, { header: "DNI", accessor: "dni" });
+  }
 
   if (!isTeacher) {
     columns.push({
@@ -365,7 +366,7 @@ export function Subjects() {
 
           {teachers.map((teacher) => (
             <option key={teacher.id} value={teacher.id}>
-              {teacher.last_name} {teacher.first_name}
+              {teacher.last_name}, {teacher.first_name}
             </option>
             ))}
         </select>
@@ -438,7 +439,7 @@ export function Subjects() {
           key={teacher.id}
           value={teacher.id}
         >
-          {teacher.last_name} {teacher.first_name}
+          {teacher.last_name}, {teacher.first_name}
         </option>
       ))}
     </select>
@@ -517,7 +518,7 @@ export function Subjects() {
           key={teacher.id}
           value={teacher.id}
         >
-          {teacher.last_name} {teacher.first_name}
+          {teacher.last_name}, {teacher.first_name}
         </option>
       ))}
     </select>
