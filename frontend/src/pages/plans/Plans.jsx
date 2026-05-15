@@ -1,158 +1,425 @@
 import { useEffect, useState } from "react";
 import BasicTable from "../../components/tables/BasicTables/BasicTablesOne";
 import { planService } from "../../services/plan.service";
+import { PlanPriceService } from "../../services/PlanPrice.service";
 import Button from "../../components/ui/Button";
 import { Modal } from "../../components/ui/Modal";
 import { isAdmin } from "../../utils/auth";
 
 export function Plans() {
+  const [planPrices, setPlanPrices] = useState([]);
+  const [selectedPlanPrice, setSelectedPlanPrice] = useState(null);
+
   const [plans, setPlans] = useState([]);
-  const [selectedPlan, setSelectedPlan] = useState(null);
+  const [selectedPlan, setSelectedPlan] = useState("");
+  
 
   const [openEditModal, setOpenEditModal] = useState(false);
   const [openDeleteModal, setOpenDeleteModal] = useState(false);
+  const [openCreateModal, setOpenCreateModal] = useState(false);
 
-  const [name, setName] = useState("");
-  const [errorEdit, setErrorEdit] = useState("");
+  const [searchPlanName, setSearchPlanName] = useState("");
+  const [searchPrice, setSearchPrice] = useState("");
 
-  const fetchPlans = async () => {
+  const [price, setPrice] = useState("");
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
+
+  const [errorsCreate, setErrorsCreate] = useState({});
+  const [errorsEdit, setErrorsEdit] = useState({});
+
+  const isPlanUser = !isAdmin();
+
+  const inputClass = (error) =>
+    `w-full p-2 border rounded mb-1 
+    border-gray-300
+    focus:outline-none focus:ring-1 focus:ring-[#0cc0df] focus:border-[#0cc0df]
+    ${error ? "border-red-500 focus:ring-red-500 focus:border-red-500" : ""}`;
+
+  const buttonClass =
+    "cursor-pointer transition transform hover:scale-105";
+
+  const resetForm = () => {
+    setSelectedPlan(""); 
+    setPrice("");
+    setStartDate("");
+    setEndDate("");
+    setErrorsCreate({});
+    setErrorsEdit({});
+  };
+
+  const mapErrors = (errors) => {
+    const formatted = {};
+
+    errors.forEach((e) => {
+      formatted[e.path] = e.msg;
+    });
+
+    return formatted;
+  };
+
+  const fetchPlanPrices = async () => {
     try {
-      const { data } = await planService.getAll();
-      setPlans(data?.data || []);
-    } catch (error) {
-      console.error("Error al obtener planes:", error);
-      setPlans([]);
+      const { data } = await PlanPriceService.getAll();
+      setPlanPrices(data?.data || []);
+    } catch {
+      setPlanPrices([]);
     }
   };
 
   useEffect(() => {
-    fetchPlans();
+    fetchPlanPrices();
   }, []);
 
+  useEffect(() => {
+    const fetchFilters = async () => {
+      try {
+        const plansRes = await planService.getAll();
+        setPlans(plansRes.data.data || []);
+      } catch (error) {
+        console.error(error);
+      }
+    };
 
-  const handleEdit = (plan) => {
-    setSelectedPlan(plan);
-    setName(plan.name);
-    setErrorEdit("");
-    setOpenEditModal(true);
-  };
+    fetchFilters();
+  }, []);
 
-  const handleUpdate = async () => {
+  const filteredPlans = planPrices.filter((p) => {
+    const textPlan = searchPlanName.toLowerCase();
+    const textPrice = searchPrice;
+
+    const matchPlan =
+      !textPlan ||
+      p.plan_name?.toLowerCase().includes(textPlan);
+
+    const matchPrice =
+      !textPrice ||
+      p.price?.toString().includes(textPrice);
+
+    return matchPlan && matchPrice;
+  });
+
+  const handleCreate = async () => {
     try {
-      setErrorEdit("");
+      setErrorsCreate({});
 
-      await planService.update(selectedPlan.id, { name });
+      await PlanPriceService.create({
+        plan_id: selectedPlan,
+        price,
+        start_date: startDate,
+        end_date: endDate || null,
+      });
 
-      setOpenEditModal(false);
-      fetchPlans();
+      setOpenCreateModal(false);
+      fetchPlanPrices();
+      resetForm();
     } catch (error) {
-      console.error("Error al actualizar:", error);
-
-      const message =
-        error.response?.data?.error ||
-        error.response?.data?.message ||
-        "Error al actualizar";
-
-      setErrorEdit(message);
+      const backendErrors = error.response?.data?.errors;
+      if (backendErrors) setErrorsCreate(mapErrors(backendErrors));
     }
   };
+const handleEdit = (planPrice) => {
+  setSelectedPlanPrice(planPrice);
 
-  const handleDelete = (plan) => {
-    setSelectedPlan(plan);
+  setSelectedPlan(
+    planPrice.plan_id
+      ? String(planPrice.plan_id)
+      : ""
+  );
+
+  setPrice(
+    planPrice.price
+      ? String(planPrice.price)
+      : ""
+  );
+
+  setStartDate(
+    planPrice.start_date
+      ? planPrice.start_date.split("T")[0]
+      : ""
+  );
+
+  setEndDate(
+    planPrice.end_date
+      ? planPrice.end_date.split("T")[0]
+      : ""
+  );
+
+  setErrorsEdit({});
+  setOpenEditModal(true);
+};
+
+ const handleUpdate = async () => {
+  try {
+    setErrorsEdit({});
+
+    await PlanPriceService.update(
+      selectedPlanPrice.id,
+      {
+        plan_id: Number(selectedPlan),
+        price: Number(price),
+        start_date: startDate || null,
+        end_date:
+          endDate && endDate.trim() !== ""
+            ? endDate
+            : null,
+      }
+    );
+
+    setOpenEditModal(false);
+    fetchPlanPrices();
+    resetForm();
+  } catch (error) {
+    const backendErrors =
+      error.response?.data?.errors;
+
+    if (backendErrors) {
+      setErrorsEdit(
+        mapErrors(backendErrors)
+      );
+    }
+  }
+};
+ 
+
+  const handleDelete = (planPrice) => {
+    setSelectedPlanPrice(planPrice);
     setOpenDeleteModal(true);
   };
 
   const confirmDelete = async () => {
     try {
-      await planService.delete(selectedPlan.id);
+      await PlanPriceService.delete(selectedPlanPrice.id);
       setOpenDeleteModal(false);
-      fetchPlans();
+      fetchPlanPrices();
     } catch (error) {
-      console.error("Error al eliminar:", error);
+      console.error(error.response?.data || error.message);
+      alert(error.response?.data?.message || "Error al eliminar");
     }
   };
 
-  const columns = [
-    { header: "ID", accessor: "id" },
-    { header: "Nombre", accessor: "name" },
-    {
-      header: "Acciones",
-      render: (row) =>
-        isAdmin() ? (
-          <div className="flex gap-2">
-            <Button size="sm" onClick={() => handleEdit(row)}>
-              Editar
-            </Button>
+  const openCreate = () => {
+    resetForm();
+    setOpenCreateModal(true);
+  };
 
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={() => handleDelete(row)}
-            >
-              Eliminar
-            </Button>
-          </div>
-        ) : (
-          <span className="text-gray-400 text-sm">
-            Sin permisos
-          </span>
-        ),
+  let columns = [
+    { header: "ID", accessor: "id" },
+    { header: "Plan", accessor: "plan_name" },
+    { header: "Precio", accessor: "price" },
+    {
+      header: "Fecha Inicio",
+      render: (row) =>
+        row.start_date?.split("T")[0] || "-",
+    },
+    {
+      header: "Fecha Fin",
+      render: (row) =>
+        row.end_date?.split("T")[0] || "-",
     },
   ];
 
+  if (!isPlanUser) {
+    columns.push({
+      header: "Acciones",
+      render: (row) => (
+        <div className="flex gap-2">
+          <Button
+            size="sm"
+            onClick={() => handleEdit(row)}
+            className={buttonClass}
+          >
+            Editar
+          </Button>
+
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => handleDelete(row)}
+            className={buttonClass}
+          >
+            Eliminar
+          </Button>
+        </div>
+      ),
+    });
+  }
+
+  const showCreateButtons = isAdmin();
+
+  const tableTitle = (
+    <div className="flex justify-between items-center">
+      <span>Planes</span>
+
+      {showCreateButtons && (
+        <Button
+          size="sm"
+          onClick={openCreate}
+          className={buttonClass}
+        >
+          +
+        </Button>
+      )}
+    </div>
+  );
+
   return (
     <>
+      <div className="flex gap-3 mb-4 flex-wrap">
+        <input
+          placeholder="🔍 Buscar por Plan"
+          value={searchPlanName}
+          onChange={(e) => setSearchPlanName(e.target.value)}
+          className="p-2 border border-gray-300 rounded w-60"
+        />
+
+        <input
+          placeholder="🔍 Buscar por Precio"
+          value={searchPrice}
+          onChange={(e) => setSearchPrice(e.target.value)}
+          className="p-2 border border-gray-300 rounded w-40"
+        />
+      </div>
+
       <BasicTable
-        title="Planes"
+        title={tableTitle}
         columns={columns}
-        data={plans}
+        data={filteredPlans}
       />
 
+      {showCreateButtons && (
+        <div className="mt-8">
+          <Button onClick={openCreate} className={buttonClass}>
+            Crear Plan
+          </Button>
+        </div>
+      )}
+
       <Modal
-        isOpen={openEditModal}
-        onClose={() => {
-          setOpenEditModal(false);
-          setErrorEdit("");
-        }}
+        isOpen={openCreateModal}
+        onClose={() => setOpenCreateModal(false)}
       >
-        <h2 className="text-lg font-semibold mb-4">
+        <h2 className="text-xl font-bold mb-8">
+          Crear Plan
+        </h2>
+
+        <div className="flex flex-col mb-6">
+          <label className="font-semibold mb-2">Plan</label>
+          <select
+            className={inputClass(errorsCreate.plan_id)}
+            value={selectedPlan}
+            onChange={(e) => setSelectedPlan(e.target.value)}
+          >
+            <option value="">Seleccionar Plan</option>
+            {plans.map((plan) => (
+              <option key={plan.id} value={plan.id}>
+                {plan.name}
+              </option>
+            ))}
+          </select>
+          {errorsCreate.plan_id && (
+            <p className="text-red-500 text-sm mt-1">
+              {errorsCreate.plan_id}
+            </p>
+          )}
+        </div>
+
+        <div className="flex flex-col mb-6">
+          <label className="font-semibold mb-2">Precio</label>
+          <input
+            type="number"
+            className={inputClass(errorsCreate.price)}
+            value={price}
+            onChange={(e) => setPrice(e.target.value)}
+          />
+        </div>
+
+        <div className="flex flex-col mb-6">
+          <label className="font-semibold mb-2">Fecha Inicio</label>
+          <input
+            type="date"
+            className={inputClass(errorsCreate.start_date)}
+            value={startDate}
+            onChange={(e) => setStartDate(e.target.value)}
+          />
+        </div>
+
+        <div className="flex flex-col mb-6">
+          <label className="font-semibold mb-2">Fecha Fin</label>
+          <input
+            type="date"
+            className={inputClass(errorsCreate.end_date)}
+            value={endDate}
+            onChange={(e) => setEndDate(e.target.value)}
+          />
+        </div>
+
+        <div className="flex justify-end gap-4 mt-10">
+          <Button variant="outline" onClick={() => setOpenCreateModal(false)}>
+            Cancelar
+          </Button>
+          <Button onClick={handleCreate}>Crear</Button>
+        </div>
+      </Modal>
+
+      <Modal isOpen={openEditModal} onClose={() => setOpenEditModal(false)}>
+        <h2 className="text-xl font-bold mb-8">
           Editar Plan
         </h2>
 
-        <div className="mb-3"> 
-          <label className="block text-sm font-medium mb-1"> 
-            Plan 
-          </label> 
-          <input 
-            type="text" 
-            className="w-full border p-2 rounded" 
-            value={name} onChange={(e) => setName(e.target.value)} 
-          /> 
+        <div className="flex flex-col mb-6">
+          <label className="font-semibold mb-2">Plan</label>
+          <select
+            className={inputClass(errorsEdit.plan_id)}
+           value={selectedPlan}
+           onChange={(e) =>
+        setSelectedPlan(e.target.value)
+}
+          >
+            <option value="">Seleccionar Plan</option>
+            {plans.map((plan) => (
+              <option key={plan.id} value={plan.id}>
+                {plan.name}
+              </option>
+            ))}
+          </select>
         </div>
 
-        {errorEdit && (
-          <p className="text-red-500 text-sm mb-3">
-            {errorEdit}
-          </p>
-        )}
+        <div className="flex flex-col mb-6">
+          <label className="font-semibold mb-2">Precio</label>
+          <input
+            type="number"
+            className={inputClass(errorsEdit.price)}
+            value={price}
+            onChange={(e) => setPrice(e.target.value)}
+          />
+        </div>
 
-        <div className="flex justify-end gap-2">
-          <Button
-            variant="outline"
-            onClick={() => {
-              setOpenEditModal(false);
-              setErrorEdit("");
-            }}
-          >
+        <div className="flex flex-col mb-6">
+          <label className="font-semibold mb-2">Fecha Inicio</label>
+          <input
+            type="date"
+            className={inputClass(errorsEdit.start_date)}
+            value={startDate}
+            onChange={(e) => setStartDate(e.target.value)}
+          />
+        </div>
+
+        <div className="flex flex-col mb-6">
+          <label className="font-semibold mb-2">Fecha Fin</label>
+          <input
+            type="date"
+            className={inputClass(errorsEdit.end_date)}
+            value={endDate}
+            onChange={(e) => setEndDate(e.target.value)}
+          />
+        </div>
+
+        <div className="flex justify-end gap-4 mt-10">
+          <Button variant="outline" onClick={() => setOpenEditModal(false)}>
             Cancelar
           </Button>
-
-          <Button
-            onClick={handleUpdate}
-            disabled={!name.trim()}
-          >
-            Guardar
-          </Button>
+          <Button onClick={handleUpdate}>Guardar</Button>
         </div>
       </Modal>
 
@@ -164,19 +431,19 @@ export function Plans() {
           ¿Eliminar plan?
         </h2>
 
-        <p className="text-gray-600 mb-4">
-          Esta acción no se puede deshacer.
-        </p>
-
         <div className="flex justify-end gap-2">
           <Button
             variant="outline"
             onClick={() => setOpenDeleteModal(false)}
+            className={buttonClass}
           >
             Cancelar
           </Button>
 
-          <Button onClick={confirmDelete}>
+          <Button
+            onClick={confirmDelete}
+            className={buttonClass}
+          >
             Eliminar
           </Button>
         </div>

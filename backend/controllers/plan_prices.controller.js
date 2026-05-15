@@ -9,19 +9,25 @@ export const planPricesController = {
   getAll: async (req, res) => {
     try {
       const sql = `
-        SELECT 
-        p.id, 
-        pp.plan_id,  
-        pp.price, 
-        pp.start_date, 
-        pp.end_date
+        SELECT
+          pp.id,
+          pp.plan_id,
+          p.name AS plan_name,
+          pp.price,
+          pp.start_date,
+          pp.end_date
         FROM plan_prices pp
-        JOIN plans p ON pp.plan_id = p.id
+        JOIN plans p
+          ON pp.plan_id = p.id
+        ORDER BY pp.id ASC
       `;
 
       const [rows] = await db.execute(sql);
 
-      res.json({ success: true, data: rows });
+      res.json({
+        success: true,
+        data: rows,
+      });
     } catch {
       res.status(500).json({
         success: false,
@@ -35,27 +41,32 @@ export const planPricesController = {
       const id = Number(req.params.id);
 
       const sql = `
-        SELECT 
-        p.id, 
-        pp.plan_id,  
-        pp.price, 
-        pp.start_date, 
-        pp.end_date
+        SELECT
+          pp.id,
+          pp.plan_id,
+          p.name AS plan_name,
+          pp.price,
+          pp.start_date,
+          pp.end_date
         FROM plan_prices pp
-        JOIN plans p ON pp.plan_id = p.id
+        JOIN plans p
+          ON pp.plan_id = p.id
         WHERE pp.id = ?
       `;
 
       const [rows] = await db.execute(sql, [id]);
 
-      if (rows.length === 0) {
+      if (!rows.length) {
         return res.status(404).json({
           success: false,
           message: "Precio de plan no encontrado",
         });
       }
 
-      res.json({ success: true, data: rows[0] });
+      res.json({
+        success: true,
+        data: rows[0],
+      });
     } catch {
       res.status(500).json({
         success: false,
