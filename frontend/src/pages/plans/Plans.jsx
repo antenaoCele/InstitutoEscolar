@@ -98,34 +98,66 @@ export function Plans() {
 
     return matchPlan && matchPrice;
   });
+const handleCreate = async () => {
+  try {
+    setErrorsCreate({});
 
-  const handleCreate = async () => {
-    try {
-      setErrorsCreate({});
-
-      await PlanPriceService.create({
-        plan_id: selectedPlan,
-        price,
-        start_date: startDate,
-        end_date: endDate || null,
+    // Crear el plan
+    const planResponse =
+      await planService.create({
+        name: selectedPlan,
       });
 
-      setOpenCreateModal(false);
-      fetchPlanPrices();
-      resetForm();
-    } catch (error) {
-      const backendErrors = error.response?.data?.errors;
-      if (backendErrors) setErrorsCreate(mapErrors(backendErrors));
+    const newPlanId =
+      planResponse.data.data.id;
+
+    // Crear precio del plan
+    await PlanPriceService.create({
+      plan_id: newPlanId,
+      price: Number(price),
+      start_date: startDate,
+      end_date:
+        endDate || null,
+    });
+
+    setOpenCreateModal(false);
+
+    fetchPlanPrices();
+
+    const plansRes =
+      await planService.getAll();
+
+    setPlans(
+      plansRes.data.data || []
+    );
+
+    resetForm();
+  } catch (error) {
+    console.log(
+      "ERROR COMPLETO:",
+      error.response?.data
+    );
+
+    const backendErrors =
+      error.response?.data
+        ?.errors;
+
+    if (backendErrors) {
+      setErrorsCreate(
+        mapErrors(
+          backendErrors
+        )
+      );
     }
-  };
+  }
+};
 const handleEdit = (planPrice) => {
   setSelectedPlanPrice(planPrice);
 
-  setSelectedPlan(
-    planPrice.plan_id
-      ? String(planPrice.plan_id)
-      : ""
-  );
+  
+ setSelectedPlan(
+  planPrice.plan_name || ""
+);
 
   setPrice(
     planPrice.price
@@ -305,18 +337,17 @@ const handleEdit = (planPrice) => {
 
         <div className="flex flex-col mb-6">
           <label className="font-semibold mb-2">Plan</label>
-          <select
-            className={inputClass(errorsCreate.plan_id)}
-            value={selectedPlan}
-            onChange={(e) => setSelectedPlan(e.target.value)}
-          >
-            <option value="">Seleccionar Plan</option>
-            {plans.map((plan) => (
-              <option key={plan.id} value={plan.id}>
-                {plan.name}
-              </option>
-            ))}
-          </select>
+          <input
+  type="text"
+  placeholder="Escribir nombre del plan"
+  className={inputClass(errorsCreate.plan_id)}
+  value={selectedPlan}
+  onChange={(e) =>
+    setSelectedPlan(
+      e.target.value
+    )
+  }
+/>
           {errorsCreate.plan_id && (
             <p className="text-red-500 text-sm mt-1">
               {errorsCreate.plan_id}
@@ -369,20 +400,17 @@ const handleEdit = (planPrice) => {
 
         <div className="flex flex-col mb-6">
           <label className="font-semibold mb-2">Plan</label>
-          <select
-            className={inputClass(errorsEdit.plan_id)}
-           value={selectedPlan}
-           onChange={(e) =>
-        setSelectedPlan(e.target.value)
-}
-          >
-            <option value="">Seleccionar Plan</option>
-            {plans.map((plan) => (
-              <option key={plan.id} value={plan.id}>
-                {plan.name}
-              </option>
-            ))}
-          </select>
+       <input
+  type="text"
+  placeholder="Editar nombre del plan"
+  className={inputClass(errorsEdit.plan_id)}
+  value={selectedPlan}
+  onChange={(e) =>
+    setSelectedPlan(
+      e.target.value
+    )
+  }
+/>
         </div>
 
         <div className="flex flex-col mb-6">
