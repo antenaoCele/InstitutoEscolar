@@ -4,7 +4,8 @@ import { useAuth } from "./context/Auth.jsx";
 import Login from "./pages/login/Login.jsx";
 import UserProfiles from "./pages/me/UserProfiles.jsx";
 import { Users } from "./pages/users/AllUsers.jsx";
-import { Layout } from "./Layout.jsx";
+// import { Layout } from "./Layout.jsx";
+import AppLayout from "./components/Layout/AppLayout.jsx";
 import PrivateRoute from "./routes/PrivateRoute.jsx";
 import { Teachers } from "./pages/teachers/Teachers.jsx";
 import { Students } from "./pages/students/Students.jsx";
@@ -39,7 +40,7 @@ export default function App() {
 
         {/* Rutas protegidas */}
         <Route element={<PrivateRoute />}>
-          <Route element={<Layout />}>
+          <Route element={<AppLayout />}>
             <Route path="/me" element={<UserProfiles />} />
             <Route path="/users" element={<Users />} />
             <Route path="/students" element={<Students />} />

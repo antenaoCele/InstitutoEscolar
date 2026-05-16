@@ -1,15 +1,13 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Link, useLocation } from "react-router";
+import { Link, useLocation } from "react-router-dom";
 
 import {
   BoxCubeIcon,
   CalenderIcon,
   ChevronDownIcon,
   GridIcon,
-  HorizontaLDots,
   ListIcon,
   PageIcon,
-  PieChartIcon,
   PlugInIcon,
   TableIcon,
   UserCircleIcon,
@@ -18,69 +16,74 @@ import {
 import { useSidebar } from "../../context/SidebarContext";
 import SidebarWidget from "./SidebarWidget";
 
+const BRAND_COLOR = "#0cc0df";
+
 const navItems = [
   {
     icon: <GridIcon />,
-    name: "Dashboard",
-    subItems: [{ name: "Ecommerce", path: "/", pro: false }],
-  },
-  {
-    icon: <CalenderIcon />,
-    name: "Calendar",
-    path: "/calendar",
+    name: "Inicio",
+    path: "/me",
   },
   {
     icon: <UserCircleIcon />,
-    name: "User Profile",
-    path: "/profile",
+    name: "Mi Perfil",
+    path: "/me",
   },
   {
-    name: "Forms",
     icon: <ListIcon />,
-    subItems: [{ name: "Form Elements", path: "/form-elements", pro: false }],
+    name: "Alumnos",
+    subItems: [
+      {
+        name: "Total de alumnos",
+        path: "/students?status=all",
+      },
+      {
+        name: "Alumnos activos",
+        path: "/students?status=active",
+      },
+    ],
   },
   {
-    name: "Tables",
+    icon: <UserCircleIcon />,
+    name: "Docentes",
+    path: "/teachers",
+  },
+  {
     icon: <TableIcon />,
-    subItems: [{ name: "Basic Tables", path: "/basic-tables", pro: false }],
+    name: "Materias",
+    path: "/subjects",
   },
   {
-    name: "Pages",
     icon: <PageIcon />,
-    subItems: [
-      { name: "Blank Page", path: "/blank", pro: false },
-      { name: "404 Error", path: "/error-404", pro: false },
-    ],
+    name: "Planes",
+    path: "/plans",
   },
-];
-
-const othersItems = [
   {
-    icon: <PieChartIcon />,
-    name: "Charts",
-    subItems: [
-      { name: "Line Chart", path: "/line-chart", pro: false },
-      { name: "Bar Chart", path: "/bar-chart", pro: false },
-    ],
+    icon: <CalenderIcon />,
+    name: "Horarios",
+    path: "/schedules",
   },
   {
     icon: <BoxCubeIcon />,
-    name: "UI Elements",
-    subItems: [
-      { name: "Alerts", path: "/alerts", pro: false },
-      { name: "Avatar", path: "/avatars", pro: false },
-      { name: "Badge", path: "/badge", pro: false },
-      { name: "Buttons", path: "/buttons", pro: false },
-      { name: "Images", path: "/images", pro: false },
-      { name: "Videos", path: "/videos", pro: false },
-    ],
+    name: "Tutores",
+    path: "/tutors",
   },
   {
     icon: <PlugInIcon />,
-    name: "Authentication",
+    name: "Usuarios",
     subItems: [
-      { name: "Sign In", path: "/signin", pro: false },
-      { name: "Sign Up", path: "/signup", pro: false },
+      {
+        name: "Administradores",
+        path: "/users/admins",
+      },
+      {
+        name: "Docentes",
+        path: "/users/teachers",
+      },
+      {
+        name: "Todos los usuarios",
+        path: "/users",
+      },
     ],
   },
 ];
@@ -94,29 +97,22 @@ const AppSidebar = () => {
   const subMenuRefs = useRef({});
 
   const isActive = useCallback(
-    (path) => location.pathname === path,
-    [location.pathname],
+    (path) => location.pathname + location.search === path,
+    [location.pathname, location.search],
   );
 
   useEffect(() => {
     let submenuMatched = false;
 
-    ["main", "others"].forEach((menuType) => {
-      const items = menuType === "main" ? navItems : othersItems;
-
-      items.forEach((nav, index) => {
-        if (nav.subItems) {
-          nav.subItems.forEach((subItem) => {
-            if (isActive(subItem.path)) {
-              setOpenSubmenu({
-                type: menuType,
-                index,
-              });
-              submenuMatched = true;
-            }
-          });
-        }
-      });
+    navItems.forEach((nav, index) => {
+      if (nav.subItems) {
+        nav.subItems.forEach((subItem) => {
+          if (isActive(subItem.path)) {
+            setOpenSubmenu(index);
+            submenuMatched = true;
+          }
+        });
+      }
     });
 
     if (!submenuMatched) {
@@ -126,85 +122,104 @@ const AppSidebar = () => {
 
   useEffect(() => {
     if (openSubmenu !== null) {
-      const key = `${openSubmenu.type}-${openSubmenu.index}`;
-
-      if (subMenuRefs.current[key]) {
+      if (subMenuRefs.current[openSubmenu]) {
         setSubMenuHeight((prev) => ({
           ...prev,
-          [key]: subMenuRefs.current[key]?.scrollHeight || 0,
+          [openSubmenu]: subMenuRefs.current[openSubmenu]?.scrollHeight || 0,
         }));
       }
     }
   }, [openSubmenu]);
 
-  const handleSubmenuToggle = (index, menuType) => {
-    setOpenSubmenu((prev) => {
-      if (prev && prev.type === menuType && prev.index === index) {
-        return null;
-      }
-      return { type: menuType, index };
-    });
+  const handleSubmenuToggle = (index) => {
+    setOpenSubmenu((prev) => (prev === index ? null : index));
   };
 
-  const renderMenuItems = (items, menuType) => (
-    <ul className="flex flex-col gap-4">
-      {items.map((nav, index) => (
+  const renderMenuItems = () => (
+    <ul className="flex flex-col gap-2">
+      {navItems.map((nav, index) => (
         <li key={nav.name}>
           {nav.subItems ? (
-            <button
-              onClick={() => handleSubmenuToggle(index, menuType)}
-              className={`menu-item group ${
-                openSubmenu?.type === menuType && openSubmenu?.index === index
-                  ? "menu-item-active"
-                  : "menu-item-inactive"
-              }`}
-            >
-              <span className="menu-item-icon-size">{nav.icon}</span>
-
-              {(isExpanded || isHovered || isMobileOpen) && (
-                <span className="menu-item-text">{nav.name}</span>
-              )}
-
-              {(isExpanded || isHovered || isMobileOpen) && (
-                <ChevronDownIcon
-                  className={`ml-auto w-5 h-5 ${
-                    openSubmenu?.index === index ? "rotate-180" : ""
-                  }`}
-                />
-              )}
-            </button>
-          ) : (
-            nav.path && (
-              <Link
-                to={nav.path}
-                className={`menu-item ${
-                  isActive(nav.path) ? "menu-item-active" : "menu-item-inactive"
-                }`}
+            <>
+              <button
+                onClick={() => handleSubmenuToggle(index)}
+                className="flex items-center w-full px-4 py-3 rounded-xl transition-all hover:bg-gray-100 dark:hover:bg-gray-800"
+                style={
+                  openSubmenu === index
+                    ? {
+                        backgroundColor: `${BRAND_COLOR}20`,
+                        color: BRAND_COLOR,
+                      }
+                    : {}
+                }
               >
-                {nav.icon}
-                {(isExpanded || isHovered || isMobileOpen) && nav.name}
-              </Link>
-            )
-          )}
+                <span>{nav.icon}</span>
 
-          {nav.subItems && (isExpanded || isHovered || isMobileOpen) && (
-            <div
-              ref={(el) => (subMenuRefs.current[`${menuType}-${index}`] = el)}
-              style={{
-                height:
-                  openSubmenu?.type === menuType && openSubmenu?.index === index
-                    ? `${subMenuHeight[`${menuType}-${index}`]}px`
-                    : "0px",
-              }}
+                {(isExpanded || isHovered || isMobileOpen) && (
+                  <>
+                    <span className="ml-3">{nav.name}</span>
+
+                    <ChevronDownIcon
+                      className={`ml-auto w-5 h-5 transition-transform ${
+                        openSubmenu === index ? "rotate-180" : ""
+                      }`}
+                    />
+                  </>
+                )}
+              </button>
+
+              {(isExpanded || isHovered || isMobileOpen) && (
+                <div
+                  ref={(el) => (subMenuRefs.current[index] = el)}
+                  className="overflow-hidden transition-all duration-300"
+                  style={{
+                    height:
+                      openSubmenu === index
+                        ? `${subMenuHeight[index]}px`
+                        : "0px",
+                  }}
+                >
+                  <ul className="ml-10 mt-2 flex flex-col gap-2">
+                    {nav.subItems.map((subItem) => (
+                      <li key={subItem.name}>
+                        <Link
+                          to={subItem.path}
+                          className="block py-2 text-sm transition-colors"
+                          style={{
+                            color: isActive(subItem.path)
+                              ? BRAND_COLOR
+                              : "#6b7280",
+                            fontWeight: isActive(subItem.path) ? "600" : "400",
+                          }}
+                        >
+                          {subItem.name}
+                        </Link>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </>
+          ) : (
+            <Link
+              to={nav.path}
+              className="flex items-center px-4 py-3 rounded-xl transition-all hover:bg-gray-100 dark:hover:bg-gray-800"
+              style={
+                isActive(nav.path)
+                  ? {
+                      backgroundColor: `${BRAND_COLOR}20`,
+                      color: BRAND_COLOR,
+                      fontWeight: "600",
+                    }
+                  : {}
+              }
             >
-              <ul className="ml-9">
-                {nav.subItems.map((subItem) => (
-                  <li key={subItem.name}>
-                    <Link to={subItem.path}>{subItem.name}</Link>
-                  </li>
-                ))}
-              </ul>
-            </div>
+              <span>{nav.icon}</span>
+
+              {(isExpanded || isHovered || isMobileOpen) && (
+                <span className="ml-3">{nav.name}</span>
+              )}
+            </Link>
           )}
         </li>
       ))}
@@ -213,20 +228,44 @@ const AppSidebar = () => {
 
   return (
     <aside
-      className={`fixed top-0 left-0 h-screen ${
+      className={`fixed top-0 left-0 h-screen bg-white dark:bg-gray-900 border-r dark:border-gray-800 transition-all duration-300 ${
         isExpanded || isMobileOpen ? "w-[290px]" : "w-[90px]"
       }`}
       onMouseEnter={() => !isExpanded && setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
-      <Link to="/">Logo</Link>
+      <Link to="/me" className="flex items-center justify-center gap-3 py-6">
+        <img
+          src="images/logo/logo 6.jpeg"
+          alt="Matecitos"
+          className="h-10 w-auto"
+        />
 
-      <nav>
-        {renderMenuItems(navItems, "main")}
-        {renderMenuItems(othersItems, "others")}
-      </nav>
+        {(isExpanded || isHovered || isMobileOpen) && (
+          <span className="text-2xl font-bold" style={{ color: BRAND_COLOR }}>
+            Matecitos
+          </span>
+        )}
+      </Link>
 
-      {(isExpanded || isHovered || isMobileOpen) && <SidebarWidget />}
+      <nav className="px-4">{renderMenuItems()}</nav>
+
+      {(isExpanded || isHovered || isMobileOpen) && (
+        <div className="px-4 mt-8">
+          <SidebarWidget />
+
+          <button
+            onClick={() => {
+              localStorage.removeItem("token");
+              window.location.href = "/login";
+            }}
+            className="mt-4 w-full text-left py-2 font-medium"
+            style={{ color: BRAND_COLOR }}
+          >
+            Logout
+          </button>
+        </div>
+      )}
     </aside>
   );
 };
