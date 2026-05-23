@@ -1,12 +1,8 @@
-import Button from "../../ui/Button";
+import Button from "../ui/Button";
 
 export default function SubmitButton({ loading, text }) {
   return (
-    <Button
-      type="submit"
-      disabled={loading}
-      className="w-full"
-    >
+    <Button type="submit" disabled={loading} className="w-full">
       {loading ? "Guardando..." : text}
     </Button>
   );
