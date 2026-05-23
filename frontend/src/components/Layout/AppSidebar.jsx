@@ -25,11 +25,11 @@ const navItems = [
     name: "Inicio",
     path: "/me",
   },
-  {
-    icon: <UserCircleIcon />,
-    name: "Mi Perfil",
-    path: "/me",
-  },
+  // {
+  //   icon: <UserCircleIcon />,
+  //   name: "Mi Perfil",
+  //   path: "/me",
+  // },
   {
     icon: <ListIcon />,
     name: "Alumnos",
@@ -240,7 +240,13 @@ const AppSidebar = () => {
     >
       <Link
         to="/home"
-        className="flex items-center justify-start gap-3 py-11 pl-9"
+        className={`flex items-center transition-all duration-300 py-8
+    ${
+      isExpanded || isHovered || isMobileOpen
+        ? "justify-center"
+        : "justify-center"
+    }
+  `}
       >
         <img
           src={
@@ -249,35 +255,17 @@ const AppSidebar = () => {
               : "images/logo/logo 6.png"
           }
           alt="Matecitos"
-          style={{
-            width: "45px",
-            height: "45px",
-            borderRadius: "55%",
-            objectFit: "cover",
-          }}
+          className={`rounded-full object-cover transition-all duration-300
+      ${
+        isExpanded || isHovered || isMobileOpen
+          ? "w-[70px] h-[70px]"
+          : "w-[38px] h-[38px]"
+      }
+    `}
         />
-
-        {(isExpanded || isHovered || isMobileOpen) && (
-          <span className="text-2xl font-bold" style={{ color: BRAND_COLOR }}>
-            Matecitos
-          </span>
-        )}
       </Link>
 
       <nav className="px-4">{renderMenuItems()}</nav>
-
-      {(isExpanded || isHovered || isMobileOpen) && (
-        <Button
-          size="md"
-          onClick={() => {
-            localStorage.removeItem("token");
-            window.location.href = "/login";
-          }}
-          className="w-full"
-        >
-          Logout
-        </Button>
-      )}
     </aside>
   );
 };
