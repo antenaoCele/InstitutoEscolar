@@ -14,7 +14,7 @@ export default function AuthLayout({ children }) {
             {/*  Logo */}
             <div className="block mb-6">
               <img
-                src="/images/logo/logo 6.jpeg"
+                src="/images/logo/logo 6.png"
                 alt="Logo"
                 className="w-[290px] h-[290px] mx-auto rounded-full object-cover border-4 border-white shadow-lg transition-transform duration-300 hover:scale-110"
               />
