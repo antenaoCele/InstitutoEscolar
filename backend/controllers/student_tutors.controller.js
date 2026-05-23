@@ -9,37 +9,38 @@ export const studentTutorsController = {
   getAll: async (req, res) => {
     try {
       const [rows] = await db.execute(`
-        SELECT
-          st.id,
+      SELECT
+        st.id AS student_tutor_id,
 
-          s.id AS student_id,
-          s.first_name AS student_first_name,
-          s.last_name AS student_last_name,
+        t.id,
+        t.first_name,
+        t.last_name,
+        t.dni,
+        t.phone,
 
-          t.id AS tutor_id,
-          t.first_name,
-          t.last_name,
-          t.dni,
-          t.phone
+        s.id AS student_id,
 
-        FROM student_tutors st
+        CONCAT(
+          s.last_name,
+          ', ',
+          s.first_name
+        ) AS student_name
 
-        JOIN students s
-          ON st.student_id = s.id
+      FROM tutors t
 
-        JOIN tutors t
-          ON st.tutor_id = t.id
-      `);
+      LEFT JOIN student_tutors st
+        ON st.tutor_id = t.id
 
-      const formatted = rows.map((row) => ({
-        ...row,
-        student_name: `${row.student_last_name} ${row.student_first_name}`,
-      }));
+      LEFT JOIN students s
+        ON st.student_id = s.id
+
+      ORDER BY t.id ASC
+    `);
 
       res.json({
         success: true,
-        total: formatted.length,
-        data: formatted,
+        total: rows.length,
+        data: rows,
       });
     } catch (error) {
       console.error(error);
