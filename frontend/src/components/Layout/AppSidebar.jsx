@@ -1,5 +1,9 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
+import { useTheme } from "../../context/ThemeContext";
+import { useSidebar } from "../../context/SidebarContext";
+import SidebarWidget from "./SidebarWidget";
+import Button from "../ui/Button";
 
 import {
   BoxCubeIcon,
@@ -12,9 +16,6 @@ import {
   TableIcon,
   UserCircleIcon,
 } from "../../icons";
-
-import { useSidebar } from "../../context/SidebarContext";
-import SidebarWidget from "./SidebarWidget";
 
 const BRAND_COLOR = "#0cc0df";
 
@@ -90,6 +91,7 @@ const navItems = [
 
 const AppSidebar = () => {
   const { isExpanded, isMobileOpen, isHovered, setIsHovered } = useSidebar();
+  const { theme } = useTheme();
   const location = useLocation();
 
   const [openSubmenu, setOpenSubmenu] = useState(null);
@@ -143,7 +145,7 @@ const AppSidebar = () => {
             <>
               <button
                 onClick={() => handleSubmenuToggle(index)}
-                className="flex items-center w-full px-4 py-3 rounded-xl transition-all hover:bg-gray-100 dark:hover:bg-gray-800"
+                className="flex items-center w-full px-4 py-3 rounded-xl transition-all hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-900 dark:text-white"
                 style={
                   openSubmenu === index
                     ? {
@@ -188,7 +190,9 @@ const AppSidebar = () => {
                           style={{
                             color: isActive(subItem.path)
                               ? BRAND_COLOR
-                              : "#6b7280",
+                              : theme === "dark"
+                                ? "#ffffff"
+                                : "#6b7280",
                             fontWeight: isActive(subItem.path) ? "600" : "400",
                           }}
                         >
@@ -203,7 +207,7 @@ const AppSidebar = () => {
           ) : (
             <Link
               to={nav.path}
-              className="flex items-center px-4 py-3 rounded-xl transition-all hover:bg-gray-100 dark:hover:bg-gray-800"
+              className="flex items-center px-4 py-3 rounded-xl transition-all hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-900 dark:text-white"
               style={
                 isActive(nav.path)
                   ? {
@@ -228,17 +232,29 @@ const AppSidebar = () => {
 
   return (
     <aside
-      className={`fixed top-0 left-0 h-screen bg-white dark:bg-gray-900 border-r dark:border-gray-800 transition-all duration-300 ${
+      className={`fixed top-0 left-0 h-screen bg-white dark:bg-black border-r dark:border-gray-800 transition-all duration-300 ${
         isExpanded || isMobileOpen ? "w-[290px]" : "w-[90px]"
       }`}
       onMouseEnter={() => !isExpanded && setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
-      <Link to="/me" className="flex items-center justify-center gap-3 py-6">
+      <Link
+        to="/home"
+        className="flex items-center justify-start gap-3 py-11 pl-9"
+      >
         <img
-          src="images/logo/logo 6.jpeg"
+          src={
+            theme === "dark"
+              ? "images/logo/logo 11.png"
+              : "images/logo/logo 6.png"
+          }
           alt="Matecitos"
-          className="h-10 w-auto"
+          style={{
+            width: "45px",
+            height: "45px",
+            borderRadius: "55%",
+            objectFit: "cover",
+          }}
         />
 
         {(isExpanded || isHovered || isMobileOpen) && (
@@ -251,20 +267,16 @@ const AppSidebar = () => {
       <nav className="px-4">{renderMenuItems()}</nav>
 
       {(isExpanded || isHovered || isMobileOpen) && (
-        <div className="px-4 mt-8">
-          <SidebarWidget />
-
-          <button
-            onClick={() => {
-              localStorage.removeItem("token");
-              window.location.href = "/login";
-            }}
-            className="mt-4 w-full text-left py-2 font-medium"
-            style={{ color: BRAND_COLOR }}
-          >
-            Logout
-          </button>
-        </div>
+        <Button
+          size="md"
+          onClick={() => {
+            localStorage.removeItem("token");
+            window.location.href = "/login";
+          }}
+          className="w-full"
+        >
+          Logout
+        </Button>
       )}
     </aside>
   );
