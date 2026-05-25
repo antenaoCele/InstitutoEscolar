@@ -12,7 +12,7 @@ export const teacherSubjectsController = {
       SELECT
         ts.id,
         t.id AS teacher_id,
-        CONCAT(t.last_name, ' ', t.first_name) AS teacher_name,
+        CONCAT(t.last_name, ', ', t.first_name) AS teacher_name,
         s.id AS subject_id,
         s.name AS subject_name
       FROM teacher_subjects ts
