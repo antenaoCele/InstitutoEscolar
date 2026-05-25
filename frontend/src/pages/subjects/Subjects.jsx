@@ -14,7 +14,6 @@ export function Subjects() {
   const [teachers, setTeachers] = useState([]);
   const [selectedTeacher, setSelectedTeacher] = useState("");
 
-  const [teacherId, setTeacherId] = useState("");
   const [selectedTeacherId, setSelectedTeacherId] = useState("");
 
   const [teacherSubjects, setTeacherSubjects] = useState([]);
@@ -28,8 +27,6 @@ export function Subjects() {
 
   const [errorsCreate, setErrorsCreate] = useState({});
   const [errorsEdit, setErrorsEdit] = useState({});
-
-  const isTeacher = !isAdmin();
 
   const buttonClass =
     "cursor-pointer transition transform hover:scale-105";
@@ -109,11 +106,11 @@ export function Subjects() {
   });
 
   const resetForm = () => {
-  setName("");
-  setTeacherId("");
+    setName("");
+    setSelectedTeacherId("");
 
-  setErrorsCreate({});
-  setErrorsEdit({});
+    setErrorsCreate({});
+    setErrorsEdit({});
   };
 
   const mapErrors = (errors) => {
@@ -295,11 +292,7 @@ export function Subjects() {
   { header: "Docente", accessor: "teacher_name" },
   ];
 
-  if (!isTeacher) {
-    columns.splice(3, 0, { header: "DNI", accessor: "dni" });
-  }
-
-  if (!isTeacher) {
+  if (isAdmin()) {
     columns.push({
       header: "Acciones",
       render: (row) => (
