@@ -310,7 +310,7 @@ const confirmDelete = async () => {
 
   {teachers.map((teacher) => (
     <option key={teacher.id} value={teacher.id}>
-      {teacher.first_name} {teacher.last_name}
+      {teacher.last_name}, {teacher.first_name}
     </option>
   ))}
 </select>
