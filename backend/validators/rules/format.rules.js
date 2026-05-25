@@ -82,8 +82,12 @@ DNI
 ========================================================= */
 export const validateDNI = (field, optional = false) => [
   baseField(field, optional)
+    .trim()
+    .notEmpty()
+    .withMessage("Este campo no puede estar vacío.")
+    .bail()
     .isNumeric()
-    .withMessage("Este campo no puede estar vacío o contener un DNI no válido.")
+    .withMessage("Este campo no puede contener un DNI no válido.")
     .customSanitizer((v) =>
       v === undefined || v === null || v === ""
         ? undefined
@@ -241,10 +245,11 @@ NAME
 export const validateName = (field, optional = false) => [
   baseField(field, optional)
     .trim()
+    .notEmpty()
+    .withMessage("Este campo no puede estar vacío.")
+    .bail()
     .matches(/^[a-zA-Z0-9ñÑáéíóúÁÉÍÓÚ\s°º().,+\-/#]+$/)
-    .withMessage(
-      "Este campo no puede estar vacío o contener caracteres no válidos.",
-    )
+    .withMessage("Este campo no puede contener caracteres no válidos.")
     .bail()
     .isLength({ min: 3 })
     .withMessage("Este campo debe superar los 3 caracteres.")
@@ -293,10 +298,11 @@ PERSON NAME
 export const validatePersonName = (field, optional = false) => [
   baseField(field, optional)
     .trim()
+    .notEmpty()
+    .withMessage("Este campo no puede estar vacío.")
+    .bail()
     .matches(/^[a-zA-ZñÑáéíóúÁÉÍÓÚ\s]+$/)
-    .withMessage(
-      "Este campo no puede estar vacío o contener caracteres no válidos.",
-    )
+    .withMessage("Este campo no puede contener caracteres no válidos.")
     .bail()
     .isLength({ min: 3 })
     .withMessage("Este campo debe superar los 3 caracteres.")
@@ -310,14 +316,15 @@ PHONE
 ========================================================= */
 export const validatePhone = (field, optional = false) => [
   baseField(field, optional)
+    .notEmpty()
+    .withMessage("Este campo no puede estar vacío.")
+    .bail()
     .trim()
     .isLength({ max: 20 })
     .withMessage("Este campo no puede superar los 20 caracteres.")
     .bail()
     .matches(/^[0-9+\- ]+$/)
-    .withMessage(
-      "Este campo no puede estar vacío o contener caracteres no válidos.",
-    ),
+    .withMessage("Este campo no puede contener caracteres no válidos."),
 ];
 
 /* =========================================================
