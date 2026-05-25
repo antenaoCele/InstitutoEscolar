@@ -111,30 +111,25 @@ const { data } = await studentService.getAll(params);
 
 
   const filteredStudents = students.filter((s) => {
-  const textName = searchFirstLastName.toLowerCase();
-  const textSchool = searchSchool.toLowerCase();
-
-  const matchName =
-    !textName ||
-    s.first_name?.toLowerCase().includes(textName) ||
-    s.last_name?.toLowerCase().includes(textName);
-
-  const matchSchool =
-    !textSchool ||
-    s.school?.toLowerCase().includes(textSchool);
-
-  let matchDNI = true;
-
-  if (isAdmin()) {
+    const textName = searchFirstLastName.toLowerCase();
     const textDNI = searchDNI;
+    const textSchool = searchSchool.toLowerCase();
 
-    matchDNI =
+    const matchName =
+      !textName ||
+      s.first_name?.toLowerCase().includes(textName) ||
+      s.last_name?.toLowerCase().includes(textName);
+
+    const matchDNI =
       !textDNI ||
       s.dni?.toString().includes(textDNI);
-  }
 
-  return matchName && matchDNI && matchSchool;
-});
+    const matchSchool =
+      !textSchool ||
+      s.school?.toLowerCase().includes(textSchool);
+
+    return matchName && matchDNI && matchSchool;
+  });
 
   const handleCreate = async () => {
     try {
@@ -181,7 +176,7 @@ const { data } = await studentService.getAll(params);
     if (!lastName.trim()) newErrors.last_name = "Este campo no puede estar vacío.";
     if (!dni.trim()) newErrors.dni = "Este campo no puede estar vacío.";
     if (!school.trim()) newErrors.school = "Este campo no puede estar vacío.";
-    if (!birthDate) newErrors.birth_date = "Seleccione una fecha válida.";
+    if (!birthDate) newErrors.birth_date = "Ingrese una fecha válida.";
     if (!level) newErrors.level = "Seleccione una opción válida.";
     if (!grade) newErrors.grade = "Seleccione una opción válida.";
 
@@ -292,14 +287,12 @@ const confirmDelete = async () => {
           className="p-2 border border-gray-300 rounded w-60"
         />
 
-        {isAdmin() && (
-          <input
-            placeholder="🔍 Buscar por DNI"
-            value={searchDNI}
-            onChange={(e) => setSearchDNI(e.target.value)}
-            className="p-2 border border-gray-300 rounded w-40"
-          />
-        )}
+        <input
+          placeholder="🔍 Buscar por DNI"
+          value={searchDNI}
+          onChange={(e) => setSearchDNI(e.target.value)}
+          className="p-2 border border-gray-300 rounded w-40"
+        />
 
         <input
           placeholder="🔍 Buscar por Colegio o Universidad"
