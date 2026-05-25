@@ -38,7 +38,6 @@ export function Students() {
   const [errorsEdit, setErrorsEdit] = useState({});
 
   const location = useLocation();
-  const isTeacher = !isAdmin();
 
   const params = new URLSearchParams(location.search);
   const status = params.get("status") || "all";
@@ -112,25 +111,30 @@ const { data } = await studentService.getAll(params);
 
 
   const filteredStudents = students.filter((s) => {
-    const textName = searchFirstLastName.toLowerCase();
+  const textName = searchFirstLastName.toLowerCase();
+  const textSchool = searchSchool.toLowerCase();
+
+  const matchName =
+    !textName ||
+    s.first_name?.toLowerCase().includes(textName) ||
+    s.last_name?.toLowerCase().includes(textName);
+
+  const matchSchool =
+    !textSchool ||
+    s.school?.toLowerCase().includes(textSchool);
+
+  let matchDNI = true;
+
+  if (isAdmin()) {
     const textDNI = searchDNI;
-    const textSchool = searchSchool.toLowerCase();
 
-    const matchName =
-      !textName ||
-      s.first_name?.toLowerCase().includes(textName) ||
-      s.last_name?.toLowerCase().includes(textName);
-
-    const matchDNI =
+    matchDNI =
       !textDNI ||
       s.dni?.toString().includes(textDNI);
+  }
 
-    const matchSchool =
-      !textSchool ||
-      s.school?.toLowerCase().includes(textSchool);
-
-    return matchName && matchDNI && matchSchool;
-  });
+  return matchName && matchDNI && matchSchool;
+});
 
   const handleCreate = async () => {
     try {
@@ -173,10 +177,10 @@ const { data } = await studentService.getAll(params);
   const handleUpdate = async () => {
     const newErrors = {};
 
-    if (!firstName.trim()) newErrors.first_name = "Este campo está vacío.";
-    if (!lastName.trim()) newErrors.last_name = "Este campo está vacío.";
-    if (!dni.trim()) newErrors.dni = "Este campo está vacío.";
-    if (!school.trim()) newErrors.school = "Este campo está vacío.";
+    if (!firstName.trim()) newErrors.first_name = "Este campo no puede estar vacío.";
+    if (!lastName.trim()) newErrors.last_name = "Este campo no puede estar vacío.";
+    if (!dni.trim()) newErrors.dni = "Este campo no puede estar vacío.";
+    if (!school.trim()) newErrors.school = "Este campo no puede estar vacío.";
     if (!birthDate) newErrors.birth_date = "Seleccione una fecha válida.";
     if (!level) newErrors.level = "Seleccione una opción válida.";
     if (!grade) newErrors.grade = "Seleccione una opción válida.";
@@ -244,11 +248,11 @@ const confirmDelete = async () => {
     { header: "Grado", accessor: "grade" },
   ];
 
-  if (!isTeacher) {
+  if (isAdmin()) {
     columns.splice(3, 0, { header: "DNI", accessor: "dni" });
   }
 
-  if (!isTeacher && status !== "active") {
+  if (isAdmin() && status !== "active") {
     columns.push({
       header: "Acciones",
       render: (row) => (
@@ -264,7 +268,7 @@ const confirmDelete = async () => {
     });
   }
 
-  const showCreateButtons = !(isAdmin() && status === "active");
+  const showCreateButtons = (isAdmin() && status !== "active");
 
   const tableTitle = (
     <div className="flex justify-between items-center">
@@ -288,12 +292,14 @@ const confirmDelete = async () => {
           className="p-2 border border-gray-300 rounded w-60"
         />
 
-        <input
-          placeholder="🔍 Buscar por DNI"
-          value={searchDNI}
-          onChange={(e) => setSearchDNI(e.target.value)}
-          className="p-2 border border-gray-300 rounded w-40"
-        />
+        {isAdmin() && (
+          <input
+            placeholder="🔍 Buscar por DNI"
+            value={searchDNI}
+            onChange={(e) => setSearchDNI(e.target.value)}
+            className="p-2 border border-gray-300 rounded w-40"
+          />
+        )}
 
         <input
           placeholder="🔍 Buscar por Colegio o Universidad"
