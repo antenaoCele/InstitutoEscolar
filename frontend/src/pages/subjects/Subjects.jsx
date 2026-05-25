@@ -451,11 +451,13 @@ export function Subjects() {
         setOpenCreateModal(false);
         resetForm();
       }}
+      className={buttonClass}
     >
       Cancelar
     </Button>
 
-    <Button onClick={handleCreate}>
+    <Button onClick={handleCreate} className={buttonClass}>
+      
       Crear
     </Button>
   </div>
@@ -530,6 +532,7 @@ export function Subjects() {
         setOpenEditModal(false);
         resetForm();
       }}
+      className={buttonClass}
     >
       Cancelar
     </Button>

@@ -400,8 +400,12 @@ const confirmDelete = async () => {
       </div>
 
       <div className="flex justify-end gap-4 mt-10">
-        <Button variant="outline" onClick={() => setOpenCreateModal(false)}>Cancelar</Button>
-        <Button onClick={handleCreate}>Crear</Button>
+        <Button variant="outline" onClick={() => setOpenCreateModal(false)} className={buttonClass}>
+          Cancelar
+        </Button>
+        <Button onClick={handleCreate} className={buttonClass}>
+          Crear
+        </Button>
       </div>
     </Modal>
 
@@ -463,8 +467,12 @@ const confirmDelete = async () => {
       </div>
 
       <div className="flex justify-end gap-4 mt-10">
-        <Button variant="outline" onClick={() => setOpenEditModal(false)}>Cancelar</Button>
-        <Button onClick={handleUpdate}>Guardar</Button>
+        <Button variant="outline" onClick={() => setOpenEditModal(false)} className={buttonClass}>
+          Cancelar
+        </Button>
+        <Button onClick={handleUpdate} className={buttonClass}>
+          Guardar
+        </Button>
       </div>
     </Modal>
 
