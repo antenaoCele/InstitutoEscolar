@@ -18,18 +18,27 @@ const AppHeader = () => {
   };
 
   return (
-    <header className="sticky top-0 z-99999 w-full border-b border-gray-200 bg-white dark:bg-black dark:border-gray-800">
+    <header className="sticky top-0 z-30 w-full border-b border-gray-200 bg-white dark:bg-black dark:border-gray-800">
       <div className="flex items-center justify-between px-4 py-3 lg:px-6">
         {/* IZQUIERDA — HAMBURGUESA */}
         <button
           onClick={handleToggle}
           aria-label="Toggle Sidebar"
-          className="flex items-center justify-center w-10 h-10 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-900 transition"
+          className="
+          flex items-center justify-center
+          w-10 h-10
+          rounded-lg
+          border border-gray-300 dark:border-gray-700
+          bg-white dark:bg-gray-900
+          hover:bg-gray-50 dark:hover:bg-gray-800
+          transition-all duration-200
+          shadow-sm
+          "
         >
           <div className="flex flex-col justify-between w-6 h-5">
-            <span className="h-[2px] w-full rounded-full bg-black dark:bg-white"></span>
-            <span className="h-[2px] w-full rounded-full bg-black dark:bg-white"></span>
-            <span className="h-[2px] w-full rounded-full bg-black dark:bg-white"></span>
+            <span className="h-[2px] w-full rounded-full bg-[#0cc0df]"></span>
+            <span className="h-[2px] w-full rounded-full bg-[#0cc0df]"></span>
+            <span className="h-[2px] w-full rounded-full bg-[#0cc0df]"></span>
           </div>
         </button>
 
