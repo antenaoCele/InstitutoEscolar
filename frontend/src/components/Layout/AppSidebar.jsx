@@ -15,6 +15,7 @@ import {
   PlugInIcon,
   TableIcon,
   UserCircleIcon,
+  GroupIcon,
 } from "../../icons";
 
 const BRAND_COLOR = "#0cc0df";
@@ -25,13 +26,8 @@ const navItems = [
     name: "Inicio",
     path: "/me",
   },
-  // {
-  //   icon: <UserCircleIcon />,
-  //   name: "Mi Perfil",
-  //   path: "/me",
-  // },
   {
-    icon: <ListIcon />,
+    icon: <GroupIcon />,
     name: "Alumnos",
     subItems: [
       {
@@ -45,12 +41,12 @@ const navItems = [
     ],
   },
   {
-    icon: <UserCircleIcon />,
+    icon: <GroupIcon />,
     name: "Docentes",
     path: "/teachers",
   },
   {
-    icon: <TableIcon />,
+    icon: <ListIcon />,
     name: "Materias",
     path: "/subjects",
   },
@@ -65,12 +61,12 @@ const navItems = [
     path: "/schedules",
   },
   {
-    icon: <BoxCubeIcon />,
+    icon: <GroupIcon />,
     name: "Tutores",
     path: "/tutors",
   },
   {
-    icon: <PlugInIcon />,
+    icon: <UserCircleIcon />,
     name: "Usuarios",
     subItems: [
       {
@@ -232,22 +228,22 @@ const AppSidebar = () => {
 
   return (
     <aside
-      className={`fixed top-0 left-0 h-screen bg-white dark:bg-black border-r dark:border-gray-800 transition-all duration-300 ${
-        isExpanded || isMobileOpen ? "w-[290px]" : "w-[90px]"
-      }`}
-      onMouseEnter={() => !isExpanded && setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
+      className={`fixed top-0 left-0 h-screen bg-white dark:bg-black
+  border-r border-gray-200 dark:border-gray-700
+  transition-all duration-300 overflow-y-auto overflow-x-hidden
+  ${isExpanded || isHovered || isMobileOpen ? "w-[290px]" : "w-[90px]"}`}
+      onMouseEnter={() => {
+        if (!isExpanded && !isMobileOpen) {
+          setIsHovered(true);
+        }
+      }}
+      onMouseLeave={() => {
+        if (!isExpanded) {
+          setIsHovered(false);
+        }
+      }}
     >
-      <Link
-        to="/home"
-        className={`flex items-center transition-all duration-300 py-8
-    ${
-      isExpanded || isHovered || isMobileOpen
-        ? "justify-center"
-        : "justify-center"
-    }
-  `}
-      >
+      <Link to="/home" className="flex items-center justify-center py-8">
         <img
           src={
             theme === "dark"
@@ -255,17 +251,17 @@ const AppSidebar = () => {
               : "images/logo/logo 6.png"
           }
           alt="Matecitos"
-          className={`rounded-full object-cover transition-all duration-300
-      ${
-        isExpanded || isHovered || isMobileOpen
-          ? "w-[70px] h-[70px]"
-          : "w-[38px] h-[38px]"
-      }
-    `}
+          className={`rounded-full object-cover transition-all duration-300 hover:scale-110
+            ${
+              isExpanded || isHovered || isMobileOpen
+                ? "w-[70px] h-[70px]"
+                : "w-[38px] h-[38px]"
+            }
+          `}
         />
       </Link>
 
-      <nav className="px-4">{renderMenuItems()}</nav>
+      <nav className="px-4 pb-6">{renderMenuItems()}</nav>
     </aside>
   );
 };

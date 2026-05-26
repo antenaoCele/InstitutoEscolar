@@ -3,98 +3,166 @@
 @import "tailwindcss";
 
 @custom-variant dark (&:where(.dark, .dark *));
+
 @theme {
   --font-outfit: "Outfit", sans-serif;
 
-  /* Definición de colores brand (ejemplos, ajusta a tus códigos reales) */
   --color-brand-50: #f0f7ff;
   --color-brand-100: #e0effe;
   --color-brand-400: #38bdf8;
   --color-brand-500: #0ea5e9;
 
-  /* Definición de tamaños personalizados si los usas */
   --text-theme-sm: 0.875rem;
 }
 
+/* ---------- BASE ---------- */
+
 @layer base {
+  html {
+    @apply bg-gray-50 dark:bg-black;
+  }
+
   body {
-    @apply relative font-normal z-1 bg-gray-50 font-outfit;
-    /* opcional: si querés asegurar tamaño base */
+    @apply relative z-1 font-normal font-outfit
+    bg-gray-50 text-gray-900
+    dark:bg-black dark:text-white;
     font-size: 16px;
   }
+
+  #root {
+    @apply bg-gray-50 dark:bg-black min-h-screen;
+  }
+
+  table {
+    @apply dark:bg-gray-900;
+  }
+
+  th,
+  td {
+    @apply dark:border-gray-700;
+  }
 }
+
+/* ---------- COMPONENTS ---------- */
 
 @layer components {
   .menu-item {
     @apply relative flex items-center w-full gap-3 px-3 py-2 font-medium rounded-lg text-theme-sm;
   }
+
   .menu-item-active {
     @apply bg-brand-50 text-brand-500 dark:bg-brand-500/[0.12] dark:text-brand-400;
   }
+
   .menu-item-inactive {
-    @apply text-gray-700 hover:bg-gray-100 group-hover:text-gray-700 dark:text-gray-300 dark:hover:bg-white/5 dark:hover:text-gray-300;
+    @apply text-gray-700 hover:bg-gray-100 group-hover:text-gray-700
+    dark:text-gray-300 dark:hover:bg-white/5 dark:hover:text-gray-300;
   }
+
   .menu-item-icon {
     @apply text-gray-500 group-hover:text-gray-700 dark:text-gray-400;
   }
+
   .menu-item-icon-active {
     @apply text-brand-500 dark:text-brand-400;
   }
+
   .menu-item-icon-size svg {
     @apply !size-6;
   }
+
   .menu-item-icon-inactive {
-    @apply text-gray-500 group-hover:text-gray-700 dark:text-gray-400 dark:group-hover:text-gray-300;
+    @apply text-gray-500 group-hover:text-gray-700
+    dark:text-gray-400 dark:group-hover:text-gray-300;
   }
 
   .menu-item-arrow {
     @apply relative;
   }
+
   .menu-item-arrow-active {
     @apply rotate-180 text-brand-500 dark:text-brand-400;
   }
+
   .menu-item-arrow-inactive {
-    @apply text-gray-500 group-hover:text-gray-700 dark:text-gray-400 dark:group-hover:text-gray-300;
+    @apply text-gray-500 group-hover:text-gray-700
+    dark:text-gray-400 dark:group-hover:text-gray-300;
   }
 
   .menu-dropdown-item {
     @apply relative flex items-center gap-3 rounded-lg px-3 py-2.5 text-theme-sm font-medium;
   }
+
   .menu-dropdown-item-active {
     @apply bg-brand-50 text-brand-500 dark:bg-brand-500/[0.12] dark:text-brand-400;
   }
+
   .menu-dropdown-item-inactive {
-    @apply text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-white/5;
+    @apply text-gray-700 hover:bg-gray-100
+    dark:text-gray-300 dark:hover:bg-white/5;
   }
 
   .menu-dropdown-badge {
-    @apply block rounded-full px-2.5 py-0.5 text-xs font-medium uppercase text-brand-500 dark:text-brand-400;
+    @apply block rounded-full px-2.5 py-0.5 text-xs font-medium uppercase
+    text-brand-500 dark:text-brand-400;
   }
+
   .menu-dropdown-badge-active {
     @apply bg-brand-100 dark:bg-brand-500/20;
   }
+
   .menu-dropdown-badge-inactive {
-    @apply bg-brand-50 group-hover:bg-brand-100 dark:bg-brand-500/15 dark:group-hover:bg-brand-500/20;
+    @apply bg-brand-50 group-hover:bg-brand-100
+    dark:bg-brand-500/15 dark:group-hover:bg-brand-500/20;
   }
 }
 
+/* ---------- UTILITIES ---------- */
+
 @layer utilities {
+  /* scrollbar oculto */
   .no-scrollbar::-webkit-scrollbar {
     display: none;
   }
+
   .no-scrollbar {
     -ms-overflow-style: none;
     scrollbar-width: none;
   }
 
+  /* scrollbar personalizado */
   .custom-scrollbar::-webkit-scrollbar {
     @apply size-1.5;
   }
+
   .custom-scrollbar::-webkit-scrollbar-track {
-    @apply rounded-full;
+    @apply rounded-full bg-gray-200 dark:bg-gray-900;
   }
+
   .custom-scrollbar::-webkit-scrollbar-thumb {
-    @apply bg-gray-200 rounded-full dark:bg-gray-700;
+    @apply bg-gray-400 dark:bg-gray-700 rounded-full;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    @apply bg-gray-500 dark:bg-gray-600;
+  }
+
+  /* SCROLL GLOBAL DEL LAYOUT */
+  ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+
+  ::-webkit-scrollbar-track {
+    @apply bg-gray-200 dark:bg-black;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    @apply bg-gray-400 dark:bg-gray-700 rounded-full;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-gray-500 dark:bg-gray-600;
   }
 
   input[type="date"]::-webkit-inner-spin-button,
@@ -106,10 +174,12 @@
   }
 }
 
-/* CHECKBOX */
+/* ---------- CHECKBOX ---------- */
+
 .tableCheckbox:checked ~ span span {
   @apply opacity-100;
 }
+
 .tableCheckbox:checked ~ span {
   @apply border-brand-500 bg-brand-500;
 }
