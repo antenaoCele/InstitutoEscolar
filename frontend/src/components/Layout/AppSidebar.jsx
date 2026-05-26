@@ -15,6 +15,7 @@ import {
   PlugInIcon,
   TableIcon,
   UserCircleIcon,
+  GroupIcon,
 } from "../../icons";
 
 const BRAND_COLOR = "#0cc0df";
@@ -26,7 +27,7 @@ const navItems = [
     path: "/me",
   },
   {
-    icon: <ListIcon />,
+    icon: <GroupIcon />,
     name: "Alumnos",
     subItems: [
       {
@@ -40,12 +41,12 @@ const navItems = [
     ],
   },
   {
-    icon: <UserCircleIcon />,
+    icon: <GroupIcon />,
     name: "Docentes",
     path: "/teachers",
   },
   {
-    icon: <TableIcon />,
+    icon: <ListIcon />,
     name: "Materias",
     path: "/subjects",
   },
@@ -60,12 +61,12 @@ const navItems = [
     path: "/schedules",
   },
   {
-    icon: <BoxCubeIcon />,
+    icon: <GroupIcon />,
     name: "Tutores",
     path: "/tutors",
   },
   {
-    icon: <PlugInIcon />,
+    icon: <UserCircleIcon />,
     name: "Usuarios",
     subItems: [
       {
