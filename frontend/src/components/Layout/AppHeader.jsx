@@ -5,12 +5,10 @@ import NotificationDropdown from "../../components/header/NotificationDropdown";
 import UserDropdown from "../../components/header/UserDropdown";
 
 const AppHeader = () => {
-  const [isApplicationMenuOpen, setApplicationMenuOpen] = useState(false);
-
   const { isMobileOpen, toggleSidebar, toggleMobileSidebar } = useSidebar();
 
   const handleToggle = () => {
-    if (window.innerWidth >= 991) {
+    if (window.innerWidth >= 1024) {
       toggleSidebar();
     } else {
       toggleMobileSidebar();
@@ -52,11 +50,7 @@ const AppHeader = () => {
         </div>
 
         {/* DERECHA */}
-        <div
-          className={`${
-            isApplicationMenuOpen ? "flex" : "hidden lg:flex"
-          } items-center gap-3`}
-        >
+        <div className="flex items-center gap-2 sm:gap-4">
           <ThemeToggleButton />
 
           {/* <NotificationDropdown /> */}

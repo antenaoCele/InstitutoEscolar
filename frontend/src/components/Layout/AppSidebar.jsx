@@ -86,7 +86,13 @@ const navItems = [
 ];
 
 const AppSidebar = () => {
-  const { isExpanded, isMobileOpen, isHovered, setIsHovered } = useSidebar();
+  const {
+    isExpanded,
+    isMobileOpen,
+    isHovered,
+    setIsHovered,
+    toggleMobileSidebar,
+  } = useSidebar();
   const { theme } = useTheme();
   const location = useLocation();
 
@@ -182,6 +188,7 @@ const AppSidebar = () => {
                       <li key={subItem.name}>
                         <Link
                           to={subItem.path}
+                          onClick={() => isMobileOpen && toggleMobileSidebar()}
                           className="block py-2 text-sm transition-colors"
                           style={{
                             color: isActive(subItem.path)
@@ -203,6 +210,7 @@ const AppSidebar = () => {
           ) : (
             <Link
               to={nav.path}
+              onClick={() => isMobileOpen && toggleMobileSidebar()}
               className="flex items-center px-4 py-3 rounded-xl transition-all hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-900 dark:text-white"
               style={
                 isActive(nav.path)
@@ -228,10 +236,11 @@ const AppSidebar = () => {
 
   return (
     <aside
-      className={`fixed top-0 left-0 h-screen bg-white dark:bg-black
+      className={`fixed top-0 left-0 z-50 h-screen bg-white dark:bg-black
   border-r border-gray-200 dark:border-gray-700
   transition-all duration-300 overflow-y-auto overflow-x-hidden
-  ${isExpanded || isHovered || isMobileOpen ? "w-[290px]" : "w-[90px]"}`}
+  ${isMobileOpen ? "translate-x-0 w-[290px]" : "-translate-x-full lg:translate-x-0"}
+  ${isExpanded || isHovered ? "lg:w-[290px]" : "lg:w-[90px]"}`}
       onMouseEnter={() => {
         if (!isExpanded && !isMobileOpen) {
           setIsHovered(true);
@@ -243,7 +252,11 @@ const AppSidebar = () => {
         }
       }}
     >
-      <Link to="/home" className="flex items-center justify-center py-8">
+      <Link
+        to="/home"
+        onClick={() => isMobileOpen && toggleMobileSidebar()}
+        className="flex items-center justify-center py-8"
+      >
         <img
           src={
             theme === "dark"
