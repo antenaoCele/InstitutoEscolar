@@ -88,7 +88,7 @@ export const studentsController = {
           });
 
         return {
-          student_id: row.student_id,
+          id: row.student_id,
           first_name: row.first_name,
           last_name: row.last_name,
           dni: row.dni,
