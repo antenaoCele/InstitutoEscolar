@@ -30,7 +30,6 @@ export function Teachers() {
   const [errorsEdit, setErrorsEdit] = useState({});
 
   const location = useLocation();
-  const isTeacher = !isAdmin();
 
   const params = new URLSearchParams(location.search);
   const status = params.get("status") || "all";
@@ -201,11 +200,11 @@ const fetchTeachers = async () => {
     { header: "Teléfono", accessor: "phone" },
   ];
 
-  if (!isTeacher) {
+  if (isAdmin()) {
     columns.splice(3, 0, { header: "DNI", accessor: "dni" });
   }
 
-  if (!isTeacher) {
+  if (isAdmin()) {
     columns.push({
       header: "Acciones",
       render: (row) => (
@@ -314,7 +313,7 @@ const fetchTeachers = async () => {
 
     {/* EDIT MODAL */}
     <Modal isOpen={openEditModal} onClose={() => setOpenEditModal(false)}>
-      <h2 className="text-xl font-bold mb-8">Editar Alumno</h2>
+      <h2 className="text-xl font-bold mb-8">Editar Docente</h2>
 
       <div className="flex flex-col mb-6">
         <label className="font-semibold mb-2">Nombre</label>
