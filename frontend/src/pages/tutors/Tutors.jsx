@@ -12,12 +12,9 @@ export function Tutors() {
   const [selectedTutor, setSelectedTutor] = useState(null);
 
   const [students, setStudents] = useState([]);
-  const [selectedStudent, setSelectedStudent] = useState("");
+  const [filterStudentId, setFilterStudentId] = useState("");
 
-  const [studentId, setStudentId] = useState("")
   const [selectedStudentId, setSelectedStudentId] = useState("");
-
-  const [studentTutor, setStudentTutor] = useState([]);
 
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
@@ -34,8 +31,6 @@ export function Tutors() {
 
   const [errorsCreate, setErrorsCreate] = useState({});
   const [errorsEdit, setErrorsEdit] = useState({});
-
-  const isTeacher = !isAdmin();
 
   const buttonClass = "cursor-pointer transition transform hover:scale-105";
 
@@ -56,47 +51,60 @@ export function Tutors() {
       const relations = studentTutorsRes.data.data || [];
   
       const merged = tutorsData.map((tutor) => {
-        const relation = relations.find(
-          (r) => r.tutor_id === tutor.id
-        );
-  
-        return {
-          ...tutor,
-          student_tutor_id: relation?.id || null,
-          student_id: relation?.student_id || "",
-          student_name: relation?.student_name || "",
-        };
-      });
+  const relation = relations.find(
+    (r) => r.id === tutor.id
+  );
+
+  return {
+    ...tutor,
+
+    student_tutor_id:
+      relation?.student_tutor_id || null,
+
+    student_id:
+      relation?.student_id || "",
+
+    student_name:
+      relation?.student_name || "",
+  };
+});
   
       let filtered = merged;
   
-      if (selectedStudent) {
+      if (filterStudentId) {
         filtered = merged.filter(
-          (s) => String(s.student_id) === String(selectedStudent)
+          (s) => String(s.student_id) === String(filterStudentId)
         );
       }
   
       setTutors(filtered);
-      setStudentTutor(relations);
     } catch (error) {
       console.error(error);
       setTutors([]);
     }
   };
 
-  const fetchStudents = async () => {
-     try {
-      const res = await studentService.getAll();
-  
-      setStudents(res.data.data || []);
-    } catch (error) {
-      console.error(error);
-    }
-  };
+const fetchStudents = async () => {
+  try {
+    const res = await studentService.getAll();
+
+    console.log("STUDENTS API:");
+    console.table(
+  res.data.data.map((s) => ({
+    id: s.id,
+    name: `${s.last_name}, ${s.first_name}`,
+  }))
+);
+
+    setStudents(res.data.data || []);
+  } catch (error) {
+    console.error(error);
+  }
+};
 
   useEffect(() => {
   fetchTutors();
-  }, [selectedStudent]);
+  }, [filterStudentId]);
 
   useEffect(() => {
     fetchStudents();
@@ -125,6 +133,8 @@ export function Tutors() {
     setDni("");
     setPhone("");
 
+    setSelectedStudentId("");
+
     setErrorsCreate({});
     setErrorsEdit({});
   };
@@ -147,51 +157,72 @@ export function Tutors() {
   try {
     setErrorsCreate({});
 
-    if (!firstName.trim()) {
-      setErrorsCreate({
-        firstName: "Este campo no puede estar vacío.",
-      });
+    const newErrors = {};
 
-      return;
-    }
+if (!firstName.trim()) {
+  newErrors.first_name =
+    "Este campo no puede estar vacío.";
+}
 
-    if (!lastName.trim()) {
-      setErrorsCreate({
-        lastName: "Este campo no puede estar vacío.",
-      });
+if (!lastName.trim()) {
+  newErrors.last_name =
+    "Este campo no puede estar vacío.";
+}
 
-      return;
-    }
-  
-    if (!dni.trim()) {
-      setErrorsCreate({
-        dni: "Este campo no puede estar vacío.",
-      });
+if (!dni.trim()) {
+  newErrors.dni =
+    "Este campo no puede estar vacío.";
+}
 
-      return;
-    }
+if (!phone.trim()) {
+  newErrors.phone =
+    "Este campo no puede estar vacío.";
+}
 
-    if (!phone.trim()) {
-      setErrorsCreate({
-        phone: "Este campo no puede estar vacío.",
-      });
+if (Object.keys(newErrors).length > 0) {
+  setErrorsCreate(newErrors);
+  return;
+}
 
-      return;
-    }
+const tutorRes = await tutorService.create({
+  first_name: firstName,
+  last_name: lastName,
+  dni: dni,
+  phone: phone,
+});
 
-    const tutorRes = await tutorService.create({
-      firstName,
-      lastName,
-      dni,
-      phone
-    });
+console.log("TUTOR RESPONSE:");
+console.log(tutorRes.data);
 
-    if (selectedStudentId) {
-      await studentTutorService.create({
-        student_id: selectedStudentId,
-        tutor_id: tutorRes.data.data.id,
-      });
-    }
+console.log("TUTOR DATA:");
+console.log(tutorRes.data.data);
+
+console.log("TUTOR ID:");
+console.log(tutorRes.data.data?.id);
+
+console.log("SELECTED STUDENT:");
+console.log(selectedStudentId);
+
+if (selectedStudentId) {
+
+  const payload = {
+    student_id: selectedStudentId,
+    tutor_id: tutorRes.data.data?.id,
+  };
+
+  console.log("STUDENT_TUTOR PAYLOAD:");
+  console.log(payload);
+
+try {
+  await studentTutorService.create(payload);
+} catch (error) {
+
+  await tutorService.delete(
+    tutorRes.data.data.id
+  );
+
+  throw error;
+}}
 
     setOpenCreateModal(false);
 
@@ -213,22 +244,14 @@ export function Tutors() {
   const handleEdit = async (tutor) => {
   setSelectedTutor(tutor);
 
-  setFirstName(tutor.firstName || "");
-  setLastName(tutor.lastName || "");
+  setFirstName(tutor.first_name || "");
+  setLastName(tutor.last_name || "");
   setDni(tutor.dni || "");
   setPhone(tutor.phone || "");
 
-  try {
-    const relationRes = await studentTutorService.getAll();
-
-    const relation = relationRes.data.data.find(
-      (r) => r.tutor_id === tutor.id
-    );
-
-    setSelectedStudentId(relation?.tutor_id || "");
-  } catch {
-    setSelectedStudentId("");
-  }
+  setSelectedStudentId(
+    tutor.student_id || ""
+  );
 
   setErrorsEdit({});
   setOpenEditModal(true);
@@ -238,58 +261,52 @@ export function Tutors() {
   try {
     setErrorsEdit({});
 
-    if (!firstName.trim()) {
-      setErrorsEdit({
-        firstName: "Este campo no puede estar vacío.",
-      });
+   const newErrors = {};
 
-      return;
-    }
+if (!firstName.trim()) {
+  newErrors.first_name =
+    "Este campo no puede estar vacío.";
+}
 
-    else if (!lastName.trim()) {
-      setErrorsEdit({
-        lastName: "Este campo no puede estar vacío.",
-      });
+if (!lastName.trim()) {
+  newErrors.last_name =
+    "Este campo no puede estar vacío.";
+}
 
-      return;
-    }
+if (!dni.trim()) {
+  newErrors.dni =
+    "Este campo no puede estar vacío.";
+}
 
-    else if (!dni.trim()) {
-      setErrorsEdit({
-        dni: "Este campo no puede estar vacío.",
-      });
+if (!phone.trim()) {
+  newErrors.phone =
+    "Este campo no puede estar vacío.";
+}
 
-      return;
-    }
-
-    else if (!phone.trim()) {
-      setErrorsEdit({
-        phone: "Este campo no puede estar vacío.",
-      });
-
-      return;
-    }
+if (Object.keys(newErrors).length > 0) {
+  setErrorsCreate(newErrors);
+  return;
+}
 
     await tutorService.update(
       selectedTutor.id,
-      { firstName, lastName, dni, phone}
+      {
+        first_name: firstName,
+        last_name: lastName,
+        dni: dni,
+        phone: phone,
+      }
     );
 
-    const relationsRes =
-      await studentTutorService.getAll();
-
     const existingRelation =
-      relationsRes.data.data.find(
-        (r) =>
-          r.tutor_id === selectedTutor.id
-      );
+      selectedTutor.student_tutor_id;
 
     if (
       existingRelation &&
       selectedStudentId
     ) {
       await studentTutorService.update(
-        existingRelation.id,
+        existingRelation,
         {
           student_id: selectedStudentId,
           tutor_id: selectedTutor.id,
@@ -302,7 +319,7 @@ export function Tutors() {
       !selectedStudentId
     ) {
       await studentTutorService.delete(
-        existingRelation.id
+        existingRelation
       );
     }
 
@@ -356,34 +373,36 @@ export function Tutors() {
   };
 
   let columns = [
-    { header: "ID", accessor: "tutor_id" },
+    { header: "ID", accessor: "id" },
     { header: "Apellido", accessor: "last_name" },
     { header: "Nombre", accessor: "first_name" },
     { header: "Teléfono", accessor: "phone" },
     { header: "Alumno", accessor: "student_name" },
   ];
 
-  if (!isTeacher) {
+  if (isAdmin()) {
     columns.splice(3, 0, { header: "DNI", accessor: "dni" });
   }
 
-  if (!isTeacher) {
+  if (isAdmin()) {
     columns.push({
       header: "Acciones",
       render: (row) => (
         <div className="flex gap-2">
           <Button 
-          size="sm" 
-          onClick={() => handleEdit(row)} 
-          className={buttonClass}>
+            size="sm" 
+            onClick={() => handleEdit(row)} 
+            className={buttonClass}
+          >
             Editar
           </Button>
 
           <Button 
-          size="sm" 
-          variant="outline" 
-          onClick={() => handleDelete(row)} 
-          className={buttonClass}>
+            size="sm" 
+            variant="outline" 
+            onClick={() => handleDelete(row)} 
+            className={buttonClass}
+          >
             Eliminar
           </Button>
         </div>
@@ -391,11 +410,12 @@ export function Tutors() {
     });
   }
 
-  const showCreateButtons = !(isAdmin());
+  const showCreateButtons = isAdmin();
 
   const tableTitle = (
     <div className="flex justify-between items-center">
       <span>Tutores</span>
+
       {showCreateButtons && (
         <Button 
         size="sm" 
@@ -410,7 +430,6 @@ export function Tutors() {
 
   return (
   <>
-  {/* BUSCADORES */}
       <div className="flex gap-3 mb-4 flex-wrap">
         <input
           placeholder=" 🔍 Buscar por Nombre o Apellido"
@@ -427,13 +446,13 @@ export function Tutors() {
         />
 
         <select
-          value={selectedStudent}
-          onChange={(e) => setSelectedStudent(e.target.value)}
+          value={filterStudentId}
+          onChange={(e) => setFilterStudentId(e.target.value)}
           className="p-2 border border-gray-300 rounded w-60"
         >
-        
           <option 
-            value="">👦🏻👧🏻 Todos los estudiantes
+            value="">
+              👦🏻👧🏻 Todos los estudiantes
           </option>
 
           {students.map((student) => (
@@ -447,7 +466,6 @@ export function Tutors() {
         </select>
       </div>
 
-      
     <BasicTable 
       title={tableTitle} 
       columns={columns}  
@@ -465,113 +483,164 @@ export function Tutors() {
       </div>
     )}
 
-    {/* CREATE MODAL */}
     <Modal 
       isOpen={openCreateModal} 
       onClose={() => {setOpenCreateModal(false);
       resetForm();
     }}
     >
-      <h2 className="text-xl font-bold mb-8">Crear Tutor</h2>
+      <h2 className="text-xl font-bold mb-8">
+        Crear Tutor
+      </h2>
 
       <div className="flex flex-col mb-6">
-        <label className="font-semibold mb-2">Nombre</label>
+        <label className="font-semibold mb-2">
+          Nombre
+        </label>
 
         <input 
           className={inputClass(errorsCreate.first_name)} 
           value={firstName} 
           onChange={(e) => setFirstName(e.target.value)} 
         />
-          {errorsCreate.first_name && <p className="text-red-500 text-sm mt-1">{errorsCreate.first_name}</p>}
+
+        {errorsCreate.first_name && (
+          <p className="text-red-500 text-sm mt-1">
+            {errorsCreate.first_name}
+            </p> 
+        )}
       </div>
 
       <div className="flex flex-col mb-6">
-        <label className="font-semibold mb-2">Apellido</label>
+        <label className="font-semibold mb-2">
+          Apellido
+        </label>
 
         <input 
           className={inputClass(errorsCreate.last_name)}
           value={lastName} 
           onChange={(e) => setLastName(e.target.value)} 
         />
-        {errorsCreate.last_name && <p className="text-red-500 text-sm mt-1">{errorsCreate.last_name}</p>}
+        {errorsCreate.last_name && (
+          <p className="text-red-500 text-sm mt-1">
+            {errorsCreate.last_name}
+          </p>
+        )}
       </div>
 
       <div className="flex flex-col mb-6">
-        <label className="font-semibold mb-2">DNI</label>
+        <label className="font-semibold mb-2">
+          DNI
+        </label>
 
         <input 
           className={inputClass(errorsCreate.dni)}
-          value={dni} onChange={(e) => setDni(e.target.value)}
+          value={dni} 
+          onChange={(e) => setDni(e.target.value)}
         />
-        {errorsCreate.dni && <p className="text-red-500 text-sm mt-1">{errorsCreate.dni}</p>}
+        {errorsCreate.dni && (
+          <p className="text-red-500 text-sm mt-1">
+            {errorsCreate.dni}
+          </p>
+        )}
       </div>
 
       <div className="flex flex-col mb-6">
-        <label className="font-semibold mb-2">Teléfono</label>
+        <label className="font-semibold mb-2">
+          Teléfono
+        </label>
 
         <input 
           className={inputClass(errorsCreate.phone)} 
           value={phone} 
           onChange={(e) => setPhone(e.target.value)}
         />
-        {errorsCreate.phone && <p className="text-red-500 text-sm mt-1">{errorsCreate.phone}</p>}
+        {errorsCreate.phone && (
+          <p className="text-red-500 text-sm mt-1">
+            {errorsCreate.phone}
+          </p>
+        )}
       </div>
 
       <div className="flex flex-col mb-6">
       <label className="font-semibold mb-2">Alumno</label>
 
-      <select 
-        value={selectedStudent} 
-        onChange={(e) => setSelectedStudentId(e.target.value)}
-        className={inputClass(errorsCreate.tutor_id)}>
-      
-        <option value="">
-          Sin alumno asignado
-        </option>
+      <select
+  value={selectedStudentId}
+  onChange={(e) =>
+    setSelectedStudentId(e.target.value)
+  }
+  className={inputClass(
+    errorsCreate.student_id
+  )}
+>
+  <option value="">
+    Sin alumno asignado
+  </option>
 
-        {students.map((student) => (
-          <option
-            key={student.id}
-            value={student.id}
-          >
-            {student.last_name}, {student.first_name}
-          </option>
-        ))}
-    </select>
+  {students.map((student) => (
+    <option
+      key={student.id}
+      value={student.id}
+    >
+      {student.last_name},{" "}
+      {student.first_name}
+    </option>
+  ))}
+</select>
+
+        {errorsCreate.student_id && (
+      <p className="text-red-500 text-sm mt-1">
+        {errorsCreate.student_id}
+      </p>
+    )}
+
     </div>
 
       <div className="flex justify-end gap-4 mt-10">
-        <Button 
-          variant="outline" 
-          onClick={() => setOpenCreateModal(false)}
-        >
+        <Button
+              variant="outline"
+              onClick={() => {
+                setOpenCreateModal(false);
+                resetForm();
+              }}
+              className={buttonClass}
+            >
           Cancelar
         </Button>
 
         <Button 
           onClick={handleCreate}
+          className={buttonClass}
         >
           Crear
         </Button>
       </div>
     </Modal>
 
-    {/* EDIT MODAL */}
     <Modal 
       isOpen={openEditModal} 
-      onClose={() => setOpenEditModal(false)}
+      onClose={() => {setOpenEditModal(false); resetForm();}}
     >
-      <h2 className="text-xl font-bold mb-8">Editar Tutor</h2>
+      <h2 className="text-xl font-bold mb-8">
+        Editar Tutor
+      </h2>
 
       <div className="flex flex-col mb-6">
-        <label className="font-semibold mb-2">Nombre</label>
+        <label className="font-semibold mb-2">
+          Nombre
+        </label>
 
         <input 
           className={inputClass(errorsEdit.first_name)} 
           value={firstName} 
           onChange={(e) => setFirstName(e.target.value)} 
         />
-        {errorsEdit.first_name && <p className="text-red-500 text-sm mt-1">{errorsEdit.first_name}</p>}
+        {errorsEdit.first_name && (
+          <p className="text-red-500 text-sm mt-1">
+            {errorsEdit.first_name}
+          </p>
+        )}
       </div>
 
       <div className="flex flex-col mb-6">
@@ -600,45 +669,65 @@ export function Tutors() {
         <label className="font-semibold mb-2">Teléfono</label>
 
         <input 
-          className={inputClass(errorsCreate.phone)} 
+          className={inputClass(errorsEdit.phone)} 
           value={phone} 
           onChange={(e) => setPhone(e.target.value)} 
         />
-        {errorsCreate.phone && <p className="text-red-500 text-sm mt-1">{errorsCreate.phone}</p>}
+        {errorsEdit.phone && (
+          <p className="text-red-500 text-sm mt-1">
+            {errorsEdit.phone}
+          </p>
+        )}
       </div>
 
       <div className="flex flex-col mb-6">
         <label className="font-semibold mb-2">Alumno</label>
 
         <select
-          value={selectedStudentId}
-          onChange={(e) =>setSelectedStudentId(e.target.value)}
-          className={inputClass(errorsEdit.student_id)}
-        >
-          <option value="">Sin alumno asignado</option>
+  value={selectedStudentId}
+  onChange={(e) =>
+    setSelectedStudentId(e.target.value)
+  }
+  className={inputClass(
+    errorsEdit.student_id
+  )}
+>
+  <option value="">
+    Sin alumno asignado
+  </option>
 
-          {students.map((student) => (
-            <option
-              key={student.id}
-              value={student.id}
-            >
-              {student.last_name}, {student.first_name}
-            </option>
-          ))}
-        </select>
+  {students.map((student) => (
+    <option
+      key={student.id}
+      value={student.id}
+    >
+      {student.last_name},{" "}
+      {student.first_name}
+    </option>
+  ))}
+</select>
 
         {errorsEdit.student_id && (<p className="text-red-500 text-sm mt-1">{errorsEdit.student_id}</p>)}
       </div>
 
       <div className="flex justify-end gap-4 mt-10">
-        <Button 
-          variant="outline" 
-          onClick={() => setOpenEditModal(false)}
+        <Button
+          variant="outline"
+          onClick={() => {
+            setOpenEditModal(false);
+            resetForm();
+          }}
+          className={buttonClass}
         >
           Cancelar
         </Button>
 
-        <Button onClick={handleUpdate}>Guardar</Button>
+        <Button 
+          onClick={handleUpdate} 
+          className={buttonClass}
+        > 
+          Guardar
+        </Button>
       </div>
     </Modal>
 
