@@ -82,7 +82,7 @@ export function Students() {
       params.plan_id = selectedPlan;
     }
 
-const { data } = await studentService.getAll(params);
+    const { data } = await studentService.getAll(params);
       setStudents(data?.data || []);
     } catch {
       setStudents([]);
@@ -107,7 +107,7 @@ const { data } = await studentService.getAll(params);
   };
 
   fetchFilters();
-}, []);
+  }, []);
 
 
   const filteredStudents = students.filter((s) => {
@@ -200,27 +200,27 @@ const { data } = await studentService.getAll(params);
 
       setOpenEditModal(false);
       fetchStudents();
-    } catch (error) {
-      const backendErrors = error.response?.data?.errors;
-      if (backendErrors) setErrorsEdit(mapErrors(backendErrors));
-    }
-  };
+      } catch (error) {
+          const backendErrors = error.response?.data?.errors;
+          if (backendErrors) setErrorsEdit(mapErrors(backendErrors));
+      }
+    };
 
   const handleDelete = (student) => {
     setSelectedStudent(student);
     setOpenDeleteModal(true);
   };
 
-const confirmDelete = async () => {
-  try {
-    await studentService.delete(selectedStudent.student_id);
-    setOpenDeleteModal(false);
-    fetchStudents();
-  } catch (error) {
-    console.error(error.response?.data || error.message);
-    alert(error.response?.data?.message || "Error al eliminar");
-  }
-};
+  const confirmDelete = async () => {
+    try {
+      await studentService.delete(selectedStudent.student_id);
+      setOpenDeleteModal(false);
+      fetchStudents();
+    } catch (error) {
+      console.error(error.response?.data || error.message);
+      alert(error.response?.data?.message || "Error al eliminar");
+    }
+  };
 
   const openCreate = () => {
     resetForm();
@@ -228,17 +228,11 @@ const confirmDelete = async () => {
   };
 
   let columns = [
-    { header: "ID", accessor: "student_id" },
+    { header: "ID", accessor: "id" },
     { header: "Apellido", accessor: "last_name" },
     { header: "Nombre", accessor: "first_name" },
+    { header: "Fecha de Nacimiento", render: (row) => row.birth_date ? new Date(row.birth_date).toLocaleDateString("es-AR") : "-",},
     { header: "Colegio o Universidad", accessor: "school" },
-    {
-      header: "Fecha de Nacimiento",
-      render: (row) =>
-        row.birth_date
-          ? new Date(row.birth_date).toLocaleDateString("es-AR")
-          : "-",
-    },
     { header: "Nivel", accessor: "level" },
     { header: "Grado", accessor: "grade" },
   ];
@@ -278,214 +272,496 @@ const confirmDelete = async () => {
 
   return (
   <>
- {/* BUSCADORES */}
-      <div className="flex gap-3 mb-4 flex-wrap">
+    <div 
+      className="flex gap-3 mb-4 flex-wrap">
         <input
           placeholder=" 🔍 Buscar por Nombre o Apellido"
           value={searchFirstLastName}
           onChange={(e) => setSearchFirstLastName(e.target.value)}
-          className="p-2 border border-gray-300 rounded w-60"
-        />
+          className="p-2 border border-gray-300 rounded w-60"/>
 
         <input
           placeholder="🔍 Buscar por DNI"
           value={searchDNI}
           onChange={(e) => setSearchDNI(e.target.value)}
-          className="p-2 border border-gray-300 rounded w-40"
-        />
+          className="p-2 border border-gray-300 rounded w-40"/>
 
         <input
           placeholder="🔍 Buscar por Colegio o Universidad"
           value={searchSchool}
           onChange={(e) => setSearchSchool(e.target.value)}
-          className="p-2 border border-gray-300 rounded w-60"
-        />
+          className="p-2 border border-gray-300 rounded w-60"/>
 
         <select
-  value={selectedTeacher}
-  onChange={(e) => setSelectedTeacher(e.target.value)}
-  className="p-2 border border-gray-300 rounded w-60"
->
-  <option value="">👨‍🏫 Todos los docentes</option>
+          value={selectedTeacher}
+          onChange={(e) => setSelectedTeacher(e.target.value)}
+          className="p-2 border border-gray-300 rounded w-60">
+          <option 
+            value="">
+              👨‍🏫 Todos los docentes
+          </option>
 
-  {teachers.map((teacher) => (
-    <option key={teacher.id} value={teacher.id}>
-      {teacher.last_name}, {teacher.first_name}
-    </option>
-  ))}
-</select>
+          {teachers.map((teacher) => (
+            <option 
+              key={teacher.id} 
+              value={teacher.id}>
+              {teacher.last_name}, {teacher.first_name}
+            </option>
+          ))}
+        </select>
 
-<select
-  value={selectedPlan}
-  onChange={(e) => setSelectedPlan(e.target.value)}
-  className="p-2 border border-gray-300 rounded w-60"
->
-  <option value="">📘 Todos los planes</option>
+        <select
+          value={selectedPlan}
+          onChange={(e) => setSelectedPlan(e.target.value)}
+          className="p-2 border border-gray-300 rounded w-60">
+  
+          <option 
+            value="">
+              📘 Todos los planes
+          </option>
 
-  {plans.map((plan) => (
-    <option key={plan.id} value={plan.id}>
-      {plan.name}
-    </option>
-  ))}
-</select>
+          {plans.map((plan) => (
+            <option key={plan.id} value={plan.id}>
+              {plan.name}
+            </option>
+          ))}
+        </select>
+    </div>
 
-      </div>
-
-      
-    <BasicTable title={tableTitle} columns={columns}  data={filteredStudents} />
+    <BasicTable 
+      title={tableTitle}
+      columns={columns} 
+      data={filteredStudents} />
 
     {showCreateButtons && (
       <div className="mt-8">
-        <Button onClick={openCreate} className={buttonClass}>
-          Crear Alumno
-        </Button>
+        <Button 
+          onClick={openCreate} 
+          className={buttonClass}>
+            Crear Alumno
+          </Button>
       </div>
-    )}
+   )}
 
-    {/* CREATE MODAL */}
-    <Modal isOpen={openCreateModal} onClose={() => setOpenCreateModal(false)}>
-      <h2 className="text-xl font-bold mb-8">Crear Alumno</h2>
+    <Modal 
+      isOpen={openCreateModal} 
+      onClose={() => setOpenCreateModal(false)}>
+        <h2 
+          className="text-xl font-bold mb-8">
+            Crear Alumno
+        </h2>
 
-      <div className="flex flex-col mb-6">
-        <label className="font-semibold mb-2">Nombre</label>
-        <input className={inputClass(errorsCreate.first_name)} value={firstName} onChange={(e) => setFirstName(e.target.value)} />
-        {errorsCreate.first_name && <p className="text-red-500 text-sm mt-1">{errorsCreate.first_name}</p>}
-      </div>
+        <div 
+          className="flex flex-col mb-6">
+            <label 
+              className="font-semibold mb-2">
+                Nombre
+            </label>
 
-      <div className="flex flex-col mb-6">
-        <label className="font-semibold mb-2">Apellido</label>
-        <input className={inputClass(errorsCreate.last_name)} value={lastName} onChange={(e) => setLastName(e.target.value)} />
-        {errorsCreate.last_name && <p className="text-red-500 text-sm mt-1">{errorsCreate.last_name}</p>}
-      </div>
+          <input 
+            className={inputClass(errorsCreate.first_name)} 
+            value={firstName} 
+            onChange={(e) => setFirstName(e.target.value)} />
+              {errorsCreate.first_name && 
+                <p 
+                  className="text-red-500 text-sm mt-1">
+                    {errorsCreate.first_name}
+                </p>
+              }
+        </div>
 
-      <div className="flex flex-col mb-6">
-        <label className="font-semibold mb-2">DNI</label>
-        <input className={inputClass(errorsCreate.dni)} value={dni} onChange={(e) => setDni(e.target.value)} />
-        {errorsCreate.dni && <p className="text-red-500 text-sm mt-1">{errorsCreate.dni}</p>}
-      </div>
+        <div 
+          className="flex flex-col mb-6">
+            <label 
+              className="font-semibold mb-2">
+                Apellido
+            </label>
 
-      <div className="flex flex-col mb-6">
-        <label className="font-semibold mb-2">Colegio o Universidad</label>
-        <input className={inputClass(errorsCreate.school)} value={school} onChange={(e) => setSchool(e.target.value)} />
-        {errorsCreate.school && <p className="text-red-500 text-sm mt-1">{errorsCreate.school}</p>}
-      </div>
+            <input 
+              className={inputClass(errorsCreate.last_name)} 
+              value={lastName} 
+              onChange={(e) => setLastName(e.target.value)} />
+                {errorsCreate.last_name && 
+                  <p 
+                    className="text-red-500 text-sm mt-1">
+                      {errorsCreate.last_name}
+                    </p>
+                }
+        </div>
 
-      <div className="flex flex-col mb-6">
-        <label className="font-semibold mb-2">Fecha de nacimiento</label>
-        <input type="date" className={inputClass(errorsCreate.birth_date)} value={birthDate} onChange={(e) => setBirthDate(e.target.value)} />
-        {errorsCreate.birth_date && <p className="text-red-500 text-sm mt-1">{errorsCreate.birth_date}</p>}
-      </div>
+        <div 
+          className="flex flex-col mb-6">
+            <label 
+              className="font-semibold mb-2">
+                DNI
+            </label>
 
-      <div className="flex flex-col mb-6">
-        <label className="font-semibold mb-2">Nivel</label>
-        <select className={inputClass(errorsCreate.level)} value={level} onChange={(e) => setLevel(e.target.value)}>
-          <option value="" disabled>Seleccionar</option>
-          <option value="Inicial">Inicial</option>
-          <option value="Primario">Primario</option>
-          <option value="Secundario">Secundario</option>
-          <option value="Universitario">Universitario</option>
-        </select>
-        {errorsCreate.level && <p className="text-red-500 text-sm mt-1">{errorsCreate.level}</p>}
-      </div>
+            <input
+              className={inputClass(errorsCreate.dni)} 
+              value={dni} 
+              onChange={(e) => setDni(e.target.value)} />
+                
+              {errorsCreate.dni && 
+                <p className="text-red-500 text-sm mt-1">
+                  {errorsCreate.dni}
+                </p>
+              }
+        </div>
 
-      <div className="flex flex-col mb-6">
-        <label className="font-semibold mb-2">Grado</label>
-        <select className={inputClass(errorsCreate.grade)} value={grade} onChange={(e) => setGrade(e.target.value)}>
-          <option value="" disabled>Seleccionar</option>
-          {[1, 2, 3, 4, 5, 6, 7].map((g) => (
-            <option key={g} value={g}>{g}</option>
-          ))}
-        </select>
-        {errorsCreate.grade && <p className="text-red-500 text-sm mt-1">{errorsCreate.grade}</p>}
-      </div>
+        <div 
+          className="flex flex-col mb-6">
+            <label 
+              className="font-semibold mb-2">
+                Colegio o Universidad
+            </label>
 
-      <div className="flex justify-end gap-4 mt-10">
-        <Button variant="outline" onClick={() => setOpenCreateModal(false)} className={buttonClass}>
-          Cancelar
-        </Button>
-        <Button onClick={handleCreate} className={buttonClass}>
-          Crear
-        </Button>
-      </div>
+            <input
+              className={inputClass(errorsCreate.school)} 
+              value={school} 
+              onChange={(e) => setSchool(e.target.value)} />
+                    
+            {errorsCreate.school && 
+              <p className="text-red-500 text-sm mt-1">
+                {errorsCreate.school}
+              </p>
+              }
+        </div>
+
+        <div 
+          className="flex flex-col mb-6">
+            <label 
+              className="font-semibold mb-2">
+                Fecha de nacimiento
+            </label>
+
+            <input
+              type="date"
+              className={inputClass(errorsCreate.birth_date)} 
+              value={birthDate} onChange={(e) => setBirthDate(e.target.value)} />
+                      
+            {errorsCreate.birth_date && 
+              <p className="text-red-500 text-sm mt-1">
+                {errorsCreate.birth_date}
+              </p>
+            }
+        </div>
+
+        <div 
+          className="flex flex-col mb-6">
+            <label 
+              className="font-semibold mb-2">
+                Nivel
+            </label>
+
+            <select 
+              className={inputClass(errorsCreate.level)} 
+              value={level} 
+              onChange={(e) => setLevel(e.target.value)}>
+          
+                <option
+                  value="" 
+                  disabled>
+                    Seleccionar
+                </option>
+
+                <option 
+                  value="Inicial">
+                    Inicial
+                </option>
+
+                <option 
+                  value="Primario">
+                    Primario
+                </option>
+
+                <option 
+                  value="Secundario">
+                    Secundario
+                </option>
+
+                <option 
+                  value="Universitario">
+                    Universitario
+                </option>
+            </select>
+
+            {errorsCreate.level && 
+              <p 
+                className="text-red-500 text-sm mt-1">
+                  {errorsCreate.level}
+              </p>
+            }
+        </div>
+
+        <div 
+          className="flex flex-col mb-6">
+            <label 
+              className="font-semibold mb-2">
+                Grado
+            </label>
+
+            <select 
+              className={inputClass(errorsCreate.grade)} 
+              value={grade} 
+              onChange={(e) => setGrade(e.target.value)}>
+          
+                <option 
+                  value="" 
+                  disabled>
+                    Seleccionar
+                </option>
+
+                {[1, 2, 3, 4, 5, 6, 7].map((g) => (
+                  <option 
+                    key={g} 
+                    value={g}>
+                      {g}
+                  </option>
+                ))}
+            </select>
+
+            {errorsCreate.grade && 
+              <p className="text-red-500 text-sm mt-1">
+                {errorsCreate.grade}
+              </p>
+            }
+        </div>
+
+        <div 
+          className="flex justify-end gap-4 mt-10">
+            <Button 
+              variant="outline" 
+              onClick={() => setOpenCreateModal(false)} 
+              className={buttonClass}>
+                Cancelar
+            </Button>
+
+            <Button 
+              onClick={handleCreate} 
+              className={buttonClass}>
+                Crear
+            </Button>
+        </div>
     </Modal>
 
-    {/* EDIT MODAL */}
-    <Modal isOpen={openEditModal} onClose={() => setOpenEditModal(false)}>
-      <h2 className="text-xl font-bold mb-8">Editar Alumno</h2>
+    <Modal 
+      isOpen={openEditModal} 
+      onClose={() => setOpenEditModal(false)}>
+        <h2 className="text-xl font-bold mb-8">
+          Editar Alumno
+        </h2>
 
-      <div className="flex flex-col mb-6">
-        <label className="font-semibold mb-2">Nombre</label>
-        <input className={inputClass(errorsEdit.first_name)} value={firstName} onChange={(e) => setFirstName(e.target.value)} />
-        {errorsEdit.first_name && <p className="text-red-500 text-sm mt-1">{errorsEdit.first_name}</p>}
+        <div 
+          className="flex flex-col mb-6">
+            <label 
+              className="font-semibold mb-2">
+                Nombre
+            </label>
+
+            <input 
+              className={inputClass(errorsEdit.first_name)} v
+              alue={firstName} 
+              onChange={(e) => setFirstName(e.target.value)} />
+        
+            {errorsEdit.first_name && 
+              <p className="text-red-500 text-sm mt-1">
+                {errorsEdit.first_name}
+              </p>
+            }
+        </div>
+
+        <div 
+          className="flex flex-col mb-6">
+            <label className="font-semibold mb-2">
+              Apellido
+            </label>
+
+            <input 
+              className={inputClass(errorsEdit.last_name)} 
+              value={lastName} 
+              onChange={(e) => setLastName(e.target.value)} />
+        
+            {errorsEdit.last_name && 
+              <p className="text-red-500 text-sm mt-1">
+                {errorsEdit.last_name}
+              </p>
+            }
       </div>
 
-      <div className="flex flex-col mb-6">
-        <label className="font-semibold mb-2">Apellido</label>
-        <input className={inputClass(errorsEdit.last_name)} value={lastName} onChange={(e) => setLastName(e.target.value)} />
-        {errorsEdit.last_name && <p className="text-red-500 text-sm mt-1">{errorsEdit.last_name}</p>}
+      <div 
+        className="flex flex-col mb-6">
+          <label  
+            className="font-semibold mb-2">
+              DNI
+          </label>
+
+          <input 
+            className={inputClass(errorsEdit.dni)} 
+            value={dni} 
+            onChange={(e) => setDni(e.target.value)} />
+          
+          {errorsEdit.dni && 
+            <p className="text-red-500 text-sm mt-1">
+              {errorsEdit.dni}
+            </p>
+          }
+      </div>  
+
+      <div 
+        className="flex flex-col mb-6">
+          <label 
+            className="font-semibold mb-2">
+              Colegio o Universidad
+          </label>
+
+          <input 
+            className={inputClass(errorsEdit.school)} 
+            value={school} 
+            onChange={(e) => setSchool(e.target.value)} />
+        
+          {errorsEdit.school && 
+            <p className="text-red-500 text-sm mt-1">
+              {errorsEdit.school}
+            </p>
+          }
       </div>
 
-      <div className="flex flex-col mb-6">
-        <label className="font-semibold mb-2">DNI</label>
-        <input className={inputClass(errorsEdit.dni)} value={dni} onChange={(e) => setDni(e.target.value)} />
-        {errorsEdit.dni && <p className="text-red-500 text-sm mt-1">{errorsEdit.dni}</p>}
+      <div 
+        className="flex flex-col mb-6">
+          <label 
+            className="font-semibold mb-2">
+              Fecha de nacimiento
+          </label>
+
+          <input 
+            type="date" 
+            className={inputClass(errorsEdit.birth_date)} 
+            value={birthDate} onChange={(e) => setBirthDate(e.target.value)} />
+        
+          {errorsEdit.birth_date && 
+            <p className="text-red-500 text-sm mt-1">
+              {errorsEdit.birth_date}
+            </p>
+          }
       </div>
 
-      <div className="flex flex-col mb-6">
-        <label className="font-semibold mb-2">Colegio o Universidad</label>
-        <input className={inputClass(errorsEdit.school)} value={school} onChange={(e) => setSchool(e.target.value)} />
-        {errorsEdit.school && <p className="text-red-500 text-sm mt-1">{errorsEdit.school}</p>}
+      <div 
+        className="flex flex-col mb-6">
+          <label 
+            className="font-semibold mb-2">
+              Nivel
+          </label>
+
+          <select 
+            className={inputClass(errorsEdit.level)} 
+            value={level}
+            onChange={(e) => setLevel(e.target.value)}>
+              <option 
+                value="" 
+                disabled>
+                  Seleccionar
+              </option>
+
+              <option 
+                value="Inicial">
+                  Inicial
+              </option>
+
+              <option 
+                value="Primario">
+                  Primario
+              </option>
+
+              <option 
+                value="Secundario">
+                  Secundario
+              </option>
+
+              <option 
+                value="Universitario">
+                  Universitario
+              </option>
+          </select>
+
+          {errorsEdit.level && 
+            <p className="text-red-500 text-sm mt-1">
+              {errorsEdit.level}
+            </p>
+          }
       </div>
 
-      <div className="flex flex-col mb-6">
-        <label className="font-semibold mb-2">Fecha de nacimiento</label>
-        <input type="date" className={inputClass(errorsEdit.birth_date)} value={birthDate} onChange={(e) => setBirthDate(e.target.value)} />
-        {errorsEdit.birth_date && <p className="text-red-500 text-sm mt-1">{errorsEdit.birth_date}</p>}
+      <div 
+        className="flex flex-col mb-6">
+          <label 
+            className="font-semibold mb-2">
+              Grado
+          </label>
+
+          <select 
+            className={inputClass(errorsEdit.grade)} 
+            value={grade} 
+            onChange={(e) => setGrade(e.target.value)}>
+              <option 
+                value="" 
+                disabled>
+                  Seleccionar
+              </option>
+          
+              {[1, 2, 3, 4, 5, 6, 7].map((g) => (
+                <option 
+                  key={g} 
+                  value={g}>
+                    {g}
+                </option>
+              ))}
+          </select>
+        
+          {errorsEdit.grade && 
+            <p className="text-red-500 text-sm mt-1">
+              {errorsEdit.grade}
+            </p>
+          }
       </div>
 
-      <div className="flex flex-col mb-6">
-        <label className="font-semibold mb-2">Nivel</label>
-        <select className={inputClass(errorsEdit.level)} value={level} onChange={(e) => setLevel(e.target.value)}>
-          <option value="" disabled>Seleccionar</option>
-          <option value="Inicial">Inicial</option>
-          <option value="Primario">Primario</option>
-          <option value="Secundario">Secundario</option>
-          <option value="Universitario">Universitario</option>
-        </select>
-        {errorsEdit.level && <p className="text-red-500 text-sm mt-1">{errorsEdit.level}</p>}
-      </div>
-
-      <div className="flex flex-col mb-6">
-        <label className="font-semibold mb-2">Grado</label>
-        <select className={inputClass(errorsEdit.grade)} value={grade} onChange={(e) => setGrade(e.target.value)}>
-          <option value="" disabled>Seleccionar</option>
-          {[1, 2, 3, 4, 5, 6, 7].map((g) => (
-            <option key={g} value={g}>{g}</option>
-          ))}
-        </select>
-        {errorsEdit.grade && <p className="text-red-500 text-sm mt-1">{errorsEdit.grade}</p>}
-      </div>
-
-      <div className="flex justify-end gap-4 mt-10">
-        <Button variant="outline" onClick={() => setOpenEditModal(false)} className={buttonClass}>
-          Cancelar
-        </Button>
-        <Button onClick={handleUpdate} className={buttonClass}>
-          Guardar
-        </Button>
-      </div>
-    </Modal>
-
-      <Modal isOpen={openDeleteModal} onClose={() => setOpenDeleteModal(false)}>
-        <h2 className="text-lg font-semibold mb-4">¿Eliminar alumno?</h2>
-
-        <div className="flex justify-end gap-2">
-          <Button variant="outline" onClick={() => setOpenDeleteModal(false)} className={buttonClass}>
+      <div 
+        className="flex justify-end gap-4 mt-10">
+        <Button 
+          variant="outline" 
+          onClick={() => setOpenEditModal(false)} 
+          className={buttonClass}>
             Cancelar
-          </Button>
-          <Button onClick={confirmDelete} className={buttonClass}>
-            Eliminar
-          </Button>
+        </Button>
+        
+        <Button 
+          onClick={handleUpdate} 
+          className={buttonClass}>
+            Guardar
+        </Button>
+      </div>
+    </Modal>
+
+    <Modal 
+      isOpen={openDeleteModal} 
+      onClose={() => setOpenDeleteModal(false)}>
+        <h2 
+        className="text-lg font-semibold mb-4">
+          ¿Eliminar alumno?
+        </h2>
+
+        <div 
+          className="flex justify-end gap-2">
+            <Button 
+              variant="outline" 
+              onClick={() => setOpenDeleteModal(false)} 
+              className={buttonClass}>
+                Cancelar
+            </Button>
+          
+            <Button 
+              onClick={confirmDelete} 
+              className={buttonClass}>
+                Eliminar
+            </Button>
         </div>
       </Modal>
   </>
