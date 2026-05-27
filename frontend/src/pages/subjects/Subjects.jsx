@@ -348,17 +348,19 @@ export function Subjects() {
 
         <select
           value={selectedTeacher}
-          onChange={(e) =>
-            setSelectedTeacher(e.target.value)
-          }
+          onChange={(e) => setSelectedTeacher(e.target.value)}
           className="p-2 border border-gray-300 rounded w-60"
         >
-          <option value="">
-            👨‍🏫 Todos los docentes
+          <option 
+            value="">
+              👨‍🏫 Todos los docentes
           </option>
 
           {teachers.map((teacher) => (
-            <option key={teacher.id} value={teacher.id}>
+            <option 
+              key={teacher.id} 
+              value={teacher.id}
+            >
               {teacher.last_name}, {teacher.first_name}
             </option>
             ))}
@@ -383,12 +385,11 @@ export function Subjects() {
       )}
 
       <Modal
-  isOpen={openCreateModal}
-  onClose={() => {
-    setOpenCreateModal(false);
-    resetForm();
-  }}
->
+        isOpen={openCreateModal}
+        onClose={() => {setOpenCreateModal(false);
+        resetForm();
+        }}
+      >
   <h2 className="text-xl font-bold mb-8">
     Crear Materia
   </h2>
@@ -537,7 +538,7 @@ export function Subjects() {
       Cancelar
     </Button>
 
-    <Button onClick={handleUpdate}>
+    <Button onClick={handleUpdate} className={buttonClass}>
       Guardar
     </Button>
   </div>
@@ -559,11 +560,12 @@ export function Subjects() {
             onClick={() =>
               setOpenDeleteModal(false)
             }
+          className={buttonClass}
           >
             Cancelar
           </Button>
 
-          <Button onClick={confirmDelete}>
+          <Button onClick={confirmDelete} className={buttonClass}>
             Eliminar
           </Button>
         </div>
