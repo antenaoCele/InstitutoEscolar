@@ -9,7 +9,7 @@ function MenuItem({ item, onClick }) {
   return (
     <DropdownItem
       onItemClick={onClick}
-      tag="a"
+      tag={Link}
       to={item.to}
       className="flex items-center gap-3 px-3 py-2 text-sm font-medium text-gray-700 rounded-lg hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-white/5"
     >
@@ -35,7 +35,7 @@ export default function UserDropdown() {
   const menuItems = [
     {
       label: "Editar perfil",
-      to: "/edit-user",
+      to: "/me",
       icon: <UserIcon />,
     },
   ];

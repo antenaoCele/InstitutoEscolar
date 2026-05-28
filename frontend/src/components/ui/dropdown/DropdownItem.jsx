@@ -5,9 +5,9 @@ export const DropdownItem = ({
   to,
   onClick,
   onItemClick,
-  baseClassName = "block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-gray-900",
   className = "",
   children,
+  baseClassName = "...",
 }) => {
   const combinedClasses = `${baseClassName} ${className}`.trim();
 
@@ -15,15 +15,18 @@ export const DropdownItem = ({
     if (tag === "button") {
       event.preventDefault();
     }
-    if (onClick) onClick();
-    if (onItemClick) onItemClick();
+
+    onClick?.();
+    onItemClick?.();
   };
 
-  if (tag === "a" && to) {
+  if (tag !== "button") {
+    const Component = tag;
+
     return (
-      <Link to={to} className={combinedClasses} onClick={handleClick}>
+      <Component to={to} className={combinedClasses} onClick={handleClick}>
         {children}
-      </Link>
+      </Component>
     );
   }
 

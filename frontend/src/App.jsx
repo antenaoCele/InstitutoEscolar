@@ -3,10 +3,9 @@ import { useAuth } from "./context/Auth.jsx";
 
 import Login from "./pages/login/Login.jsx";
 import UserProfiles from "./pages/me/UserProfiles.jsx";
-import { Users } from "./pages/users/AllUsers.jsx";
-// import { Layout } from "./Layout.jsx";
 import AppLayout from "./components/Layout/AppLayout.jsx";
 import PrivateRoute from "./routes/PrivateRoute.jsx";
+import { Users } from "./pages/users/AllUsers.jsx";
 import { Teachers } from "./pages/teachers/Teachers.jsx";
 import { Students } from "./pages/students/Students.jsx";
 import { Tutors } from "./pages/tutors/Tutors.jsx";
@@ -20,14 +19,14 @@ export default function App() {
   return (
     <BrowserRouter>
       <Routes>
-        {/* Ruta raíz */}
+        {/* SI NO está logueado → login */}
         <Route
           path="/"
           element={
-            isAuthenticated ? (
-              <Navigate to="/me" replace />
-            ) : (
+            !isAuthenticated ? (
               <Navigate to="/login" replace />
+            ) : (
+              <Navigate to="/me" replace />
             )
           }
         />
@@ -35,7 +34,7 @@ export default function App() {
         {/* Login */}
         <Route
           path="/login"
-          element={isAuthenticated ? <Navigate to="/me" replace /> : <Login />}
+          element={!isAuthenticated ? <Login /> : <Navigate to="/me" replace />}
         />
 
         {/* Rutas protegidas */}
@@ -48,12 +47,10 @@ export default function App() {
             <Route path="/plans" element={<Plans />} />
             <Route path="/subjects" element={<Subjects />} />
             <Route path="/tutors" element={<Tutors />} />
-            <Route path="/schedules" element={<Schedules />} />
           </Route>
         </Route>
 
-        {/* Fallback */}
-        <Route path="*" element={<Navigate to="/" replace />} />
+        <Route path="*" element={<Navigate to="/login" replace />} />
       </Routes>
     </BrowserRouter>
   );
