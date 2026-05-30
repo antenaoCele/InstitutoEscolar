@@ -39,10 +39,10 @@ export default function useForm(initialValues, validate) {
     setSuccess(false);
 
     try {
-      // 🚀 llamada al service
+      //  llamada al service
       const res = await submitFn(formData);
 
-      // ⚠️ manejo de errores backend
+      //  manejo de errores backend
       if (!res.success) {
         if (res.errors) {
           const backendErrors = {};
@@ -56,7 +56,7 @@ export default function useForm(initialValues, validate) {
         return;
       }
 
-      // ✅ éxito
+      //  éxito
       setSuccess(true);
       setFormData(initialValues);
     } catch (err) {
@@ -69,7 +69,7 @@ export default function useForm(initialValues, validate) {
 
   return {
     formData,
-    setFormData, // 🔥 importante para edición dinámica
+    setFormData, //  importante para edición dinámica
     errors,
     handleChange,
     handleSubmit,

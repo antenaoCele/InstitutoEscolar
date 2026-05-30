@@ -19,6 +19,10 @@ export const AuthProvider = ({ children }) => {
   const login = async (username, password) => {
     setError(null);
 
+    if (!username?.trim() || !password?.trim()) {
+      return { success: false, error: "Debes completar todos los campos" };
+    }
+
     try {
       const response = await fetch("http://localhost:3000/login", {
         method: "POST",
@@ -57,7 +61,6 @@ export const AuthProvider = ({ children }) => {
       }
 
       return { success: true };
-
     } catch (error) {
       setError(error.message);
       return { success: false, error: error.message };

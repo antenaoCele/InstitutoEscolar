@@ -12,6 +12,7 @@ import { Tutors } from "./pages/tutors/Tutors.jsx";
 import { Schedules } from "./pages/schedules/Schedules.jsx";
 import { Subjects } from "./pages/subjects/Subjects.jsx";
 import { Plans } from "./pages/plans/Plans.jsx";
+import { Home } from "./pages/home/Home.jsx";
 
 export default function App() {
   const { isAuthenticated } = useAuth();
@@ -19,27 +20,17 @@ export default function App() {
   return (
     <BrowserRouter>
       <Routes>
-        {/* SI NO está logueado → login */}
-        <Route
-          path="/"
-          element={
-            !isAuthenticated ? (
-              <Navigate to="/login" replace />
-            ) : (
-              <Navigate to="/me" replace />
-            )
-          }
-        />
-
         {/* Login */}
         <Route
           path="/login"
-          element={!isAuthenticated ? <Login /> : <Navigate to="/me" replace />}
+          element={!isAuthenticated ? <Login /> : <Navigate to="/" replace />}
         />
 
         {/* Rutas protegidas */}
         <Route element={<PrivateRoute />}>
           <Route element={<AppLayout />}>
+            <Route path="/" element={<Home />} />
+            <Route path="/home" element={<Navigate to="/" replace />} />
             <Route path="/me" element={<UserProfiles />} />
             <Route path="/users" element={<Users />} />
             <Route path="/students" element={<Students />} />
