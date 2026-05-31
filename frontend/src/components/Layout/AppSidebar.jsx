@@ -56,10 +56,19 @@ const navItems = [
     path: "/plans",
   },
   {
-    icon: <CalenderIcon />,
-    name: "Horarios",
-    path: "/schedules",
-  },
+  icon: <CalenderIcon />,
+  name: "Horarios",
+  subItems: [
+    {
+      name: "Calendario Semanal",
+      path: "/schedules?view=weekly",
+    },
+    {
+      name: "Calendario Mensual",
+      path: "/schedules?view=monthly",
+    },
+  ],
+},
   {
     icon: <GroupIcon />,
     name: "Tutores",
