@@ -120,13 +120,13 @@ export default function UserProfiles() {
 
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {["first_name", "last_name", "username", "role"].map((field) => (
+            {["first_name", "last_name", "username", "email", "role"].map((field) => (
               <div key={field}>
                 <label className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300 capitalize">
                   {field.replace("_", " ")}
                 </label>
                 <input
-                  type={field === "text"}
+                  type="text"
                   name={field}
                   value={formData[field] || ""}
                   onChange={handleChange}
