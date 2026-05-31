@@ -1,9 +1,19 @@
 import React, { useEffect, useState } from "react";
+import { Modal } from "../../components/ui/Modal";
+import { isAdmin } from "../../utils/auth";
 
 export default function MonthlyCalendar() {
   const [currentDate, setCurrentDate] = useState(
     new Date()
   );
+
+  const [openCreateModal, setOpenCreateModal] = useState(false);
+
+  const [eventName, setEventName] = useState("");
+  const [eventDate, setEventDate] = useState("");
+  const [eventTime, setEventTime] = useState("");
+
+  const [events, setEvents] = useState([]);
 
   const [holidays, setHolidays] = useState([]);
 
@@ -28,6 +38,25 @@ export default function MonthlyCalendar() {
   useEffect(() => {
     fetchHolidays();
   }, [year]);
+
+  const handleCreateEvent = () => {
+    if (!eventName || !eventDate) return;
+
+    const newEvent = {
+      id: Date.now(),
+      title: eventName,
+      date: eventDate,
+      time: eventTime,
+    };
+
+    setEvents((prev) => [...prev, newEvent]);
+
+    setEventName("");
+    setEventDate("");
+    setEventTime("");
+
+    setOpenCreateModal(false);
+  };
 
   const fetchHolidays = async () => {
     try {
@@ -86,9 +115,18 @@ export default function MonthlyCalendar() {
       <div className="flex justify-between items-center mb-6">
         <button
           onClick={handlePreviousMonth}
-          className="px-4 py-2 border rounded hover:bg-gray-50"
+          className="
+            cursor-pointer transition transform hover:scale-105
+            px-4
+            py-2
+            rounded-lg
+            bg-[#0cc0df]
+            text-white
+            hover:opacity-90
+            transition
+          "
         >
-          ⬅️
+          ←
         </button>
 
         <h2 className="text-2xl font-bold capitalize">
@@ -97,11 +135,42 @@ export default function MonthlyCalendar() {
 
         <button
           onClick={handleNextMonth}
-          className="px-4 py-2 border rounded hover:bg-gray-50"
+          className="
+            cursor-pointer transition transform hover:scale-105
+            px-4
+            py-2
+            rounded-lg
+            bg-[#0cc0df]
+            text-white
+            hover:opacity-90
+            transition
+          "
         >
-         ➡️
+         →
         </button>
       </div>
+
+      
+      {isAdmin() && (
+          <div className="flex justify-end mb-6">
+            <button
+              onClick={() => setOpenCreateModal(true)}
+              className="
+                cursor-pointer transition transform hover:scale-105
+                px-4
+                py-2
+                rounded-lg
+                bg-[#0cc0df]
+                text-white
+                hover:opacity-90
+                transition
+              "
+            >
+              Crear Evento
+            </button>
+          </div>
+        )}
+
 
       {/* Tabla */}
 
@@ -145,7 +214,11 @@ export default function MonthlyCalendar() {
                       return (
                         <td
                           key={`blank-${dayIndex}`}
-                          className="border bg-gray-50 h-32"
+                          className="
+                            border
+                            bg-gray-50
+                            h-40
+                          "
                         />
                       );
                     }
@@ -168,20 +241,31 @@ export default function MonthlyCalendar() {
                           currentDateString
                       );
 
+                    const dayEvents = events.filter(
+                        (event) => event.date === currentDateString
+                      );
+
                     const isWeekend =
                       dayIndex === 5 ||
                       dayIndex === 6;
 
                     return (
                       <td
-                        className="
+                        className={`
                           border
                           p-2
                           h-40
                           align-top
                           overflow-hidden
                           hover:bg-blue-50
-                        "
+                          ${
+                            holiday
+                              ? "bg-red-100"
+                              : isWeekend
+                              ? "bg-orange-50"
+                              : ""
+                          }
+                        `}
                       >
                         <div className="font-bold text-gray-700">
                           {day}
@@ -193,7 +277,7 @@ export default function MonthlyCalendar() {
                               className="
                                 text-xs
                                 font-semibold
-                                text-red-700
+                                text-red-800
                                 break-words
                                 leading-tight
                                 line-clamp-4
@@ -201,12 +285,63 @@ export default function MonthlyCalendar() {
                             >
                                {holiday.nombre}
                             </div>
-
-                            {/* <div className="text-[10px] text-red-500 mt-1">
-                              {holiday.tipo}
-                            </div> */}
                           </div>
                         )}
+                        {dayEvents.map((event) => (
+                            <div
+                              key={event.id}
+                              className="
+                                mt-2
+                                p-1
+                                rounded
+                                bg-blue-100
+                                border
+                                border-blue-300
+                              "
+                            >
+                            <div className="text-xs font-semibold text-blue-800">
+                              {event.title}
+                            </div>
+
+                            {event.time && (
+                              <div className="text-[10px] text-blue-600">
+                                {event.time}
+                              </div>
+                            )}
+
+                            {isAdmin() && (
+                              <div className="flex gap-1 mt-1">
+                                <button
+                                  className="
+                                    cursor-pointer transition transform hover:scale-105
+                                    text-[10px]
+                                    px-2
+                                    py-1
+                                    rounded
+                                    bg-yellow-500
+                                    text-white
+                                  "
+                                >
+                                  Editar
+                                </button>
+
+                                <button
+                                  className="
+                                    cursor-pointer transition transform hover:scale-105
+                                    text-[10px]
+                                    px-2
+                                    py-1
+                                    rounded
+                                    bg-red-500
+                                    text-white
+                                  "
+                                >
+                                  Eliminar
+                                </button>
+                              </div>
+                            )}
+                          </div>
+                        ))}
                       </td>
                     );
                   })}
@@ -215,6 +350,108 @@ export default function MonthlyCalendar() {
           </tbody>
         </table>
       </div>
+
+      <Modal
+        isOpen={openCreateModal}
+        onClose={() => setOpenCreateModal(false)}
+      >
+        <h2 className="text-xl font-bold mb-8 ">
+          Crear Evento
+        </h2>
+
+        <div className="flex flex-col mb-6">
+          <label className="font-semibold mb-2">
+            Evento
+          </label>
+
+          <input
+            value={eventName}
+            onChange={(e) =>
+              setEventName(e.target.value)
+            }
+            className="
+              border
+              border-gray-300
+              rounded
+              px-3
+              py-2
+            "
+          />
+        </div>
+
+        <div className="flex flex-col mb-6">
+          <label className="font-semibold mb-2">
+            Fecha
+          </label>
+
+          <input
+            type="date"
+            value={eventDate}
+            onChange={(e) =>
+              setEventDate(e.target.value)
+            }
+            className="
+              border
+              border-gray-300
+              rounded
+              px-3
+              py-2
+            "
+          />
+        </div>
+
+        <div className="flex flex-col mb-6">
+          <label className="font-semibold mb-2">
+            Hora
+          </label>
+
+          <input
+            type="time"
+            value={eventTime}
+            onChange={(e) =>
+              setEventTime(e.target.value)
+            }
+            className="
+              border
+              border-gray-300
+              rounded
+              px-3
+              py-2
+            "
+          />
+        </div>
+
+        <div className="flex justify-end gap-4 mt-10">
+          <button
+            onClick={() =>
+              setOpenCreateModal(false)
+            }
+            className="
+              cursor-pointer transition transform hover:scale-105
+              px-4
+              py-2
+              border
+              rounded
+            "
+          >
+            Cancelar
+          </button>
+
+          <button
+            onClick={handleCreateEvent}
+            className="
+              cursor-pointer transition transform hover:scale-105
+              px-4
+              py-2
+              rounded
+              bg-[#0cc0df]
+              text-white
+            "
+          >
+            Crear
+          </button>
+        </div>
+      </Modal>
     </div>
   );
 }
