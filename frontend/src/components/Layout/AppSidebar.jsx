@@ -24,7 +24,7 @@ const navItems = [
   {
     icon: <GridIcon />,
     name: "Inicio",
-    path: "/me",
+    path: "/",
   },
   {
     icon: <GroupIcon />,
