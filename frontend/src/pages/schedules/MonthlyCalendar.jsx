@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { eventService } from "../../services/event.service";
 import { Modal } from "../../components/ui/Modal";
 import { isAdmin } from "../../utils/auth";
 
@@ -9,6 +10,11 @@ export default function MonthlyCalendar() {
 
   const [openCreateModal, setOpenCreateModal] = useState(false);
 
+  const [selectedEvent, setSelectedEvent] = useState(null);
+
+  const [openEditModal, setOpenEditModal] = useState(false);
+  const [openDeleteModal, setOpenDeleteModal] = useState(false);
+
   const [eventName, setEventName] = useState("");
   const [eventDate, setEventDate] = useState("");
   const [eventTime, setEventTime] = useState("");
@@ -16,6 +22,9 @@ export default function MonthlyCalendar() {
   const [events, setEvents] = useState([]);
 
   const [holidays, setHolidays] = useState([]);
+
+  const [errorsCreate, setErrorsCreate] = useState({});
+  const [errorsEdit, setErrorsEdit] = useState({});
 
   const year = currentDate.getFullYear();
   const month = currentDate.getMonth();
@@ -35,27 +44,24 @@ export default function MonthlyCalendar() {
     "diciembre",
   ];
 
-  useEffect(() => {
-    fetchHolidays();
-  }, [year]);
+  const fetchEvents = async () => {
+    try {
+      const response = await eventService.getAll();
 
-  const handleCreateEvent = () => {
-    if (!eventName || !eventDate) return;
+      console.log(response.data.data);
 
-    const newEvent = {
-      id: Date.now(),
-      title: eventName,
-      date: eventDate,
-      time: eventTime,
-    };
+      const normalizedEvents =
+      (response.data.data || []).map(
+        (event) => ({
+          ...event,
+          date: event.date?.slice(0, 10),
+        })
+      );
 
-    setEvents((prev) => [...prev, newEvent]);
-
-    setEventName("");
-    setEventDate("");
-    setEventTime("");
-
-    setOpenCreateModal(false);
+    setEvents(normalizedEvents);
+    } catch (error) {
+      console.error(error);
+    }
   };
 
   const fetchHolidays = async () => {
@@ -73,6 +79,207 @@ export default function MonthlyCalendar() {
         error
       );
     }
+  };
+
+  useEffect(() => {
+    fetchEvents();
+  }, []);
+
+  useEffect(() => {
+    fetchHolidays();
+  }, [year]);
+
+  const resetForm = () => {
+    setEventName("");
+    setEventDate("");
+    setEventTime("");
+
+    setSelectedEvent(null);
+  };
+
+  const mapErrors = (errors) => {
+    const formatted = {};
+
+    errors.forEach((e) => {
+      formatted[e.path] = e.msg;
+    });
+    return formatted;
+  };
+
+  const openCreate = () => {
+    resetForm();
+    setOpenCreateModal(true);
+  };
+
+  const handleCreate = async () => {
+    try {
+      setErrorsCreate({});
+
+      const newErrors = {};
+
+      if (!eventName.trim()) {
+        newErrors.name =
+          "Este campo no puede estar vacío.";
+      }
+
+      if (!eventDate) {
+        newErrors.date =
+          "Ingrese una fecha válida.";
+      }
+
+      if (!eventTime) {
+        newErrors.hour =
+          "Ingrese una hora válida.";
+      }
+
+      if (
+        Object.keys(newErrors).length > 0
+      ) {
+        setErrorsCreate(newErrors);
+        return;
+      }
+
+      const eventRes = await eventService.create({
+        name: eventName,
+        date: eventDate,
+        hour: eventTime,
+        
+      });
+
+      console.log(eventRes.data);
+
+      setOpenCreateModal(false);
+
+      resetForm();
+
+      fetchEvents();
+    } catch (error) {
+      const backendErrors =
+        error.response?.data?.errors;
+
+          console.log(
+              "BACKEND ERROR:"
+            );
+
+            console.log(
+              error.response?.data
+            );
+
+      if (backendErrors) {
+        setErrorsCreate(
+          mapErrors(backendErrors)
+        );
+      }
+    }
+  };
+
+  const handleEdit = (event) => {
+    setSelectedEvent(event);
+
+    setEventName(event.name || "");
+    setEventDate(event.date || "");
+    setEventTime(
+      event.hour
+        ? event.hour.slice(0, 5)
+        : ""
+    );
+
+    setErrorsEdit({});
+    setOpenEditModal(true);
+  };
+
+  const handleUpdate = async () => {
+    try {
+      setErrorsEdit({});
+
+      const newErrors = {};
+
+      if (!eventName.trim()) {
+        newErrors.name =
+          "Este campo no puede estar vacío.";
+      }
+
+      if (!eventDate) {
+        newErrors.date =
+          "Ingrese una fecha válida.";
+      }
+
+      if (!eventTime) {
+        newErrors.hour =
+          "Ingrese una hora válida.";
+      }
+
+      if (
+        Object.keys(newErrors).length > 0
+      ) {
+        setErrorsEdit(newErrors);
+        return;
+      }
+
+      await eventService.update(
+        selectedEvent.id,
+        {
+          name: eventName,
+          date: eventDate,
+          hour: eventTime,
+        }
+      );
+
+      setOpenEditModal(false);
+
+      resetForm();
+
+      fetchEvents();
+    } catch (error) {
+        const backendErrors = error.response?.data?.errors;
+
+        console.log(
+          "UPDATE ERROR:"
+        );
+
+        if (backendErrors) {
+              setErrorsEdit(
+                mapErrors(backendErrors)
+              );
+            }
+
+        console.log(
+          error.response?.data
+        );
+
+        console.error(error);
+      }
+  };
+
+  const handleDelete = (event) => {
+    setSelectedEvent(event);
+    setOpenDeleteModal(true);
+  };
+
+  const confirmDelete = async () => {
+    try {
+      await eventService.delete(selectedEvent.id);
+
+      setOpenDeleteModal(false);
+
+      fetchEvents();
+      
+    } catch (error) {
+        console.log(
+          "DELETE ERROR:"
+        );
+
+        console.log(
+          error.response?.data
+        );
+
+        console.error(error);
+
+      alert(
+        error.response?.data?.message ||
+          "Error al eliminar"
+      );
+      }
   };
 
   const handlePreviousMonth = () => {
@@ -213,7 +420,7 @@ export default function MonthlyCalendar() {
                     if (day === null) {
                       return (
                         <td
-                          key={`blank-${dayIndex}`}
+                          key={`blank-${weekIndex}-${dayIndex}`}
                           className="
                             border
                             bg-gray-50
@@ -242,52 +449,51 @@ export default function MonthlyCalendar() {
                       );
 
                     const dayEvents = events.filter(
-                        (event) => event.date === currentDateString
-                      );
+                      (event) => event.date === currentDateString
+                    );
 
                     const isWeekend =
                       dayIndex === 5 ||
                       dayIndex === 6;
 
                     return (
-                      <td
-                        className={`
-                          border
-                          p-2
-                          h-40
-                          align-top
-                          overflow-hidden
-                          hover:bg-blue-50
-                          ${
-                            holiday
-                              ? "bg-red-100"
-                              : isWeekend
-                              ? "bg-orange-50"
-                              : ""
-                          }
-                        `}
-                      >
-                        <div className="font-bold text-gray-700">
+                        <td
+                          key={`day-${weekIndex}-${day}`}
+                          className="
+                            border
+                            p-2
+                            h-40
+                            align-top
+                          "
+                        >
+                        <div className="font-bold text-gray-700 mb-1">
                           {day}
                         </div>
 
-                        {holiday && (
-                          <div className="mt-2 overflow-hidden">
-                           <div
-                              className="
-                                text-xs
-                                font-semibold
-                                text-red-800
-                                break-words
-                                leading-tight
-                                line-clamp-4
-                              "
-                            >
-                               {holiday.nombre}
+                        <div
+                          className="
+                            h-[100px]
+                            overflow-y-auto
+                            pr-1
+                          "
+                        >
+                          {holiday && (
+                            <div className="mb-2">
+                              <div
+                                className="
+                                  text-xs
+                                  font-semibold
+                                  text-red-800
+                                  break-words
+                                  leading-tight
+                                "
+                              >
+                                {holiday.nombre}
+                              </div>
                             </div>
-                          </div>
-                        )}
-                        {dayEvents.map((event) => (
+                          )}
+
+                          {dayEvents.map((event) => (
                             <div
                               key={event.id}
                               className="
@@ -299,33 +505,35 @@ export default function MonthlyCalendar() {
                                 border-blue-300
                               "
                             >
-                            <div className="text-xs font-semibold text-blue-800">
-                              {event.title}
-                            </div>
-
-                            {event.time && (
-                              <div className="text-[10px] text-blue-600">
-                                {event.time}
+                              <div className="text-xs font-semibold text-blue-800">
+                                {event.name}
                               </div>
-                            )}
+
+                              {event.hour && (
+                                <div className="text-[10px] text-blue-600">
+                                  {event.hour}
+                                </div>
+                              )}
 
                             {isAdmin() && (
                               <div className="flex gap-1 mt-1">
                                 <button
-                                  className="
-                                    cursor-pointer transition transform hover:scale-105
-                                    text-[10px]
-                                    px-2
-                                    py-1
-                                    rounded
-                                    bg-yellow-500
-                                    text-white
-                                  "
-                                >
-                                  Editar
-                                </button>
+                                onClick={() => handleEdit(event)}
+                                className="
+                                  cursor-pointer transition transform hover:scale-105
+                                  text-[10px]
+                                  px-2
+                                  py-1
+                                  rounded
+                                  bg-[#0cc0df]
+                                  text-white
+                                "
+                              >
+                                Editar
+                              </button>
 
                                 <button
+                                  onClick={() => handleDelete(event)}
                                   className="
                                     cursor-pointer transition transform hover:scale-105
                                     text-[10px]
@@ -342,6 +550,7 @@ export default function MonthlyCalendar() {
                             )}
                           </div>
                         ))}
+                        </div>
                       </td>
                     );
                   })}
@@ -377,6 +586,12 @@ export default function MonthlyCalendar() {
               py-2
             "
           />
+
+          {errorsCreate.name && (
+            <p className="mt-1 text-sm text-red-500">
+              {errorsCreate.name}
+            </p>
+          )}
         </div>
 
         <div className="flex flex-col mb-6">
@@ -398,6 +613,12 @@ export default function MonthlyCalendar() {
               py-2
             "
           />
+
+          {errorsCreate.date && (
+            <p className="mt-1 text-sm text-red-500">
+              {errorsCreate.date}
+            </p>
+          )}
         </div>
 
         <div className="flex flex-col mb-6">
@@ -419,6 +640,12 @@ export default function MonthlyCalendar() {
               py-2
             "
           />
+
+          {errorsCreate.hour && (
+            <p className="mt-1 text-sm text-red-500">
+              {errorsCreate.hour}
+            </p>
+          )}
         </div>
 
         <div className="flex justify-end gap-4 mt-10">
@@ -438,7 +665,7 @@ export default function MonthlyCalendar() {
           </button>
 
           <button
-            onClick={handleCreateEvent}
+            onClick={handleCreate}
             className="
               cursor-pointer transition transform hover:scale-105
               px-4
@@ -449,6 +676,170 @@ export default function MonthlyCalendar() {
             "
           >
             Crear
+          </button>
+        </div>
+      </Modal>
+
+      <Modal
+        isOpen={openEditModal}
+        onClose={() => {
+          setOpenEditModal(false);
+          resetForm();
+        }}
+      >
+        <h2 className="text-xl font-bold mb-8">
+          Editar Evento
+        </h2>
+
+        <div className="flex flex-col mb-6">
+          <label className="font-semibold mb-2">
+            Evento
+          </label>
+
+          <input
+            value={eventName}
+            onChange={(e) =>
+              setEventName(e.target.value)
+            }
+            className="
+              border
+              border-gray-300
+              rounded
+              px-3
+              py-2
+            "
+          />
+
+          {errorsEdit.name && (
+            <p className="mt-1 text-sm text-red-500">
+              {errorsEdit.name}
+            </p>
+          )}
+        </div>
+
+        <div className="flex flex-col mb-6">
+          <label className="font-semibold mb-2">
+            Fecha
+          </label>
+
+          <input
+            type="date"
+            value={eventDate}
+            onChange={(e) =>
+              setEventDate(e.target.value)
+            }
+            className="
+              border
+              border-gray-300
+              rounded
+              px-3
+              py-2
+            "
+          />
+
+          {errorsEdit.date && (
+            <p className="mt-1 text-sm text-red-500">
+              {errorsEdit.date}
+            </p>
+          )}
+        </div>
+
+        <div className="flex flex-col mb-6">
+          <label className="font-semibold mb-2">
+            Hora
+          </label>
+
+          <input
+            type="time"
+            value={eventTime}
+            onChange={(e) =>
+              setEventTime(e.target.value)
+            }
+            className="
+              border
+              border-gray-300
+              rounded
+              px-3
+              py-2
+            "
+          />
+
+          {errorsEdit.hour && (
+            <p className="mt-1 text-sm text-red-500">
+              {errorsEdit.hour}
+            </p>
+          )}  
+        </div>
+
+        <div className="flex justify-end gap-4 mt-10">
+          <button
+            onClick={() => {
+              setOpenEditModal(false);
+              resetForm();
+            }}
+            className="
+              cursor-pointer transition transform hover:scale-105
+              px-4
+              py-2
+              border
+              rounded
+            "
+          >
+            Cancelar
+          </button>
+
+          <button
+            onClick={handleUpdate}
+            className="
+              cursor-pointer transition transform hover:scale-105
+              px-4
+              py-2
+              rounded
+              bg-[#0cc0df]
+              text-white
+            "
+          >
+            Guardar
+          </button>
+        </div>
+      </Modal>
+
+      <Modal
+        isOpen={openDeleteModal}
+        onClose={() => setOpenDeleteModal(false)}
+      >
+        <h2 className="text-lg font-semibold mb-4">
+          ¿Eliminar evento?
+        </h2>
+
+        <div className="flex justify-end gap-2">
+          <button
+            onClick={() =>
+              setOpenDeleteModal(false)
+            }
+            className="
+              cursor-pointer transition transform hover:scale-105
+              px-4
+              py-2
+              border
+              rounded
+            "
+          >
+            Cancelar
+          </button>
+
+          <button
+            onClick={confirmDelete}
+            className="
+              cursor-pointer transition transform hover:scale-105
+              px-4
+              py-2
+              rounded
+              bg-red-500
+              text-white
+            "
+          >
+            Eliminar
           </button>
         </div>
       </Modal>
