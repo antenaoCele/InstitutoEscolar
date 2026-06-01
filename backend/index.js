@@ -7,6 +7,7 @@ import { connectDB } from "./db.js";
 
 import loginRouter from "./routes/login.routes.js";
 import enrollmentsRouter from "./routes/enrollments.routes.js";
+import eventsRouter from "./routes/events.routes.js";
 import monthlyFinancesRouter from "./routes/monthly_finances.routes.js";
 import paymentsRouter from "./routes/payments.routes.js";
 import plansRouter from "./routes/plans.routes.js";
@@ -41,6 +42,7 @@ app.use("/login", loginRouter);
 app.use("/", userRoutes);
 
 app.use("/enrollments", enrollmentsRouter);
+app.use("/events", eventsRouter);
 app.use("/monthly_finances", monthlyFinancesRouter);
 app.use("/payments", paymentsRouter);
 app.use("/plans", plansRouter);
