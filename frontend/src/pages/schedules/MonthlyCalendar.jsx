@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { eventService } from "../../services/event.service";
 import { Modal } from "../../components/ui/Modal";
 import { isAdmin } from "../../utils/auth";
+import { studentService } from "../../services/student.service";
 
 export default function MonthlyCalendar() {
   const [currentDate, setCurrentDate] = useState(
@@ -22,6 +23,8 @@ export default function MonthlyCalendar() {
   const [events, setEvents] = useState([]);
 
   const [holidays, setHolidays] = useState([]);
+
+  const [birthdays, setBirthdays] = useState([]);
 
   const [errorsCreate, setErrorsCreate] = useState({});
   const [errorsEdit, setErrorsEdit] = useState({});
@@ -81,6 +84,17 @@ export default function MonthlyCalendar() {
     }
   };
 
+  const fetchBirthdays = async () => {
+    try {
+      const response =
+        await studentService.getAll();
+
+      setBirthdays(response.data.data || []);
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
   useEffect(() => {
     fetchEvents();
   }, []);
@@ -88,6 +102,10 @@ export default function MonthlyCalendar() {
   useEffect(() => {
     fetchHolidays();
   }, [year]);
+
+    useEffect(() => {
+    fetchBirthdays();
+  }, []);
 
   const resetForm = () => {
     setEventName("");
@@ -452,6 +470,19 @@ export default function MonthlyCalendar() {
                       (event) => event.date === currentDateString
                     );
 
+                    const dayBirthdays = birthdays.filter(
+                      (student) => {
+                        const birth = new Date(
+                          student.birth_date
+                        );
+
+                        return (
+                          birth.getMonth() === month &&
+                          birth.getDate() === day
+                        );
+                      }
+                    );
+
                     const isWeekend =
                       dayIndex === 5 ||
                       dayIndex === 6;
@@ -550,6 +581,25 @@ export default function MonthlyCalendar() {
                             )}
                           </div>
                         ))}
+
+                        {dayBirthdays.map((student) => (
+                          <div
+                            key={`birthday-${student.id}`}
+                            className="
+                              mt-2
+                              p-1
+                              rounded
+                              bg-pink-100
+                              border
+                              border-pink-300
+                            "
+                          >
+                            <div className="text-xs font-semibold text-pink-700">
+                              🎂 {student.first_name} {student.last_name}
+                            </div>
+                          </div>
+                        ))}
+                        
                         </div>
                       </td>
                     );
