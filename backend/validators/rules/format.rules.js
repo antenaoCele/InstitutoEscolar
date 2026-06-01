@@ -78,6 +78,33 @@ export const validateDay = (field, optional = false) => [
 ];
 
 /* =========================================================
+DAY EVENT
+========================================================= */
+
+export const validateDayEvent = (field, optional = false) => [
+  baseField(field, optional)
+    .trim()
+    .isISO8601({ strict: true })
+    .withMessage("Ingrese una fecha válida.")
+    .bail()
+    .custom((value) => {
+      const [year, month, day] = value.split("-").map(Number);
+
+      const date = new Date(Date.UTC(year, month - 1, day));
+
+      if (
+        date.getUTCFullYear() !== year ||
+        date.getUTCMonth() !== month - 1 ||
+        date.getUTCDate() !== day
+      ) {
+        throw new Error("Fecha inválida.");
+      }
+
+      return true;
+    }),
+];
+
+/* =========================================================
 DNI
 ========================================================= */
 export const validateDNI = (field, optional = false) => [
