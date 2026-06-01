@@ -35,6 +35,7 @@ WHITELIST
 ========================================================= */
 export const ALLOWED_TABLES = {
   enrollments: "enrollments",
+  events: "events",
   monthly_finances: "monthly_finances",
   payments: "payments",
   plan_prices: "plan_prices",
