@@ -23,7 +23,7 @@
   }
 
   body {
-    @apply relative z-1 font-normal font-outfit
+    @apply font-normal font-outfit
     bg-gray-50 text-gray-900
     dark:bg-black dark:text-white;
     font-size: 16px;

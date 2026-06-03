@@ -8,12 +8,29 @@ import {
 
 export default function BasicTable({ title, columns, data }) {
   return (
-    <div className="overflow-hidden rounded-xl border border-gray-200 bg-white">
-      
+    <div
+      className="
+        overflow-hidden rounded-xl border
+        border-gray-200 bg-white
+        dark:bg-black dark:border-neutral-800
+      "
+    >
       {/* Header */}
       {title && (
-        <div className="px-5 py-4 border-b border-gray-100">
-          <h2 className="text-lg font-semibold text-gray-800">
+        <div
+          className="
+            px-5 py-4 border-b
+            border-gray-100 bg-white
+            dark:bg-black dark:border-neutral-800
+          "
+        >
+          <h2
+            className="
+              text-lg font-semibold
+              text-gray-800
+              dark:text-white
+            "
+          >
             {title}
           </h2>
         </div>
@@ -22,16 +39,25 @@ export default function BasicTable({ title, columns, data }) {
       {/* Table */}
       <div className="max-w-full overflow-x-auto">
         <div className="min-w-[600px]">
-
-          <Table>
+          <Table className="bg-white dark:bg-black">
             {/* Header */}
-            <TableHeader className="border-b border-gray-100">
+            <TableHeader
+              className="
+                border-b border-gray-100
+                bg-white
+                dark:bg-black dark:border-neutral-800
+              "
+            >
               <TableRow>
                 {columns.map((col, index) => (
                   <TableCell
                     key={index}
                     isHeader
-                    className="px-5 py-3 text-gray-500 text-start text-theme-xs"
+                    className="
+                      px-5 py-3 text-start text-theme-xs
+                      text-gray-500 bg-white
+                      dark:bg-black dark:text-neutral-400
+                    "
                   >
                     {col.header}
                   </TableCell>
@@ -40,18 +66,34 @@ export default function BasicTable({ title, columns, data }) {
             </TableHeader>
 
             {/* Body */}
-            <TableBody className="divide-y divide-gray-100">
+            <TableBody
+              className="
+                divide-y divide-gray-100
+                bg-white
+                dark:bg-black dark:divide-neutral-900
+              "
+            >
               {data.length > 0 ? (
                 data.map((row, i) => (
-                  <TableRow key={i}>
+                  <TableRow
+                    key={i}
+                    className="
+                      transition-colors duration-150
+                      hover:bg-gray-50
+                      dark:bg-black
+                      dark:hover:bg-neutral-900
+                    "
+                  >
                     {columns.map((col, j) => (
                       <TableCell
                         key={j}
-                        className="px-5 py-4 text-theme-sm text-gray-700"
+                        className="
+                          px-5 py-4 text-theme-sm
+                          text-gray-700 bg-white
+                          dark:bg-black dark:text-neutral-200
+                        "
                       >
-                        {col.render
-                          ? col.render(row)
-                          : row[col.accessor]}
+                        {col.render ? col.render(row) : row[col.accessor]}
                       </TableCell>
                     ))}
                   </TableRow>
@@ -59,8 +101,12 @@ export default function BasicTable({ title, columns, data }) {
               ) : (
                 <TableRow>
                   <TableCell
-                    className="px-5 py-4 text-center"
                     colSpan={columns.length}
+                    className="
+                      px-5 py-6 text-center
+                      text-gray-500 bg-white
+                      dark:bg-black dark:text-neutral-500
+                    "
                   >
                     No hay datos
                   </TableCell>
@@ -68,7 +114,6 @@ export default function BasicTable({ title, columns, data }) {
               )}
             </TableBody>
           </Table>
-
         </div>
       </div>
     </div>

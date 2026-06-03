@@ -8,18 +8,27 @@ export default function Select({
   error,
 }) {
   return (
-    <div>
+    <div className="mb-4">
       {label && (
-        <label className="block text-sm font-medium mb-1">
-          {label}
-        </label>
+        <label className="mb-1 block text-black dark:text-white">{label}</label>
       )}
 
       <select
         name={name}
         value={value || ""}
         onChange={onChange}
-        className="w-full border rounded-lg p-2"
+        className={`
+          w-full rounded-lg border-2 border-gray-300
+          px-3 py-2
+          bg-white text-black
+          focus:border-[#0cc0df]
+          focus:ring-2 focus:ring-[#0cc0df]/30
+          focus:outline-none
+          dark:bg-gray-900
+          dark:text-white
+          dark:border-gray-600
+          ${error ? "border-red-500" : ""}
+        `}
       >
         <option value="">Seleccionar</option>
 
@@ -30,7 +39,7 @@ export default function Select({
         ))}
       </select>
 
-      {error && <p className="text-xs text-red-500">{error}</p>}
+      {error && <p className="text-xs text-red-500 mt-1">{error}</p>}
     </div>
   );
 }

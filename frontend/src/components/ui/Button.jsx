@@ -31,6 +31,7 @@ export default function Button({
       className={`
         inline-flex items-center justify-center gap-2
         rounded transition
+        ${fullWidth ? "w-full" : ""}
         ${sizeClasses[size]}
         ${variantClasses[variant]}
         ${disabled ? "opacity-50 cursor-not-allowed" : ""}

@@ -2,6 +2,10 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/Auth.jsx";
 import ThemeTogglerTwo from "../../components/common/ThemeTogglerTwo";
+import Input from "../form/Input.jsx";
+import Label from "../form/Label.jsx";
+import Select from "../form/Select.jsx";
+import SubmitButton from "../form/SubmitButton.jsx";
 
 export default function SignInForm() {
   const [username, setUsername] = useState("");
@@ -55,28 +59,18 @@ export default function SignInForm() {
 
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
-          <label className="block mb-1 text-sm font-medium text-black dark:text-white">
-            Nombre de usuario
-          </label>
-          <input
+          <Label>Nombre de usuario</Label>
+          <Input
             type="text"
-            className="w-full p-2 border rounded bg-white text-black border-gray-300 
-            dark:bg-gray-800 dark:text-white dark:border-gray-600
-            focus:outline-none focus:ring-1 focus:ring-[#0cc0df] focus:border-[#0cc0df]"
             value={username}
             onChange={(e) => setUsername(e.target.value)}
           />
         </div>
 
         <div>
-          <label className="block mb-1 text-sm font-medium text-black dark:text-white">
-            Contraseña
-          </label>
-          <input
+          <Label>Contraseña</Label>
+          <Input
             type="password"
-            className="w-full p-2 border rounded bg-white text-black border-gray-300 
-            dark:bg-gray-800 dark:text-white dark:border-gray-600
-            focus:outline-none focus:ring-1 focus:ring-[#0cc0df] focus:border-[#0cc0df]"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
           />
@@ -86,13 +80,7 @@ export default function SignInForm() {
           <p className="text-red-500 text-sm">{errorLocal || error}</p>
         )}
 
-        <button
-          type="submit"
-          disabled={loading}
-          className="w-full p-2 text-white rounded bg-[#0cc0df] hover:bg-[#0aa3bf] disabled:opacity-50"
-        >
-          {loading ? "Ingresando..." : "Ingresar"}
-        </button>
+        <SubmitButton loading={loading} text="Ingresar" />
       </form>
     </div>
   );
