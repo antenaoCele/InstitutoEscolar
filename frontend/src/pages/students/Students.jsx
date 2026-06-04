@@ -291,21 +291,21 @@ export function Students() {
     <>
       <div className="flex gap-3 mb-4 flex-wrap">
         <input
-          placeholder=" 🔍 Buscar por Nombre o Apellido"
+          placeholder="Buscar por nombre o apellido"
           value={searchFirstLastName}
           onChange={(e) => setSearchFirstLastName(e.target.value)}
           className="p-2 border border-gray-300 rounded w-60"
         />
 
         <input
-          placeholder="🔍 Buscar por DNI"
+          placeholder="Buscar por DNI"
           value={searchDNI}
           onChange={(e) => setSearchDNI(e.target.value)}
           className="p-2 border border-gray-300 rounded w-40"
         />
 
         <input
-          placeholder="🔍 Buscar por Colegio o Universidad"
+          placeholder="Buscar por colegio o universidad"
           value={searchSchool}
           onChange={(e) => setSearchSchool(e.target.value)}
           className="p-2 border border-gray-300 rounded w-60"
@@ -316,7 +316,7 @@ export function Students() {
           onChange={(e) => setSelectedTeacher(e.target.value)}
           className="p-2 border border-gray-300 rounded w-60"
         >
-          <option value="">👨‍🏫 Todos los docentes</option>
+          <option value="">Todos los docentes</option>
 
           {teachers.map((teacher) => (
             <option key={teacher.id} value={teacher.id}>
@@ -330,7 +330,7 @@ export function Students() {
           onChange={(e) => setSelectedPlan(e.target.value)}
           className="p-2 border border-gray-300 rounded w-60"
         >
-          <option value="">📘 Todos los planes</option>
+          <option value="">Todos los planes</option>
 
           {plans.map((plan) => (
             <option key={plan.id} value={plan.id}>

@@ -340,7 +340,7 @@ export function Subjects() {
     <>
       <div className="flex gap-3 mb-4 flex-wrap">
         <input
-          placeholder="🔍 Buscar por materia"
+          placeholder="Buscar por materia"
           value={searchName}
           onChange={(e) => setSearchName(e.target.value)}
           className="p-2 border border-gray-300 rounded w-60"
@@ -353,7 +353,7 @@ export function Subjects() {
         >
           <option 
             value="">
-              👨‍🏫 Todos los docentes
+            Todos los docentes
           </option>
 
           {teachers.map((teacher) => (

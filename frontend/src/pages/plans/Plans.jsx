@@ -299,14 +299,14 @@ const handleEdit = (planPrice) => {
     <>
       <div className="flex gap-3 mb-4 flex-wrap">
         <input
-          placeholder="🔍 Buscar por Plan"
+          placeholder="Buscar por plan"
           value={searchPlanName}
           onChange={(e) => setSearchPlanName(e.target.value)}
           className="p-2 border border-gray-300 rounded w-60"
         />
 
         <input
-          placeholder="🔍 Buscar por Precio"
+          placeholder="Buscar por precio"
           value={searchPrice}
           onChange={(e) => setSearchPrice(e.target.value)}
           className="p-2 border border-gray-300 rounded w-40"
