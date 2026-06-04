@@ -15,7 +15,7 @@ export default function BasicTable({ title, columns, data }) {
         dark:bg-black dark:border-neutral-800
       "
     >
-      {/* Header */}
+      {/* Encabezado */}
       {title && (
         <div
           className="
@@ -36,11 +36,11 @@ export default function BasicTable({ title, columns, data }) {
         </div>
       )}
 
-      {/* Table */}
+      {/* Tabla */}
       <div className="max-w-full overflow-x-auto">
         <div className="min-w-[600px]">
           <Table className="bg-white dark:bg-black">
-            {/* Header */}
+            {/* Encabezado */}
             <TableHeader
               className="
                 border-b border-gray-100
@@ -65,7 +65,7 @@ export default function BasicTable({ title, columns, data }) {
               </TableRow>
             </TableHeader>
 
-            {/* Body */}
+            {/* Cuerpo */}
             <TableBody
               className="
                 divide-y divide-gray-100
@@ -78,10 +78,7 @@ export default function BasicTable({ title, columns, data }) {
                   <TableRow
                     key={i}
                     className="
-                      transition-colors duration-150
-                      hover:bg-gray-50
-                      dark:bg-black
-                      dark:hover:bg-neutral-900
+                      group
                     "
                   >
                     {columns.map((col, j) => (
@@ -89,8 +86,13 @@ export default function BasicTable({ title, columns, data }) {
                         key={j}
                         className="
                           px-5 py-4 text-theme-sm
-                          text-gray-700 bg-white
-                          dark:bg-black dark:text-neutral-200
+                          text-gray-700
+                          transition-colors
+                          duration-150
+                          group-hover:bg-cyan-50
+
+                          dark:text-neutral-200
+                          dark:group-hover:bg-neutral-900
                         "
                       >
                         {col.render ? col.render(row) : row[col.accessor]}
