@@ -335,7 +335,7 @@ export default function MonthlyCalendar() {
 
   return (
     <div className="bg-white rounded-xl border border-gray-200 p-5">
-      {/* Header */}
+      {/* Encabezado */}
 
       <div className="flex justify-between items-center mb-6">
         <button
@@ -398,7 +398,6 @@ export default function MonthlyCalendar() {
 
 
       {/* Tabla */}
-
       <div className="overflow-auto">
         <table className="w-full border border-gray-300 table-fixed">
           <thead>
@@ -495,6 +494,9 @@ export default function MonthlyCalendar() {
                             p-2
                             h-40
                             align-top
+                            transition-colors
+                            duration-150
+                            hover:bg-cyan-50
                           "
                         >
                         <div className="font-bold text-gray-700 mb-1">
