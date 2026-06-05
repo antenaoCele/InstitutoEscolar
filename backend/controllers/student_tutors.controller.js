@@ -12,7 +12,7 @@ export const studentTutorsController = {
       SELECT
         st.id AS student_tutor_id,
 
-        t.id,
+        t.id AS tutor_id,
         t.first_name,
         t.last_name,
         t.dni,
