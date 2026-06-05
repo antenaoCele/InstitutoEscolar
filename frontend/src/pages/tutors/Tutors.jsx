@@ -14,7 +14,7 @@ export function Tutors() {
   const [students, setStudents] = useState([]);
   const [filterStudentId, setFilterStudentId] = useState("");
 
-  const [selectedStudentId, setSelectedStudentId] = useState("");
+  const [selectedStudentIds, setSelectedStudentIds] = useState([]);
 
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
@@ -42,42 +42,63 @@ export function Tutors() {
 
    const fetchTutors = async () => {
     try {
-      const [tutorsRes, studentTutorsRes] = await Promise.all([
-        tutorService.getAll(),
-        studentTutorService.getAll(),
-      ]);
+      const [tutorsRes, studentTutorsRes] =
+        await Promise.all([
+          tutorService.getAll(),
+          studentTutorService.getAll(),
+        ]);
   
       const tutorsData = tutorsRes.data.data || [];
       const relations = studentTutorsRes.data.data || [];
+
+      console.log("RELATIONS");
+console.table(relations);
   
-      const merged = tutorsData.map((tutor) => {
-  const relation = relations.find(
-    (r) => r.id === tutor.id
+    const merged = tutorsData.map((tutor) => {
+      const tutorRelations = relations.filter(
+        (r) =>
+          r.tutor_id === tutor.id &&
+          r.student_tutor_id !== null
+      );
+      console.log(
+  "Tutor:",
+  tutor.id,
+  tutor.first_name,
+  tutor.last_name
+);
+
+console.log(
+  "Relaciones encontradas:",
+  tutorRelations
+);
+
+      return {
+        ...tutor,
+
+        student_relations: tutorRelations,
+
+        student_ids: tutorRelations
+          .filter((r) => r.student_id)
+          .map((r) => r.student_id),
+
+        student_names: tutorRelations
+          .filter((r) => r.student_name)
+          .map((r) => r.student_name),
+      };
+    });
+
+let filtered = merged;
+
+if (filterStudentId) {
+  filtered = merged.filter(
+    (tutor) =>
+      tutor.student_ids?.includes(
+        Number(filterStudentId)
+      )
   );
+}
 
-  return {
-    ...tutor,
-
-    student_tutor_id:
-      relation?.student_tutor_id || null,
-
-    student_id:
-      relation?.student_id || "",
-
-    student_name:
-      relation?.student_name || "",
-  };
-});
-  
-      let filtered = merged;
-  
-      if (filterStudentId) {
-        filtered = merged.filter(
-          (s) => String(s.student_id) === String(filterStudentId)
-        );
-      }
-  
-      setTutors(filtered);
+setTutors(filtered);
     } catch (error) {
       console.error(error);
       setTutors([]);
@@ -96,11 +117,21 @@ const fetchStudents = async () => {
   }))
 );
 
-    setStudents(res.data.data || []);
-  } catch (error) {
-    console.error(error);
-  }
-};
+    console.table(res.data.data);
+   const uniqueStudents = Array.from(
+      new Map(
+        (res.data.data || []).map((s) => [
+          s.id,
+          s,
+        ])
+      ).values()
+    );
+
+    setStudents(uniqueStudents);
+      } catch (error) {
+        console.error(error);
+      }
+    };
 
   useEffect(() => {
   fetchTutors();
@@ -133,7 +164,7 @@ const fetchStudents = async () => {
     setDni("");
     setPhone("");
 
-    setSelectedStudentId("");
+    setSelectedStudentIds([]);
 
     setErrorsCreate({});
     setErrorsEdit({});
@@ -201,28 +232,21 @@ console.log("TUTOR ID:");
 console.log(tutorRes.data.data?.id);
 
 console.log("SELECTED STUDENT:");
-console.log(selectedStudentId);
+console.log(selectedStudentIds);
 
-if (selectedStudentId) {
-
-  const payload = {
-    student_id: selectedStudentId,
-    tutor_id: tutorRes.data.data?.id,
-  };
-
-  console.log("STUDENT_TUTOR PAYLOAD:");
-  console.log(payload);
-
-try {
-  await studentTutorService.create(payload);
-} catch (error) {
-
-  await tutorService.delete(
-    tutorRes.data.data.id
+if (
+  selectedStudentIds.length > 0
+) {
+  await Promise.all(
+    selectedStudentIds.map(
+      (studentId) =>
+        studentTutorService.create({
+          student_id: studentId,
+          tutor_id: tutorRes.data.data.id,
+        })
+    )
   );
-
-  throw error;
-}}
+}
 
     setOpenCreateModal(false);
 
@@ -249,8 +273,8 @@ try {
   setDni(tutor.dni || "");
   setPhone(tutor.phone || "");
 
-  setSelectedStudentId(
-    tutor.student_id || ""
+  setSelectedStudentIds(
+    tutor.student_ids || []
   );
 
   setErrorsEdit({});
@@ -284,7 +308,7 @@ if (!phone.trim()) {
 }
 
 if (Object.keys(newErrors).length > 0) {
-  setErrorsCreate(newErrors);
+  setErrorsEdit(newErrors);
   return;
 }
 
@@ -298,40 +322,25 @@ if (Object.keys(newErrors).length > 0) {
       }
     );
 
-    const existingRelation =
-      selectedTutor.student_tutor_id;
+  const currentRelations =
+    selectedTutor.student_relations || [];
 
-    if (
-      existingRelation &&
-      selectedStudentId
-    ) {
-      await studentTutorService.update(
-        existingRelation,
-        {
-          student_id: selectedStudentId,
-          tutor_id: selectedTutor.id,
-        }
-      );
-    }
+  await Promise.all(
+    currentRelations.map((relation) =>
+      studentTutorService.delete(
+        relation.student_tutor_id
+      )
+    )
+  );
 
-    else if (
-      existingRelation &&
-      !selectedStudentId
-    ) {
-      await studentTutorService.delete(
-        existingRelation
-      );
-    }
-
-    else if (
-      !existingRelation &&
-      selectedStudentId
-    ) {
-      await studentTutorService.create({
-          student_id: selectedStudentId,
-          tutor_id: selectedTutor.id,
-      });
-    }
+  await Promise.all(
+    selectedStudentIds.map((studentId) =>
+      studentTutorService.create({
+        student_id: studentId,
+        tutor_id: selectedTutor.id,
+      })
+    )
+  );
 
     setOpenEditModal(false);
 
@@ -377,7 +386,33 @@ if (Object.keys(newErrors).length > 0) {
     { header: "Apellido", accessor: "last_name" },
     { header: "Nombre", accessor: "first_name" },
     { header: "Teléfono", accessor: "phone" },
-    { header: "Alumno", accessor: "student_name" },
+    {
+  header: "Alumnos",
+    render: (row) => (
+      <div
+        className="
+          h-20
+          overflow-y-auto
+          flex
+          flex-col
+          justify-center
+        "
+      >
+        {row.student_names?.length ? (
+          row.student_names.map((name, index) => (
+            <span
+              key={index}
+              className="leading-5"
+            >
+              {name}
+            </span>
+          ))
+        ) : (
+          <span>Sin alumnos</span>
+        )}
+      </div>
+    )
+  }
   ];
 
   if (isAdmin()) {
@@ -565,29 +600,33 @@ if (Object.keys(newErrors).length > 0) {
       <div className="flex flex-col mb-6">
       <label className="font-semibold mb-2">Alumno</label>
 
-      <select
-  value={selectedStudentId}
-  onChange={(e) =>
-    setSelectedStudentId(e.target.value)
-  }
-  className={inputClass(
-    errorsCreate.student_id
-  )}
->
-  <option value="">
-    Sin alumno asignado
-  </option>
+      {students.map((student) => (
+  <label
+    key={student.id}
+    className="flex items-center gap-2"
+  >
+    <input
+      type="checkbox"
+      checked={selectedStudentIds.includes(student.id)}
+      onChange={(e) => {
+        if (e.target.checked) {
+          setSelectedStudentIds([
+            ...selectedStudentIds,
+            student.id,
+          ]);
+        } else {
+          setSelectedStudentIds(
+            selectedStudentIds.filter(
+              (id) => id !== student.id
+            )
+          );
+        }
+      }}
+    />
 
-  {students.map((student) => (
-    <option
-      key={student.id}
-      value={student.id}
-    >
-      {student.last_name},{" "}
-      {student.first_name}
-    </option>
-  ))}
-</select>
+    {student.last_name}, {student.first_name}
+  </label>
+))}
 
         {errorsCreate.student_id && (
       <p className="text-red-500 text-sm mt-1">
@@ -684,17 +723,23 @@ if (Object.keys(newErrors).length > 0) {
         <label className="font-semibold mb-2">Alumno</label>
 
         <select
-  value={selectedStudentId}
-  onChange={(e) =>
-    setSelectedStudentId(e.target.value)
-  }
-  className={inputClass(
-    errorsEdit.student_id
-  )}
->
-  <option value="">
-    Sin alumno asignado
-  </option>
+          multiple
+          value={selectedStudentIds}
+          onChange={(e) =>
+            setSelectedStudentIds(
+              [...e.target.selectedOptions].map(
+                (option) => Number(option.value)
+              )
+            )
+          }
+          className="
+            border
+            rounded
+            p-2
+            h-40
+            w-full
+          "
+        >
 
   {students.map((student) => (
     <option
