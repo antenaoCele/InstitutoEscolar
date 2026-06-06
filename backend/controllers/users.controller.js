@@ -4,15 +4,26 @@ import bcrypt from "bcrypt";
 export const usersController = {
   getAll: async (req, res) => {
     try {
-      const [rows] = await db.execute(`
-        SELECT 
-        id, 
-        first_name, 
-        last_name, 
-        username, 
-        role 
-        FROM users
-    `);
+      const { role } = req.query;
+
+      let query = `
+      SELECT
+        id,
+        first_name,
+        last_name,
+        username,
+        role
+      FROM users
+    `;
+
+      const params = [];
+
+      if (role && role !== "all") {
+        query += " WHERE role = ?";
+        params.push(role);
+      }
+
+      const [rows] = await db.execute(query, params);
 
       res.json({
         success: true,
