@@ -85,7 +85,8 @@ export default function BasicTable({ title, columns, data }) {
                       <TableCell
                         key={j}
                         className="
-                          px-5 py-4 text-theme-sm
+                          px-5 py-4
+                          text-theme-sm
                           text-gray-700
                           transition-colors
                           duration-150

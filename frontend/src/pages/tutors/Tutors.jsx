@@ -388,31 +388,41 @@ if (Object.keys(newErrors).length > 0) {
     { header: "Teléfono", accessor: "phone" },
     {
   header: "Alumnos",
-    render: (row) => (
+  render: (row) => {
+    const hasScroll =
+      (row.student_names?.length || 0) > 3;
+
+    return (
       <div
-        className="
+        className={`
           h-20
           overflow-y-auto
           flex
           flex-col
-          justify-center
-        "
+          ${
+            hasScroll
+              ? "justify-start"
+              : "justify-center"
+          }
+        `}
       >
-        {row.student_names?.length ? (
-          row.student_names.map((name, index) => (
-            <span
-              key={index}
-              className="leading-5"
-            >
-              {name}
-            </span>
-          ))
-        ) : (
-          <span>Sin alumnos</span>
-        )}
+        <div className="flex flex-col gap-1">
+          {row.student_names?.length ? (
+            row.student_names.map(
+              (name, index) => (
+                <span key={index}>
+                  {name}
+                </span>
+              )
+            )
+          ) : (
+            <span>Sin alumnos</span>
+          )}
+        </div>
       </div>
-    )
-  }
+    );
+  },
+}
   ];
 
   if (isAdmin()) {
