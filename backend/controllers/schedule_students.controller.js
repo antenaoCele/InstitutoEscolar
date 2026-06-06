@@ -9,13 +9,15 @@ export const scheduleStudentsController = {
   getAll: async (req, res) => {
     try {
       const [rows] = await db.execute(`
-        SELECT 
-        ss.id, 
-        sc.id AS schedule_id, 
-        st.id AS student_id 
-        FROM schedule_students ss 
-        JOIN schedules sc ON ss.schedule_id = sc.id 
-        JOIN students st ON ss.student_id = st.id
+        SELECT
+          ss.id,
+          ss.schedule_id,
+          st.id AS student_id,
+          st.first_name,
+          st.last_name
+        FROM schedule_students ss
+        JOIN students st
+          ON st.id = ss.student_id
       `);
 
       res.json({ success: true, total: rows.length, data: rows });

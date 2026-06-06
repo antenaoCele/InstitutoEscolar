@@ -9,19 +9,24 @@ export const schedulesController = {
   getAll: async (req, res) => {
     try {
       const [rows] = await db.execute(`
-        SELECT
+      SELECT
         s.id,
-        t.id AS teacher_id,
+        s.teacher_id,
+        s.subject_id,
         t.first_name,
         t.last_name,
+        sub.name AS subject_name,
         s.start_time,
         s.end_time,
-        s.day, 
+        s.day,
         s.classroom
-        FROM schedules s
-        JOIN teachers t ON s.teacher_id = t.id
-        ORDER BY s.id DESC
-      `);
+      FROM schedules s
+      JOIN teachers t
+        ON t.id = s.teacher_id
+      JOIN subjects sub
+        ON sub.id = s.subject_id
+      ORDER BY s.day, s.start_time
+    `);
 
       res.json({
         success: true,
@@ -31,7 +36,7 @@ export const schedulesController = {
     } catch (error) {
       res.status(500).json({
         success: false,
-        message: "Error al obtener los registros",
+        message: "Error al obtener horarios",
       });
     }
   },
