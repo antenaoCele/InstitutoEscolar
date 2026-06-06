@@ -5,7 +5,7 @@ import Login from "./pages/login/Login.jsx";
 import UserProfiles from "./pages/me/UserProfiles.jsx";
 import AppLayout from "./components/Layout/AppLayout.jsx";
 import PrivateRoute from "./routes/PrivateRoute.jsx";
-import { Users } from "./pages/users/AllUsers.jsx";
+import { Users } from "./pages/users/Users.jsx";
 import { Teachers } from "./pages/teachers/Teachers.jsx";
 import { Students } from "./pages/students/Students.jsx";
 import { Tutors } from "./pages/tutors/Tutors.jsx";

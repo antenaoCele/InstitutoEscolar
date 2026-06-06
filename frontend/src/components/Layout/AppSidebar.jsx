@@ -56,19 +56,19 @@ const navItems = [
     path: "/plans",
   },
   {
-  icon: <CalenderIcon />,
-  name: "Horarios",
-  subItems: [
-    {
-      name: "Calendario Semanal",
-      path: "/schedules?view=weekly",
-    },
-    {
-      name: "Calendario Mensual",
-      path: "/schedules?view=monthly",
-    },
-  ],
-},
+    icon: <CalenderIcon />,
+    name: "Horarios",
+    subItems: [
+      {
+        name: "Calendario Semanal",
+        path: "/schedules?view=weekly",
+      },
+      {
+        name: "Calendario Mensual",
+        path: "/schedules?view=monthly",
+      },
+    ],
+  },
   {
     icon: <GroupIcon />,
     name: "Tutores",
@@ -80,21 +80,28 @@ const navItems = [
     subItems: [
       {
         name: "Administradores",
-        path: "/users/admins",
+        path: "/users?role=admin",
       },
       {
         name: "Docentes",
-        path: "/users/teachers",
+        path: "/users?role=docente",
       },
       {
         name: "Todos los usuarios",
-        path: "/users",
+        path: "/users?role=all",
       },
     ],
   },
 ];
 
 const AppSidebar = () => {
+  const currentUser = JSON.parse(localStorage.getItem("user") || "{}");
+
+  const isCurrentUserAdmin = currentUser?.role?.toLowerCase() === "admin";
+
+  const filteredNavItems = isCurrentUserAdmin
+    ? navItems
+    : navItems.filter((item) => item.name !== "Usuarios");
   const {
     isExpanded,
     isMobileOpen,
@@ -102,6 +109,7 @@ const AppSidebar = () => {
     setIsHovered,
     toggleMobileSidebar,
   } = useSidebar();
+
   const { theme } = useTheme();
   const location = useLocation();
 
@@ -117,7 +125,7 @@ const AppSidebar = () => {
   useEffect(() => {
     let submenuMatched = false;
 
-    navItems.forEach((nav, index) => {
+    filteredNavItems.forEach((nav, index) => {
       if (nav.subItems) {
         nav.subItems.forEach((subItem) => {
           if (isActive(subItem.path)) {
@@ -131,7 +139,7 @@ const AppSidebar = () => {
     if (!submenuMatched) {
       setOpenSubmenu(null);
     }
-  }, [location, isActive]);
+  }, [location.pathname, location.search]);
 
   useEffect(() => {
     if (openSubmenu !== null) {
@@ -150,7 +158,7 @@ const AppSidebar = () => {
 
   const renderMenuItems = () => (
     <ul className="flex flex-col gap-2">
-      {navItems.map((nav, index) => (
+      {filteredNavItems.map((nav, index) => (
         <li key={nav.name}>
           {nav.subItems ? (
             <>
@@ -246,10 +254,14 @@ const AppSidebar = () => {
   return (
     <aside
       className={`fixed top-0 left-0 z-50 h-screen bg-white dark:bg-black
-  border-r border-gray-200 dark:border-gray-700
-  transition-all duration-300 overflow-y-auto overflow-x-hidden
-  ${isMobileOpen ? "translate-x-0 w-[290px]" : "-translate-x-full lg:translate-x-0"}
-  ${isExpanded || isHovered ? "lg:w-[290px]" : "lg:w-[90px]"}`}
+      border-r border-gray-200 dark:border-gray-700
+      transition-all duration-300 overflow-y-auto overflow-x-hidden
+      ${
+        isMobileOpen
+          ? "translate-x-0 w-[290px]"
+          : "-translate-x-full lg:translate-x-0"
+      }
+      ${isExpanded || isHovered ? "lg:w-[290px]" : "lg:w-[90px]"}`}
       onMouseEnter={() => {
         if (!isExpanded && !isMobileOpen) {
           setIsHovered(true);
@@ -274,12 +286,11 @@ const AppSidebar = () => {
           }
           alt="Matecitos"
           className={`rounded-full object-cover transition-all duration-300 hover:scale-110
-            ${
-              isExpanded || isHovered || isMobileOpen
-                ? "w-[70px] h-[70px]"
-                : "w-[38px] h-[38px]"
-            }
-          `}
+          ${
+            isExpanded || isHovered || isMobileOpen
+              ? "w-[70px] h-[70px]"
+              : "w-[38px] h-[38px]"
+          }`}
         />
       </Link>
 
