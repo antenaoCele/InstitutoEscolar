@@ -61,4 +61,28 @@ export const scheduleStudentsController = {
       });
     }
   },
+
+  deleteByScheduleId: async (req, res) => {
+    try {
+      const { scheduleId } = req.params;
+
+      await db.execute(
+        `
+      DELETE FROM schedule_students
+      WHERE schedule_id = ?
+      `,
+        [scheduleId],
+      );
+
+      res.json({
+        success: true,
+        message: "Alumnos eliminados",
+      });
+    } catch (error) {
+      res.status(500).json({
+        success: false,
+        message: "Error al eliminar alumnos",
+      });
+    }
+  },
 };

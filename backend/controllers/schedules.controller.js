@@ -48,16 +48,21 @@ export const schedulesController = {
       const [rows] = await db.execute(
         `
         SELECT
-        s.id,
-        t.id AS teacher_id,
-        t.first_name,
-        t.last_name,
-        s.start_time,
-        s.end_time,
-        s.day, 
-        s.classroom
+          s.id,
+          s.teacher_id,
+          s.subject_id,
+          t.first_name,
+          t.last_name,
+          sub.name AS subject_name,
+          s.start_time,
+          s.end_time,
+          s.day,
+          s.classroom
         FROM schedules s
-        JOIN teachers t ON s.teacher_id = t.id
+        JOIN teachers t
+          ON t.id = s.teacher_id
+        JOIN subjects sub
+          ON sub.id = s.subject_id
         WHERE s.id = ?
         `,
         [id],
@@ -84,13 +89,13 @@ export const schedulesController = {
 
   create: async (req, res) => {
     try {
-      const { teacher_id, start_time, day, classroom } = req.body;
+      const { teacher_id, subject_id, start_time, day, classroom } = req.body;
 
       const [result] = await db.execute(
         `INSERT INTO schedules 
-       (teacher_id, start_time, end_time, day, classroom) 
-       VALUES (?, ?, ADDTIME(?, '01:30:00'), ?, ?)`,
-        [teacher_id, start_time, start_time, day, classroom],
+       (teacher_id, subject_id, start_time, end_time, day, classroom) 
+       VALUES (?, ?, ?, ADDTIME(?, '01:30:00'), ?, ?)`,
+        [teacher_id, subject_id, start_time, start_time, day, classroom],
       );
 
       const [rows] = await db.execute(
@@ -98,6 +103,7 @@ export const schedulesController = {
       SELECT 
         id,
         teacher_id,
+        subject_id,
         start_time,
         end_time,
         day,
@@ -125,28 +131,38 @@ export const schedulesController = {
   update: async (req, res) => {
     try {
       const id = Number(req.params.id);
-      const { teacher_id, start_time, day, classroom } = req.body;
+      const { teacher_id, subject_id, start_time, day, classroom } = req.body;
 
       const [rows] = await db.execute("SELECT * FROM schedules WHERE id = ?", [
         id,
       ]);
 
       const newTeacherId = teacher_id ?? rows[0].teacher_id;
+      const newSubjectId = subject_id ?? rows[0].subject_id;
       const newStartTime = start_time ?? rows[0].start_time;
       const newDay = day ?? rows[0].day;
       const newClassroom = classroom ?? rows[0].classroom;
 
       await db.execute(
         `
-      UPDATE schedules 
-      SET teacher_id = ?, 
-          start_time = ?, 
+      UPDATE schedules
+      SET teacher_id = ?,
+          subject_id = ?,
+          start_time = ?,
           end_time = ADDTIME(?, '01:30:00'),
-          day = ?, 
+          day = ?,
           classroom = ?
       WHERE id = ?
       `,
-        [newTeacherId, newStartTime, newStartTime, newDay, newClassroom, id],
+        [
+          newTeacherId,
+          newSubjectId,
+          newStartTime,
+          newStartTime,
+          newDay,
+          newClassroom,
+          id,
+        ],
       );
 
       const [updatedRows] = await db.execute(
@@ -154,6 +170,7 @@ export const schedulesController = {
       SELECT 
         id,
         teacher_id,
+        subject_id,
         start_time,
         end_time,
         day,
