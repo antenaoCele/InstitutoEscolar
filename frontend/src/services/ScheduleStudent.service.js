@@ -6,4 +6,6 @@ export const ScheduleStudentService = {
   create: (data) => api.post("/schedule_students", data),
   update: (id, data) => api.put(`/schedule_students/${id}`, data),
   delete: (id) => api.delete(`/schedule_students/${id}`),
+  deleteByScheduleId: (scheduleId) =>
+    api.delete(`/schedule_students/schedule/${scheduleId}`),
 };
