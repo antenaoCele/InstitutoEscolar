@@ -45,6 +45,13 @@ router.put(
 );
 
 router.delete(
+  "/schedule/:scheduleId",
+  authentication,
+  authorization("ADMIN"),
+  scheduleStudentsController.deleteByScheduleId,
+);
+
+router.delete(
   "/:id",
   authentication,
   authorization("ADMIN"),
