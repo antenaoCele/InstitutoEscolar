@@ -18,6 +18,14 @@ const router = express.Router();
 router.get("/", authentication, studentsController.getAllWithStatus);
 
 router.get(
+  "/:id/plans",
+  authentication,
+  ...validateID("students"),
+  checkValidations,
+  studentsController.getPlans,
+);
+
+router.get(
   "/:id",
   authentication,
   ...validateID("students"),
