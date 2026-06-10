@@ -18,6 +18,14 @@ const router = express.Router();
 router.get("/", authentication, schedulesController.getAll);
 
 router.get(
+  "/info/:id",
+  authentication,
+  ...validateID("schedules"),
+  checkValidations,
+  schedulesController.getInfo,
+);
+
+router.get(
   "/:id",
   authentication,
   ...validateID("schedules"),
