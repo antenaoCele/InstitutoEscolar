@@ -17,6 +17,8 @@ const router = express.Router();
 
 router.get("/", authentication, plansController.getAll);
 
+router.get("/current", authentication, plansController.getCurrentPlans);
+
 router.get(
   "/:id",
   authentication,
