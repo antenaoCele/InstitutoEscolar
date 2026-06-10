@@ -63,3 +63,13 @@ app.use("/users", usersRouter);
 app.listen(port, () => {
   console.log(`Servidor corriendo en puerto ${port}`);
 });
+
+process.on("uncaughtException", (err) => {
+  console.error("UNCAUGHT EXCEPTION");
+  console.error(err);
+});
+
+process.on("unhandledRejection", (err) => {
+  console.error("UNHANDLED REJECTION");
+  console.error(err);
+});
