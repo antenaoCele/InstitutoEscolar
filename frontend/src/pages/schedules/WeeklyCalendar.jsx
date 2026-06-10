@@ -4,8 +4,6 @@ import { ScheduleService } from "../../services/schedule.service";
 import { ScheduleStudentService } from "../../services/scheduleStudent.service";
 import { studentService } from "../../services/student.service";
 import { Modal } from "../../components/ui/Modal";
-import { teacherSubjectService }
-from "../../services/teacherSubject.service";
 import { isAdmin } from "../../utils/auth";
 
 export default function WeeklyCalendar() {
@@ -13,6 +11,11 @@ export default function WeeklyCalendar() {
   const [selectedTeacher, setSelectedTeacher] = useState("");
 
   const [schedules, setSchedules] = useState([]);
+
+    const [openInfoModal, setOpenInfoModal] = useState(false);
+
+  const [selectedScheduleInfo, setSelectedScheduleInfo] = useState(null);
+
   const [scheduleStudents, setScheduleStudents] = useState([]);
 
   const [openCreateModal, setOpenCreateModal] = useState(false);
@@ -29,15 +32,15 @@ export default function WeeklyCalendar() {
 
   const [selectedStudents, setSelectedStudents] = useState([]);
 
+  const [selectedPlans, setSelectedPlans] = useState([]);
+
+  const [selectedStudentPlans, setSelectedStudentPlans] = useState([]);
+
   const [selectedStudentId, setSelectedStudentId] = useState("");
 
+  const [selectedStudent, setSelectedStudent] = useState("");
+
   const [students, setStudents] = useState([]);
-
-  const [teacherSubjects, setTeacherSubjects] = useState([]);
-
-  const [subjectId, setSubjectId] = useState("");
-
-  const [selectedSubject, setSelectedSubject] = useState("");
 
   const [errorsCreate, setErrorsCreate] = useState({});
   const [errorsEdit, setErrorsEdit] = useState({});
@@ -96,73 +99,128 @@ export default function WeeklyCalendar() {
       }
     };
 
-    const fetchTeacherSubjects =
-      async () => {
-        try {
+const handleAddStudent = async () => {
+  if (!selectedStudentId) return;
 
-          const res =
-            await teacherSubjectService.getAll();
+  const student = students.find(
+    (s) => s.id === Number(selectedStudentId)
+  );
 
-          setTeacherSubjects(
-            res.data.data || []
-          );
+  if (!student) return;
 
-        } catch (error) {
-          console.error(error);
-        }
-      };
+  const exists = selectedStudents.some(
+    (s) => s.id === student.id
+  );
 
+  if (exists) return;
 
-    const handleAddStudent = () => {
-        if (!selectedStudentId) return;
+  const response =
+    await studentService.getPlans(
+      student.id,
+      teacherId
+    );
 
-        const student = students.find(
-          (s) => s.id === Number(selectedStudentId)
-        );
+    console.log(response.data.data);
 
-        if (!student) return;
+  if (response.data.data.length === 0) {
 
-        const exists = selectedStudents.some(
-          (s) => s.id === student.id
-        );
+    setErrorsCreate((prev) => ({
+      ...prev,
+      plans:
+        `${student.last_name}, ${student.first_name} no posee planes compatibles con el docente seleccionado.`,
+    }));
 
-        if (exists) return;
+    return;
+  }
 
-        setSelectedStudents((prev) => [
-           ...prev,
-           student,
-        ]);
+  // Limpiar el mensaje de error
+  setErrorsCreate((prev) => ({
+    ...prev,
+    plans: "",
+  }));
 
-        setSelectedStudentId("");
-    };
+  // Agregar alumno
+  setSelectedStudents((prev) => [
+    ...prev,
+    student,
+  ]);
+
+const alreadyExists =
+  selectedStudentPlans.some(
+    s => s.studentId === student.id
+  );
+
+if (!alreadyExists) {
+  setSelectedStudentPlans((prev) => [
+    ...prev,
+    {
+      studentId: student.id,
+      studentName:
+        `${student.last_name}, ${student.first_name}`,
+      plans: response.data.data,
+    },
+  ]);
+}
+
+  setSelectedStudentId("");
+};
 
     const handleRemoveStudent = (id) => {
-      setSelectedStudents((prev) =>
-        prev.filter((s) => s.id !== id)
-      );
-    };
+
+  setSelectedStudents((prev) =>
+    prev.filter((s) => s.id !== id)
+  );
+
+  setSelectedStudentPlans((prev) =>
+    prev.filter(
+      (student) =>
+        student.studentId !== id
+    )
+  );
+
+};
+
+const handlePlanToggle = (plan) => {
+  const exists = selectedPlans.some(
+    (p) => p.id === plan.id
+  );
+
+  if (exists) {
+    setSelectedPlans((prev) =>
+      prev.filter((p) => p.id !== plan.id)
+    );
+  } else {
+    setSelectedPlans((prev) => [
+      ...prev,
+      plan,
+    ]);
+
+    console.log(plan);
+  }
+};
 
     useEffect(() => {
       fetchTeachers();
       fetchSchedules();
       fetchScheduleStudents();
       fetchStudents();
-      fetchTeacherSubjects();
     }, []);
 
-    const resetForm = () => {
-      setTeacherId("");
-      setSubjectId("");
-      setSelectedDay("");
-      setSelectedTime("");
-      setClassroom("");
+const resetForm = () => {
+  setTeacherId("");
+  setSelectedDay("");
+  setSelectedTime("");
+  setClassroom("");
 
-      setSelectedStudentId("");
-      setSelectedStudents([]);
+  setSelectedStudentId("");
 
-      setErrorsCreate({});
-      setErrorsEdit({});
-    };
+  setSelectedStudents([]);
+  setSelectedStudentPlans([]);
+  setSelectedPlans([]);
+
+  setErrorsCreate({});
+  setErrorsEdit({});
+};
 
    const mapErrors = (errors) => {
     const formatted = {};
@@ -187,11 +245,6 @@ export default function WeeklyCalendar() {
 
       if (!teacherId) {
         newErrors.teacher_id =
-          "Seleccione una opción válida.";
-      }
-
-      if (!subjectId) {
-        newErrors.subject_id =
           "Seleccione una opción válida.";
       }
 
@@ -222,24 +275,15 @@ export default function WeeklyCalendar() {
         return;
       }
 
-      const scheduleRes =
-        await ScheduleService.create({
-          teacher_id: teacherId,
-          subject_id: subjectId,
-          start_time: selectedTime,
-          day: selectedDay,
-          classroom,
-        });
-
-      const scheduleId =
-        scheduleRes.data.data.id;
-
-      for (const student of selectedStudents) {
-        await ScheduleStudentService.create({
-          schedule_id: scheduleId,
-          student_id: student.id,
-        });
-      }
+      await ScheduleService.create({
+        teacher_id: teacherId,
+        start_time: selectedTime,
+        day: selectedDay,
+        classroom,
+        students: selectedStudents.map(
+          (student) => student.id
+        ),
+      });
 
       setOpenCreateModal(false);
 
@@ -271,7 +315,6 @@ export default function WeeklyCalendar() {
     setSelectedSchedule(schedule);
 
     setTeacherId(schedule.teacher_id);
-    setSubjectId(schedule.subject_id);
     setSelectedDay(schedule.day);
 
     setSelectedTime(
@@ -299,6 +342,33 @@ export default function WeeklyCalendar() {
     setOpenEditModal(true);
   };
 
+  const fetchScheduleInfo = async (id) => {
+      try {
+
+        const res =
+          await ScheduleService.getInfo(id);
+
+        setSelectedScheduleInfo(
+          res.data.data
+        );
+
+      } catch (error) {
+        console.error(error);
+      }
+    };
+
+    const handleInfo = async (schedule) => {
+
+      setSelectedSchedule(schedule);
+
+      await fetchScheduleInfo(
+        schedule.id
+      );
+
+      setOpenInfoModal(true);
+
+    };
+
    const handleUpdate = async () => {
     try {
       setErrorsEdit({});
@@ -307,11 +377,6 @@ export default function WeeklyCalendar() {
 
       if (!teacherId) {
         newErrors.teacher_id =
-          "Seleccione una opción válida.";
-      }
-
-      if (!subjectId) {
-        newErrors.subject_id =
           "Seleccione una opción válida.";
       }
 
@@ -346,23 +411,14 @@ export default function WeeklyCalendar() {
         selectedSchedule.id,
         {
           teacher_id: teacherId,
-          subject_id: subjectId,
           start_time: selectedTime,
           day: selectedDay,
           classroom,
+          students: selectedStudents.map(
+            (student) => student.id
+          ),
         }
       );
-
-      await ScheduleStudentService.deleteByScheduleId(
-        selectedSchedule.id
-      );
-
-      for (const student of selectedStudents) {
-        await ScheduleStudentService.create({
-          schedule_id: selectedSchedule.id,
-          student_id: student.id,
-        });
-      }
 
       setOpenEditModal(false);
 
@@ -448,36 +504,35 @@ export default function WeeklyCalendar() {
     { name: "Aula B", value: "B" },
   ];
 
-  const availableSubjects =
-  teacherSubjects.filter(
-    (ts) =>
-      Number(ts.teacher_id) ===
-      Number(teacherId)
-  );
+const studentScheduleIds =
+  scheduleStudents
+    .filter(
+      (ss) =>
+        !selectedStudent ||
+        Number(ss.student_id) === Number(selectedStudent)
+    )
+    .map((ss) => ss.schedule_id);
 
-  const filteredSchedules =
-    schedules.filter((s) => {
+    const filteredSchedules =
+      schedules.filter((s) => {
 
-      const teacherOk =
-        !selectedTeacher ||
-        Number(s.teacher_id) ===
-        Number(selectedTeacher);
+        const teacherOk =
+          !selectedTeacher ||
+          Number(s.teacher_id) === Number(selectedTeacher);
 
-      const classroomOk =
-        !selectedClassroom ||
-        s.classroom ===
-        selectedClassroom;
+        const classroomOk =
+          !selectedClassroom ||
+          s.classroom === selectedClassroom;
 
-      const subjectOk =
-        !selectedSubject ||
-        Number(s.subject_id) ===
-        Number(selectedSubject);
+        const studentOk =
+          !selectedStudent ||
+          studentScheduleIds.includes(s.id);
 
-      return (
-        teacherOk &&
-        classroomOk &&
-        subjectOk
-      );
+        return (
+          teacherOk &&
+          classroomOk &&
+          studentOk
+        );
     });
 
   return (
@@ -506,31 +561,29 @@ export default function WeeklyCalendar() {
         </select>
 
         <select
-          value={selectedSubject}
+          value={selectedStudent}
           onChange={(e) =>
-            setSelectedSubject(
-              e.target.value
-            )
+            setSelectedStudent(e.target.value)
           }
+          className="
+            border
+            border-gray-300
+            rounded
+            px-3
+            py-2
+          "
         >
           <option value="">
-            Todas las materias
+            Todos los alumnos
           </option>
 
-          {[...new Map(
-            schedules.map(s => [
-              s.subject_id,
-              s
-            ])
-          ).values()].map(subject => (
-
+          {students.map((student) => (
             <option
-              key={subject.subject_id}
-              value={subject.subject_id}
+              key={student.id}
+              value={student.id}
             >
-              {subject.subject_name}
+              {student.last_name}, {student.first_name}
             </option>
-
           ))}
         </select>
 
@@ -635,6 +688,18 @@ export default function WeeklyCalendar() {
                             "
                           >
                             {schedulesInSlot.map((schedule) => {
+
+                              const cardColor =
+                                schedule.classroom === "A"
+                                  ? `
+                                    bg-blue-200
+                                    border-blue-600
+                                  `
+                                  : `
+                                    bg-red-200
+                                    border-red-600
+                                  `;
+
                               const students =
                                 scheduleStudents.filter(
                                   (ss) =>
@@ -644,52 +709,56 @@ export default function WeeklyCalendar() {
                               return (
                                 <div
                                   key={schedule.id}
-                                  className="
-                                    p-2
-                                    rounded
-                                    bg-blue-100
-                                    border
-                                    border-blue-300
-                                  "
+                                 className={
+  schedule.classroom === "A"
+    ? `
+      p-2
+      rounded
+      border
+      bg-blue-200
+      border-blue-800
+      text-blue-800
+    `
+    : `
+      p-2
+      rounded
+      border
+      bg-red-200
+      border-red-800
+      text-red-800
+    `
+}
                                 >
-                                  <div className="text-xs text-blue-800 mb-1">
+                                  <div className="text-xs mb-1">
                                     <span className="font-semibold">
                                       Docente:
                                     </span>{" "}
-                                    {schedule.last_name}, {schedule.first_name}
                                   </div>
+                                  <div
+                                      className="text-xs ml-2"
+                                    >
+                                      {schedule.last_name}, {schedule.first_name}.
+                                    </div>
 
-                                  <div className="text-xs text-blue-800 mb-1">
+                                  <div className="text-xs mb-1">
                                     <span className="font-semibold">
-                                      Materia:
-                                    </span>{" "}
-                                    {schedule.subject_name}
-                                    
-                                  </div>
-
-                                  <div className="text-xs text-blue-800 mb-1">
-                                    <span className="font-semibold">
-                                      Aula:
-                                    </span>{" "} 
-                                    {schedule.classroom}
+                                    <br />
+                                    Alumnos:
+                                    </span>
                                   </div>
 
                                   {students.map((student) => (
-                                    <div
-                                      key={student.student_id}
-                                      className="text-xs text-blue-800 mb-1"
+                                    <div 
+                                    key={student.student_id}
+                                    className="text-xs ml-2"
                                     >
-                                      <span className="font-semibold">
-                                        Alumno: 
-                                       </span>{" "}
-                                      {student.last_name}, {student.first_name}
+                                      {student.last_name}, {student.first_name}.
                                     </div>
                                   ))}
-
-                                  {isAdmin() && (
+                                  
                                     <div className="flex gap-1 mt-1">
                                       <button
-                                        onClick={() => handleEdit(schedule)}
+                                        onClick={() => handleInfo(schedule)}
                                         className="
                                           text-[10px]
                                           px-2
@@ -699,24 +768,10 @@ export default function WeeklyCalendar() {
                                           text-white
                                         "
                                       >
-                                        Editar
-                                      </button>
-
-                                      <button
-                                        onClick={() => handleDelete(schedule)}
-                                        className="
-                                          text-[10px]
-                                          px-2
-                                          py-1
-                                          rounded
-                                          bg-red-500
-                                          text-white
-                                        "
-                                      >
-                                        Eliminar
+                                        Info
                                       </button>
                                     </div>
-                                  )}
+                                  
                                 </div>
                               );
                             })}
@@ -769,7 +824,6 @@ export default function WeeklyCalendar() {
             value={teacherId}
             onChange={(e) => {
               setTeacherId(e.target.value);
-              setSubjectId("");
             }}
             className="
               border
@@ -797,47 +851,6 @@ export default function WeeklyCalendar() {
           {errorsCreate.teacher_id && (
             <p className="text-red-500 text-sm mt-1">
               {errorsCreate.teacher_id}
-            </p>
-          )}
-        </div>
-
-        {/* Materia */}
-
-        <div className="flex flex-col mb-4">
-          <label className="font-semibold mb-2">
-            Materia
-          </label>
-
-          <select
-            value={subjectId}
-            onChange={(e) =>
-              setSubjectId(e.target.value)
-            }
-            className="
-              border
-              border-gray-300
-              rounded
-              px-3
-              py-2
-            "
-          >
-            <option value="">
-              Seleccionar materia
-            </option>
-
-            {availableSubjects.map((subject) => (
-              <option
-                key={subject.id}
-                value={subject.subject_id}
-              >
-                {subject.subject_name}
-              </option>
-            ))}
-          </select>
-
-          {errorsCreate.subject_id && (
-            <p className="text-red-500 text-sm mt-1">
-              {errorsCreate.subject_id}
             </p>
           )}
         </div>
@@ -1003,6 +1016,7 @@ export default function WeeklyCalendar() {
               ))}
             </select>
 
+
             <button
               type="button"
               onClick={handleAddStudent}
@@ -1060,6 +1074,91 @@ export default function WeeklyCalendar() {
               </button>
             </div>
           ))}
+
+          <h3 className="font-semibold mt-6 mb-3">
+Planes disponibles
+</h3>
+            {errorsCreate.plans && (
+  <div className="text-red-500 text-sm mt-2">
+    {errorsCreate.plans}
+  </div>
+)}
+
+{selectedStudentPlans.map((student) => (
+
+  <div
+key={`${student.studentId}-${student.studentName}`}
+    className="
+      border
+      rounded
+      p-3
+      mb-3
+    "
+  >
+
+    <div className="font-semibold">
+      {student.studentName}
+    </div>
+
+    {student.plans.map((plan) => (
+
+      <div key={`${student.studentId}-${plan.id}`}>
+
+        <label>
+
+          <input
+  type="checkbox"
+  checked={
+    selectedPlans.some(
+      (p) => p.id === plan.id
+    )
+  }
+  onChange={() =>
+    handlePlanToggle(plan)
+  }
+/>
+
+          {" "}
+          {plan.name}
+
+        </label>
+
+      </div>
+
+    ))}
+
+  </div>
+
+))}
+
+{selectedPlans.length > 0 && (
+  <>
+    <h3 className="font-semibold mt-6 mb-3">
+      Materias
+    </h3>
+
+    <div
+      className="
+        border
+        rounded
+        p-3
+        space-y-2
+      "
+    >
+      {[
+        ...new Set(
+          selectedPlans.flatMap(
+            (plan) => plan.subjects
+          )
+        ),
+      ].map((subject) => (
+        <div key={subject}>
+          • {subject}
+        </div>
+      ))}
+    </div>
+  </>
+)}
         </div>
 
         <div className="flex justify-end gap-4 mt-10">
@@ -1150,47 +1249,6 @@ export default function WeeklyCalendar() {
           {errorsEdit.teacher_id && (
             <p className="mt-1 text-sm text-red-500">
               {errorsEdit.teacher_id}
-            </p>
-          )}
-        </div>
-
-        {/* Materia */}
-
-        <div className="flex flex-col mb-4">
-          <label className="font-semibold mb-2">
-            Materia
-          </label>
-
-          <select
-            value={subjectId}
-            onChange={(e) =>
-              setSubjectId(e.target.value)
-            }
-            className="
-              border
-              border-gray-300
-              rounded
-              px-3
-              py-2
-            "
-          >
-            <option value="">
-              Seleccionar materia
-            </option>
-
-            {availableSubjects.map((subject) => (
-              <option
-                key={subject.id}
-                value={subject.subject_id}
-              >
-                {subject.subject_name}
-              </option>
-            ))}
-          </select>
-
-          {errorsEdit.subject_id && (
-            <p className="mt-1 text-sm text-red-500">
-              {errorsEdit.subject_id}
             </p>
           )}
         </div>
@@ -1413,6 +1471,85 @@ export default function WeeklyCalendar() {
               </button>
             </div>
           ))}
+          <h3 className="font-semibold mt-6 mb-3">
+Planes disponibles
+</h3>
+
+{selectedStudentPlans.map((student) => (
+
+  <div
+    key={`${student.studentId}-${student.studentName}`}
+    className="
+      border
+      rounded
+      p-3
+      mb-3
+    "
+  >
+
+    <div className="font-semibold">
+      {student.studentName}
+    </div>
+
+    {student.plans.map((plan) => (
+
+      <div key={`${student.studentId}-${plan.id}`}>
+
+        <label>
+
+          <input
+  type="checkbox"
+  checked={
+    selectedPlans.some(
+      (p) => p.id === plan.id
+    )
+  }
+  onChange={() =>
+    handlePlanToggle(plan)
+  }
+/>
+
+          {" "}
+          {plan.name}
+
+        </label>
+
+      </div>
+
+    ))}
+
+  </div>
+
+))}
+
+{selectedPlans.length > 0 && (
+  <>
+    <h3 className="font-semibold mt-6 mb-3">
+      Materias
+    </h3>
+
+    <div
+      className="
+        border
+        rounded
+        p-3
+        space-y-2
+      "
+    >
+      {[
+        ...new Set(
+          selectedPlans.flatMap(
+            (plan) => plan.subjects
+          )
+        ),
+      ].map((subject) => (
+        <div key={subject}>
+          • {subject}
+        </div>
+      ))}
+    </div>
+  </>
+)}
         </div>
 
         <div className="flex justify-end gap-4 mt-10">
@@ -1493,6 +1630,182 @@ export default function WeeklyCalendar() {
           </button>
         </div>
       </Modal>
+
+<Modal
+  isOpen={openInfoModal}
+  onClose={() => {
+    setOpenInfoModal(false);
+    setSelectedScheduleInfo(null);
+  }}
+>
+  {selectedScheduleInfo && (
+    <>
+      <h2 className="text-xl font-bold mb-6">
+        Información del horario
+      </h2>
+
+      {/* Docente */}
+      <div className="space-y-3 mb-8">
+        <h3 className="font-bold text-lg">
+          Docente
+        </h3>
+
+        <div
+          className="
+            border
+            rounded-lg
+            p-4
+            bg-gray-50
+          "
+        >
+          <div className="font-semibold text-black">
+            {selectedScheduleInfo.teacher}
+          </div>
+
+          <div className="mt-2 text-sm text-gray-600">
+            Aula: {selectedScheduleInfo.classroom}
+          </div>
+        </div>
+      </div>
+
+      {/* Planes */}
+      <div className="space-y-3 mb-8">
+        <h3 className="font-bold text-lg">
+          Planes
+        </h3>
+
+        {selectedScheduleInfo.plans.map((plan) => (
+          <div
+            key={plan.id}
+            className="
+              border
+              rounded-lg
+              p-4
+              bg-gray-50
+            "
+          >
+            <div className="font-semibold text-black">
+              {plan.name}
+            </div>
+
+            <div className="mt-2 text-sm">
+              Materias:
+            </div>
+
+            <ul className="ml-5 list-disc text-sm">
+              {plan.subjects.map((subject) => (
+                <li key={subject}>
+                  {subject}
+                </li>
+              ))}
+            </ul>
+          </div>
+        ))}
+      </div>
+
+      {/* Alumnos */}
+      <div className="space-y-3 mb-8">
+        <h3 className="font-bold text-lg">
+          Alumnos
+        </h3>
+
+        {selectedScheduleInfo.students.map((student) => (
+          <div
+            key={student.id}
+            className="
+              border
+              rounded-lg
+              p-4
+              bg-gray-50
+            "
+          >
+            <div className="font-semibold">
+              {student.name}
+            </div>
+
+            <div className="mt-2 text-sm text-gray-600">
+              Plan: {student.plan}
+            </div>
+
+            <div className="mt-2 text-sm">
+              Materias:
+            </div>
+
+            <ul className="ml-5 list-disc text-sm">
+              {student.subjects.map((subject) => (
+                <li key={subject}>
+                  {subject}
+                </li>
+              ))}
+            </ul>
+          </div>
+        ))}
+      </div>
+
+      {/* Botones */}
+      <div className="flex justify-end gap-3 mt-8">
+        <button
+          onClick={() => {
+            setOpenInfoModal(false);
+          }}
+          className="
+            w-28
+            px-4
+            py-2
+            border
+            rounded
+          "
+        >
+          Cerrar
+        </button>
+
+        {isAdmin() && (
+          <>
+            <button
+              onClick={() => {
+                setOpenInfoModal(false);
+
+                if (selectedSchedule) {
+                  handleEdit(selectedSchedule);
+                }
+              }}
+              className="
+                w-28
+                px-4
+                py-2
+                rounded
+                bg-[#0cc0df]
+                text-white
+              "
+            >
+              Editar
+            </button>
+
+            <button
+              onClick={() => {
+                setOpenInfoModal(false);
+
+                if (selectedSchedule) {
+                  handleDelete(selectedSchedule);
+                }
+              }}
+              className="
+                w-28
+                px-4
+                py-2
+                rounded
+                bg-red-500
+                text-white
+              "
+            >
+              Eliminar
+            </button>
+          </>
+        )}
+      </div>
+    </>
+  )}
+</Modal>
     </>
   );
 }
