@@ -15,41 +15,65 @@ export const studentsController = {
       const yearMonth = today.toISOString().slice(0, 7);
 
       let query = `
-        SELECT 
-          s.id AS student_id,
-          s.first_name,
-          s.last_name,
-          s.dni,
-          s.school,
-          s.birth_date,
-          s.level,
-          s.grade,
-          sp.id AS student_plan_id,
-          sp.teacher_id,
-          sp.plan_id,
-          pp.price,
-          IFNULL(SUM(p.amount), 0) AS total_paid,
-          t.id AS tutor_id,
-          t.first_name AS tutor_first_name,
-          t.last_name AS tutor_last_name,
-          t.dni AS tutor_dni,
-          t.phone AS tutor_phone
-        FROM students s
-        LEFT JOIN student_tutors st ON st.student_id = s.id
-        LEFT JOIN tutors t ON t.id = st.tutor_id
-        LEFT JOIN student_plans sp  
-          ON sp.student_id = s.id
-          AND sp.start_date <= CURDATE()
-          AND (sp.end_date IS NULL OR sp.end_date >= CURDATE())
-        LEFT JOIN plan_prices pp 
-          ON pp.plan_id = sp.plan_id
-          AND pp.start_date <= CURDATE()
-          AND (pp.end_date IS NULL OR pp.end_date >= CURDATE())
-        LEFT JOIN payments p 
-          ON p.student_plan_id = sp.id
-          AND DATE_FORMAT(p.payment_date, '%Y-%m') = ?
-        WHERE 1=1
-      `;
+  SELECT
+    s.id AS student_id,
+    s.first_name,
+    s.last_name,
+    s.dni,
+    s.school,
+    s.birth_date,
+    s.level,
+    s.grade,
+
+    sp.id AS student_plan_id,
+    sp.teacher_id,
+    sp.plan_id,
+
+    pl.name AS plan_name,
+
+    pp.price,
+
+    IFNULL(SUM(pay.amount), 0) AS total_paid,
+
+    t.id AS tutor_id,
+    t.first_name AS tutor_first_name,
+    t.last_name AS tutor_last_name,
+    t.dni AS tutor_dni,
+    t.phone AS tutor_phone
+
+  FROM students s
+
+  LEFT JOIN student_tutors st
+    ON st.student_id = s.id
+
+  LEFT JOIN tutors t
+    ON t.id = st.tutor_id
+
+  LEFT JOIN student_plans sp
+    ON sp.student_id = s.id
+    AND sp.start_date <= CURDATE()
+    AND (
+      sp.end_date IS NULL
+      OR sp.end_date >= CURDATE()
+    )
+
+  LEFT JOIN plans pl
+    ON pl.id = sp.plan_id
+
+  LEFT JOIN plan_prices pp
+    ON pp.plan_id = sp.plan_id
+    AND pp.start_date <= CURDATE()
+    AND (
+      pp.end_date IS NULL
+      OR pp.end_date >= CURDATE()
+    )
+
+  LEFT JOIN payments pay
+    ON pay.student_plan_id = sp.id
+    AND DATE_FORMAT(pay.payment_date, '%Y-%m') = ?
+
+  WHERE 1=1
+`;
 
       const params = [yearMonth];
 
@@ -126,6 +150,84 @@ export const studentsController = {
       res.status(500).json({
         success: false,
         message: "Error al obtener alumnos",
+      });
+    }
+  },
+
+  getPlans: async (req, res) => {
+    try {
+      const studentId = Number(req.params.id);
+      const teacherId = Number(req.query.teacher_id);
+
+      console.log("studentId:", studentId);
+      console.log("teacherId:", teacherId);
+
+      const [rows] = await db.execute(
+        `
+      SELECT
+        p.id,
+        p.name,
+        sub.name AS subject_name
+      FROM student_plans sp
+
+      JOIN plans p
+        ON p.id = sp.plan_id
+
+      JOIN plan_subjects ps
+        ON ps.plan_id = p.id
+
+      JOIN subjects sub
+        ON sub.id = ps.subject_id
+
+      JOIN teacher_subjects ts
+        ON ts.subject_id = sub.id
+
+      WHERE sp.student_id = ?
+      AND (
+        sp.end_date IS NULL
+        OR sp.end_date >= CURDATE()
+      )
+      AND ts.teacher_id = ?
+
+      ORDER BY
+        p.name,
+        sub.name
+      `,
+        [studentId, teacherId],
+      );
+
+      console.log(rows);
+
+      const plans = [];
+
+      rows.forEach((row) => {
+        let plan = plans.find((p) => p.id === row.id);
+
+        if (!plan) {
+          plan = {
+            id: row.id,
+            name: row.name,
+            subjects: [],
+          };
+
+          plans.push(plan);
+        }
+
+        if (row.subject_name && !plan.subjects.includes(row.subject_name)) {
+          plan.subjects.push(row.subject_name);
+        }
+      });
+
+      res.json({
+        success: true,
+        data: plans,
+      });
+    } catch (error) {
+      console.error(error);
+
+      res.status(500).json({
+        success: false,
+        message: "Error al obtener planes",
       });
     }
   },
