@@ -17,7 +17,7 @@ export function Teachers() {
   const [openEditModal, setOpenEditModal] = useState(false);
   const [openDeleteModal, setOpenDeleteModal] = useState(false);
   const [openCreateModal, setOpenCreateModal] = useState(false);
-   
+
   const [searchFirstLastName, setSearchFirstLastName] = useState("");
   const [searchDNI, setSearchDNI] = useState("");
 
@@ -59,39 +59,39 @@ export function Teachers() {
     return formatted;
   };
 
-const fetchTeachers = async () => {
-  try {
-    const queryParams = {};
-
-    if (selectedPlan) {
-      queryParams.plan_id = selectedPlan;
-    }
-
-    const { data } = await teacherService.getAll(queryParams);
-
-    setTeachers(data?.data || []);
-  } catch {
-    setTeachers([]);
-  }
-};
-
-  useEffect(() => {
-  fetchTeachers();
-  }, [selectedPlan]);
-
-  useEffect(() => {
-  const fetchFilters = async () => {
+  const fetchTeachers = async () => {
     try {
-      const plansRes = await planService.getAll();
+      const queryParams = {};
 
-      setPlans(plansRes.data.data || []);
-    } catch (error) {
-      console.error(error);
+      if (selectedPlan) {
+        queryParams.plan_id = selectedPlan;
+      }
+
+      const { data } = await teacherService.getAll(queryParams);
+
+      setTeachers(data?.data || []);
+    } catch {
+      setTeachers([]);
     }
   };
 
-  fetchFilters();
-}, []);
+  useEffect(() => {
+    fetchTeachers();
+  }, [selectedPlan]);
+
+  useEffect(() => {
+    const fetchFilters = async () => {
+      try {
+        const plansRes = await planService.getAll();
+
+        setPlans(plansRes.data.data || []);
+      } catch (error) {
+        console.error(error);
+      }
+    };
+
+    fetchFilters();
+  }, []);
 
   const filteredTeachers = teachers.filter((t) => {
     const textName = searchFirstLastName.toLowerCase();
@@ -102,9 +102,7 @@ const fetchTeachers = async () => {
       t.first_name?.toLowerCase().includes(textName) ||
       t.last_name?.toLowerCase().includes(textName);
 
-    const matchDNI =
-      !textDNI ||
-      t.dni?.toString().includes(textDNI);
+    const matchDNI = !textDNI || t.dni?.toString().includes(textDNI);
 
     return matchName && matchDNI;
   });
@@ -142,34 +140,34 @@ const fetchTeachers = async () => {
   };
 
   const handleUpdate = async () => {
-      const newErrors = {};
-  
-      if (!firstName.trim()) newErrors.first_name = "Este campo está vacío.";
-      if (!lastName.trim()) newErrors.last_name = "Este campo está vacío.";
-      if (!dni.trim()) newErrors.dni = "Este campo está vacío.";
-      if (!phone.trim()) newErrors.phone = "Este campo está vacío.";
-  
-      if (Object.keys(newErrors).length > 0) {
-        setErrorsEdit(newErrors);
-        return;
-      }
-  
-      try {
-        setErrorsEdit({});
-  
-        await teacherService.update(selectedTeacher.id, {
-          first_name: firstName,
-          last_name: lastName,
-          dni,
-          phone,
-        });
-  
-        setOpenEditModal(false);
-        fetchTeachers();
-      } catch (error) {
-        const backendErrors = error.response?.data?.errors;
-        if (backendErrors) setErrorsEdit(mapErrors(backendErrors));
-      }
+    const newErrors = {};
+
+    if (!firstName.trim()) newErrors.first_name = "Este campo está vacío.";
+    if (!lastName.trim()) newErrors.last_name = "Este campo está vacío.";
+    if (!dni.trim()) newErrors.dni = "Este campo está vacío.";
+    if (!phone.trim()) newErrors.phone = "Este campo está vacío.";
+
+    if (Object.keys(newErrors).length > 0) {
+      setErrorsEdit(newErrors);
+      return;
+    }
+
+    try {
+      setErrorsEdit({});
+
+      await teacherService.update(selectedTeacher.id, {
+        first_name: firstName,
+        last_name: lastName,
+        dni,
+        phone,
+      });
+
+      setOpenEditModal(false);
+      fetchTeachers();
+    } catch (error) {
+      const backendErrors = error.response?.data?.errors;
+      if (backendErrors) setErrorsEdit(mapErrors(backendErrors));
+    }
   };
 
   const handleDelete = (teacher) => {
@@ -209,10 +207,19 @@ const fetchTeachers = async () => {
       header: "Acciones",
       render: (row) => (
         <div className="flex gap-2">
-          <Button size="sm" onClick={() => handleEdit(row)} className={buttonClass}>
+          <Button
+            size="sm"
+            onClick={() => handleEdit(row)}
+            className={buttonClass}
+          >
             Editar
           </Button>
-          <Button size="sm" variant="outline" onClick={() => handleDelete(row)} className={buttonClass}>
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => handleDelete(row)}
+            className={buttonClass}
+          >
             Eliminar
           </Button>
         </div>
@@ -234,8 +241,8 @@ const fetchTeachers = async () => {
   );
 
   return (
-<>
- {/* BUSCADORES */}
+    <>
+      {/* BUSCADORES */}
       <div className="flex gap-3 mb-4 flex-wrap">
         <input
           placeholder=" Buscar por nombre o apellido"
@@ -250,106 +257,169 @@ const fetchTeachers = async () => {
           onChange={(e) => setSearchDNI(e.target.value)}
           className="p-2 border border-gray-300 rounded w-40"
         />
-        
+
         <select
           value={selectedPlan}
           onChange={(e) => setSelectedPlan(e.target.value)}
           className="p-2 border border-gray-300 rounded w-60"
         >
-        <option value="">Todos los planes</option>
+          <option value="">Todos los planes</option>
 
-        {plans.map((plan) => (
-          <option key={plan.id} value={plan.id}>
-          {plan.name}
-        </option>
-        ))}
+          {plans.map((plan) => (
+            <option key={plan.id} value={plan.id}>
+              {plan.name}
+            </option>
+          ))}
         </select>
       </div>
 
-      
-    <BasicTable title={tableTitle} columns={columns}  data={filteredTeachers} />
+      <BasicTable
+        title={tableTitle}
+        columns={columns}
+        data={filteredTeachers}
+      />
 
-    {showCreateButtons && (
-      <div className="mt-8">
-        <Button onClick={openCreate} className={buttonClass}>
-          Crear Docente
-        </Button>
-      </div>
-    )}
+      {showCreateButtons && (
+        <div className="mt-8">
+          <Button onClick={openCreate} className={buttonClass}>
+            Crear Docente
+          </Button>
+        </div>
+      )}
 
-    {/* CREATE MODAL */}
-    <Modal isOpen={openCreateModal} onClose={() => setOpenCreateModal(false)}>
-      <h2 className="text-xl font-bold mb-8">Crear Docente</h2>
+      {/* CREATE MODAL */}
+      <Modal isOpen={openCreateModal} onClose={() => setOpenCreateModal(false)}>
+        <h2 className="text-xl font-bold mb-8">Crear Docente</h2>
 
-      <div className="flex flex-col mb-6">
-        <label className="font-semibold mb-2">Nombre</label>
-        <input className={inputClass(errorsCreate.first_name)} value={firstName} onChange={(e) => setFirstName(e.target.value)} />
-        {errorsCreate.first_name && <p className="text-red-500 text-sm mt-1">{errorsCreate.first_name}</p>}
-      </div>
+        <div className="flex flex-col mb-6">
+          <label className="font-semibold mb-2">Nombre</label>
+          <input
+            className={inputClass(errorsCreate.first_name)}
+            value={firstName}
+            onChange={(e) => setFirstName(e.target.value)}
+          />
+          {errorsCreate.first_name && (
+            <p className="text-red-500 text-sm mt-1">
+              {errorsCreate.first_name}
+            </p>
+          )}
+        </div>
 
-      <div className="flex flex-col mb-6">
-        <label className="font-semibold mb-2">Apellido</label>
-        <input className={inputClass(errorsCreate.last_name)} value={lastName} onChange={(e) => setLastName(e.target.value)} />
-        {errorsCreate.last_name && <p className="text-red-500 text-sm mt-1">{errorsCreate.last_name}</p>}
-      </div>
+        <div className="flex flex-col mb-6">
+          <label className="font-semibold mb-2">Apellido</label>
+          <input
+            className={inputClass(errorsCreate.last_name)}
+            value={lastName}
+            onChange={(e) => setLastName(e.target.value)}
+          />
+          {errorsCreate.last_name && (
+            <p className="text-red-500 text-sm mt-1">
+              {errorsCreate.last_name}
+            </p>
+          )}
+        </div>
 
-      <div className="flex flex-col mb-6">
-        <label className="font-semibold mb-2">DNI</label>
-        <input className={inputClass(errorsCreate.dni)} value={dni} onChange={(e) => setDni(e.target.value)} />
-        {errorsCreate.dni && <p className="text-red-500 text-sm mt-1">{errorsCreate.dni}</p>}
-      </div>
+        <div className="flex flex-col mb-6">
+          <label className="font-semibold mb-2">DNI</label>
+          <input
+            className={inputClass(errorsCreate.dni)}
+            value={dni}
+            onChange={(e) => setDni(e.target.value)}
+          />
+          {errorsCreate.dni && (
+            <p className="text-red-500 text-sm mt-1">{errorsCreate.dni}</p>
+          )}
+        </div>
 
-      <div className="flex flex-col mb-6">
-        <label className="font-semibold mb-2">Teléfono</label>
-        <input className={inputClass(errorsCreate.phone)} value={phone} onChange={(e) => setPhone(e.target.value)} />
-        {errorsCreate.phone && <p className="text-red-500 text-sm mt-1">{errorsCreate.phone}</p>}
-      </div>
+        <div className="flex flex-col mb-6">
+          <label className="font-semibold mb-2">Teléfono</label>
+          <input
+            className={inputClass(errorsCreate.phone)}
+            value={phone}
+            onChange={(e) => setPhone(e.target.value)}
+          />
+          {errorsCreate.phone && (
+            <p className="text-red-500 text-sm mt-1">{errorsCreate.phone}</p>
+          )}
+        </div>
 
-      <div className="flex justify-end gap-4 mt-10">
-        <Button variant="outline" onClick={() => setOpenCreateModal(false)}>Cancelar</Button>
-        <Button onClick={handleCreate}>Crear</Button>
-      </div>
-    </Modal>
+        <div className="flex justify-end gap-4 mt-10">
+          <Button variant="outline" onClick={() => setOpenCreateModal(false)}>
+            Cancelar
+          </Button>
+          <Button onClick={handleCreate}>Crear</Button>
+        </div>
+      </Modal>
 
-    {/* EDIT MODAL */}
-    <Modal isOpen={openEditModal} onClose={() => setOpenEditModal(false)}>
-      <h2 className="text-xl font-bold mb-8">Editar Docente</h2>
+      {/* EDIT MODAL */}
+      <Modal isOpen={openEditModal} onClose={() => setOpenEditModal(false)}>
+        <h2 className="text-xl font-bold mb-8">Editar Docente</h2>
 
-      <div className="flex flex-col mb-6">
-        <label className="font-semibold mb-2">Nombre</label>
-        <input className={inputClass(errorsEdit.first_name)} value={firstName} onChange={(e) => setFirstName(e.target.value)} />
-        {errorsEdit.first_name && <p className="text-red-500 text-sm mt-1">{errorsEdit.first_name}</p>}
-      </div>
+        <div className="flex flex-col mb-6">
+          <label className="font-semibold mb-2">Nombre</label>
+          <input
+            className={inputClass(errorsEdit.first_name)}
+            value={firstName}
+            onChange={(e) => setFirstName(e.target.value)}
+          />
+          {errorsEdit.first_name && (
+            <p className="text-red-500 text-sm mt-1">{errorsEdit.first_name}</p>
+          )}
+        </div>
 
-      <div className="flex flex-col mb-6">
-        <label className="font-semibold mb-2">Apellido</label>
-        <input className={inputClass(errorsEdit.last_name)} value={lastName} onChange={(e) => setLastName(e.target.value)} />
-        {errorsEdit.last_name && <p className="text-red-500 text-sm mt-1">{errorsEdit.last_name}</p>}
-      </div>
+        <div className="flex flex-col mb-6">
+          <label className="font-semibold mb-2">Apellido</label>
+          <input
+            className={inputClass(errorsEdit.last_name)}
+            value={lastName}
+            onChange={(e) => setLastName(e.target.value)}
+          />
+          {errorsEdit.last_name && (
+            <p className="text-red-500 text-sm mt-1">{errorsEdit.last_name}</p>
+          )}
+        </div>
 
-      <div className="flex flex-col mb-6">
-        <label className="font-semibold mb-2">DNI</label>
-        <input className={inputClass(errorsEdit.dni)} value={dni} onChange={(e) => setDni(e.target.value)} />
-        {errorsEdit.dni && <p className="text-red-500 text-sm mt-1">{errorsEdit.dni}</p>}
-      </div>
+        <div className="flex flex-col mb-6">
+          <label className="font-semibold mb-2">DNI</label>
+          <input
+            className={inputClass(errorsEdit.dni)}
+            value={dni}
+            onChange={(e) => setDni(e.target.value)}
+          />
+          {errorsEdit.dni && (
+            <p className="text-red-500 text-sm mt-1">{errorsEdit.dni}</p>
+          )}
+        </div>
 
-      <div className="flex flex-col mb-6">
-        <label className="font-semibold mb-2">Teléfono</label>
-        <input className={inputClass(errorsEdit.phone)} value={phone} onChange={(e) => setPhone(e.target.value)} />
-        {errorsEdit.phone && <p className="text-red-500 text-sm mt-1">{errorsEdit.phone}</p>}
-      </div>
+        <div className="flex flex-col mb-6">
+          <label className="font-semibold mb-2">Teléfono</label>
+          <input
+            className={inputClass(errorsEdit.phone)}
+            value={phone}
+            onChange={(e) => setPhone(e.target.value)}
+          />
+          {errorsEdit.phone && (
+            <p className="text-red-500 text-sm mt-1">{errorsEdit.phone}</p>
+          )}
+        </div>
 
-      <div className="flex justify-end gap-4 mt-10">
-        <Button variant="outline" onClick={() => setOpenEditModal(false)}>Cancelar</Button>
-        <Button onClick={handleUpdate}>Guardar</Button>
-      </div>
-    </Modal>
+        <div className="flex justify-end gap-4 mt-10">
+          <Button variant="outline" onClick={() => setOpenEditModal(false)}>
+            Cancelar
+          </Button>
+          <Button onClick={handleUpdate}>Guardar</Button>
+        </div>
+      </Modal>
 
       <Modal isOpen={openDeleteModal} onClose={() => setOpenDeleteModal(false)}>
         <h2 className="text-lg font-semibold mb-4">¿Eliminar docente?</h2>
 
         <div className="flex justify-end gap-2">
-          <Button variant="outline" onClick={() => setOpenDeleteModal(false)} className={buttonClass}>
+          <Button
+            variant="outline"
+            onClick={() => setOpenDeleteModal(false)}
+            className={buttonClass}
+          >
             Cancelar
           </Button>
           <Button onClick={confirmDelete} className={buttonClass}>
@@ -357,7 +427,6 @@ const fetchTeachers = async () => {
           </Button>
         </div>
       </Modal>
-  </>
-
+    </>
   );
 }

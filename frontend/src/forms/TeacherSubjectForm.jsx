@@ -8,7 +8,10 @@ import { teacherService } from "../services/teacher.service";
 import { subjectService } from "../services/subject.service";
 import { teacherSubjectService } from "../services/teacherSubject.service";
 
-export default function TeacherSubjectForm({ initialData = {}, isEdit = false }) {
+export default function TeacherSubjectForm({
+  initialData = {},
+  isEdit = false,
+}) {
   if (!isAdmin()) {
     return <p className="text-red-500">No autorizado</p>;
   }
@@ -58,7 +61,7 @@ export default function TeacherSubjectForm({ initialData = {}, isEdit = false })
       teacher_id: initialData.teacher_id || "",
       subject_id: initialData.subject_id || "",
     },
-    validate
+    validate,
   );
 
   const submitFn = async (data) => {

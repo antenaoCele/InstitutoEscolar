@@ -5,16 +5,16 @@ import { isAdmin } from "../utils/auth";
 
 import { subjectService } from "../services/subject.service";
 
-export default function SubjectForm({ 
-  initialData = {}, 
-  isEdit = false, 
+export default function SubjectForm({
+  initialData = {},
+  isEdit = false,
   onSuccess,
 }) {
   if (!isAdmin()) {
     return <p className="text-red-500">No autorizado</p>;
   }
 
-const validate = (data) => {
+  const validate = (data) => {
     const errors = {};
 
     if (!data.name) {
@@ -36,7 +36,7 @@ const validate = (data) => {
     {
       name: initialData.name || "",
     },
-    validate
+    validate,
   );
 
   const submitFn = async (data) => {

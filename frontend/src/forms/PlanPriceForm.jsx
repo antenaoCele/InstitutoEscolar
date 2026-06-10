@@ -53,7 +53,7 @@ export default function PlanPriceForm({ initialData = {}, isEdit = false }) {
       start_date: initialData.start_date || "",
       end_date: initialData.end_date || "",
     },
-    validatePlanPrice
+    validatePlanPrice,
   );
 
   const submitFn = async (data) => {
@@ -66,7 +66,6 @@ export default function PlanPriceForm({ initialData = {}, isEdit = false }) {
 
   return (
     <form onSubmit={(e) => handleSubmit(e, submitFn)}>
-      
       <Select
         label="Plan"
         name="plan_id"
@@ -112,8 +111,6 @@ export default function PlanPriceForm({ initialData = {}, isEdit = false }) {
         loading={loading}
         text={isEdit ? "Actualizar Precio" : "Guardar Precio"}
       </Button>
-        
-    
 
       {error && <p className="text-red-500">{error}</p>}
       {success && (

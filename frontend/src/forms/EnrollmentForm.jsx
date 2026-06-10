@@ -51,7 +51,7 @@ export default function EnrollmentForm({ initialData = {}, isEdit = false }) {
       amount: initialData.amount || "",
       payment_date: initialData.payment_date || "",
     },
-    validate
+    validate,
   );
 
   const submitFn = async (data) => {
@@ -64,7 +64,6 @@ export default function EnrollmentForm({ initialData = {}, isEdit = false }) {
 
   return (
     <form onSubmit={(e) => handleSubmit(e, submitFn)}>
-     
       <Select
         label="Alumno"
         name="student_id"
@@ -78,7 +77,6 @@ export default function EnrollmentForm({ initialData = {}, isEdit = false }) {
         hint={errors.student_id}
       />
 
-    
       <div className="mb-3">
         <label className="block text-sm font-medium mb-1">Monto</label>
         <input
@@ -93,11 +91,8 @@ export default function EnrollmentForm({ initialData = {}, isEdit = false }) {
         )}
       </div>
 
-      
       <div className="mb-3">
-        <label className="block text-sm font-medium mb-1">
-          Fecha de pago
-        </label>
+        <label className="block text-sm font-medium mb-1">Fecha de pago</label>
         <input
           type="date"
           name="payment_date"
@@ -111,10 +106,9 @@ export default function EnrollmentForm({ initialData = {}, isEdit = false }) {
       </div>
 
       <Button>
-          loading={loading}
+        loading={loading}
         text={isEdit ? "Actualizar Inscripción" : "Crear Inscripción"}
       </Button>
-      
 
       {error && <p className="text-red-500">{error}</p>}
       {success && (

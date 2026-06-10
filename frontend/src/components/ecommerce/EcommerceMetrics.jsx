@@ -26,7 +26,7 @@ export default function EcommerceMetrics() {
       .then((res) => res.json())
       .then((data) => {
         const sorted = data.data.sort(
-          (a, b) => b.year - a.year || b.month - a.month
+          (a, b) => b.year - a.year || b.month - a.month,
         );
 
         const current = sorted[0];
@@ -39,15 +39,12 @@ export default function EcommerceMetrics() {
   }, []);
 
   const incomeChange =
-    prevIncome > 0
-      ? ((income - prevIncome) / prevIncome) * 100
-      : 0;
+    prevIncome > 0 ? ((income - prevIncome) / prevIncome) * 100 : 0;
 
   const isIncomeUp = incomeChange >= 0;
 
   return (
     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:gap-6">
-      
       {/* 👥 ALUMNOS */}
       <div className="rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03] md:p-6">
         <div className="flex items-center justify-center w-12 h-12 bg-gray-100 rounded-xl dark:bg-gray-800">

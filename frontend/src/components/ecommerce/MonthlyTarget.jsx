@@ -15,7 +15,7 @@ export default function MonthlyTarget() {
       .then((res) => res.json())
       .then((data) => {
         const sorted = data.data.sort(
-          (a, b) => b.year - a.year || b.month - a.month
+          (a, b) => b.year - a.year || b.month - a.month,
         );
 
         setFinance(sorted[0]);
@@ -93,19 +93,20 @@ export default function MonthlyTarget() {
             </button>
 
             <Dropdown isOpen={isOpen} onClose={closeDropdown}>
-              <DropdownItem onItemClick={closeDropdown}>
-                Ver más
-              </DropdownItem>
-              <DropdownItem onItemClick={closeDropdown}>
-                Eliminar
-              </DropdownItem>
+              <DropdownItem onItemClick={closeDropdown}>Ver más</DropdownItem>
+              <DropdownItem onItemClick={closeDropdown}>Eliminar</DropdownItem>
             </Dropdown>
           </div>
         </div>
 
         {/* Chart */}
         <div className="relative">
-          <Chart options={options} series={series} type="radialBar" height={330} />
+          <Chart
+            options={options}
+            series={series}
+            type="radialBar"
+            height={330}
+          />
 
           <span
             className={`absolute left-1/2 top-full -translate-x-1/2 -translate-y-[95%] rounded-full px-3 py-1 text-xs font-medium ${

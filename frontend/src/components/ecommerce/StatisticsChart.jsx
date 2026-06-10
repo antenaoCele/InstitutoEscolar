@@ -10,7 +10,7 @@ export default function StatisticsChart() {
       .then((res) => res.json())
       .then((data) => {
         const sorted = data.data.sort(
-          (a, b) => a.year - b.year || a.month - b.month
+          (a, b) => a.year - b.year || a.month - b.month,
         );
         setFinances(sorted);
       })
@@ -19,15 +19,24 @@ export default function StatisticsChart() {
 
   const getMonthShort = (month) => {
     const months = [
-      "Ene", "Feb", "Mar", "Abr",
-      "May", "Jun", "Jul", "Ago",
-      "Sep", "Oct", "Nov", "Dic",
+      "Ene",
+      "Feb",
+      "Mar",
+      "Abr",
+      "May",
+      "Jun",
+      "Jul",
+      "Ago",
+      "Sep",
+      "Oct",
+      "Nov",
+      "Dic",
     ];
     return months[month - 1];
   };
 
   const categories = finances.map(
-    (item) => `${getMonthShort(item.month)} ${item.year}`
+    (item) => `${getMonthShort(item.month)} ${item.year}`,
   );
 
   const incomeData = finances.map((item) => item.total_income);

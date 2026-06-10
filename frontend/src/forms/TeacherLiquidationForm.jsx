@@ -66,7 +66,7 @@ export default function TeacherLiquidationForm({
       total_collected: initialData.total_collected || "",
       net_salary: initialData.net_salary || "",
     },
-    validate
+    validate,
   );
 
   const submitFn = async (data) => {

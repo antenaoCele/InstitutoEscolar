@@ -5,7 +5,10 @@ import Button from "../components/ui/Button";
 import { isAdmin } from "../utils/auth";
 import { MonthlyFinanceService } from "../services/monthlyFinance.service";
 
-export default function MonthlyFinanceForm({ initialData = {}, isEdit = false }) {
+export default function MonthlyFinanceForm({
+  initialData = {},
+  isEdit = false,
+}) {
   if (!isAdmin()) {
     return <p className="text-red-500">No autorizado</p>;
   }
@@ -33,7 +36,7 @@ export default function MonthlyFinanceForm({ initialData = {}, isEdit = false })
       month: initialData.month || "",
       other_expenses: initialData.other_expenses || "",
     },
-    validate
+    validate,
   );
 
   const submitFn = async (data) => {
@@ -46,7 +49,6 @@ export default function MonthlyFinanceForm({ initialData = {}, isEdit = false })
 
   return (
     <form onSubmit={(e) => handleSubmit(e, submitFn)}>
-    
       <Input
         label="Año"
         name="year"
@@ -57,7 +59,6 @@ export default function MonthlyFinanceForm({ initialData = {}, isEdit = false })
         hint={errors.year}
       />
 
-      
       <Select
         label="Mes"
         name="month"
@@ -93,8 +94,6 @@ export default function MonthlyFinanceForm({ initialData = {}, isEdit = false })
         loading={loading}
         text={isEdit ? "Actualizar Cierre" : "Generar Cierre Mensual"}
       </Button>
-        
-      
 
       {error && <p className="text-red-500">{error}</p>}
       {success && (

@@ -56,7 +56,7 @@ export default function PlanSubjectForm({ initialData = {}, isEdit = false }) {
       plan_id: initialData.plan_id || "",
       subject_id: initialData.subject_id || "",
     },
-    validate
+    validate,
   );
 
   const submitFn = async (data) => {
@@ -69,7 +69,6 @@ export default function PlanSubjectForm({ initialData = {}, isEdit = false }) {
 
   return (
     <form onSubmit={(e) => handleSubmit(e, submitFn)}>
-      
       <Select
         label="Plan"
         name="plan_id"
@@ -83,7 +82,6 @@ export default function PlanSubjectForm({ initialData = {}, isEdit = false }) {
         hint={errors.plan_id}
       />
 
-      
       <Select
         label="Materia"
         name="subject_id"
@@ -98,11 +96,9 @@ export default function PlanSubjectForm({ initialData = {}, isEdit = false }) {
       />
 
       <Button>
-         loading={loading}
+        loading={loading}
         text={isEdit ? "Actualizar Relación" : "Asignar Materia"}
       </Button>
-       
-    
 
       {error && <p className="text-red-500">{error}</p>}
       {success && (

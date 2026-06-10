@@ -8,10 +8,11 @@ import { studentService } from "../services/student.service";
 import { tutorService } from "../services/tutor.service";
 import { studentTutorService } from "../services/studentTutor.service";
 
-export default function StudentTutorForm({ 
-  initialData = {}, 
+export default function StudentTutorForm({
+  initialData = {},
   isEdit = false,
-  onSuccess, }) {
+  onSuccess,
+}) {
   if (!isAdmin()) {
     return <p className="text-red-500">No autorizado</p>;
   }
@@ -23,16 +24,15 @@ export default function StudentTutorForm({
     let mounted = true;
 
     const fetchData = async () => {
-          try {
-            const [s, t] = await Promise.all([
-              studentService.getAll(),
-              tutorService.getAll(),
-            ]);
+      try {
+        const [s, t] = await Promise.all([
+          studentService.getAll(),
+          tutorService.getAll(),
+        ]);
 
-            if (mounted) {
+        if (mounted) {
           setStudents(s.data);
           setTutors(t.data);
-
         }
       } catch (err) {
         console.error(err);
@@ -70,7 +70,7 @@ export default function StudentTutorForm({
       student_id: initialData.student_id || "",
       tutor_id: initialData.tutor_id || "",
     },
-    validate
+    validate,
   );
 
   const submitFn = async (data) => {
@@ -79,10 +79,9 @@ export default function StudentTutorForm({
     } else {
       return await studentTutorService.create(data);
 
-    if (res.success && onSuccess) {
-      onSuccess();
-    }
-
+      if (res.success && onSuccess) {
+        onSuccess();
+      }
     }
   };
 

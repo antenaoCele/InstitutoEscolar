@@ -8,7 +8,10 @@ import { scheduleService } from "../services/schedule.service";
 import { studentService } from "../services/student.service";
 import { ScheduleStudentService } from "../services/scheduleStudent.service";
 
-export default function ScheduleStudentForm({ initialData = {}, isEdit = false }) {
+export default function ScheduleStudentForm({
+  initialData = {},
+  isEdit = false,
+}) {
   if (!isAdmin()) {
     return <p className="text-red-500">No autorizado</p>;
   }
@@ -56,7 +59,7 @@ export default function ScheduleStudentForm({ initialData = {}, isEdit = false }
       schedule_id: initialData.schedule_id || "",
       student_id: initialData.student_id || "",
     },
-    validate
+    validate,
   );
 
   const submitFn = async (data) => {
@@ -69,7 +72,6 @@ export default function ScheduleStudentForm({ initialData = {}, isEdit = false }
 
   return (
     <form onSubmit={(e) => handleSubmit(e, submitFn)}>
-      
       <Select
         label="Horario"
         name="schedule_id"
@@ -83,7 +85,6 @@ export default function ScheduleStudentForm({ initialData = {}, isEdit = false }
         hint={errors.schedule_id}
       />
 
-      
       <Select
         label="Alumno"
         name="student_id"
@@ -98,11 +99,9 @@ export default function ScheduleStudentForm({ initialData = {}, isEdit = false }
       />
 
       <Button>
-         loading={loading}
+        loading={loading}
         text={isEdit ? "Actualizar Asignación" : "Asignar Alumno"}
       </Button>
-       
-  
 
       {error && <p className="text-red-500">{error}</p>}
       {success && (

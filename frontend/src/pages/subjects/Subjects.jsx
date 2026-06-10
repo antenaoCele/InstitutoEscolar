@@ -28,57 +28,50 @@ export function Subjects() {
   const [errorsCreate, setErrorsCreate] = useState({});
   const [errorsEdit, setErrorsEdit] = useState({});
 
-  const buttonClass =
-    "cursor-pointer transition transform hover:scale-105";
+  const buttonClass = "cursor-pointer transition transform hover:scale-105";
 
   const inputClass = (error) =>
     `w-full p-2 border rounded mb-1
     border-gray-300
     focus:outline-none focus:ring-1 focus:ring-[#0cc0df] focus:border-[#0cc0df]
-    ${
-      error
-        ? "border-red-500 focus:ring-red-500 focus:border-red-500"
-        : ""
-    }`;
+    ${error ? "border-red-500 focus:ring-red-500 focus:border-red-500" : ""}`;
 
   const fetchSubjects = async () => {
-  try {
-    const [subjectsRes, teacherSubjectsRes] = await Promise.all([
-      subjectService.getAll(),
-      teacherSubjectService.getAll(),
-    ]);
+    try {
+      const [subjectsRes, teacherSubjectsRes] = await Promise.all([
+        subjectService.getAll(),
+        teacherSubjectService.getAll(),
+      ]);
 
-    const subjectsData = subjectsRes.data.data || [];
-    const relations = teacherSubjectsRes.data.data || [];
+      const subjectsData = subjectsRes.data.data || [];
+      const relations = teacherSubjectsRes.data.data || [];
 
-    const merged = subjectsData.map((subject) => {
-      const relation = relations.find(
-        (r) => r.subject_id === subject.id
-      );
+      const merged = subjectsData.map((subject) => {
+        const relation = relations.find((r) => r.subject_id === subject.id);
 
-      return {
-        ...subject,
-        teacher_subject_id: relation?.id || null,
-        teacher_id: relation?.teacher_id || "",
-        teacher_name: relation?.teacher_name || "",
-      };
-    });
+        return {
+          ...subject,
+          teacher_subject_id: relation?.id || null,
+          teacher_id: relation?.teacher_id || "",
+          teacher_name: relation?.teacher_name || "",
+        };
+      });
 
-    let filtered = merged;
+      let filtered = merged;
 
-    if (selectedTeacher) {
-      filtered = merged.filter(
-        (s) => String(s.teacher_id) === String(selectedTeacher)
-      );
+      if (selectedTeacher) {
+        filtered = merged.filter(
+          (s) => String(s.teacher_id) === String(selectedTeacher),
+        );
+      }
+
+      setSubjects(filtered);
+      setTeacherSubjects(relations);
+    } catch (error) {
+      console.error(error);
+      setSubjects([]);
     }
-
-    setSubjects(filtered);
-    setTeacherSubjects(relations);
-  } catch (error) {
-    console.error(error);
-    setSubjects([]);
-  }
-};
+  };
 
   const fetchTeachers = async () => {
     try {
@@ -91,7 +84,7 @@ export function Subjects() {
   };
 
   useEffect(() => {
-  fetchSubjects();
+    fetchSubjects();
   }, [selectedTeacher]);
 
   useEffect(() => {
@@ -100,8 +93,7 @@ export function Subjects() {
 
   const filteredSubjects = subjects.filter((s) => {
     return (
-      !searchName ||
-      s.name?.toLowerCase().includes(searchName.toLowerCase())
+      !searchName || s.name?.toLowerCase().includes(searchName.toLowerCase())
     );
   });
 
@@ -124,145 +116,115 @@ export function Subjects() {
   };
 
   const openCreate = () => {
-  resetForm();
-  setOpenCreateModal(true);
+    resetForm();
+    setOpenCreateModal(true);
   };
 
   const handleCreate = async () => {
-  try {
-    setErrorsCreate({});
+    try {
+      setErrorsCreate({});
 
-    if (!name.trim()) {
-      setErrorsCreate({
-        name: "Este campo no puede estar vacío.",
+      if (!name.trim()) {
+        setErrorsCreate({
+          name: "Este campo no puede estar vacío.",
+        });
+
+        return;
+      }
+
+      const subjectRes = await subjectService.create({
+        name,
       });
 
-      return;
+      if (selectedTeacherId) {
+        await teacherSubjectService.create({
+          teacher_id: selectedTeacherId,
+          subject_id: subjectRes.data.data.id,
+        });
+      }
+
+      setOpenCreateModal(false);
+
+      resetForm();
+
+      fetchSubjects();
+    } catch (error) {
+      const backendErrors = error.response?.data?.errors;
+
+      if (backendErrors) {
+        setErrorsCreate(mapErrors(backendErrors));
+      }
     }
-
-    const subjectRes = await subjectService.create({
-      name,
-    });
-
-    if (selectedTeacherId) {
-      await teacherSubjectService.create({
-        teacher_id: selectedTeacherId,
-        subject_id: subjectRes.data.data.id,
-      });
-    }
-
-    setOpenCreateModal(false);
-
-    resetForm();
-
-    fetchSubjects();
-  } catch (error) {
-    const backendErrors =
-      error.response?.data?.errors;
-
-    if (backendErrors) {
-      setErrorsCreate(
-        mapErrors(backendErrors)
-      );
-    }
-  }
-};
+  };
 
   const handleEdit = async (subject) => {
-  setSelectedSubject(subject);
+    setSelectedSubject(subject);
 
-  setName(subject.name || "");
+    setName(subject.name || "");
 
-  try {
-    const relationRes = await teacherSubjectService.getAll();
+    try {
+      const relationRes = await teacherSubjectService.getAll();
 
-    const relation = relationRes.data.data.find(
-      (r) => r.subject_id === subject.id
-    );
+      const relation = relationRes.data.data.find(
+        (r) => r.subject_id === subject.id,
+      );
 
-    setSelectedTeacherId(relation?.teacher_id || "");
-  } catch {
-    setSelectedTeacherId("");
-  }
+      setSelectedTeacherId(relation?.teacher_id || "");
+    } catch {
+      setSelectedTeacherId("");
+    }
 
-  setErrorsEdit({});
-  setOpenEditModal(true);
-};
+    setErrorsEdit({});
+    setOpenEditModal(true);
+  };
 
   const handleUpdate = async () => {
-  try {
-    setErrorsEdit({});
+    try {
+      setErrorsEdit({});
 
-    if (!name.trim()) {
-      setErrorsEdit({
-        name: "Este campo no puede estar vacío.",
-      });
+      if (!name.trim()) {
+        setErrorsEdit({
+          name: "Este campo no puede estar vacío.",
+        });
 
-      return;
-    }
+        return;
+      }
 
-    await subjectService.update(
-      selectedSubject.id,
-      { name }
-    );
+      await subjectService.update(selectedSubject.id, { name });
 
-    const relationsRes =
-      await teacherSubjectService.getAll();
+      const relationsRes = await teacherSubjectService.getAll();
 
-    const existingRelation =
-      relationsRes.data.data.find(
-        (r) =>
-          r.subject_id === selectedSubject.id
+      const existingRelation = relationsRes.data.data.find(
+        (r) => r.subject_id === selectedSubject.id,
       );
 
-    if (
-      existingRelation &&
-      selectedTeacherId
-    ) {
-      await teacherSubjectService.update(
-        existingRelation.id,
-        {
+      if (existingRelation && selectedTeacherId) {
+        await teacherSubjectService.update(existingRelation.id, {
           teacher_id: selectedTeacherId,
           subject_id: selectedSubject.id,
-        }
-      );
+        });
+      } else if (existingRelation && !selectedTeacherId) {
+        await teacherSubjectService.delete(existingRelation.id);
+      } else if (!existingRelation && selectedTeacherId) {
+        await teacherSubjectService.create({
+          teacher_id: selectedTeacherId,
+          subject_id: selectedSubject.id,
+        });
+      }
+
+      setOpenEditModal(false);
+
+      resetForm();
+
+      fetchSubjects();
+    } catch (error) {
+      const backendErrors = error.response?.data?.errors;
+
+      if (backendErrors) {
+        setErrorsEdit(mapErrors(backendErrors));
+      }
     }
-
-    else if (
-      existingRelation &&
-      !selectedTeacherId
-    ) {
-      await teacherSubjectService.delete(
-        existingRelation.id
-      );
-    }
-
-    else if (
-      !existingRelation &&
-      selectedTeacherId
-    ) {
-      await teacherSubjectService.create({
-        teacher_id: selectedTeacherId,
-        subject_id: selectedSubject.id,
-      });
-    }
-
-    setOpenEditModal(false);
-
-    resetForm();
-
-    fetchSubjects();
-  } catch (error) {
-    const backendErrors =
-      error.response?.data?.errors;
-
-    if (backendErrors) {
-      setErrorsEdit(
-        mapErrors(backendErrors)
-      );
-    }
-  }
-};
+  };
 
   const handleDelete = (subject) => {
     setSelectedSubject(subject);
@@ -279,17 +241,14 @@ export function Subjects() {
     } catch (error) {
       console.error(error);
 
-      alert(
-        error.response?.data?.message ||
-          "Error al eliminar"
-      );
+      alert(error.response?.data?.message || "Error al eliminar");
     }
   };
 
   let columns = [
-  { header: "ID", accessor: "id" },
-  { header: "Materia", accessor: "name" },
-  { header: "Docente", accessor: "teacher_name" },
+    { header: "ID", accessor: "id" },
+    { header: "Materia", accessor: "name" },
+    { header: "Docente", accessor: "teacher_name" },
   ];
 
   if (isAdmin()) {
@@ -325,11 +284,7 @@ export function Subjects() {
       <span>Materias</span>
 
       {showCreateButtons && (
-        <Button
-          size="sm"
-          onClick={openCreate}
-          className={buttonClass}
-        >
+        <Button size="sm" onClick={openCreate} className={buttonClass}>
           +
         </Button>
       )}
@@ -351,19 +306,13 @@ export function Subjects() {
           onChange={(e) => setSelectedTeacher(e.target.value)}
           className="p-2 border border-gray-300 rounded w-60"
         >
-          <option 
-            value="">
-            Todos los docentes
-          </option>
+          <option value="">Todos los docentes</option>
 
           {teachers.map((teacher) => (
-            <option 
-              key={teacher.id} 
-              value={teacher.id}
-            >
+            <option key={teacher.id} value={teacher.id}>
               {teacher.last_name}, {teacher.first_name}
             </option>
-            ))}
+          ))}
         </select>
       </div>
 
@@ -375,10 +324,7 @@ export function Subjects() {
 
       {showCreateButtons && (
         <div className="mt-8">
-          <Button
-            onClick={openCreate}
-            className={buttonClass}
-          >
+          <Button onClick={openCreate} className={buttonClass}>
             Crear Materia
           </Button>
         </div>
@@ -386,181 +332,140 @@ export function Subjects() {
 
       <Modal
         isOpen={openCreateModal}
-        onClose={() => {setOpenCreateModal(false);
-        resetForm();
+        onClose={() => {
+          setOpenCreateModal(false);
+          resetForm();
         }}
       >
-  <h2 className="text-xl font-bold mb-8">
-    Crear Materia
-  </h2>
+        <h2 className="text-xl font-bold mb-8">Crear Materia</h2>
 
-  <div className="flex flex-col mb-6">
-    <label className="font-semibold mb-2">
-      Nombre
-    </label>
+        <div className="flex flex-col mb-6">
+          <label className="font-semibold mb-2">Nombre</label>
 
-    <input
-      className={inputClass(errorsCreate.name)}
-      value={name}
-      onChange={(e) => setName(e.target.value)}
-    />
+          <input
+            className={inputClass(errorsCreate.name)}
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+          />
 
-    {errorsCreate.name && (
-      <p className="text-red-500 text-sm mt-1">
-        {errorsCreate.name}
-      </p>
-    )}
-  </div>
+          {errorsCreate.name && (
+            <p className="text-red-500 text-sm mt-1">{errorsCreate.name}</p>
+          )}
+        </div>
 
-  <div className="flex flex-col mb-6">
-    <label className="font-semibold mb-2">
-      Docente
-    </label>
+        <div className="flex flex-col mb-6">
+          <label className="font-semibold mb-2">Docente</label>
 
-    <select
-      value={selectedTeacherId}
-      onChange={(e) =>
-        setSelectedTeacherId(e.target.value)
-      }
-      className={inputClass(errorsCreate.teacher_id)}
-    >
-      <option value="">
-        Sin docente asignado
-      </option>
+          <select
+            value={selectedTeacherId}
+            onChange={(e) => setSelectedTeacherId(e.target.value)}
+            className={inputClass(errorsCreate.teacher_id)}
+          >
+            <option value="">Sin docente asignado</option>
 
-      {teachers.map((teacher) => (
-        <option
-          key={teacher.id}
-          value={teacher.id}
-        >
-          {teacher.last_name}, {teacher.first_name}
-        </option>
-      ))}
-    </select>
+            {teachers.map((teacher) => (
+              <option key={teacher.id} value={teacher.id}>
+                {teacher.last_name}, {teacher.first_name}
+              </option>
+            ))}
+          </select>
 
-    {errorsCreate.teacher_id && (
-      <p className="text-red-500 text-sm mt-1">
-        {errorsCreate.teacher_id}
-      </p>
-    )}
-  </div>
+          {errorsCreate.teacher_id && (
+            <p className="text-red-500 text-sm mt-1">
+              {errorsCreate.teacher_id}
+            </p>
+          )}
+        </div>
 
-  <div className="flex justify-end gap-4 mt-10">
-    <Button
-      variant="outline"
-      onClick={() => {
-        setOpenCreateModal(false);
-        resetForm();
-      }}
-      className={buttonClass}
-    >
-      Cancelar
-    </Button>
+        <div className="flex justify-end gap-4 mt-10">
+          <Button
+            variant="outline"
+            onClick={() => {
+              setOpenCreateModal(false);
+              resetForm();
+            }}
+            className={buttonClass}
+          >
+            Cancelar
+          </Button>
 
-    <Button onClick={handleCreate} className={buttonClass}>
-      
-      Crear
-    </Button>
-  </div>
-</Modal>
+          <Button onClick={handleCreate} className={buttonClass}>
+            Crear
+          </Button>
+        </div>
+      </Modal>
 
       <Modal
-  isOpen={openEditModal}
-  onClose={() => {
-    setOpenEditModal(false);
-    resetForm();
-  }}
->
-  <h2 className="text-xl font-bold mb-8">
-    Editar Materia
-  </h2>
-
-  <div className="flex flex-col mb-6">
-    <label className="font-semibold mb-2">
-      Nombre
-    </label>
-
-    <input
-      className={inputClass(errorsEdit.name)}
-      value={name}
-      onChange={(e) => setName(e.target.value)}
-    />
-
-    {errorsEdit.name && (
-      <p className="text-red-500 text-sm mt-1">
-        {errorsEdit.name}
-      </p>
-    )}
-  </div>
-
-  <div className="flex flex-col mb-6">
-    <label className="font-semibold mb-2">
-      Docente
-    </label>
-
-    <select
-      value={selectedTeacherId}
-      onChange={(e) =>
-        setSelectedTeacherId(e.target.value)
-      }
-      className={inputClass(errorsEdit.teacher_id)}
-    >
-      <option value="">
-        Sin docente asignado
-      </option>
-
-      {teachers.map((teacher) => (
-        <option
-          key={teacher.id}
-          value={teacher.id}
-        >
-          {teacher.last_name}, {teacher.first_name}
-        </option>
-      ))}
-    </select>
-
-    {errorsEdit.teacher_id && (
-      <p className="text-red-500 text-sm mt-1">
-        {errorsEdit.teacher_id}
-      </p>
-    )}
-  </div>
-
-  <div className="flex justify-end gap-4 mt-10">
-    <Button
-      variant="outline"
-      onClick={() => {
-        setOpenEditModal(false);
-        resetForm();
-      }}
-      className={buttonClass}
-    >
-      Cancelar
-    </Button>
-
-    <Button onClick={handleUpdate} className={buttonClass}>
-      Guardar
-    </Button>
-  </div>
-</Modal>
-
-      <Modal
-        isOpen={openDeleteModal}
-        onClose={() =>
-          setOpenDeleteModal(false)
-        }
+        isOpen={openEditModal}
+        onClose={() => {
+          setOpenEditModal(false);
+          resetForm();
+        }}
       >
-        <h2 className="text-lg font-semibold mb-4">
-          ¿Eliminar materia?
-        </h2>
+        <h2 className="text-xl font-bold mb-8">Editar Materia</h2>
+
+        <div className="flex flex-col mb-6">
+          <label className="font-semibold mb-2">Nombre</label>
+
+          <input
+            className={inputClass(errorsEdit.name)}
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+          />
+
+          {errorsEdit.name && (
+            <p className="text-red-500 text-sm mt-1">{errorsEdit.name}</p>
+          )}
+        </div>
+
+        <div className="flex flex-col mb-6">
+          <label className="font-semibold mb-2">Docente</label>
+
+          <select
+            value={selectedTeacherId}
+            onChange={(e) => setSelectedTeacherId(e.target.value)}
+            className={inputClass(errorsEdit.teacher_id)}
+          >
+            <option value="">Sin docente asignado</option>
+
+            {teachers.map((teacher) => (
+              <option key={teacher.id} value={teacher.id}>
+                {teacher.last_name}, {teacher.first_name}
+              </option>
+            ))}
+          </select>
+
+          {errorsEdit.teacher_id && (
+            <p className="text-red-500 text-sm mt-1">{errorsEdit.teacher_id}</p>
+          )}
+        </div>
+
+        <div className="flex justify-end gap-4 mt-10">
+          <Button
+            variant="outline"
+            onClick={() => {
+              setOpenEditModal(false);
+              resetForm();
+            }}
+            className={buttonClass}
+          >
+            Cancelar
+          </Button>
+
+          <Button onClick={handleUpdate} className={buttonClass}>
+            Guardar
+          </Button>
+        </div>
+      </Modal>
+
+      <Modal isOpen={openDeleteModal} onClose={() => setOpenDeleteModal(false)}>
+        <h2 className="text-lg font-semibold mb-4">¿Eliminar materia?</h2>
 
         <div className="flex justify-end gap-2">
           <Button
             variant="outline"
-            onClick={() =>
-              setOpenDeleteModal(false)
-            }
-          className={buttonClass}
+            onClick={() => setOpenDeleteModal(false)}
+            className={buttonClass}
           >
             Cancelar
           </Button>

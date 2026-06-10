@@ -5,10 +5,11 @@ import { isAdmin } from "../utils/auth";
 
 import { teacherService } from "../services/teacher.service";
 
-export default function TeacherForm({ 
-  initialData = {}, 
+export default function TeacherForm({
+  initialData = {},
   isEdit = false,
-  onSuccess, }) {
+  onSuccess,
+}) {
   if (!isAdmin()) {
     return <p className="text-red-500">No autorizado</p>;
   }
@@ -47,7 +48,7 @@ export default function TeacherForm({
       dni: initialData.dni || "",
       phone: initialData.phone || "",
     },
-    validate
+    validate,
   );
 
   const submitFn = async (data) => {

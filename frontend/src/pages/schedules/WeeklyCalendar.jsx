@@ -12,7 +12,7 @@ export default function WeeklyCalendar() {
 
   const [schedules, setSchedules] = useState([]);
 
-    const [openInfoModal, setOpenInfoModal] = useState(false);
+  const [openInfoModal, setOpenInfoModal] = useState(false);
 
   const [selectedScheduleInfo, setSelectedScheduleInfo] = useState(null);
 
@@ -44,7 +44,7 @@ export default function WeeklyCalendar() {
 
   const [errorsCreate, setErrorsCreate] = useState({});
   const [errorsEdit, setErrorsEdit] = useState({});
-  
+
   const [selectedSchedule, setSelectedSchedule] = useState(null);
 
   const fetchTeachers = async () => {
@@ -57,172 +57,137 @@ export default function WeeklyCalendar() {
     }
   };
 
-    const fetchSchedules = async () => {
-      try {
-        const res = await ScheduleService.getAll();
+  const fetchSchedules = async () => {
+    try {
+      const res = await ScheduleService.getAll();
 
-        setSchedules(res.data.data || []);
-      } catch (error) {
-        console.error(error);
-      }
-    };
+      setSchedules(res.data.data || []);
+    } catch (error) {
+      console.error(error);
+    }
+  };
 
-    const fetchScheduleStudents = async () => {
-      try {
-        const res =
-          await ScheduleStudentService.getAll();
+  const fetchScheduleStudents = async () => {
+    try {
+      const res = await ScheduleStudentService.getAll();
 
-        setScheduleStudents(
-          res.data.data || []
-        );
-      } catch (error) {
-        console.error(error);
-      }
-    };
+      setScheduleStudents(res.data.data || []);
+    } catch (error) {
+      console.error(error);
+    }
+  };
 
-    const fetchStudents = async () => {
-      try {
-        const res = await studentService.getAll();
+  const fetchStudents = async () => {
+    try {
+      const res = await studentService.getAll();
 
-        const uniqueStudents = [
-          ...new Map(
-            (res.data.data || []).map(student => [
-              student.id,
-              student,
-            ])
-          ).values(),
-        ];
+      const uniqueStudents = [
+        ...new Map(
+          (res.data.data || []).map((student) => [student.id, student]),
+        ).values(),
+      ];
 
-        setStudents(uniqueStudents);
-      } catch (error) {
-        console.error(error);
-      }
-    };
+      setStudents(uniqueStudents);
+    } catch (error) {
+      console.error(error);
+    }
+  };
 
-const handleAddStudent = async () => {
-  if (!selectedStudentId) return;
+  const handleAddStudent = async () => {
+    if (!selectedStudentId) return;
 
-  const student = students.find(
-    (s) => s.id === Number(selectedStudentId)
-  );
+    const student = students.find((s) => s.id === Number(selectedStudentId));
 
-  if (!student) return;
+    if (!student) return;
 
-  const exists = selectedStudents.some(
-    (s) => s.id === student.id
-  );
+    const exists = selectedStudents.some((s) => s.id === student.id);
 
-  if (exists) return;
+    if (exists) return;
 
-  const response =
-    await studentService.getPlans(
-      student.id,
-      teacherId
-    );
+    const response = await studentService.getPlans(student.id, teacherId);
 
     console.log(response.data.data);
 
-  if (response.data.data.length === 0) {
+    if (response.data.data.length === 0) {
+      setErrorsCreate((prev) => ({
+        ...prev,
+        plans: `${student.last_name}, ${student.first_name} no posee planes compatibles con el docente seleccionado.`,
+      }));
 
+      return;
+    }
+
+    // Limpiar el mensaje de error
     setErrorsCreate((prev) => ({
       ...prev,
-      plans:
-        `${student.last_name}, ${student.first_name} no posee planes compatibles con el docente seleccionado.`,
+      plans: "",
     }));
 
-    return;
-  }
+    // Agregar alumno
+    setSelectedStudents((prev) => [...prev, student]);
 
-  // Limpiar el mensaje de error
-  setErrorsCreate((prev) => ({
-    ...prev,
-    plans: "",
-  }));
-
-  // Agregar alumno
-  setSelectedStudents((prev) => [
-    ...prev,
-    student,
-  ]);
-
-const alreadyExists =
-  selectedStudentPlans.some(
-    s => s.studentId === student.id
-  );
-
-if (!alreadyExists) {
-  setSelectedStudentPlans((prev) => [
-    ...prev,
-    {
-      studentId: student.id,
-      studentName:
-        `${student.last_name}, ${student.first_name}`,
-      plans: response.data.data,
-    },
-  ]);
-}
-
-  setSelectedStudentId("");
-};
-
-    const handleRemoveStudent = (id) => {
-
-  setSelectedStudents((prev) =>
-    prev.filter((s) => s.id !== id)
-  );
-
-  setSelectedStudentPlans((prev) =>
-    prev.filter(
-      (student) =>
-        student.studentId !== id
-    )
-  );
-
-};
-
-const handlePlanToggle = (plan) => {
-  const exists = selectedPlans.some(
-    (p) => p.id === plan.id
-  );
-
-  if (exists) {
-    setSelectedPlans((prev) =>
-      prev.filter((p) => p.id !== plan.id)
+    const alreadyExists = selectedStudentPlans.some(
+      (s) => s.studentId === student.id,
     );
-  } else {
-    setSelectedPlans((prev) => [
-      ...prev,
-      plan,
-    ]);
 
-    console.log(plan);
-  }
-};
+    if (!alreadyExists) {
+      setSelectedStudentPlans((prev) => [
+        ...prev,
+        {
+          studentId: student.id,
+          studentName: `${student.last_name}, ${student.first_name}`,
+          plans: response.data.data,
+        },
+      ]);
+    }
 
-    useEffect(() => {
-      fetchTeachers();
-      fetchSchedules();
-      fetchScheduleStudents();
-      fetchStudents();
-    }, []);
+    setSelectedStudentId("");
+  };
 
-const resetForm = () => {
-  setTeacherId("");
-  setSelectedDay("");
-  setSelectedTime("");
-  setClassroom("");
+  const handleRemoveStudent = (id) => {
+    setSelectedStudents((prev) => prev.filter((s) => s.id !== id));
 
-  setSelectedStudentId("");
+    setSelectedStudentPlans((prev) =>
+      prev.filter((student) => student.studentId !== id),
+    );
+  };
 
-  setSelectedStudents([]);
-  setSelectedStudentPlans([]);
-  setSelectedPlans([]);
+  const handlePlanToggle = (plan) => {
+    const exists = selectedPlans.some((p) => p.id === plan.id);
 
-  setErrorsCreate({});
-  setErrorsEdit({});
-};
+    if (exists) {
+      setSelectedPlans((prev) => prev.filter((p) => p.id !== plan.id));
+    } else {
+      setSelectedPlans((prev) => [...prev, plan]);
 
-   const mapErrors = (errors) => {
+      console.log(plan);
+    }
+  };
+
+  useEffect(() => {
+    fetchTeachers();
+    fetchSchedules();
+    fetchScheduleStudents();
+    fetchStudents();
+  }, []);
+
+  const resetForm = () => {
+    setTeacherId("");
+    setSelectedDay("");
+    setSelectedTime("");
+    setClassroom("");
+
+    setSelectedStudentId("");
+
+    setSelectedStudents([]);
+    setSelectedStudentPlans([]);
+    setSelectedPlans([]);
+
+    setErrorsCreate({});
+    setErrorsEdit({});
+  };
+
+  const mapErrors = (errors) => {
     const formatted = {};
 
     errors.forEach((e) => {
@@ -244,33 +209,26 @@ const resetForm = () => {
       const newErrors = {};
 
       if (!teacherId) {
-        newErrors.teacher_id =
-          "Seleccione una opción válida.";
+        newErrors.teacher_id = "Seleccione una opción válida.";
       }
 
       if (!selectedDay) {
-        newErrors.day =
-          "Seleccione una opción válida.";
+        newErrors.day = "Seleccione una opción válida.";
       }
 
       if (!selectedTime) {
-        newErrors.start_time =
-          "Seleccione una opción válida.";
+        newErrors.start_time = "Seleccione una opción válida.";
       }
 
       if (!classroom) {
-        newErrors.classroom =
-          "Seleccione una opción válida.";
+        newErrors.classroom = "Seleccione una opción válida.";
       }
 
       if (selectedStudents.length === 0) {
-        newErrors.students =
-          "Seleccione al menos una opción válida.";
+        newErrors.students = "Seleccione al menos una opción válida.";
       }
 
-      if (
-        Object.keys(newErrors).length > 0
-      ) {
+      if (Object.keys(newErrors).length > 0) {
         setErrorsCreate(newErrors);
         return;
       }
@@ -280,9 +238,7 @@ const resetForm = () => {
         start_time: selectedTime,
         day: selectedDay,
         classroom,
-        students: selectedStudents.map(
-          (student) => student.id
-        ),
+        students: selectedStudents.map((student) => student.id),
       });
 
       setOpenCreateModal(false);
@@ -291,24 +247,19 @@ const resetForm = () => {
 
       fetchSchedules();
       fetchScheduleStudents();
-
     } catch (error) {
-        console.error(error);
+      console.error(error);
 
-        const backendErrors =
-          error.response?.data?.errors;
+      const backendErrors = error.response?.data?.errors;
 
-        if (backendErrors?.length) {
+      if (backendErrors?.length) {
+        const formatted = mapErrors(backendErrors);
 
-          const formatted =
-            mapErrors(backendErrors);
+        formatted.general = backendErrors[0].msg;
 
-          formatted.general =
-            backendErrors[0].msg;
-
-          setErrorsCreate(formatted);
-        }
+        setErrorsCreate(formatted);
       }
+    }
   };
 
   const handleEdit = (schedule) => {
@@ -317,24 +268,20 @@ const resetForm = () => {
     setTeacherId(schedule.teacher_id);
     setSelectedDay(schedule.day);
 
-    setSelectedTime(
-      schedule.start_time.slice(0, 5)
-    );
+    setSelectedTime(schedule.start_time.slice(0, 5));
 
     setClassroom(schedule.classroom);
 
-    const studentsForSchedule =
-      scheduleStudents.filter(
-        (ss) =>
-          ss.schedule_id === schedule.id
-      );
+    const studentsForSchedule = scheduleStudents.filter(
+      (ss) => ss.schedule_id === schedule.id,
+    );
 
     setSelectedStudents(
       studentsForSchedule.map((student) => ({
         id: student.student_id,
         first_name: student.first_name,
         last_name: student.last_name,
-      }))
+      })),
     );
 
     setErrorsEdit({});
@@ -343,82 +290,61 @@ const resetForm = () => {
   };
 
   const fetchScheduleInfo = async (id) => {
-      try {
+    try {
+      const res = await ScheduleService.getInfo(id);
 
-        const res =
-          await ScheduleService.getInfo(id);
+      setSelectedScheduleInfo(res.data.data);
+    } catch (error) {
+      console.error(error);
+    }
+  };
 
-        setSelectedScheduleInfo(
-          res.data.data
-        );
+  const handleInfo = async (schedule) => {
+    setSelectedSchedule(schedule);
 
-      } catch (error) {
-        console.error(error);
-      }
-    };
+    await fetchScheduleInfo(schedule.id);
 
-    const handleInfo = async (schedule) => {
+    setOpenInfoModal(true);
+  };
 
-      setSelectedSchedule(schedule);
-
-      await fetchScheduleInfo(
-        schedule.id
-      );
-
-      setOpenInfoModal(true);
-
-    };
-
-   const handleUpdate = async () => {
+  const handleUpdate = async () => {
     try {
       setErrorsEdit({});
 
       const newErrors = {};
 
       if (!teacherId) {
-        newErrors.teacher_id =
-          "Seleccione una opción válida.";
+        newErrors.teacher_id = "Seleccione una opción válida.";
       }
 
       if (!selectedDay) {
-        newErrors.day =
-          "Seleccione una opción válida.";
+        newErrors.day = "Seleccione una opción válida.";
       }
 
       if (!selectedTime) {
-        newErrors.start_time =
-          "Seleccione una opción válida.";
+        newErrors.start_time = "Seleccione una opción válida.";
       }
 
       if (!classroom) {
-        newErrors.classroom =
-          "Seleccione una opción válida.";
+        newErrors.classroom = "Seleccione una opción válida.";
       }
 
       if (selectedStudents.length === 0) {
-        newErrors.students =
-          "Seleccione al menos una opción válida.";
+        newErrors.students = "Seleccione al menos una opción válida.";
       }
 
-      if (
-        Object.keys(newErrors).length > 0
-      ) {
+      if (Object.keys(newErrors).length > 0) {
         setErrorsEdit(newErrors);
         return;
       }
 
-      await ScheduleService.update(
-        selectedSchedule.id,
-        {
-          teacher_id: teacherId,
-          start_time: selectedTime,
-          day: selectedDay,
-          classroom,
-          students: selectedStudents.map(
-            (student) => student.id
-          ),
-        }
-      );
+      await ScheduleService.update(selectedSchedule.id, {
+        teacher_id: teacherId,
+        start_time: selectedTime,
+        day: selectedDay,
+        classroom,
+        students: selectedStudents.map((student) => student.id),
+      });
 
       setOpenEditModal(false);
 
@@ -426,24 +352,19 @@ const resetForm = () => {
 
       fetchSchedules();
       fetchScheduleStudents();
-
     } catch (error) {
-        console.error(error);
+      console.error(error);
 
-        const backendErrors =
-          error.response?.data?.errors;
+      const backendErrors = error.response?.data?.errors;
 
-        if (backendErrors?.length) {
+      if (backendErrors?.length) {
+        const formatted = mapErrors(backendErrors);
 
-          const formatted =
-            mapErrors(backendErrors);
+        formatted.general = backendErrors[0].msg;
 
-          formatted.general =
-            backendErrors[0].msg;
-
-          setErrorsEdit(formatted);
-        }
+        setErrorsEdit(formatted);
       }
+    }
   };
 
   const handleDelete = (schedule) => {
@@ -454,9 +375,7 @@ const resetForm = () => {
 
   const confirmDelete = async () => {
     try {
-      await ScheduleService.delete(
-        selectedSchedule.id
-      );
+      await ScheduleService.delete(selectedSchedule.id);
 
       setOpenDeleteModal(false);
 
@@ -464,19 +383,17 @@ const resetForm = () => {
 
       fetchSchedules();
       fetchScheduleStudents();
-
     } catch (error) {
-        console.error(error);
+      console.error(error);
 
-        const backendErrors =
-          error.response?.data?.errors;
+      const backendErrors = error.response?.data?.errors;
 
-        if (backendErrors?.length) {
-          setErrorsEdit({
-            general: backendErrors[0].msg,
-          });
-        }
+      if (backendErrors?.length) {
+        setErrorsEdit({
+          general: backendErrors[0].msg,
+        });
       }
+    }
   };
 
   const timeSlots = [
@@ -504,36 +421,23 @@ const resetForm = () => {
     { name: "Aula B", value: "B" },
   ];
 
-const studentScheduleIds =
-  scheduleStudents
+  const studentScheduleIds = scheduleStudents
     .filter(
       (ss) =>
-        !selectedStudent ||
-        Number(ss.student_id) === Number(selectedStudent)
+        !selectedStudent || Number(ss.student_id) === Number(selectedStudent),
     )
     .map((ss) => ss.schedule_id);
 
-    const filteredSchedules =
-      schedules.filter((s) => {
+  const filteredSchedules = schedules.filter((s) => {
+    const teacherOk =
+      !selectedTeacher || Number(s.teacher_id) === Number(selectedTeacher);
 
-        const teacherOk =
-          !selectedTeacher ||
-          Number(s.teacher_id) === Number(selectedTeacher);
+    const classroomOk = !selectedClassroom || s.classroom === selectedClassroom;
 
-        const classroomOk =
-          !selectedClassroom ||
-          s.classroom === selectedClassroom;
+    const studentOk = !selectedStudent || studentScheduleIds.includes(s.id);
 
-        const studentOk =
-          !selectedStudent ||
-          studentScheduleIds.includes(s.id);
-
-        return (
-          teacherOk &&
-          classroomOk &&
-          studentOk
-        );
-    });
+    return teacherOk && classroomOk && studentOk;
+  });
 
   return (
     <>
@@ -541,20 +445,13 @@ const studentScheduleIds =
       <div className="flex justify-between mb-6">
         <select
           value={selectedTeacher}
-          onChange={(e) =>
-            setSelectedTeacher(e.target.value)
-          }
+          onChange={(e) => setSelectedTeacher(e.target.value)}
           className="p-2 border border-gray-300 rounded w-72"
         >
-          <option value="">
-            Todos los docentes
-          </option>
+          <option value="">Todos los docentes</option>
 
           {teachers.map((teacher) => (
-            <option
-              key={teacher.id}
-              value={teacher.id}
-            >
+            <option key={teacher.id} value={teacher.id}>
               {teacher.last_name}, {teacher.first_name}
             </option>
           ))}
@@ -562,9 +459,7 @@ const studentScheduleIds =
 
         <select
           value={selectedStudent}
-          onChange={(e) =>
-            setSelectedStudent(e.target.value)
-          }
+          onChange={(e) => setSelectedStudent(e.target.value)}
           className="
             border
             border-gray-300
@@ -573,15 +468,10 @@ const studentScheduleIds =
             py-2
           "
         >
-          <option value="">
-            Todos los alumnos
-          </option>
+          <option value="">Todos los alumnos</option>
 
           {students.map((student) => (
-            <option
-              key={student.id}
-              value={student.id}
-            >
+            <option key={student.id} value={student.id}>
               {student.last_name}, {student.first_name}
             </option>
           ))}
@@ -589,23 +479,13 @@ const studentScheduleIds =
 
         <select
           value={selectedClassroom}
-          onChange={(e) =>
-            setSelectedClassroom(
-              e.target.value
-            )
-          }
+          onChange={(e) => setSelectedClassroom(e.target.value)}
         >
-          <option value="">
-            Todas las aulas
-          </option>
+          <option value="">Todas las aulas</option>
 
-          <option value="A">
-            Aula A
-          </option>
+          <option value="A">Aula A</option>
 
-          <option value="B">
-            Aula B
-          </option>
+          <option value="B">Aula B</option>
         </select>
 
         {isAdmin() && (
@@ -633,17 +513,12 @@ const studentScheduleIds =
         "
       >
         <table className="w-full border border-gray-300">
-          
           <thead>
             <tr>
-              <th className="border p-2 bg-gray-100">
-                Horario
-              </th>
+              <th className="border p-2 bg-gray-100">Horario</th>
 
               {days.map((day) => (
-                <th key={day.value}>
-                  {day.name}
-                </th>
+                <th key={day.value}>{day.name}</th>
               ))}
             </tr>
           </thead>
@@ -651,21 +526,16 @@ const studentScheduleIds =
           <tbody>
             {timeSlots.map((slot) => (
               <tr key={slot}>
-                <td className="border p-2 font-semibold">
-                  {slot}
-                </td>
+                <td className="border p-2 font-semibold">{slot}</td>
 
                 {days.map((day) => {
+                  const slotStart = slot.split(" - ")[0];
 
-                  const slotStart =
-                    slot.split(" - ")[0];
-
-                  const schedulesInSlot =
-                    filteredSchedules.filter(
-                      (s) =>
-                        Number(s.day) === day.value &&
-                        s.start_time.slice(0, 5) === slotStart
-                    );
+                  const schedulesInSlot = filteredSchedules.filter(
+                    (s) =>
+                      Number(s.day) === day.value &&
+                      s.start_time.slice(0, 5) === slotStart,
+                  );
 
                   return (
                     <td
@@ -680,86 +550,81 @@ const studentScheduleIds =
                         w-[160px]
                       "
                     >
-                          <div
-                            className="
+                      <div
+                        className="
                               h-full
                               overflow-y-auto
                               space-y-2
                             "
-                          >
-                            {schedulesInSlot.map((schedule) => {
-
-                              const cardColor =
-                                schedule.classroom === "A"
-                                  ? `
+                      >
+                        {schedulesInSlot.map((schedule) => {
+                          const cardColor =
+                            schedule.classroom === "A"
+                              ? `
                                     bg-blue-200
                                     border-blue-600
                                   `
-                                  : `
+                              : `
                                     bg-red-200
                                     border-red-600
                                   `;
 
-                              const students =
-                                scheduleStudents.filter(
-                                  (ss) =>
-                                    ss.schedule_id === schedule.id
-                                );
+                          const students = scheduleStudents.filter(
+                            (ss) => ss.schedule_id === schedule.id,
+                          );
 
-                              return (
+                          return (
+                            <div
+                              key={schedule.id}
+                              className={
+                                schedule.classroom === "A"
+                                  ? `
+                                    p-2
+                                    rounded
+                                    border
+                                    bg-blue-200
+                                    border-blue-800
+                                    text-blue-800
+                                  `
+                                  : `
+                                    p-2
+                                    rounded
+                                    border
+                                    bg-red-200
+                                    border-red-800
+                                    text-red-800
+                                  `
+                              }
+                            >
+                              <div className="text-xs mb-1">
+                                <span className="font-semibold">
+                                  Docente:
+                                </span>{" "}
+                              </div>
+                              <div className="text-xs ml-2">
+                                {schedule.last_name}, {schedule.first_name}.
+                              </div>
+
+                              <div className="text-xs mb-1">
+                                <span className="font-semibold">
+                                  <br />
+                                  Alumnos:
+                                </span>
+                              </div>
+
+                              {students.map((student) => (
                                 <div
-                                  key={schedule.id}
-                                 className={
-  schedule.classroom === "A"
-    ? `
-      p-2
-      rounded
-      border
-      bg-blue-200
-      border-blue-800
-      text-blue-800
-    `
-    : `
-      p-2
-      rounded
-      border
-      bg-red-200
-      border-red-800
-      text-red-800
-    `
-}
+                                  key={student.student_id}
+                                  className="text-xs ml-2"
                                 >
-                                  <div className="text-xs mb-1">
-                                    <span className="font-semibold">
-                                      Docente:
-                                    </span>{" "}
-                                  </div>
-                                  <div
-                                      className="text-xs ml-2"
-                                    >
-                                      {schedule.last_name}, {schedule.first_name}.
-                                    </div>
+                                  {student.last_name}, {student.first_name}.
+                                </div>
+                              ))}
 
-                                  <div className="text-xs mb-1">
-                                    <span className="font-semibold">
-                                    <br />
-                                    Alumnos:
-                                    </span>
-                                  </div>
-
-                                  {students.map((student) => (
-                                    <div 
-                                    key={student.student_id}
-                                    className="text-xs ml-2"
-                                    >
-                                      {student.last_name}, {student.first_name}.
-                                    </div>
-                                  ))}
-                                  
-                                    <div className="flex gap-1 mt-1">
-                                      <button
-                                        onClick={() => handleInfo(schedule)}
-                                        className="
+                              <div className="flex gap-1 mt-1">
+                                <button
+                                  onClick={() => handleInfo(schedule)}
+                                  className="
                                           text-[10px]
                                           px-2
                                           py-1
@@ -767,17 +632,15 @@ const studentScheduleIds =
                                           bg-[#0cc0df]
                                           text-white
                                         "
-                                      >
-                                        Info
-                                      </button>
-                                    </div>
-                                  
-                                </div>
-                              );
-                            })}
-                        </div>             
+                                >
+                                  Info
+                                </button>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
                     </td>
-
                   );
                 })}
               </tr>
@@ -785,7 +648,7 @@ const studentScheduleIds =
           </tbody>
         </table>
       </div>
-      
+
       <div className="flex justify-start mt-6">
         <button
           onClick={openCreate}
@@ -809,16 +672,12 @@ const studentScheduleIds =
           resetForm();
         }}
       >
-        <h2 className="text-xl font-bold mb-8">
-          Crear Horario
-        </h2>
+        <h2 className="text-xl font-bold mb-8">Crear Horario</h2>
 
         {/* Docente */}
 
         <div className="flex flex-col mb-4">
-          <label className="font-semibold mb-2">
-            Docente
-          </label>
+          <label className="font-semibold mb-2">Docente</label>
 
           <select
             value={teacherId}
@@ -833,17 +692,11 @@ const studentScheduleIds =
               py-2
             "
           >
-            <option value="">
-              Seleccionar docente
-            </option>
+            <option value="">Seleccionar docente</option>
 
             {teachers.map((teacher) => (
-              <option
-                key={teacher.id}
-                value={teacher.id}
-              >
-                {teacher.last_name},{" "}
-                {teacher.first_name}
+              <option key={teacher.id} value={teacher.id}>
+                {teacher.last_name}, {teacher.first_name}
               </option>
             ))}
           </select>
@@ -858,15 +711,11 @@ const studentScheduleIds =
         {/* Día */}
 
         <div className="flex flex-col mb-4">
-          <label className="font-semibold mb-2">
-            Día
-          </label>
+          <label className="font-semibold mb-2">Día</label>
 
           <select
             value={selectedDay}
-            onChange={(e) =>
-              setSelectedDay(e.target.value)
-            }
+            onChange={(e) => setSelectedDay(e.target.value)}
             className="
               border
               border-gray-300
@@ -875,39 +724,28 @@ const studentScheduleIds =
               py-2
             "
           >
-            <option value="">
-              Seleccionar día
-            </option>
+            <option value="">Seleccionar día</option>
 
             {days.map((day) => (
-              <option
-                key={day.value}
-                value={day.value}
-              >
+              <option key={day.value} value={day.value}>
                 {day.name}
               </option>
             ))}
           </select>
 
           {errorsCreate.day && (
-            <p className="text-red-500 text-sm mt-1">
-              {errorsCreate.day}
-            </p>
+            <p className="text-red-500 text-sm mt-1">{errorsCreate.day}</p>
           )}
         </div>
 
         {/* Horario */}
 
         <div className="flex flex-col mb-4">
-          <label className="font-semibold mb-2">
-            Horario
-          </label>
+          <label className="font-semibold mb-2">Horario</label>
 
           <select
             value={selectedTime}
-            onChange={(e) =>
-              setSelectedTime(e.target.value)
-            }
+            onChange={(e) => setSelectedTime(e.target.value)}
             className="
               border
               border-gray-300
@@ -916,15 +754,10 @@ const studentScheduleIds =
               py-2
             "
           >
-            <option value="">
-              Seleccionar horario
-            </option>
+            <option value="">Seleccionar horario</option>
 
             {timeSlots.map((slot) => (
-              <option
-                key={slot}
-                value={slot.split(" - ")[0]}
-              >
+              <option key={slot} value={slot.split(" - ")[0]}>
                 {slot}
               </option>
             ))}
@@ -940,15 +773,11 @@ const studentScheduleIds =
         {/* Aula */}
 
         <div className="flex flex-col mb-4">
-          <label className="font-semibold mb-2">
-            Aula
-          </label>
+          <label className="font-semibold mb-2">Aula</label>
 
           <select
             value={classroom}
-            onChange={(e) =>
-              setClassroom(e.target.value)
-            }
+            onChange={(e) => setClassroom(e.target.value)}
             className="
               border
               border-gray-300
@@ -957,15 +786,10 @@ const studentScheduleIds =
               py-2
             "
           >
-            <option value="">
-              Seleccionar aula
-            </option>
+            <option value="">Seleccionar aula</option>
 
             {classrooms.map((room) => (
-              <option
-                key={room.value}
-                value={room.value}
-              >
+              <option key={room.value} value={room.value}>
                 {room.name}
               </option>
             ))}
@@ -981,18 +805,12 @@ const studentScheduleIds =
         {/* Alumno */}
 
         <div className="flex flex-col mb-2">
-          <label className="font-semibold mb-2">
-            Alumno
-          </label>
+          <label className="font-semibold mb-2">Alumno</label>
 
           <div className="flex gap-2">
             <select
               value={selectedStudentId}
-              onChange={(e) =>
-                setSelectedStudentId(
-                  e.target.value
-                )
-              }
+              onChange={(e) => setSelectedStudentId(e.target.value)}
               className="
                 flex-1
                 border
@@ -1002,9 +820,7 @@ const studentScheduleIds =
                 py-2
               "
             >
-              <option value="">
-                Seleccionar alumno
-              </option>
+              <option value="">Seleccionar alumno</option>
 
               {students.map((student) => (
                 <option
@@ -1015,7 +831,6 @@ const studentScheduleIds =
                 </option>
               ))}
             </select>
-
 
             <button
               type="button"
@@ -1033,10 +848,8 @@ const studentScheduleIds =
           </div>
 
           {errorsCreate.students && (
-            <p className="text-red-500 text-sm mt-1">
-              {errorsCreate.students}
-            </p>
-          )} 
+            <p className="text-red-500 text-sm mt-1">{errorsCreate.students}</p>
+          )}
         </div>
 
         {/* Lista */}
@@ -1056,15 +869,12 @@ const studentScheduleIds =
               "
             >
               <span>
-                {student.last_name},{" "}
-                {student.first_name}
+                {student.last_name}, {student.first_name}
               </span>
 
               <button
                 type="button"
-                onClick={() =>
-                  handleRemoveStudent(student.id)
-                }
+                onClick={() => handleRemoveStudent(student.id)}
                 className="
                   text-red-500
                   font-bold
@@ -1075,90 +885,60 @@ const studentScheduleIds =
             </div>
           ))}
 
-          <h3 className="font-semibold mt-6 mb-3">
-Planes disponibles
-</h3>
-            {errorsCreate.plans && (
-  <div className="text-red-500 text-sm mt-2">
-    {errorsCreate.plans}
-  </div>
-)}
+          <h3 className="font-semibold mt-6 mb-3">Planes disponibles</h3>
+          {errorsCreate.plans && (
+            <div className="text-red-500 text-sm mt-2">
+              {errorsCreate.plans}
+            </div>
+          )}
 
-{selectedStudentPlans.map((student) => (
-
-  <div
-key={`${student.studentId}-${student.studentName}`}
-    className="
+          {selectedStudentPlans.map((student) => (
+            <div
+              key={`${student.studentId}-${student.studentName}`}
+              className="
       border
       rounded
       p-3
       mb-3
     "
-  >
+            >
+              <div className="font-semibold">{student.studentName}</div>
 
-    <div className="font-semibold">
-      {student.studentName}
-    </div>
+              {student.plans.map((plan) => (
+                <div key={`${student.studentId}-${plan.id}`}>
+                  <label>
+                    <input
+                      type="checkbox"
+                      checked={selectedPlans.some((p) => p.id === plan.id)}
+                      onChange={() => handlePlanToggle(plan)}
+                    />{" "}
+                    {plan.name}
+                  </label>
+                </div>
+              ))}
+            </div>
+          ))}
 
-    {student.plans.map((plan) => (
+          {selectedPlans.length > 0 && (
+            <>
+              <h3 className="font-semibold mt-6 mb-3">Materias</h3>
 
-      <div key={`${student.studentId}-${plan.id}`}>
-
-        <label>
-
-          <input
-  type="checkbox"
-  checked={
-    selectedPlans.some(
-      (p) => p.id === plan.id
-    )
-  }
-  onChange={() =>
-    handlePlanToggle(plan)
-  }
-/>
-
-          {" "}
-          {plan.name}
-
-        </label>
-
-      </div>
-
-    ))}
-
-  </div>
-
-))}
-
-{selectedPlans.length > 0 && (
-  <>
-    <h3 className="font-semibold mt-6 mb-3">
-      Materias
-    </h3>
-
-    <div
-      className="
+              <div
+                className="
         border
         rounded
         p-3
         space-y-2
       "
-    >
-      {[
-        ...new Set(
-          selectedPlans.flatMap(
-            (plan) => plan.subjects
-          )
-        ),
-      ].map((subject) => (
-        <div key={subject}>
-          • {subject}
-        </div>
-      ))}
-    </div>
-  </>
-)}
+              >
+                {[
+                  ...new Set(selectedPlans.flatMap((plan) => plan.subjects)),
+                ].map((subject) => (
+                  <div key={subject}>• {subject}</div>
+                ))}
+              </div>
+            </>
+          )}
         </div>
 
         <div className="flex justify-end gap-4 mt-10">
@@ -1179,9 +959,7 @@ key={`${student.studentId}-${student.studentName}`}
           </button>
 
           {errorsCreate.general && (
-            <p className="text-red-500 text-sm mb-2">
-              {errorsCreate.general}
-            </p>
+            <p className="text-red-500 text-sm mb-2">{errorsCreate.general}</p>
           )}
           <button
             onClick={handleCreate}
@@ -1207,22 +985,16 @@ key={`${student.studentId}-${student.studentName}`}
           resetForm();
         }}
       >
-        <h2 className="text-xl font-bold mb-8">
-          Editar Horario
-        </h2>
+        <h2 className="text-xl font-bold mb-8">Editar Horario</h2>
 
         {/* Docente */}
 
         <div className="flex flex-col mb-4">
-          <label className="font-semibold mb-2">
-            Docente
-          </label>
+          <label className="font-semibold mb-2">Docente</label>
 
           <select
             value={teacherId}
-            onChange={(e) =>
-              setTeacherId(e.target.value)
-            }
+            onChange={(e) => setTeacherId(e.target.value)}
             className="
               border
               border-gray-300
@@ -1231,40 +1003,28 @@ key={`${student.studentId}-${student.studentName}`}
               py-2
             "
           >
-            <option value="">
-              Seleccionar docente
-            </option>
+            <option value="">Seleccionar docente</option>
 
             {teachers.map((teacher) => (
-              <option
-                key={teacher.id}
-                value={teacher.id}
-              >
-                {teacher.last_name},{" "}
-                {teacher.first_name}
+              <option key={teacher.id} value={teacher.id}>
+                {teacher.last_name}, {teacher.first_name}
               </option>
             ))}
           </select>
 
           {errorsEdit.teacher_id && (
-            <p className="mt-1 text-sm text-red-500">
-              {errorsEdit.teacher_id}
-            </p>
+            <p className="mt-1 text-sm text-red-500">{errorsEdit.teacher_id}</p>
           )}
         </div>
 
         {/* Día */}
 
         <div className="flex flex-col mb-4">
-          <label className="font-semibold mb-2">
-            Día
-          </label>
+          <label className="font-semibold mb-2">Día</label>
 
           <select
             value={selectedDay}
-            onChange={(e) =>
-              setSelectedDay(e.target.value)
-            }
+            onChange={(e) => setSelectedDay(e.target.value)}
             className="
               border
               border-gray-300
@@ -1273,39 +1033,28 @@ key={`${student.studentId}-${student.studentName}`}
               py-2
             "
           >
-            <option value="">
-              Seleccionar día
-            </option>
+            <option value="">Seleccionar día</option>
 
             {days.map((day) => (
-              <option
-                key={day.value}
-                value={day.value}
-              >
+              <option key={day.value} value={day.value}>
                 {day.name}
               </option>
             ))}
           </select>
 
           {errorsEdit.day && (
-            <p className="mt-1 text-sm text-red-500">
-              {errorsEdit.day}
-            </p>
+            <p className="mt-1 text-sm text-red-500">{errorsEdit.day}</p>
           )}
         </div>
 
         {/* Horario */}
 
         <div className="flex flex-col mb-4">
-          <label className="font-semibold mb-2">
-            Horario
-          </label>
+          <label className="font-semibold mb-2">Horario</label>
 
           <select
             value={selectedTime}
-            onChange={(e) =>
-              setSelectedTime(e.target.value)
-            }
+            onChange={(e) => setSelectedTime(e.target.value)}
             className="
               border
               border-gray-300
@@ -1314,39 +1063,28 @@ key={`${student.studentId}-${student.studentName}`}
               py-2
             "
           >
-            <option value="">
-              Seleccionar horario
-            </option>
+            <option value="">Seleccionar horario</option>
 
             {timeSlots.map((slot) => (
-              <option
-                key={slot}
-                value={slot.split(" - ")[0]}
-              >
+              <option key={slot} value={slot.split(" - ")[0]}>
                 {slot}
               </option>
             ))}
           </select>
 
           {errorsEdit.start_time && (
-            <p className="mt-1 text-sm text-red-500">
-              {errorsEdit.start_time}
-            </p>
+            <p className="mt-1 text-sm text-red-500">{errorsEdit.start_time}</p>
           )}
         </div>
 
         {/* Aula */}
 
         <div className="flex flex-col mb-4">
-          <label className="font-semibold mb-2">
-            Aula
-          </label>
+          <label className="font-semibold mb-2">Aula</label>
 
           <select
             value={classroom}
-            onChange={(e) =>
-              setClassroom(e.target.value)
-            }
+            onChange={(e) => setClassroom(e.target.value)}
             className="
               border
               border-gray-300
@@ -1355,42 +1093,29 @@ key={`${student.studentId}-${student.studentName}`}
               py-2
             "
           >
-            <option value="">
-              Seleccionar aula
-            </option>
+            <option value="">Seleccionar aula</option>
 
             {classrooms.map((room) => (
-              <option
-                key={room.value}
-                value={room.value}
-              >
+              <option key={room.value} value={room.value}>
                 {room.name}
               </option>
             ))}
           </select>
 
           {errorsEdit.classroom && (
-            <p className="mt-1 text-sm text-red-500">
-              {errorsEdit.classroom}
-            </p>
+            <p className="mt-1 text-sm text-red-500">{errorsEdit.classroom}</p>
           )}
         </div>
 
         {/* Alumno */}
 
         <div className="flex flex-col mb-2">
-          <label className="font-semibold mb-2">
-            Alumno
-          </label>
+          <label className="font-semibold mb-2">Alumno</label>
 
           <div className="flex gap-2">
             <select
               value={selectedStudentId}
-              onChange={(e) =>
-                setSelectedStudentId(
-                  e.target.value
-                )
-              }
+              onChange={(e) => setSelectedStudentId(e.target.value)}
               className="
                 flex-1
                 border
@@ -1400,9 +1125,7 @@ key={`${student.studentId}-${student.studentName}`}
                 py-2
               "
             >
-              <option value="">
-                Seleccionar alumno
-              </option>
+              <option value="">Seleccionar alumno</option>
 
               {students.map((student) => (
                 <option
@@ -1430,9 +1153,7 @@ key={`${student.studentId}-${student.studentName}`}
           </div>
 
           {errorsEdit.students && (
-            <p className="mt-1 text-sm text-red-500">
-              {errorsEdit.students}
-            </p>
+            <p className="mt-1 text-sm text-red-500">{errorsEdit.students}</p>
           )}
         </div>
 
@@ -1453,15 +1174,12 @@ key={`${student.studentId}-${student.studentName}`}
               "
             >
               <span>
-                {student.last_name},{" "}
-                {student.first_name}
+                {student.last_name}, {student.first_name}
               </span>
 
               <button
                 type="button"
-                onClick={() =>
-                  handleRemoveStudent(student.id)
-                }
+                onClick={() => handleRemoveStudent(student.id)}
                 className="
                   text-red-500
                   font-bold
@@ -1471,85 +1189,55 @@ key={`${student.studentId}-${student.studentName}`}
               </button>
             </div>
           ))}
-          <h3 className="font-semibold mt-6 mb-3">
-Planes disponibles
-</h3>
+          <h3 className="font-semibold mt-6 mb-3">Planes disponibles</h3>
 
-{selectedStudentPlans.map((student) => (
-
-  <div
-    key={`${student.studentId}-${student.studentName}`}
-    className="
+          {selectedStudentPlans.map((student) => (
+            <div
+              key={`${student.studentId}-${student.studentName}`}
+              className="
       border
       rounded
       p-3
       mb-3
     "
-  >
+            >
+              <div className="font-semibold">{student.studentName}</div>
 
-    <div className="font-semibold">
-      {student.studentName}
-    </div>
+              {student.plans.map((plan) => (
+                <div key={`${student.studentId}-${plan.id}`}>
+                  <label>
+                    <input
+                      type="checkbox"
+                      checked={selectedPlans.some((p) => p.id === plan.id)}
+                      onChange={() => handlePlanToggle(plan)}
+                    />{" "}
+                    {plan.name}
+                  </label>
+                </div>
+              ))}
+            </div>
+          ))}
 
-    {student.plans.map((plan) => (
+          {selectedPlans.length > 0 && (
+            <>
+              <h3 className="font-semibold mt-6 mb-3">Materias</h3>
 
-      <div key={`${student.studentId}-${plan.id}`}>
-
-        <label>
-
-          <input
-  type="checkbox"
-  checked={
-    selectedPlans.some(
-      (p) => p.id === plan.id
-    )
-  }
-  onChange={() =>
-    handlePlanToggle(plan)
-  }
-/>
-
-          {" "}
-          {plan.name}
-
-        </label>
-
-      </div>
-
-    ))}
-
-  </div>
-
-))}
-
-{selectedPlans.length > 0 && (
-  <>
-    <h3 className="font-semibold mt-6 mb-3">
-      Materias
-    </h3>
-
-    <div
-      className="
+              <div
+                className="
         border
         rounded
         p-3
         space-y-2
       "
-    >
-      {[
-        ...new Set(
-          selectedPlans.flatMap(
-            (plan) => plan.subjects
-          )
-        ),
-      ].map((subject) => (
-        <div key={subject}>
-          • {subject}
-        </div>
-      ))}
-    </div>
-  </>
-)}
+              >
+                {[
+                  ...new Set(selectedPlans.flatMap((plan) => plan.subjects)),
+                ].map((subject) => (
+                  <div key={subject}>• {subject}</div>
+                ))}
+              </div>
+            </>
+          )}
         </div>
 
         <div className="flex justify-end gap-4 mt-10">
@@ -1571,9 +1259,7 @@ Planes disponibles
           </button>
 
           {errorsEdit.general && (
-            <p className="text-red-500 text-sm mb-2">
-              {errorsEdit.general}
-            </p>
+            <p className="text-red-500 text-sm mb-2">{errorsEdit.general}</p>
           )}
           <button
             onClick={handleUpdate}
@@ -1590,20 +1276,13 @@ Planes disponibles
           </button>
         </div>
       </Modal>
-      
-      <Modal
-        isOpen={openDeleteModal}
-        onClose={() => setOpenDeleteModal(false)}
-      >
-        <h2 className="text-lg font-semibold mb-4">
-          ¿Eliminar horario?
-        </h2>
+
+      <Modal isOpen={openDeleteModal} onClose={() => setOpenDeleteModal(false)}>
+        <h2 className="text-lg font-semibold mb-4">¿Eliminar horario?</h2>
 
         <div className="flex justify-end gap-2">
           <button
-            onClick={() =>
-              setOpenDeleteModal(false)
-            }
+            onClick={() => setOpenDeleteModal(false)}
             className="
               cursor-pointer transition transform hover:scale-105
               px-4
@@ -1631,145 +1310,125 @@ Planes disponibles
         </div>
       </Modal>
 
-<Modal
-  isOpen={openInfoModal}
-  onClose={() => {
-    setOpenInfoModal(false);
-    setSelectedScheduleInfo(null);
-  }}
->
-  {selectedScheduleInfo && (
-    <>
-      <h2 className="text-xl font-bold mb-6">
-        Información del horario
-      </h2>
+      <Modal
+        isOpen={openInfoModal}
+        onClose={() => {
+          setOpenInfoModal(false);
+          setSelectedScheduleInfo(null);
+        }}
+      >
+        {selectedScheduleInfo && (
+          <>
+            <h2 className="text-xl font-bold mb-6">Información del horario</h2>
 
-      {/* Docente */}
-      <div className="space-y-3 mb-8">
-        <h3 className="font-bold text-lg">
-          Docente
-        </h3>
+            {/* Docente */}
+            <div className="space-y-3 mb-8">
+              <h3 className="font-bold text-lg">Docente</h3>
 
-        <div
-          className="
+              <div
+                className="
             border
             rounded-lg
             p-4
             bg-gray-50
           "
-        >
-          <div className="font-semibold text-black">
-            {selectedScheduleInfo.teacher}
-          </div>
+              >
+                <div className="font-semibold text-black">
+                  {selectedScheduleInfo.teacher}
+                </div>
 
-          <div className="mt-2 text-sm text-gray-600">
-            Aula: {selectedScheduleInfo.classroom}
-          </div>
-        </div>
-      </div>
+                <div className="mt-2 text-sm text-gray-600">
+                  Aula: {selectedScheduleInfo.classroom}
+                </div>
+              </div>
+            </div>
 
-      {/* Planes */}
-      <div className="space-y-3 mb-8">
-        <h3 className="font-bold text-lg">
-          Planes
-        </h3>
+            {/* Planes */}
+            <div className="space-y-3 mb-8">
+              <h3 className="font-bold text-lg">Planes</h3>
 
-        {selectedScheduleInfo.plans.map((plan) => (
-          <div
-            key={plan.id}
-            className="
+              {selectedScheduleInfo.plans.map((plan) => (
+                <div
+                  key={plan.id}
+                  className="
               border
               rounded-lg
               p-4
               bg-gray-50
             "
-          >
-            <div className="font-semibold text-black">
-              {plan.name}
-            </div>
+                >
+                  <div className="font-semibold text-black">{plan.name}</div>
 
-            <div className="mt-2 text-sm">
-              Materias:
-            </div>
+                  <div className="mt-2 text-sm">Materias:</div>
 
-            <ul className="ml-5 list-disc text-sm">
-              {plan.subjects.map((subject) => (
-                <li key={subject}>
-                  {subject}
-                </li>
+                  <ul className="ml-5 list-disc text-sm">
+                    {plan.subjects.map((subject) => (
+                      <li key={subject}>{subject}</li>
+                    ))}
+                  </ul>
+                </div>
               ))}
-            </ul>
-          </div>
-        ))}
-      </div>
+            </div>
 
-      {/* Alumnos */}
-      <div className="space-y-3 mb-8">
-        <h3 className="font-bold text-lg">
-          Alumnos
-        </h3>
+            {/* Alumnos */}
+            <div className="space-y-3 mb-8">
+              <h3 className="font-bold text-lg">Alumnos</h3>
 
-        {selectedScheduleInfo.students.map((student) => (
-          <div
-            key={student.id}
-            className="
+              {selectedScheduleInfo.students.map((student) => (
+                <div
+                  key={student.id}
+                  className="
               border
               rounded-lg
               p-4
               bg-gray-50
             "
-          >
-            <div className="font-semibold">
-              {student.name}
-            </div>
+                >
+                  <div className="font-semibold">{student.name}</div>
 
-            <div className="mt-2 text-sm text-gray-600">
-              Plan: {student.plan}
-            </div>
+                  <div className="mt-2 text-sm text-gray-600">
+                    Plan: {student.plan}
+                  </div>
 
-            <div className="mt-2 text-sm">
-              Materias:
-            </div>
+                  <div className="mt-2 text-sm">Materias:</div>
 
-            <ul className="ml-5 list-disc text-sm">
-              {student.subjects.map((subject) => (
-                <li key={subject}>
-                  {subject}
-                </li>
+                  <ul className="ml-5 list-disc text-sm">
+                    {student.subjects.map((subject) => (
+                      <li key={subject}>{subject}</li>
+                    ))}
+                  </ul>
+                </div>
               ))}
-            </ul>
-          </div>
-        ))}
-      </div>
+            </div>
 
-      {/* Botones */}
-      <div className="flex justify-end gap-3 mt-8">
-        <button
-          onClick={() => {
-            setOpenInfoModal(false);
-          }}
-          className="
+            {/* Botones */}
+            <div className="flex justify-end gap-3 mt-8">
+              <button
+                onClick={() => {
+                  setOpenInfoModal(false);
+                }}
+                className="
             w-28
             px-4
             py-2
             border
             rounded
           "
-        >
-          Cerrar
-        </button>
+              >
+                Cerrar
+              </button>
 
-        {isAdmin() && (
-          <>
-            <button
-              onClick={() => {
-                setOpenInfoModal(false);
+              {isAdmin() && (
+                <>
+                  <button
+                    onClick={() => {
+                      setOpenInfoModal(false);
 
-                if (selectedSchedule) {
-                  handleEdit(selectedSchedule);
-                }
-              }}
-              className="
+                      if (selectedSchedule) {
+                        handleEdit(selectedSchedule);
+                      }
+                    }}
+                    className="
                 w-28
                 px-4
                 py-2
@@ -1777,19 +1436,19 @@ Planes disponibles
                 bg-[#0cc0df]
                 text-white
               "
-            >
-              Editar
-            </button>
+                  >
+                    Editar
+                  </button>
 
-            <button
-              onClick={() => {
-                setOpenInfoModal(false);
+                  <button
+                    onClick={() => {
+                      setOpenInfoModal(false);
 
-                if (selectedSchedule) {
-                  handleDelete(selectedSchedule);
-                }
-              }}
-              className="
+                      if (selectedSchedule) {
+                        handleDelete(selectedSchedule);
+                      }
+                    }}
+                    className="
                 w-28
                 px-4
                 py-2
@@ -1797,15 +1456,15 @@ Planes disponibles
                 bg-red-500
                 text-white
               "
-            >
-              Eliminar
-            </button>
+                  >
+                    Eliminar
+                  </button>
+                </>
+              )}
+            </div>
           </>
         )}
-      </div>
-    </>
-  )}
-</Modal>
+      </Modal>
     </>
   );
 }

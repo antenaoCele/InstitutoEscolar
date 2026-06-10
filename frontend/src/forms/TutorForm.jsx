@@ -4,10 +4,11 @@ import SubmitButton from "../components/form/SubmitButton";
 import { isAdmin } from "../utils/auth";
 import { teacherService, tutorService } from "../services/tutor.service";
 
-export default function TutorForm({ 
-  initialData = {}, 
+export default function TutorForm({
+  initialData = {},
   isEdit = false,
-  onSuccess, }) {
+  onSuccess,
+}) {
   if (!isAdmin()) {
     return <p className="text-red-500">No autorizado</p>;
   }
@@ -46,7 +47,7 @@ export default function TutorForm({
       dni: initialData.dni || "",
       phone: initialData.phone || "",
     },
-    validate
+    validate,
   );
 
   const submitFn = async (data) => {

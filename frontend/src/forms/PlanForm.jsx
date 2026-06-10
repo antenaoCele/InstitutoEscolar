@@ -36,7 +36,7 @@ export default function PlanForm({
     {
       name: initialData.name || "",
     },
-    validate
+    validate,
   );
 
   const submitFn = async (data) => {

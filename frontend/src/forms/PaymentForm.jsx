@@ -30,17 +30,13 @@ export default function PaymentForm({ initialData = {}, isEdit = false }) {
   const validate = (data) => {
     const errors = {};
 
-    if (!data.student_plan_id)
-      errors.student_plan_id = "Plan requerido";
+    if (!data.student_plan_id) errors.student_plan_id = "Plan requerido";
 
-    if (!data.amount)
-      errors.amount = "Monto requerido";
+    if (!data.amount) errors.amount = "Monto requerido";
 
-    if (!data.payment_date)
-      errors.payment_date = "Fecha requerida";
+    if (!data.payment_date) errors.payment_date = "Fecha requerida";
 
-    if (!data.payment_method)
-      errors.payment_method = "Método requerido";
+    if (!data.payment_method) errors.payment_method = "Método requerido";
 
     return errors;
   };
@@ -60,7 +56,7 @@ export default function PaymentForm({ initialData = {}, isEdit = false }) {
       payment_date: initialData.payment_date || "",
       payment_method: initialData.payment_method || "",
     },
-    validate
+    validate,
   );
 
   const submitFn = async (data) => {
@@ -73,7 +69,6 @@ export default function PaymentForm({ initialData = {}, isEdit = false }) {
 
   return (
     <form onSubmit={(e) => handleSubmit(e, submitFn)}>
-      
       <Select
         label="Plan del alumno"
         name="student_plan_id"
@@ -87,7 +82,6 @@ export default function PaymentForm({ initialData = {}, isEdit = false }) {
         hint={errors.student_plan_id}
       />
 
-     
       <div className="mb-3">
         <label className="block text-sm font-medium mb-1">Monto</label>
         <input
@@ -102,11 +96,8 @@ export default function PaymentForm({ initialData = {}, isEdit = false }) {
         )}
       </div>
 
-      
       <div className="mb-3">
-        <label className="block text-sm font-medium mb-1">
-          Fecha de pago
-        </label>
+        <label className="block text-sm font-medium mb-1">Fecha de pago</label>
         <input
           type="date"
           name="payment_date"
@@ -115,13 +106,10 @@ export default function PaymentForm({ initialData = {}, isEdit = false }) {
           className="w-full border rounded-lg p-2"
         />
         {errors.payment_date && (
-          <p className="text-xs text-red-500">
-            {errors.payment_date}
-          </p>
+          <p className="text-xs text-red-500">{errors.payment_date}</p>
         )}
       </div>
 
-      
       <Select
         label="Método de pago"
         name="payment_method"
@@ -140,8 +128,6 @@ export default function PaymentForm({ initialData = {}, isEdit = false }) {
         loading={loading}
         text={isEdit ? "Actualizar Pago" : "Registrar Pago"}
       </Button>
-        
-    
 
       {error && <p className="text-red-500">{error}</p>}
       {success && (

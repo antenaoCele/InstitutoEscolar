@@ -60,8 +60,7 @@ export default function StudentPlanForm({
     if (!data.student_id) errors.student_id = "Alumno requerido";
     if (!data.plan_id) errors.plan_id = "Plan requerido";
     if (!data.teacher_id) errors.teacher_id = "Docente requerido";
-    if (!data.start_date)
-      errors.start_date = "Fecha de inicio requerida";
+    if (!data.start_date) errors.start_date = "Fecha de inicio requerida";
 
     return errors;
   };
@@ -82,7 +81,7 @@ export default function StudentPlanForm({
       start_date: initialData.start_date || "",
       end_date: initialData.end_date || "",
     },
-    validate
+    validate,
   );
 
   const submitFn = async (data) => {
@@ -104,9 +103,7 @@ export default function StudentPlanForm({
   return (
     <form onSubmit={(e) => handleSubmit(e, submitFn)}>
       <h2 className="text-lg font-semibold mb-4">
-        {isEdit
-          ? "Editar Asignación de Plan"
-          : "Nueva asignación de Plan"}
+        {isEdit ? "Editar Asignación de Plan" : "Nueva asignación de Plan"}
       </h2>
 
       <Select
@@ -168,20 +165,14 @@ export default function StudentPlanForm({
 
       <SubmitButton
         loading={loading}
-        text={
-          isEdit
-            ? "Actualizar Plan del Alumno"
-            : "Asignar Plan"
-        }
+        text={isEdit ? "Actualizar Plan del Alumno" : "Asignar Plan"}
       />
 
       {error && <p className="text-red-500 mt-2">{error}</p>}
 
       {success && (
         <p className="text-green-500 mt-2">
-          {isEdit
-            ? "Actualizado correctamente"
-            : "Creado correctamente"}
+          {isEdit ? "Actualizado correctamente" : "Creado correctamente"}
         </p>
       )}
     </form>

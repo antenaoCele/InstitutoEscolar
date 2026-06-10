@@ -6,10 +6,10 @@ import { isAdmin } from "../utils/auth";
 
 import { studentService } from "../services/student.service";
 
-export default function StudentForm({ 
-  initialData = {}, 
-  isEdit = false,  
-  onSuccess, 
+export default function StudentForm({
+  initialData = {},
+  isEdit = false,
+  onSuccess,
 }) {
   if (!isAdmin()) {
     return <p className="text-red-500">No autorizado</p>;
@@ -17,29 +17,29 @@ export default function StudentForm({
 
   const validate = (data) => {
     const errors = {};
-  
-      if (!data.first_name) {
-        errors.first_name = "Nombre requerido";
-      } 
-      if (!data.last_name) {
-        errors.last_name = "Apellido requerido";
-      }
-      if (!data.dni) {
-        errors.dni = "DNI requerido";
-      }
-      if (!data.school) {
-        errors.school = "Escuela requerida";
-      }
-      if (!data.birth_date) {
-        errors.birth_date = "Fecha requerida";
-      }
-      if (!data.level) {
-        errors.level = "Nivel requerido";
-      }
-      if (!data.grade) {
-        errors.grade = "Grado requerido";
-      }
-   
+
+    if (!data.first_name) {
+      errors.first_name = "Nombre requerido";
+    }
+    if (!data.last_name) {
+      errors.last_name = "Apellido requerido";
+    }
+    if (!data.dni) {
+      errors.dni = "DNI requerido";
+    }
+    if (!data.school) {
+      errors.school = "Escuela requerida";
+    }
+    if (!data.birth_date) {
+      errors.birth_date = "Fecha requerida";
+    }
+    if (!data.level) {
+      errors.level = "Nivel requerido";
+    }
+    if (!data.grade) {
+      errors.grade = "Grado requerido";
+    }
+
     return errors;
   };
 
@@ -61,7 +61,7 @@ export default function StudentForm({
       level: initialData.level || "",
       grade: initialData.grade || "",
     },
-    validate
+    validate,
   );
 
   const submitFn = async (data) => {
@@ -76,10 +76,8 @@ export default function StudentForm({
     return res;
   };
 
-  
   return (
     <form onSubmit={(e) => handleSubmit(e, submitFn)}>
-
       <h2 className="text-lg font-semibold mb-4">
         {isEdit ? "Editar Alumno" : "Nuevo Alumno"}
       </h2>

@@ -86,17 +86,14 @@ export default function UserInfoCard({ userId }) {
         delete payload.password;
       }
 
-      const res = await fetch(
-        `http://localhost:3000/users/${userId}`,
-        {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify(payload),
-        }
-      );
+      const res = await fetch(`http://localhost:3000/users/${userId}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(payload),
+      });
 
       const data = await res.json();
 
@@ -126,9 +123,7 @@ export default function UserInfoCard({ userId }) {
 
   return (
     <div className="p-5 border rounded-2xl">
-      <h4 className="text-lg font-semibold mb-4">
-        Información Personal
-      </h4>
+      <h4 className="text-lg font-semibold mb-4">Información Personal</h4>
 
       <div className="grid grid-cols-2 gap-4">
         <Info label="Nombre" value={user.first_name} />
@@ -146,7 +141,6 @@ export default function UserInfoCard({ userId }) {
           <h4 className="text-xl mb-4">Editar usuario</h4>
 
           <div className="grid gap-4">
-
             <Field
               label="Nombre"
               name="first_name"
@@ -187,7 +181,6 @@ export default function UserInfoCard({ userId }) {
                 disabled={user.role === "docente"}
               />
             </div>
-
           </div>
 
           <div className="flex gap-2 mt-6">

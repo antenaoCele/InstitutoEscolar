@@ -54,7 +54,7 @@ export default function ScheduleForm({ initialData = {}, isEdit = false }) {
       day: initialData.day || "",
       classroom: initialData.classroom || "",
     },
-    validate
+    validate,
   );
 
   const submitFn = async (data) => {
@@ -67,7 +67,6 @@ export default function ScheduleForm({ initialData = {}, isEdit = false }) {
 
   return (
     <form onSubmit={(e) => handleSubmit(e, submitFn)}>
-  
       <Select
         label="Profesor"
         name="teacher_id"
@@ -81,7 +80,6 @@ export default function ScheduleForm({ initialData = {}, isEdit = false }) {
         hint={errors.teacher_id}
       />
 
-      
       <Input
         label="Hora inicio"
         name="start_time"
@@ -92,7 +90,6 @@ export default function ScheduleForm({ initialData = {}, isEdit = false }) {
         hint={errors.start_time}
       />
 
-      
       <Select
         label="Día"
         name="day"
@@ -110,7 +107,6 @@ export default function ScheduleForm({ initialData = {}, isEdit = false }) {
         hint={errors.day}
       />
 
-      
       <Input
         label="Aula"
         name="classroom"
@@ -124,8 +120,6 @@ export default function ScheduleForm({ initialData = {}, isEdit = false }) {
         loading={loading}
         text={isEdit ? "Actualizar Horario" : "Crear Horario"}
       </Button>
-        
-      
 
       {error && <p className="text-red-500">{error}</p>}
       {success && (

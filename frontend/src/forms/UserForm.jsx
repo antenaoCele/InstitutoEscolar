@@ -11,7 +11,6 @@ export default function UserForm({
   isEdit = false,
   onSuccess,
 }) {
-
   const validate = (data) => {
     const errors = {};
 
@@ -55,7 +54,7 @@ export default function UserForm({
       password: "", // nunca precargar
       role: initialData.role || "DOCENTE",
     },
-    validate
+    validate,
   );
 
   const submitFn = async (data) => {
@@ -88,7 +87,6 @@ export default function UserForm({
 
   return (
     <form onSubmit={(e) => handleSubmit(e, submitFn)}>
-
       <Input
         label="Nombre"
         name="first_name"
@@ -123,10 +121,7 @@ export default function UserForm({
         value={formData.password}
         onChange={handleChange}
         error={errors.password}
-        hint={
-          errors.password ||
-          (isEdit ? "Dejar vacío para no cambiar" : "")
-        }
+        hint={errors.password || (isEdit ? "Dejar vacío para no cambiar" : "")}
       />
 
       {isAdmin() && (
