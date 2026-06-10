@@ -53,7 +53,16 @@ const navItems = [
   {
     icon: <PageIcon />,
     name: "Planes",
-    path: "/plans",
+    subItems: [
+      {
+        name: "Planes actuales",
+        path: "/plans?type=current",
+      },
+      {
+        name: "Historial de planes",
+        path: "/plans?type=history",
+      },
+    ],
   },
   {
     icon: <CalenderIcon />,
@@ -101,7 +110,9 @@ const AppSidebar = () => {
 
   const filteredNavItems = isCurrentUserAdmin
     ? navItems
-    : navItems.filter((item) => item.name !== "Usuarios");
+    : navItems.filter(
+        (item) => item.name !== "Usuarios" && item.name !== "Planes",
+      );
   const {
     isExpanded,
     isMobileOpen,
