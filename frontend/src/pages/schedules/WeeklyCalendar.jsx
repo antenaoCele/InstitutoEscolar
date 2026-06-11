@@ -7,45 +7,45 @@ import { Modal } from "../../components/ui/Modal";
 import { isAdmin } from "../../utils/auth";
 
 export default function WeeklyCalendar() {
+  // Datos
   const [teachers, setTeachers] = useState([]);
-  const [selectedTeacher, setSelectedTeacher] = useState("");
-
+  const [students, setStudents] = useState([]);
   const [schedules, setSchedules] = useState([]);
-
-  const [openInfoModal, setOpenInfoModal] = useState(false);
-
-  const [selectedScheduleInfo, setSelectedScheduleInfo] = useState(null);
-
   const [scheduleStudents, setScheduleStudents] = useState([]);
 
-  const [openCreateModal, setOpenCreateModal] = useState(false);
-
-  const [openEditModal, setOpenEditModal] = useState(false);
-  const [openDeleteModal, setOpenDeleteModal] = useState(false);
-
-  const [selectedDay, setSelectedDay] = useState("");
-  const [selectedTime, setSelectedTime] = useState("");
-
-  const [teacherId, setTeacherId] = useState("");
-  const [classroom, setClassroom] = useState("");
+  // Filtros del calendario
+  const [selectedTeacher, setSelectedTeacher] = useState("");
+  const [selectedStudent, setSelectedStudent] = useState("");
   const [selectedClassroom, setSelectedClassroom] = useState("");
 
-  const [selectedStudents, setSelectedStudents] = useState([]);
+  // Modales
+  const [openCreateModal, setOpenCreateModal] = useState(false);
+  const [openEditModal, setOpenEditModal] = useState(false);
+  const [openDeleteModal, setOpenDeleteModal] = useState(false);
+  const [openInfoModal, setOpenInfoModal] = useState(false);
 
-  const [selectedPlans, setSelectedPlans] = useState([]);
+  // Horario seleccionado
+  const [selectedSchedule, setSelectedSchedule] = useState(null);
+  const [selectedScheduleInfo, setSelectedScheduleInfo] = useState(null);
 
-  const [selectedStudentPlans, setSelectedStudentPlans] = useState([]);
+  // Formulario
+  const [teacherId, setTeacherId] = useState("");
+  const [selectedDay, setSelectedDay] = useState("");
+  const [selectedTime, setSelectedTime] = useState("");
+  const [classroom, setClassroom] = useState("");
 
+  // Alumno a agregar
   const [selectedStudentId, setSelectedStudentId] = useState("");
 
-  const [selectedStudent, setSelectedStudent] = useState("");
+  // Alumnos agregados al horario
+  const [selectedStudents, setSelectedStudents] = useState([]);
 
-  const [students, setStudents] = useState([]);
+  // Planes y materias de esos alumnos
+  const [selectedStudentPlans, setSelectedStudentPlans] = useState([]);
 
+  // Errores
   const [errorsCreate, setErrorsCreate] = useState({});
   const [errorsEdit, setErrorsEdit] = useState({});
-
-  const [selectedSchedule, setSelectedSchedule] = useState(null);
 
   const fetchTeachers = async () => {
     try {
@@ -93,7 +93,7 @@ export default function WeeklyCalendar() {
     }
   };
 
-  const handleAddStudent = async () => {
+  const handleAddStudent = async (isEdit = false) => {
     if (!selectedStudentId) return;
 
     const student = students.find((s) => s.id === Number(selectedStudentId));
@@ -104,24 +104,47 @@ export default function WeeklyCalendar() {
 
     if (exists) return;
 
+    console.log("student:", student.id);
+    console.log("teacher:", teacherId);
+
     const response = await studentService.getPlans(student.id, teacherId);
 
+    console.log(response);
+    console.log(response.data);
     console.log(response.data.data);
 
     if (response.data.data.length === 0) {
-      setErrorsCreate((prev) => ({
-        ...prev,
-        plans: `${student.last_name}, ${student.first_name} no posee planes compatibles con el docente seleccionado.`,
-      }));
+      if (isEdit) {
+        setErrorsEdit((prev) => ({
+          ...prev,
+          plans: `${student.last_name}, ${student.first_name} no posee planes compatibles con el docente seleccionado.`,
+        }));
+      } else {
+        setErrorsCreate((prev) => ({
+          ...prev,
+          plans: `${student.last_name}, ${student.first_name} no posee planes compatibles con el docente seleccionado.`,
+        }));
+      }
+
+      setSelectedStudentId("");
 
       return;
     }
 
     // Limpiar el mensaje de error
-    setErrorsCreate((prev) => ({
-      ...prev,
-      plans: "",
-    }));
+    if (isEdit) {
+      setErrorsEdit((prev) => ({
+        ...prev,
+        plans: "",
+        studentConflict: "",
+      }));
+    } else {
+      setErrorsCreate((prev) => ({
+        ...prev,
+        plans: "",
+        studentConflict: "",
+      }));
+    }
 
     // Agregar alumno
     setSelectedStudents((prev) => [...prev, student]);
@@ -137,6 +160,8 @@ export default function WeeklyCalendar() {
           studentId: student.id,
           studentName: `${student.last_name}, ${student.first_name}`,
           plans: response.data.data,
+          selectedPlans:
+            response.data.data.length === 1 ? [response.data.data[0]] : [],
         },
       ]);
     }
@@ -144,25 +169,47 @@ export default function WeeklyCalendar() {
     setSelectedStudentId("");
   };
 
-  const handleRemoveStudent = (id) => {
-    setSelectedStudents((prev) => prev.filter((s) => s.id !== id));
+  const handleRemoveStudent = (studentId) => {
+    setSelectedStudents((prev) =>
+      prev.filter((student) => student.id !== studentId),
+    );
 
     setSelectedStudentPlans((prev) =>
-      prev.filter((student) => student.studentId !== id),
+      prev.filter((student) => student.studentId !== studentId),
     );
   };
 
-  const handlePlanToggle = (plan) => {
-    const exists = selectedPlans.some((p) => p.id === plan.id);
+  const handlePlanToggle = (studentId, plan) => {
+    setSelectedStudentPlans((prev) =>
+      prev.map((student) => {
+        if (student.studentId !== studentId) {
+          return student;
+        }
 
-    if (exists) {
-      setSelectedPlans((prev) => prev.filter((p) => p.id !== plan.id));
-    } else {
-      setSelectedPlans((prev) => [...prev, plan]);
+        const exists = student.selectedPlans.some((p) => p.id === plan.id);
 
-      console.log(plan);
-    }
+        return {
+          ...student,
+          selectedPlans: exists
+            ? student.selectedPlans.filter((p) => p.id !== plan.id)
+            : [...student.selectedPlans, plan],
+        };
+      }),
+    );
   };
+
+  useEffect(() => {
+    setSelectedStudentId("");
+
+    setSelectedStudents([]);
+    setSelectedStudentPlans([]);
+
+    setErrorsCreate((prev) => ({
+      ...prev,
+      plans: "",
+      studentConflict: "",
+    }));
+  }, [teacherId]);
 
   useEffect(() => {
     fetchTeachers();
@@ -181,7 +228,6 @@ export default function WeeklyCalendar() {
 
     setSelectedStudents([]);
     setSelectedStudentPlans([]);
-    setSelectedPlans([]);
 
     setErrorsCreate({});
     setErrorsEdit({});
@@ -250,19 +296,37 @@ export default function WeeklyCalendar() {
     } catch (error) {
       console.error(error);
 
+      alert(JSON.stringify(error.response?.data, null, 2));
+
       const backendErrors = error.response?.data?.errors;
 
       if (backendErrors?.length) {
-        const formatted = mapErrors(backendErrors);
+        const formatted = {};
 
-        formatted.general = backendErrors[0].msg;
+        backendErrors.forEach((e) => {
+          if (
+            e.msg ===
+            "El horario se superpone con otro del mismo docente o aula."
+          ) {
+            formatted.start_time = e.msg;
+          } else if (
+            e.msg ===
+            "El alumno ya está inscripto en otra clase en ese mismo horario."
+          ) {
+            formatted.studentConflict = e.msg;
+          } else if (e.msg === "La clase ya alcanzó el máximo de 5 alumnos.") {
+            formatted.general = e.msg;
+          } else {
+            formatted[e.path] = e.msg;
+          }
+        });
 
         setErrorsCreate(formatted);
       }
     }
   };
 
-  const handleEdit = (schedule) => {
+  const handleEdit = async (schedule) => {
     setSelectedSchedule(schedule);
 
     setTeacherId(schedule.teacher_id);
@@ -283,6 +347,24 @@ export default function WeeklyCalendar() {
         last_name: student.last_name,
       })),
     );
+
+    const plans = await Promise.all(
+      studentsForSchedule.map(async (student) => {
+        const response = await studentService.getPlans(
+          student.student_id,
+          schedule.teacher_id,
+        );
+
+        return {
+          studentId: student.student_id,
+          studentName: `${student.last_name}, ${student.first_name}`,
+          plans: response.data.data,
+          selectedPlans: response.data.data,
+        };
+      }),
+    );
+
+    setSelectedStudentPlans(plans);
 
     setErrorsEdit({});
 
@@ -355,12 +437,30 @@ export default function WeeklyCalendar() {
     } catch (error) {
       console.error(error);
 
+      alert(JSON.stringify(error.response?.data, null, 2));
+
       const backendErrors = error.response?.data?.errors;
 
       if (backendErrors?.length) {
-        const formatted = mapErrors(backendErrors);
+        const formatted = {};
 
-        formatted.general = backendErrors[0].msg;
+        backendErrors.forEach((e) => {
+          if (
+            e.msg ===
+            "El horario se superpone con otro del mismo docente o aula."
+          ) {
+            formatted.start_time = e.msg;
+          } else if (
+            e.msg ===
+            "El alumno ya está inscripto en otra clase en ese mismo horario."
+          ) {
+            formatted.studentConflict = e.msg;
+          } else if (e.msg === "La clase ya alcanzó el máximo de 5 alumnos.") {
+            formatted.general = e.msg;
+          } else {
+            formatted[e.path] = e.msg;
+          }
+        });
 
         setErrorsEdit(formatted);
       }
@@ -674,6 +774,23 @@ export default function WeeklyCalendar() {
       >
         <h2 className="text-xl font-bold mb-8">Crear Horario</h2>
 
+        {/* {errorsCreate.general && (
+          <div
+            className="
+              mb-6
+              p-3
+              rounded
+              border
+              border-red-300
+              bg-red-50
+              text-red-600
+              text-sm
+            "
+          >
+            {errorsCreate.general}
+          </div>
+        )} */}
+
         {/* Docente */}
 
         <div className="flex flex-col mb-4">
@@ -834,7 +951,7 @@ export default function WeeklyCalendar() {
 
             <button
               type="button"
-              onClick={handleAddStudent}
+              onClick={() => handleAddStudent(false)}
               className="
                 px-4
                 py-2
@@ -885,60 +1002,83 @@ export default function WeeklyCalendar() {
             </div>
           ))}
 
-          <h3 className="font-semibold mt-6 mb-3">Planes disponibles</h3>
           {errorsCreate.plans && (
-            <div className="text-red-500 text-sm mt-2">
+            <div className="mt-4 text-sm text-red-500">
               {errorsCreate.plans}
             </div>
           )}
 
           {selectedStudentPlans.map((student) => (
             <div
-              key={`${student.studentId}-${student.studentName}`}
+              key={student.studentId}
               className="
-      border
-      rounded
-      p-3
-      mb-3
-    "
+                border
+                rounded-lg
+                p-4
+                mb-4
+                bg-gray-50
+              "
             >
-              <div className="font-semibold">{student.studentName}</div>
+              <div className="flex justify-between items-center">
+                <div className="font-semibold">{student.studentName}</div>
 
-              {student.plans.map((plan) => (
-                <div key={`${student.studentId}-${plan.id}`}>
-                  <label>
-                    <input
-                      type="checkbox"
-                      checked={selectedPlans.some((p) => p.id === plan.id)}
-                      onChange={() => handlePlanToggle(plan)}
-                    />{" "}
-                    {plan.name}
-                  </label>
-                </div>
-              ))}
-            </div>
-          ))}
-
-          {selectedPlans.length > 0 && (
-            <>
-              <h3 className="font-semibold mt-6 mb-3">Materias</h3>
-
-              <div
-                className="
-        border
-        rounded
-        p-3
-        space-y-2
-      "
-              >
-                {[
-                  ...new Set(selectedPlans.flatMap((plan) => plan.subjects)),
-                ].map((subject) => (
-                  <div key={subject}>• {subject}</div>
+                <button
+                  type="button"
+                  className="text-red-500 font-bold"
+                  onClick={() => handleRemoveStudent(student.studentId)}
+                >
+                  ✕
+                </button>
+              </div>
+              <div className="mt-4 font-semibold">Planes disponibles</div>
+              <div className="space-y-2 mt-2">
+                {student.plans.map((plan) => (
+                  <div key={plan.id}>
+                    <label>
+                      <input
+                        type="checkbox"
+                        checked={student.selectedPlans.some(
+                          (p) => p.id === plan.id,
+                        )}
+                        onChange={() =>
+                          handlePlanToggle(student.studentId, plan)
+                        }
+                      />{" "}
+                      {plan.name}
+                    </label>
+                  </div>
                 ))}
               </div>
-            </>
-          )}
+              {student.selectedPlans.length > 0 && (
+                <>
+                  <div className="mt-4 font-semibold">Materias</div>
+
+                  <div
+                    className="
+                      border
+                      rounded
+                      p-3
+                      mt-2
+                      space-y-1
+                    "
+                  >
+                    {[
+                      ...new Set(
+                        student.selectedPlans.flatMap((plan) => plan.subjects),
+                      ),
+                    ].map((subject) => (
+                      <div key={subject}>• {subject}</div>
+                    ))}
+                  </div>
+                </>
+              )}
+              {errorsCreate.studentConflict && (
+                <div className="mt-4 text-sm text-red-500">
+                  {errorsCreate.studentConflict}
+                </div>
+              )}
+            </div>
+          ))}
         </div>
 
         <div className="flex justify-end gap-4 mt-10">
@@ -958,9 +1098,9 @@ export default function WeeklyCalendar() {
             Cancelar
           </button>
 
-          {errorsCreate.general && (
+          {/* {errorsCreate.general && (
             <p className="text-red-500 text-sm mb-2">{errorsCreate.general}</p>
-          )}
+          )} */}
           <button
             onClick={handleCreate}
             className="
@@ -986,6 +1126,23 @@ export default function WeeklyCalendar() {
         }}
       >
         <h2 className="text-xl font-bold mb-8">Editar Horario</h2>
+
+        {/* {errorsEdit.general && (
+          <div
+            className="
+              mb-6
+              p-3
+              rounded
+              border
+              border-red-300
+              bg-red-50
+              text-red-600
+              text-sm
+            "
+          >
+            {errorsEdit.general}
+          </div>
+        )} */}
 
         {/* Docente */}
 
@@ -1139,7 +1296,7 @@ export default function WeeklyCalendar() {
 
             <button
               type="button"
-              onClick={handleAddStudent}
+              onClick={() => handleAddStudent(true)}
               className="
                 px-4
                 py-2
@@ -1189,55 +1346,85 @@ export default function WeeklyCalendar() {
               </button>
             </div>
           ))}
-          <h3 className="font-semibold mt-6 mb-3">Planes disponibles</h3>
+
+          {errorsEdit.plans && (
+            <div className="mt-4 text-sm text-red-500">{errorsEdit.plans}</div>
+          )}
 
           {selectedStudentPlans.map((student) => (
             <div
-              key={`${student.studentId}-${student.studentName}`}
+              key={student.studentId}
               className="
-      border
-      rounded
-      p-3
-      mb-3
-    "
+                border
+                rounded-lg
+                p-4
+                mb-4
+                bg-gray-50
+              "
             >
-              <div className="font-semibold">{student.studentName}</div>
+              <div className="flex justify-between items-center">
+                <div className="font-semibold">{student.studentName}</div>
 
-              {student.plans.map((plan) => (
-                <div key={`${student.studentId}-${plan.id}`}>
-                  <label>
-                    <input
-                      type="checkbox"
-                      checked={selectedPlans.some((p) => p.id === plan.id)}
-                      onChange={() => handlePlanToggle(plan)}
-                    />{" "}
-                    {plan.name}
-                  </label>
-                </div>
-              ))}
-            </div>
-          ))}
+                <button
+                  type="button"
+                  className="text-red-500 font-bold"
+                  onClick={() => handleRemoveStudent(student.studentId)}
+                >
+                  ✕
+                </button>
+              </div>
 
-          {selectedPlans.length > 0 && (
-            <>
-              <h3 className="font-semibold mt-6 mb-3">Materias</h3>
+              <div className="mt-4 font-semibold">Planes disponibles</div>
 
-              <div
-                className="
-        border
-        rounded
-        p-3
-        space-y-2
-      "
-              >
-                {[
-                  ...new Set(selectedPlans.flatMap((plan) => plan.subjects)),
-                ].map((subject) => (
-                  <div key={subject}>• {subject}</div>
+              <div className="space-y-2 mt-2">
+                {student.plans.map((plan) => (
+                  <div key={plan.id}>
+                    <label>
+                      <input
+                        type="checkbox"
+                        checked={student.selectedPlans.some(
+                          (p) => p.id === plan.id,
+                        )}
+                        onChange={() =>
+                          handlePlanToggle(student.studentId, plan)
+                        }
+                      />{" "}
+                      {plan.name}
+                    </label>
+                  </div>
                 ))}
               </div>
-            </>
-          )}
+
+              {student.selectedPlans.length > 0 && (
+                <>
+                  <div className="mt-4 font-semibold">Materias</div>
+
+                  <div
+                    className="
+                      border
+                      rounded
+                      p-3
+                      mt-2
+                      space-y-1
+                    "
+                  >
+                    {[
+                      ...new Set(
+                        student.selectedPlans.flatMap((plan) => plan.subjects),
+                      ),
+                    ].map((subject) => (
+                      <div key={subject}>• {subject}</div>
+                    ))}
+                  </div>
+                </>
+              )}
+              {errorsEdit.studentConflict && (
+                <div className="mt-4 text-sm text-red-500">
+                  {errorsEdit.studentConflict}
+                </div>
+              )}
+            </div>
+          ))}
         </div>
 
         <div className="flex justify-end gap-4 mt-10">
@@ -1258,9 +1445,9 @@ export default function WeeklyCalendar() {
             Cancelar
           </button>
 
-          {errorsEdit.general && (
+          {/* {errorsEdit.general && (
             <p className="text-red-500 text-sm mb-2">{errorsEdit.general}</p>
-          )}
+          )} */}
           <button
             onClick={handleUpdate}
             className="
@@ -1327,11 +1514,11 @@ export default function WeeklyCalendar() {
 
               <div
                 className="
-            border
-            rounded-lg
-            p-4
-            bg-gray-50
-          "
+                  border
+                  rounded-lg
+                  p-4
+                  bg-gray-50
+                "
               >
                 <div className="font-semibold text-black">
                   {selectedScheduleInfo.teacher}
@@ -1351,11 +1538,11 @@ export default function WeeklyCalendar() {
                 <div
                   key={plan.id}
                   className="
-              border
-              rounded-lg
-              p-4
-              bg-gray-50
-            "
+                    border
+                    rounded-lg
+                    p-4
+                    bg-gray-50
+                  "
                 >
                   <div className="font-semibold text-black">{plan.name}</div>
 
@@ -1378,11 +1565,11 @@ export default function WeeklyCalendar() {
                 <div
                   key={student.id}
                   className="
-              border
-              rounded-lg
-              p-4
-              bg-gray-50
-            "
+                    border
+                    rounded-lg
+                    p-4
+                    bg-gray-50
+                  "
                 >
                   <div className="font-semibold">{student.name}</div>
 
@@ -1408,12 +1595,12 @@ export default function WeeklyCalendar() {
                   setOpenInfoModal(false);
                 }}
                 className="
-            w-28
-            px-4
-            py-2
-            border
-            rounded
-          "
+                  w-28
+                  px-4
+                  py-2
+                  border
+                  rounded
+                "
               >
                 Cerrar
               </button>
@@ -1429,13 +1616,13 @@ export default function WeeklyCalendar() {
                       }
                     }}
                     className="
-                w-28
-                px-4
-                py-2
-                rounded
-                bg-[#0cc0df]
-                text-white
-              "
+                      w-28
+                      px-4
+                      py-2
+                      rounded
+                      bg-[#0cc0df]
+                      text-white
+                    "
                   >
                     Editar
                   </button>
@@ -1449,13 +1636,13 @@ export default function WeeklyCalendar() {
                       }
                     }}
                     className="
-                w-28
-                px-4
-                py-2
-                rounded
-                bg-red-500
-                text-white
-              "
+                      w-28
+                      px-4
+                      py-2
+                      rounded
+                      bg-red-500
+                      text-white
+                    "
                   >
                     Eliminar
                   </button>
