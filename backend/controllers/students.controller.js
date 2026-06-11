@@ -196,6 +196,9 @@ export const studentsController = {
         [studentId, teacherId],
       );
 
+      console.log("studentId:", studentId);
+      console.log("teacherId:", teacherId);
+
       console.log(rows);
 
       const plans = [];
