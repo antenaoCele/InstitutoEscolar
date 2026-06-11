@@ -137,54 +137,46 @@ export const validateScheduleConflict = (table = "schedules") => [
 SCHEDULES_STUDEMTS CONFLICT
 ========================================================= */
 export const validateStudentScheduleConflict = () => [
-  body("student_id").custom(async (student_id, { req }) => {
-    const { schedule_id } = req.body;
-    const id = req.params?.id ?? null;
+  body("students").custom(async (students, { req }) => {
+    const { day, start_time } = req.body;
 
-    if (!student_id || !schedule_id) return true;
+    if (!students?.length || !day || !start_time) {
+      return true;
+    }
 
-    const [scheduleRows] = await db.execute(
+    const end_time = await db.execute(
       `
-      SELECT day, start_time, end_time
-      FROM schedules
-      WHERE id = ?
+      SELECT ADDTIME(?, '01:30:00') AS end_time
       `,
-      [schedule_id],
+      [start_time],
     );
 
-    if (!scheduleRows.length) return true;
+    const newEndTime = end_time[0][0].end_time;
 
-    const newSchedule = scheduleRows[0];
+    for (const student_id of students) {
+      const [rows] = await db.execute(
+        `
+        SELECT ss.id
+        FROM schedule_students ss
 
-    const [rows] = await db.execute(
-      `
-      SELECT ss.id
-      FROM schedule_students ss
-      JOIN schedules s ON ss.schedule_id = s.id
-      WHERE ss.student_id = ?
-      AND ss.schedule_id != ?
-      AND s.day = ?
-      AND (? IS NULL OR ss.id != ?)
-      AND (
-        ? < s.end_time
-        AND ? > s.start_time
-      )
-      `,
-      [
-        student_id,
-        schedule_id,
-        newSchedule.day,
-        id,
-        id,
-        newSchedule.start_time,
-        newSchedule.end_time,
-      ],
-    );
+        JOIN schedules s
+          ON s.id = ss.schedule_id
 
-    if (rows.length) {
-      throw new Error(
-        "El alumno ya está inscripto en otra clase en ese mismo horario.",
+        WHERE ss.student_id = ?
+        AND s.day = ?
+        AND (
+          ? < s.end_time
+          AND ? > s.start_time
+        )
+        `,
+        [student_id, day, start_time, newEndTime],
       );
+
+      if (rows.length) {
+        throw new Error(
+          "El alumno ya está inscripto en otra clase en ese mismo horario.",
+        );
+      }
     }
 
     return true;
