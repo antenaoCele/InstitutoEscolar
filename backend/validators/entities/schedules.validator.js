@@ -1,6 +1,7 @@
 import {
   validateForeignId,
   validateScheduleConflict,
+  validateStudentScheduleConflict,
 } from "../rules/database.rules.js";
 
 import {
@@ -20,6 +21,8 @@ export const validateSchedules = [
 
   ...validateScheduleConflict("schedules"),
 
+  ...validateStudentScheduleConflict(),
+
   ...validateDay("day"),
   ...validateClassroom("classroom"),
 ];
@@ -32,6 +35,10 @@ export const validateEditSchedules = [
   ...validateStartTime("start_time", true),
 
   ...validateScheduleConflict("schedules"),
+
+  ...validateScheduleConflict("schedules"),
+
+  ...validateStudentScheduleConflict(),
 
   ...validateDay("day", true),
   ...validateClassroom("classroom", true),
