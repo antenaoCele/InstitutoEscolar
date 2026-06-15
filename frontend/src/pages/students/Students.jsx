@@ -46,12 +46,6 @@ export function Students() {
   const params = new URLSearchParams(location.search);
   const status = params.get("status") || "all";
 
-  const inputClass = (error) =>
-    `w-full p-2 border rounded mb-1 
-    border-gray-300
-    focus:outline-none focus:ring-1 focus:ring-[#0cc0df] focus:border-[#0cc0df]
-    ${error ? "border-red-500 focus:ring-red-500 focus:border-red-500" : ""}`;
-
   const buttonClass = "cursor-pointer transition transform hover:scale-105";
 
   const resetForm = () => {
@@ -290,28 +284,28 @@ export function Students() {
   return (
     <>
       <div className="flex gap-3 mb-4 flex-wrap">
-        <input
+        <Input
           placeholder="Buscar por nombre o apellido"
           value={searchFirstLastName}
           onChange={(e) => setSearchFirstLastName(e.target.value)}
-          className="p-2 border border-gray-300 rounded w-60"
+          className="w-60"
         />
 
-        <input
+        <Input
           placeholder="Buscar por DNI"
           value={searchDNI}
           onChange={(e) => setSearchDNI(e.target.value)}
-          className="p-2 border border-gray-300 rounded w-40"
+          className="w-40"
         />
 
-        <input
+        <Input
           placeholder="Buscar por colegio o universidad"
           value={searchSchool}
           onChange={(e) => setSearchSchool(e.target.value)}
-          className="p-2 border border-gray-300 rounded w-60"
+          className="w-60"
         />
 
-        <select
+        <Select
           value={selectedTeacher}
           onChange={(e) => setSelectedTeacher(e.target.value)}
           className="p-2 border border-gray-300 rounded w-60"
@@ -323,9 +317,9 @@ export function Students() {
               {teacher.last_name}, {teacher.first_name}
             </option>
           ))}
-        </select>
+        </Select>
 
-        <select
+        <Select
           value={selectedPlan}
           onChange={(e) => setSelectedPlan(e.target.value)}
           className="p-2 border border-gray-300 rounded w-60"
@@ -337,7 +331,7 @@ export function Students() {
               {plan.name}
             </option>
           ))}
-        </select>
+        </Select>
       </div>
 
       <BasicTable
@@ -357,130 +351,68 @@ export function Students() {
       <Modal isOpen={openCreateModal} onClose={() => setOpenCreateModal(false)}>
         <h2 className="text-xl font-bold mb-8">Crear Alumno</h2>
 
-        <div className="flex flex-col mb-6">
-          <label className="font-semibold mb-2">Nombre</label>
+        <Input
+          label="Nombre"
+          value={firstName}
+          onChange={(e) => setFirstName(e.target.value)}
+          error={errorsCreate.first_name}
+        />
 
-          <input
-            className={inputClass(errorsCreate.first_name)}
-            value={firstName}
-            onChange={(e) => setFirstName(e.target.value)}
-          />
-          {errorsCreate.first_name && (
-            <p className="text-red-500 text-sm mt-1">
-              {errorsCreate.first_name}
-            </p>
-          )}
-        </div>
+        <Input
+          label="Apellido"
+          value={lastName}
+          onChange={(e) => setLastName(e.target.value)}
+          error={errorsCreate.last_name}
+        />
 
-        <div className="flex flex-col mb-6">
-          <label className="font-semibold mb-2">Apellido</label>
+        <Input
+          label="DNI"
+          value={dni}
+          onChange={(e) => setDni(e.target.value)}
+          error={errorsCreate.dni}
+        />
 
-          <input
-            className={inputClass(errorsCreate.last_name)}
-            value={lastName}
-            onChange={(e) => setLastName(e.target.value)}
-          />
-          {errorsCreate.last_name && (
-            <p className="text-red-500 text-sm mt-1">
-              {errorsCreate.last_name}
-            </p>
-          )}
-        </div>
+        <Input
+          label="Colegio o Universidad"
+          value={school}
+          onChange={(e) => setSchool(e.target.value)}
+          error={errorsCreate.school}
+        />
 
-        <div className="flex flex-col mb-6">
-          <label className="font-semibold mb-2">DNI</label>
+        <Input
+          label="Fecha de nacimiento"
+          type="date"
+          value={birthDate}
+          onChange={(e) => setBirthDate(e.target.value)}
+          error={errorsCreate.birth_date}
+        />
 
-          <input
-            className={inputClass(errorsCreate.dni)}
-            value={dni}
-            onChange={(e) => setDni(e.target.value)}
-          />
+        <Select
+          label="Nivel"
+          value={level}
+          onChange={(e) => setLevel(e.target.value)}
+          error={errorsCreate.level}
+        >
+          <option value="">Seleccione un nivel</option>
+          <option value="Inicial">Inicial</option>
+          <option value="Primario">Primario</option>
+          <option value="Secundario">Secundario</option>
+          <option value="Universitario">Universitario</option>
+        </Select>
 
-          {errorsCreate.dni && (
-            <p className="text-red-500 text-sm mt-1">{errorsCreate.dni}</p>
-          )}
-        </div>
-
-        <div className="flex flex-col mb-6">
-          <label className="font-semibold mb-2">Colegio o Universidad</label>
-
-          <input
-            className={inputClass(errorsCreate.school)}
-            value={school}
-            onChange={(e) => setSchool(e.target.value)}
-          />
-
-          {errorsCreate.school && (
-            <p className="text-red-500 text-sm mt-1">{errorsCreate.school}</p>
-          )}
-        </div>
-
-        <div className="flex flex-col mb-6">
-          <label className="font-semibold mb-2">Fecha de nacimiento</label>
-
-          <input
-            type="date"
-            className={inputClass(errorsCreate.birth_date)}
-            value={birthDate}
-            onChange={(e) => setBirthDate(e.target.value)}
-          />
-
-          {errorsCreate.birth_date && (
-            <p className="text-red-500 text-sm mt-1">
-              {errorsCreate.birth_date}
-            </p>
-          )}
-        </div>
-
-        <div className="flex flex-col mb-6">
-          <label className="font-semibold mb-2">Nivel</label>
-
-          <select
-            className={inputClass(errorsCreate.level)}
-            value={level}
-            onChange={(e) => setLevel(e.target.value)}
-          >
-            <option value="" disabled>
-              Seleccionar
+        <Select
+          label="Grado"
+          value={grade}
+          onChange={(e) => setGrade(e.target.value)}
+          error={errorsCreate.grade}
+        >
+          <option value="">Seleccione un grado</option>
+          {[1, 2, 3, 4, 5, 6, 7].map((g) => (
+            <option key={g} value={g}>
+              {g}
             </option>
-
-            <option value="Inicial">Inicial</option>
-
-            <option value="Primario">Primario</option>
-
-            <option value="Secundario">Secundario</option>
-
-            <option value="Universitario">Universitario</option>
-          </select>
-
-          {errorsCreate.level && (
-            <p className="text-red-500 text-sm mt-1">{errorsCreate.level}</p>
-          )}
-        </div>
-
-        <div className="flex flex-col mb-6">
-          <label className="font-semibold mb-2">Grado</label>
-
-          <select
-            className={inputClass(errorsCreate.grade)}
-            value={grade}
-            onChange={(e) => setGrade(e.target.value)}
-          >
-            <option value="" disabled>
-              Seleccionar
-            </option>
-
-            {[1, 2, 3, 4, 5, 6, 7].map((g) => (
-              <option key={g} value={g}>
-                {g}
-              </option>
-            ))}
-          </select>
-
-          {errorsCreate.grade && (
-            <p className="text-red-500 text-sm mt-1">{errorsCreate.grade}</p>
-          )}
-        </div>
+          ))}
+        </Select>
 
         <div className="flex justify-end gap-4 mt-10">
           <Button
@@ -500,127 +432,68 @@ export function Students() {
       <Modal isOpen={openEditModal} onClose={() => setOpenEditModal(false)}>
         <h2 className="text-xl font-bold mb-8">Editar Alumno</h2>
 
-        <div className="flex flex-col mb-6">
-          <label className="font-semibold mb-2">Nombre</label>
+        <Input
+          label="Nombre"
+          value={firstName}
+          onChange={(e) => setFirstName(e.target.value)}
+          error={errorsEdit.first_name}
+        />
 
-          <input
-            className={inputClass(errorsEdit.first_name)}
-            v
-            alue={firstName}
-            onChange={(e) => setFirstName(e.target.value)}
-          />
+        <Input
+          label="Apellido"
+          value={lastName}
+          onChange={(e) => setLastName(e.target.value)}
+          error={errorsEdit.last_name}
+        />
 
-          {errorsEdit.first_name && (
-            <p className="text-red-500 text-sm mt-1">{errorsEdit.first_name}</p>
-          )}
-        </div>
+        <Input
+          label="DNI"
+          value={dni}
+          onChange={(e) => setDni(e.target.value)}
+          error={errorsEdit.dni}
+        />
 
-        <div className="flex flex-col mb-6">
-          <label className="font-semibold mb-2">Apellido</label>
+        <Input
+          label="Colegio o Universidad"
+          value={school}
+          onChange={(e) => setSchool(e.target.value)}
+          error={errorsEdit.school}
+        />
 
-          <input
-            className={inputClass(errorsEdit.last_name)}
-            value={lastName}
-            onChange={(e) => setLastName(e.target.value)}
-          />
+        <Input
+          label="Fecha de nacimiento"
+          type="date"
+          value={birthDate}
+          onChange={(e) => setBirthDate(e.target.value)}
+          error={errorsEdit.birth_date}
+        />
 
-          {errorsEdit.last_name && (
-            <p className="text-red-500 text-sm mt-1">{errorsEdit.last_name}</p>
-          )}
-        </div>
+        <Select
+          label="Nivel"
+          value={level}
+          onChange={(e) => setLevel(e.target.value)}
+          error={errorsEdit.level}
+        >
+          <option value="">Seleccione un nivel</option>
+          <option value="Inicial">Inicial</option>
+          <option value="Primario">Primario</option>
+          <option value="Secundario">Secundario</option>
+          <option value="Universitario">Universitario</option>
+        </Select>
 
-        <div className="flex flex-col mb-6">
-          <label className="font-semibold mb-2">DNI</label>
-
-          <input
-            className={inputClass(errorsEdit.dni)}
-            value={dni}
-            onChange={(e) => setDni(e.target.value)}
-          />
-
-          {errorsEdit.dni && (
-            <p className="text-red-500 text-sm mt-1">{errorsEdit.dni}</p>
-          )}
-        </div>
-
-        <div className="flex flex-col mb-6">
-          <label className="font-semibold mb-2">Colegio o Universidad</label>
-
-          <input
-            className={inputClass(errorsEdit.school)}
-            value={school}
-            onChange={(e) => setSchool(e.target.value)}
-          />
-
-          {errorsEdit.school && (
-            <p className="text-red-500 text-sm mt-1">{errorsEdit.school}</p>
-          )}
-        </div>
-
-        <div className="flex flex-col mb-6">
-          <label className="font-semibold mb-2">Fecha de nacimiento</label>
-
-          <input
-            type="date"
-            className={inputClass(errorsEdit.birth_date)}
-            value={birthDate}
-            onChange={(e) => setBirthDate(e.target.value)}
-          />
-
-          {errorsEdit.birth_date && (
-            <p className="text-red-500 text-sm mt-1">{errorsEdit.birth_date}</p>
-          )}
-        </div>
-
-        <div className="flex flex-col mb-6">
-          <label className="font-semibold mb-2">Nivel</label>
-
-          <select
-            className={inputClass(errorsEdit.level)}
-            value={level}
-            onChange={(e) => setLevel(e.target.value)}
-          >
-            <option value="" disabled>
-              Seleccionar
+        <Select
+          label="Grado"
+          value={grade}
+          onChange={(e) => setGrade(e.target.value)}
+          error={errorsEdit.grade}
+        >
+          <option value="">Seleccione un grado</option>
+          {[1, 2, 3, 4, 5, 6, 7].map((g) => (
+            <option key={g} value={g}>
+              {g}
             </option>
-
-            <option value="Inicial">Inicial</option>
-
-            <option value="Primario">Primario</option>
-
-            <option value="Secundario">Secundario</option>
-
-            <option value="Universitario">Universitario</option>
-          </select>
-
-          {errorsEdit.level && (
-            <p className="text-red-500 text-sm mt-1">{errorsEdit.level}</p>
-          )}
-        </div>
-
-        <div className="flex flex-col mb-6">
-          <label className="font-semibold mb-2">Grado</label>
-
-          <select
-            className={inputClass(errorsEdit.grade)}
-            value={grade}
-            onChange={(e) => setGrade(e.target.value)}
-          >
-            <option value="" disabled>
-              Seleccionar
-            </option>
-
-            {[1, 2, 3, 4, 5, 6, 7].map((g) => (
-              <option key={g} value={g}>
-                {g}
-              </option>
-            ))}
-          </select>
-
-          {errorsEdit.grade && (
-            <p className="text-red-500 text-sm mt-1">{errorsEdit.grade}</p>
-          )}
-        </div>
+          ))}
+        </Select>
 
         <div className="flex justify-end gap-4 mt-10">
           <Button

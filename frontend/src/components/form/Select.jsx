@@ -3,9 +3,9 @@ export default function Select({
   name,
   value,
   onChange,
-  options = [],
-  getLabel = (opt) => opt.name,
   error,
+  className = "",
+  children,
 }) {
   return (
     <div className="mb-4">
@@ -24,19 +24,14 @@ export default function Select({
           focus:border-[#0cc0df]
           focus:ring-2 focus:ring-[#0cc0df]/30
           focus:outline-none
-          dark:bg-gray-900
+          dark:bg-black
           dark:text-white
           dark:border-gray-600
           ${error ? "border-red-500" : ""}
+          ${className}
         `}
       >
-        <option value="">Seleccionar</option>
-
-        {options.map((opt) => (
-          <option key={opt.id} value={opt.id}>
-            {getLabel(opt)}
-          </option>
-        ))}
+        {children}
       </select>
 
       {error && <p className="text-xs text-red-500 mt-1">{error}</p>}
