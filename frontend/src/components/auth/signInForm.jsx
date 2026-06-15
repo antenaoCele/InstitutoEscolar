@@ -45,7 +45,7 @@ export default function SignInForm() {
 
   return (
     <div className="flex flex-col justify-center w-full lg:w-1/2 p-6 bg-white dark:bg-black transition-colors">
-      <div className="fixed z-50 hidden top-6 left-6 sm:block">
+      <div className="fixed z-50 hidden top-6 right-6 sm:block">
         <ThemeTogglerTwo />
       </div>
 
