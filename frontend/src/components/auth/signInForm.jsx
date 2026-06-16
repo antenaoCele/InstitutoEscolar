@@ -6,10 +6,12 @@ import Input from "../form/Input.jsx";
 import Label from "../form/Label.jsx";
 import Select from "../form/Select.jsx";
 import SubmitButton from "../form/SubmitButton.jsx";
+import { EyeIcon, EyeCloseIcon } from "../../icons/index.js";
 
 export default function SignInForm() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [errorLocal, setErrorLocal] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -69,11 +71,25 @@ export default function SignInForm() {
 
         <div>
           <Label>Contraseña</Label>
-          <Input
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-          />
+          <div className="relative">
+            <Input
+              type={showPassword ? "text" : "password"}
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className="w-full pr-10"
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 cursor-pointer z-10 flex items-center justify-center"
+            >
+              {showPassword ? (
+                <EyeCloseIcon className="w-5 h-5" />
+              ) : (
+                <EyeIcon className="w-5 h-5" />
+              )}
+            </button>
+          </div>
         </div>
 
         {(errorLocal || error) && (

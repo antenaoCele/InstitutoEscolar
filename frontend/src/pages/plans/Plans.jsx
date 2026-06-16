@@ -150,7 +150,7 @@ export function Plans() {
         plan_id: newPlanId,
         price: Number(price),
         start_date: startDate,
-        end_date: endDate && endDate.trim() !== "" ? endDate : null,
+        end_date: endDate.trim() || null,
       });
 
       alert("Plan creado con éxito");
@@ -198,7 +198,7 @@ export function Plans() {
         plan_id: selectedPlanPrice.plan_id,
         price: Number(price),
         start_date: startDate || null,
-        end_date: endDate && endDate.trim() !== "" ? endDate : null,
+        end_date: endDate.trim() || null,
       });
 
       alert("Plan actualizado con éxito");
@@ -222,9 +222,17 @@ export function Plans() {
 
   const confirmDelete = async () => {
     try {
+      // Primero eliminamos el precio del plan
       await PlanPriceService.delete(selectedPlanPrice.id);
+      // Luego eliminamos el plan base asociado
+      await planService.delete(selectedPlanPrice.plan_id);
+
       setOpenDeleteModal(false);
       fetchPlanPrices();
+
+      // Actualizamos la lista de planes para que se refleje en los filtros/formularios
+      const plansRes = await planService.getAll();
+      setPlans(plansRes.data.data || []);
     } catch (error) {
       console.error(error.response?.data || error.message);
       alert(error.response?.data?.message || "Error al eliminar");
@@ -418,7 +426,7 @@ export function Plans() {
         </div>
 
         <div className="flex flex-col mb-6">
-          <Label className="font-semibold mb-2">Fecha Fin</Label>
+          <Label className="font-semibold mb-2">Fecha Fin (Opcional)</Label>
           <Input
             type="date"
             className={inputClass(errorsCreate.end_date)}
@@ -475,7 +483,7 @@ export function Plans() {
         </div>
 
         <div className="flex flex-col mb-6">
-          <Label className="font-semibold mb-2">Fecha Fin</Label>
+          <Label className="font-semibold mb-2">Fecha Fin (Opcional)</Label>
           <Input
             type="date"
             className={inputClass(errorsEdit.end_date)}
