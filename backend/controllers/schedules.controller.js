@@ -114,10 +114,10 @@ export const schedulesController = {
         JOIN teachers t
             ON t.id = s.teacher_id
 
-        JOIN schedule_students ss
+        LEFT JOIN schedule_students ss
             ON ss.schedule_id = s.id
 
-        JOIN students st
+        LEFT JOIN students st
             ON st.id = ss.student_id
 
         LEFT JOIN student_plans sp
@@ -186,22 +186,31 @@ export const schedulesController = {
           }
         }
 
-        let student = info.students.find((s) => s.id === row.student_id);
+        if (row.student_id) {
+          let student = info.students.find((s) => s.id === row.student_id);
 
-        if (!student) {
-          student = {
-            id: row.student_id,
-            name: `${row.student_last_name}, ${row.student_first_name}`,
-            plan: row.plan_name || "Sin plan",
-            subjects: [],
-          };
+          if (!student) {
+            student = {
+              id: row.student_id,
+              name: `${row.student_last_name}, ${row.student_first_name}`,
+              plan: row.plan_name || "Sin plan",
+              subjects: [],
+            };
 
-          info.students.push(student);
+            info.students.push(student);
+          }
+
+          if (
+            row.subject_name &&
+            !student.subjects.includes(row.subject_name)
+          ) {
+            student.subjects.push(row.subject_name);
+          }
         }
 
-        if (row.subject_name && !student.subjects.includes(row.subject_name)) {
-          student.subjects.push(row.subject_name);
-        }
+        // if (row.subject_name && !student.subjects.includes(row.subject_name)) {
+        //   student.subjects.push(row.subject_name);
+        // }
       });
 
       res.json({
