@@ -4,6 +4,7 @@ export default function Input({
   value,
   onChange,
   type = "text",
+  placeholder = "",
   error,
   className = "",
 }) {
@@ -18,6 +19,7 @@ export default function Input({
         name={name}
         value={value}
         onChange={onChange}
+        placeholder={placeholder}
         className={`
           w-full rounded-lg border-2
           px-3 py-2
@@ -25,8 +27,10 @@ export default function Input({
           focus:ring-2 focus:ring-[#0cc0df]/30
           focus:outline-none
           dark:border-gray-600
-          dark:bg-gray-900
+          dark:bg-black
           dark:text-white
+          placeholder-gray-400
+          dark:placeholder-gray-500
           ${
             error
               ? "border-red-500 focus:border-red-500 focus:ring-red-500/30"
