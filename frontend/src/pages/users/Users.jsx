@@ -176,10 +176,6 @@ export function Users() {
 
   let columns = [
     {
-      header: "ID",
-      accessor: "id",
-    },
-    {
       header: "Apellido",
       accessor: "last_name",
     },

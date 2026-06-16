@@ -249,7 +249,6 @@ export function Subjects() {
   };
 
   let columns = [
-    { header: "ID", accessor: "id" },
     { header: "Materia", accessor: "name" },
     { header: "Docente", accessor: "teacher_name" },
   ];

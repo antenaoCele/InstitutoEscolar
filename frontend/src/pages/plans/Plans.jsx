@@ -241,10 +241,6 @@ export function Plans() {
   if (isCurrentView) {
     columns = [
       {
-        header: "ID",
-        accessor: "id",
-      },
-      {
         header: "Plan",
         accessor: "name",
       },
@@ -259,7 +255,6 @@ export function Plans() {
     ];
   } else {
     columns = [
-      { header: "ID", accessor: "id" },
       { header: "Plan", accessor: "plan_name" },
       { header: "Precio", accessor: "price" },
       {
