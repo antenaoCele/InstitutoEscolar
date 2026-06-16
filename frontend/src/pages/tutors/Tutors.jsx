@@ -111,7 +111,15 @@ export function Tutors() {
         new Map((res.data.data || []).map((s) => [s.id, s])).values(),
       );
 
-      setStudents(uniqueStudents);
+      setStudents(
+        uniqueStudents.sort((a, b) =>
+          `${a.last_name} ${a.first_name}`.localeCompare(
+            `${b.last_name} ${b.first_name}`,
+            "es",
+            { sensitivity: "base" },
+          ),
+        ),
+      );
     } catch (error) {
       console.error(error);
     }
@@ -632,30 +640,41 @@ export function Tutors() {
         <div className="flex flex-col mb-6">
           <Label className="font-semibold mb-2">Alumno</Label>
 
-          <Select
-            multiple
-            value={selectedStudentIds}
-            onChange={(e) =>
-              setSelectedStudentIds(
-                [...e.target.selectedOptions].map((option) =>
-                  Number(option.value),
-                ),
-              )
-            }
-            className="
-            border
-            rounded
-            p-2
-            h-40
-            w-full
-          "
-          >
-            {students.map((student) => (
-              <option key={student.id} value={student.id}>
-                {student.last_name}, {student.first_name}
-              </option>
-            ))}
-          </Select>
+          <div className="border border-gray-300 rounded p-3 max-h-40 overflow-y-auto">
+            {[...students]
+              .sort((a, b) => {
+                const nameA = `${a.last_name} ${a.first_name}`;
+                const nameB = `${b.last_name} ${b.first_name}`;
+
+                return nameA.localeCompare(nameB, "es", {
+                  sensitivity: "base",
+                });
+              })
+              .map((student) => (
+                <label
+                  key={student.id}
+                  className="flex items-center gap-2 mb-2"
+                >
+                  <input
+                    type="checkbox"
+                    checked={selectedStudentIds.includes(student.id)}
+                    onChange={(e) => {
+                      if (e.target.checked) {
+                        setSelectedStudentIds([
+                          ...selectedStudentIds,
+                          student.id,
+                        ]);
+                      } else {
+                        setSelectedStudentIds(
+                          selectedStudentIds.filter((id) => id !== student.id),
+                        );
+                      }
+                    }}
+                  />
+                  {student.last_name}, {student.first_name}
+                </label>
+              ))}
+          </div>
 
           {errorsEdit.student_id && (
             <p className="text-red-500 text-sm mt-1">{errorsEdit.student_id}</p>
