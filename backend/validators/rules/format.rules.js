@@ -132,8 +132,8 @@ export const validateClassroom = (field, optional = false) => [
   baseField(field, optional)
     .trim()
     .toUpperCase()
-    .matches(/^[A-Z]$/)
-    .withMessage("Debe ingresar una sola letra (A-Z)."),
+    .isIn(["A", "B"])
+    .withMessage("El aula debe ser A o B."),
 ];
 
 /* =========================================================
@@ -371,14 +371,19 @@ export const validateStartTime = (field, optional = false) => [
   baseField(field, optional).custom((value) => {
     if (value === undefined) return true;
 
-    const [h, m] = value.split(":").map(Number);
-    const totalMinutes = h * 60 + m;
+    const validHours = [
+      "08:00",
+      "09:30",
+      "11:00",
+      "15:00",
+      "16:30",
+      "18:00",
+      "19:30",
+      "21:00",
+    ];
 
-    const min = 8 * 60;
-    const max = 21 * 60 + 30;
-
-    if (totalMinutes < min || totalMinutes > max) {
-      throw new Error("El horario debe estar entre 08:00 y 21:30.");
+    if (!validHours.includes(value)) {
+      throw new Error("El horario seleccionado no es válido.");
     }
 
     return true;

@@ -140,6 +140,8 @@ export const validateStudentScheduleConflict = () => [
   body("students").custom(async (students, { req }) => {
     const { day, start_time } = req.body;
 
+    const scheduleId = req.params?.id ?? null;
+
     if (!students?.length || !day || !start_time) {
       return true;
     }
@@ -156,20 +158,21 @@ export const validateStudentScheduleConflict = () => [
     for (const student_id of students) {
       const [rows] = await db.execute(
         `
-        SELECT ss.id
-        FROM schedule_students ss
+    SELECT ss.id
+    FROM schedule_students ss
 
-        JOIN schedules s
-          ON s.id = ss.schedule_id
+    JOIN schedules s
+      ON s.id = ss.schedule_id
 
-        WHERE ss.student_id = ?
-        AND s.day = ?
-        AND (
-          ? < s.end_time
-          AND ? > s.start_time
-        )
-        `,
-        [student_id, day, start_time, newEndTime],
+    WHERE ss.student_id = ?
+    AND s.day = ?
+    AND (? IS NULL OR s.id != ?)
+    AND (
+      ? < s.end_time
+      AND ? > s.start_time
+    )
+    `,
+        [student_id, day, scheduleId, scheduleId, start_time, newEndTime],
       );
 
       if (rows.length) {
@@ -191,7 +194,12 @@ export const validateScheduleStudentRules = (
   max = 5,
 ) => [
   body("student_id").custom(async (student_id, { req }) => {
-    const { schedule_id } = req.body;
+    let { schedule_id } = req.body;
+
+    if (!schedule_id && req.params?.id) {
+      schedule_id = req.params.id;
+    }
+
     const id = req.params?.id ?? null;
 
     if (!student_id || !schedule_id) return true;
