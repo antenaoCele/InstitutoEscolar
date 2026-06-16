@@ -56,8 +56,6 @@ export default function WeeklyCalendar() {
     try {
       const res = await teacherService.getAll();
 
-      console.log("TEACHERS:", res.data);
-
       setTeachers(res.data.data || []);
     } catch (error) {
       console.error("ERROR TEACHERS", error);
@@ -67,17 +65,6 @@ export default function WeeklyCalendar() {
   const fetchSchedules = async () => {
     try {
       const res = await ScheduleService.getAll();
-
-      console.log("SCHEDULES:", res.data);
-
-      console.log(
-        res.data.data.map((s) => ({
-          id: s.id,
-          classroom: s.classroom,
-          day: s.day,
-          start_time: s.start_time,
-        })),
-      );
 
       setSchedules(res.data.data || []);
     } catch (error) {
@@ -98,8 +85,6 @@ export default function WeeklyCalendar() {
   const fetchStudents = async () => {
     try {
       const res = await studentService.getAll();
-
-      console.log("STUDENTS:", res.data);
 
       const uniqueStudents = [
         ...new Map(
@@ -124,14 +109,7 @@ export default function WeeklyCalendar() {
 
     if (exists) return;
 
-    console.log("student:", student.id);
-    console.log("teacher:", teacherId);
-
     const response = await studentService.getPlans(student.id, teacherId);
-
-    console.log(response);
-    console.log(response.data);
-    console.log(response.data.data);
 
     if (response.data.data.length === 0) {
       if (isEdit) {
@@ -616,12 +594,6 @@ export default function WeeklyCalendar() {
 
     const studentOk = !selectedStudent || studentScheduleIds.includes(s.id);
 
-    console.log({
-      classroomSchedule: s.classroom,
-      selectedClassroom,
-      classroomOk,
-    });
-
     return teacherOk && classroomOk && studentOk;
   });
 
@@ -758,18 +730,6 @@ export default function WeeklyCalendar() {
                       s.start_time.slice(0, 5) === slotStart,
                   );
 
-                  if (selectedClassroom === "B" && schedulesInSlot.length > 0) {
-                    console.log(
-                      day.label,
-                      slotStart,
-                      schedulesInSlot.map((s) => ({
-                        id: s.id,
-                        aula: s.classroom,
-                        docente: s.last_name,
-                      })),
-                    );
-                  }
-
                   return (
                     <td
                       key={`${day.value}-${slot}`}
@@ -788,13 +748,6 @@ export default function WeeklyCalendar() {
                         "
                       >
                         {schedulesInSlot.map((schedule) => {
-                          console.log(
-                            "RENDER",
-                            schedule.id,
-                            schedule.classroom,
-                            schedule.day,
-                            schedule.start_time,
-                          );
                           const cardColor =
                             schedule.classroom === "A"
                               ? `
