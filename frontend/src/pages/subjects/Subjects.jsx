@@ -4,6 +4,9 @@ import { subjectService } from "../../services/subject.service";
 import { teacherService } from "../../services/teacher.service";
 import { teacherSubjectService } from "../../services/teacherSubject.service";
 import Button from "../../components/ui/Button";
+import Label from "../../components/form/Label";
+import Input from "../../components/form/Input";
+import Select from "../../components/form/Select";
 import { Modal } from "../../components/ui/Modal";
 import { isAdmin } from "../../utils/auth";
 
@@ -294,14 +297,14 @@ export function Subjects() {
   return (
     <>
       <div className="flex gap-3 mb-4 flex-wrap">
-        <input
+        <Input
           placeholder="Buscar por materia"
           value={searchName}
           onChange={(e) => setSearchName(e.target.value)}
           className="p-2 border border-gray-300 rounded w-60"
         />
 
-        <select
+        <Select
           value={selectedTeacher}
           onChange={(e) => setSelectedTeacher(e.target.value)}
           className="p-2 border border-gray-300 rounded w-60"
@@ -313,7 +316,7 @@ export function Subjects() {
               {teacher.last_name}, {teacher.first_name}
             </option>
           ))}
-        </select>
+        </Select>
       </div>
 
       <BasicTable
@@ -340,9 +343,9 @@ export function Subjects() {
         <h2 className="text-xl font-bold mb-8">Crear Materia</h2>
 
         <div className="flex flex-col mb-6">
-          <label className="font-semibold mb-2">Nombre</label>
+          <Label className="font-semibold mb-2">Nombre</Label>
 
-          <input
+          <Input
             className={inputClass(errorsCreate.name)}
             value={name}
             onChange={(e) => setName(e.target.value)}
@@ -354,9 +357,9 @@ export function Subjects() {
         </div>
 
         <div className="flex flex-col mb-6">
-          <label className="font-semibold mb-2">Docente</label>
+          <Label className="font-semibold mb-2">Docente</Label>
 
-          <select
+          <Select
             value={selectedTeacherId}
             onChange={(e) => setSelectedTeacherId(e.target.value)}
             className={inputClass(errorsCreate.teacher_id)}
@@ -368,7 +371,7 @@ export function Subjects() {
                 {teacher.last_name}, {teacher.first_name}
               </option>
             ))}
-          </select>
+          </Select>
 
           {errorsCreate.teacher_id && (
             <p className="text-red-500 text-sm mt-1">
@@ -405,9 +408,9 @@ export function Subjects() {
         <h2 className="text-xl font-bold mb-8">Editar Materia</h2>
 
         <div className="flex flex-col mb-6">
-          <label className="font-semibold mb-2">Nombre</label>
+          <Label className="font-semibold mb-2">Nombre</Label>
 
-          <input
+          <Input
             className={inputClass(errorsEdit.name)}
             value={name}
             onChange={(e) => setName(e.target.value)}
@@ -419,9 +422,9 @@ export function Subjects() {
         </div>
 
         <div className="flex flex-col mb-6">
-          <label className="font-semibold mb-2">Docente</label>
+          <Label className="font-semibold mb-2">Docente</Label>
 
-          <select
+          <Select
             value={selectedTeacherId}
             onChange={(e) => setSelectedTeacherId(e.target.value)}
             className={inputClass(errorsEdit.teacher_id)}
@@ -433,7 +436,7 @@ export function Subjects() {
                 {teacher.last_name}, {teacher.first_name}
               </option>
             ))}
-          </select>
+          </Select>
 
           {errorsEdit.teacher_id && (
             <p className="text-red-500 text-sm mt-1">{errorsEdit.teacher_id}</p>

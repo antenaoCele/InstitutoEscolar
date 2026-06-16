@@ -28,7 +28,7 @@ export const Modal = ({
 
   const contentClasses = isFullscreen
     ? "w-full h-full"
-    : "relative w-full max-w-lg mx-4 p-6 rounded-2xl bg-white dark:bg-gray-900 shadow-xl";
+    : "relative w-full max-w-lg mx-4 p-6 rounded-2xl bg-white dark:bg-black text-black dark:text-white shadow-xl";
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">

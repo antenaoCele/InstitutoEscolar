@@ -3,6 +3,9 @@ import { useLocation } from "react-router-dom";
 
 import BasicTable from "../../components/tables/BasicTables/BasicTablesOne";
 import Button from "../../components/ui/Button";
+import Label from "../../components/form/Label";
+import Input from "../../components/form/Input";
+import Select from "../../components/form/Select";
 import { Modal } from "../../components/ui/Modal";
 
 import { userService } from "../../services/user.service";
@@ -242,7 +245,7 @@ export function Users() {
   return (
     <>
       <div className="flex gap-3 mb-4 flex-wrap">
-        <input
+        <Input
           placeholder="Buscar por nombre, apellido o usuario"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
@@ -270,8 +273,8 @@ export function Users() {
         <h2 className="text-xl font-bold mb-8">Crear Usuario</h2>
 
         <div className="flex flex-col mb-6">
-          <label className="font-semibold mb-2">Nombre</label>
-          <input
+          <Label className="font-semibold mb-2">Nombre</Label>
+          <Input
             value={firstName}
             onChange={(e) => setFirstName(e.target.value)}
             className={inputClass(errors.first_name)}
@@ -282,8 +285,8 @@ export function Users() {
         </div>
 
         <div className="flex flex-col mb-6">
-          <label className="font-semibold mb-2">Apellido</label>
-          <input
+          <Label className="font-semibold mb-2">Apellido</Label>
+          <Input
             value={lastName}
             onChange={(e) => setLastName(e.target.value)}
             className={inputClass(errors.last_name)}
@@ -294,8 +297,8 @@ export function Users() {
         </div>
 
         <div className="flex flex-col mb-6">
-          <label className="font-semibold mb-2">Usuario</label>
-          <input
+          <Label className="font-semibold mb-2">Usuario</Label>
+          <Input
             value={username}
             onChange={(e) => setUsername(e.target.value)}
             className={inputClass(errors.username)}
@@ -306,8 +309,8 @@ export function Users() {
         </div>
 
         <div className="flex flex-col mb-6">
-          <label className="font-semibold mb-2">Contraseña</label>
-          <input
+          <Label className="font-semibold mb-2">Contraseña</Label>
+          <Input
             type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
@@ -319,15 +322,15 @@ export function Users() {
         </div>
 
         <div className="flex flex-col mb-6">
-          <label className="font-semibold mb-2">Rol</label>
-          <select
+          <Label className="font-semibold mb-2">Rol</Label>
+          <Select
             value={role}
             onChange={(e) => setRole(e.target.value)}
             className={inputClass(errors.role)}
           >
             <option value="DOCENTE">Docente</option>
             <option value="ADMIN">Administrador</option>
-          </select>
+          </Select>
         </div>
 
         <div className="flex justify-end gap-4 mt-10">
@@ -349,8 +352,8 @@ export function Users() {
         <h2 className="text-xl font-bold mb-8">Editar Usuario</h2>
 
         <div className="flex flex-col mb-6">
-          <label className="font-semibold mb-2">Nombre</label>
-          <input
+          <Label className="font-semibold mb-2">Nombre</Label>
+          <Input
             value={firstName}
             onChange={(e) => setFirstName(e.target.value)}
             className={inputClass(errors.first_name)}
@@ -361,8 +364,8 @@ export function Users() {
         </div>
 
         <div className="flex flex-col mb-6">
-          <label className="font-semibold mb-2">Apellido</label>
-          <input
+          <Label className="font-semibold mb-2">Apellido</Label>
+          <Input
             value={lastName}
             onChange={(e) => setLastName(e.target.value)}
             className={inputClass(errors.last_name)}
@@ -373,8 +376,8 @@ export function Users() {
         </div>
 
         <div className="flex flex-col mb-6">
-          <label className="font-semibold mb-2">Usuario</label>
-          <input
+          <Label className="font-semibold mb-2">Usuario</Label>
+          <Input
             value={username}
             onChange={(e) => setUsername(e.target.value)}
             className={inputClass(errors.username)}
@@ -385,10 +388,10 @@ export function Users() {
         </div>
 
         <div className="flex flex-col mb-6">
-          <label className="font-semibold mb-2">
+          <Label className="font-semibold mb-2">
             Nueva contraseña (opcional)
-          </label>
-          <input
+          </Label>
+          <Input
             type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
@@ -400,15 +403,15 @@ export function Users() {
         </div>
 
         <div className="flex flex-col mb-6">
-          <label className="font-semibold mb-2">Rol</label>
-          <select
+          <Label className="font-semibold mb-2">Rol</Label>
+          <Select
             value={role}
             onChange={(e) => setRole(e.target.value)}
             className={inputClass(errors.role)}
           >
             <option value="DOCENTE">Docente</option>
             <option value="ADMIN">Administrador</option>
-          </select>
+          </Select>
         </div>
 
         <div className="flex justify-end gap-4 mt-10">

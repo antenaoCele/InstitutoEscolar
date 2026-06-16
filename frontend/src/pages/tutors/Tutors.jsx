@@ -4,6 +4,9 @@ import { tutorService } from "../../services/tutor.service";
 import { studentService } from "../../services/student.service";
 import { studentTutorService } from "../../services/studentTutor.service";
 import Button from "../../components/ui/Button";
+import Label from "../../components/form/Label";
+import Input from "../../components/form/Input";
+import Select from "../../components/form/Select";
 import { Modal } from "../../components/ui/Modal";
 import { isAdmin } from "../../utils/auth";
 
@@ -414,21 +417,21 @@ export function Tutors() {
   return (
     <>
       <div className="flex gap-3 mb-4 flex-wrap">
-        <input
+        <Input
           placeholder=" Buscar por nombre o apellido"
           value={searchFirstLastName}
           onChange={(e) => setSearchFirstLastName(e.target.value)}
           className="p-2 border border-gray-300 rounded w-60"
         />
 
-        <input
+        <Input
           placeholder="Buscar por DNI"
           value={searchDNI}
           onChange={(e) => setSearchDNI(e.target.value)}
           className="p-2 border border-gray-300 rounded w-40"
         />
 
-        <select
+        <Select
           value={filterStudentId}
           onChange={(e) => setFilterStudentId(e.target.value)}
           className="p-2 border border-gray-300 rounded w-60"
@@ -440,7 +443,7 @@ export function Tutors() {
               {student.last_name}, {student.first_name}
             </option>
           ))}
-        </select>
+        </Select>
       </div>
 
       <BasicTable title={tableTitle} columns={columns} data={filteredTutors} />
@@ -463,9 +466,9 @@ export function Tutors() {
         <h2 className="text-xl font-bold mb-8">Crear Tutor</h2>
 
         <div className="flex flex-col mb-6">
-          <label className="font-semibold mb-2">Nombre</label>
+          <Label className="font-semibold mb-2">Nombre</Label>
 
-          <input
+          <Input
             className={inputClass(errorsCreate.first_name)}
             value={firstName}
             onChange={(e) => setFirstName(e.target.value)}
@@ -479,9 +482,9 @@ export function Tutors() {
         </div>
 
         <div className="flex flex-col mb-6">
-          <label className="font-semibold mb-2">Apellido</label>
+          <Label className="font-semibold mb-2">Apellido</Label>
 
-          <input
+          <Input
             className={inputClass(errorsCreate.last_name)}
             value={lastName}
             onChange={(e) => setLastName(e.target.value)}
@@ -494,9 +497,9 @@ export function Tutors() {
         </div>
 
         <div className="flex flex-col mb-6">
-          <label className="font-semibold mb-2">DNI</label>
+          <Label className="font-semibold mb-2">DNI</Label>
 
-          <input
+          <Input
             className={inputClass(errorsCreate.dni)}
             value={dni}
             onChange={(e) => setDni(e.target.value)}
@@ -507,9 +510,9 @@ export function Tutors() {
         </div>
 
         <div className="flex flex-col mb-6">
-          <label className="font-semibold mb-2">Teléfono</label>
+          <Label className="font-semibold mb-2">Teléfono</Label>
 
-          <input
+          <Input
             className={inputClass(errorsCreate.phone)}
             value={phone}
             onChange={(e) => setPhone(e.target.value)}
@@ -520,11 +523,11 @@ export function Tutors() {
         </div>
 
         <div className="flex flex-col mb-6">
-          <label className="font-semibold mb-2">Alumno</label>
+          <Label className="font-semibold mb-2">Alumno</Label>
 
           {students.map((student) => (
-            <label key={student.id} className="flex items-center gap-2">
-              <input
+            <Label key={student.id} className="flex items-center gap-2">
+              <Input
                 type="checkbox"
                 checked={selectedStudentIds.includes(student.id)}
                 onChange={(e) => {
@@ -538,7 +541,7 @@ export function Tutors() {
                 }}
               />
               {student.last_name}, {student.first_name}
-            </label>
+            </Label>
           ))}
 
           {errorsCreate.student_id && (
@@ -576,9 +579,9 @@ export function Tutors() {
         <h2 className="text-xl font-bold mb-8">Editar Tutor</h2>
 
         <div className="flex flex-col mb-6">
-          <label className="font-semibold mb-2">Nombre</label>
+          <Label className="font-semibold mb-2">Nombre</Label>
 
-          <input
+          <Input
             className={inputClass(errorsEdit.first_name)}
             value={firstName}
             onChange={(e) => setFirstName(e.target.value)}
@@ -589,9 +592,9 @@ export function Tutors() {
         </div>
 
         <div className="flex flex-col mb-6">
-          <label className="font-semibold mb-2">Apellido</label>
+          <Label className="font-semibold mb-2">Apellido</Label>
 
-          <input
+          <Input
             className={inputClass(errorsEdit.last_name)}
             value={lastName}
             onChange={(e) => setLastName(e.target.value)}
@@ -602,9 +605,9 @@ export function Tutors() {
         </div>
 
         <div className="flex flex-col mb-6">
-          <label className="font-semibold mb-2">DNI</label>
+          <Label className="font-semibold mb-2">DNI</Label>
 
-          <input
+          <Input
             className={inputClass(errorsEdit.dni)}
             value={dni}
             onChange={(e) => setDni(e.target.value)}
@@ -615,9 +618,9 @@ export function Tutors() {
         </div>
 
         <div className="flex flex-col mb-6">
-          <label className="font-semibold mb-2">Teléfono</label>
+          <Label className="font-semibold mb-2">Teléfono</Label>
 
-          <input
+          <Input
             className={inputClass(errorsEdit.phone)}
             value={phone}
             onChange={(e) => setPhone(e.target.value)}
@@ -628,9 +631,9 @@ export function Tutors() {
         </div>
 
         <div className="flex flex-col mb-6">
-          <label className="font-semibold mb-2">Alumno</label>
+          <Label className="font-semibold mb-2">Alumno</Label>
 
-          <select
+          <Select
             multiple
             value={selectedStudentIds}
             onChange={(e) =>
@@ -653,7 +656,7 @@ export function Tutors() {
                 {student.last_name}, {student.first_name}
               </option>
             ))}
-          </select>
+          </Select>
 
           {errorsEdit.student_id && (
             <p className="text-red-500 text-sm mt-1">{errorsEdit.student_id}</p>

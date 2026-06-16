@@ -81,7 +81,14 @@ export function Students() {
       }
 
       const { data } = await studentService.getAll(params);
-      setStudents(data?.data || []);
+      const rawData = data?.data || [];
+
+      // Eliminar duplicados basados en el ID
+      const uniqueStudents = Array.from(
+        new Map(rawData.map((s) => [s.id, s])).values(),
+      );
+
+      setStudents(uniqueStudents);
     } catch {
       setStudents([]);
     }
@@ -184,7 +191,7 @@ export function Students() {
     try {
       setErrorsEdit({});
 
-      await studentService.update(selectedStudent.student_id, {
+      await studentService.update(selectedStudent.id, {
         first_name: firstName,
         last_name: lastName,
         dni,
@@ -209,7 +216,7 @@ export function Students() {
 
   const confirmDelete = async () => {
     try {
-      await studentService.delete(selectedStudent.student_id);
+      await studentService.delete(selectedStudent.id);
       setOpenDeleteModal(false);
       fetchStudents();
     } catch (error) {

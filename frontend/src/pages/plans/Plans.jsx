@@ -6,6 +6,9 @@ import { PlanPriceService } from "../../services/PlanPrice.service";
 import { subjectService } from "../../services/subject.service";
 import { PlanSubjectService } from "../../services/PlanSubject.service";
 import Button from "../../components/ui/Button";
+import Label from "../../components/form/Label";
+import Input from "../../components/form/Input";
+import Select from "../../components/form/Select";
 import { Modal } from "../../components/ui/Modal";
 import { isAdmin } from "../../utils/auth";
 
@@ -313,7 +316,7 @@ export function Plans() {
   return (
     <>
       <div className="flex gap-3 mb-4 flex-wrap">
-        <input
+        <Input
           placeholder="Buscar por plan"
           value={searchPlanName}
           onChange={(e) => setSearchPlanName(e.target.value)}
@@ -321,7 +324,7 @@ export function Plans() {
         />
 
         {isHistoryView && (
-          <input
+          <Input
             placeholder="Buscar por precio"
             value={searchPrice}
             onChange={(e) => setSearchPrice(e.target.value)}
@@ -348,8 +351,8 @@ export function Plans() {
         <h2 className="text-xl font-bold mb-8">Crear Plan</h2>
 
         <div className="flex flex-col mb-6">
-          <label className="font-semibold mb-2">Plan</label>
-          <input
+          <Label className="font-semibold mb-2">Plan</Label>
+          <Input
             type="text"
             placeholder="Escribir nombre del plan"
             className={inputClass(errorsCreate.name || errorsCreate.plan_id)}
@@ -364,11 +367,11 @@ export function Plans() {
         </div>
 
         <div className="flex flex-col mb-6">
-          <label className="font-semibold mb-2">Materias</label>
+          <Label className="font-semibold mb-2">Materias</Label>
           <div className="grid grid-cols-2 gap-2 max-h-40 overflow-y-auto p-2 border border-gray-200 rounded">
             {subjects.map((s) => (
-              <label key={s.id} className="flex items-center gap-2 text-sm">
-                <input
+              <Label key={s.id} className="flex items-center gap-2 text-sm">
+                <Input
                   type="checkbox"
                   value={s.id}
                   checked={selectedSubjects.includes(s.id)}
@@ -384,7 +387,7 @@ export function Plans() {
                   }}
                 />
                 {s.name}
-              </label>
+              </Label>
             ))}
           </div>
           {selectedSubjects.length === 0 && (
@@ -395,8 +398,8 @@ export function Plans() {
         </div>
 
         <div className="flex flex-col mb-6">
-          <label className="font-semibold mb-2">Precio</label>
-          <input
+          <Label className="font-semibold mb-2">Precio</Label>
+          <Input
             type="number"
             className={inputClass(errorsCreate.price)}
             value={price}
@@ -405,8 +408,8 @@ export function Plans() {
         </div>
 
         <div className="flex flex-col mb-6">
-          <label className="font-semibold mb-2">Fecha Inicio</label>
-          <input
+          <Label className="font-semibold mb-2">Fecha Inicio</Label>
+          <Input
             type="date"
             className={inputClass(errorsCreate.start_date)}
             value={startDate}
@@ -415,8 +418,8 @@ export function Plans() {
         </div>
 
         <div className="flex flex-col mb-6">
-          <label className="font-semibold mb-2">Fecha Fin</label>
-          <input
+          <Label className="font-semibold mb-2">Fecha Fin</Label>
+          <Input
             type="date"
             className={inputClass(errorsCreate.end_date)}
             value={endDate}
@@ -436,8 +439,8 @@ export function Plans() {
         <h2 className="text-xl font-bold mb-8">Editar Plan</h2>
 
         <div className="flex flex-col mb-6">
-          <label className="font-semibold mb-2">Plan</label>
-          <input
+          <Label className="font-semibold mb-2">Plan</Label>
+          <Input
             type="text"
             placeholder="Editar nombre del plan"
             className={inputClass(errorsEdit.name || errorsEdit.plan_id)}
@@ -452,8 +455,8 @@ export function Plans() {
         </div>
 
         <div className="flex flex-col mb-6">
-          <label className="font-semibold mb-2">Precio</label>
-          <input
+          <Label className="font-semibold mb-2">Precio</Label>
+          <Input
             type="number"
             className={inputClass(errorsEdit.price)}
             value={price}
@@ -462,8 +465,8 @@ export function Plans() {
         </div>
 
         <div className="flex flex-col mb-6">
-          <label className="font-semibold mb-2">Fecha Inicio</label>
-          <input
+          <Label className="font-semibold mb-2">Fecha Inicio</Label>
+          <Input
             type="date"
             className={inputClass(errorsEdit.start_date)}
             value={startDate}
@@ -472,8 +475,8 @@ export function Plans() {
         </div>
 
         <div className="flex flex-col mb-6">
-          <label className="font-semibold mb-2">Fecha Fin</label>
-          <input
+          <Label className="font-semibold mb-2">Fecha Fin</Label>
+          <Input
             type="date"
             className={inputClass(errorsEdit.end_date)}
             value={endDate}

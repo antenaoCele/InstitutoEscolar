@@ -4,6 +4,9 @@ import BasicTable from "../../components/tables/BasicTables/BasicTablesOne";
 import { teacherService } from "../../services/teacher.service";
 import { planService } from "../../services/plan.service";
 import Button from "../../components/ui/Button";
+import Label from "../../components/form/Label";
+import Input from "../../components/form/Input";
+import Select from "../../components/form/Select";
 import { Modal } from "../../components/ui/Modal";
 import { isAdmin } from "../../utils/auth";
 
@@ -244,33 +247,19 @@ export function Teachers() {
     <>
       {/* BUSCADORES */}
       <div className="flex gap-3 mb-4 flex-wrap">
-        <input
+        <Input
           placeholder=" Buscar por nombre o apellido"
           value={searchFirstLastName}
           onChange={(e) => setSearchFirstLastName(e.target.value)}
           className="p-2 border border-gray-300 rounded w-60"
         />
 
-        <input
+        <Input
           placeholder="Buscar por DNI"
           value={searchDNI}
           onChange={(e) => setSearchDNI(e.target.value)}
           className="p-2 border border-gray-300 rounded w-40"
         />
-
-        <select
-          value={selectedPlan}
-          onChange={(e) => setSelectedPlan(e.target.value)}
-          className="p-2 border border-gray-300 rounded w-60"
-        >
-          <option value="">Todos los planes</option>
-
-          {plans.map((plan) => (
-            <option key={plan.id} value={plan.id}>
-              {plan.name}
-            </option>
-          ))}
-        </select>
       </div>
 
       <BasicTable
@@ -292,8 +281,8 @@ export function Teachers() {
         <h2 className="text-xl font-bold mb-8">Crear Docente</h2>
 
         <div className="flex flex-col mb-6">
-          <label className="font-semibold mb-2">Nombre</label>
-          <input
+          <Label className="font-semibold mb-2">Nombre</Label>
+          <Input
             className={inputClass(errorsCreate.first_name)}
             value={firstName}
             onChange={(e) => setFirstName(e.target.value)}
@@ -306,8 +295,8 @@ export function Teachers() {
         </div>
 
         <div className="flex flex-col mb-6">
-          <label className="font-semibold mb-2">Apellido</label>
-          <input
+          <Label className="font-semibold mb-2">Apellido</Label>
+          <Input
             className={inputClass(errorsCreate.last_name)}
             value={lastName}
             onChange={(e) => setLastName(e.target.value)}
@@ -320,8 +309,8 @@ export function Teachers() {
         </div>
 
         <div className="flex flex-col mb-6">
-          <label className="font-semibold mb-2">DNI</label>
-          <input
+          <Label className="font-semibold mb-2">DNI</Label>
+          <Input
             className={inputClass(errorsCreate.dni)}
             value={dni}
             onChange={(e) => setDni(e.target.value)}
@@ -332,8 +321,8 @@ export function Teachers() {
         </div>
 
         <div className="flex flex-col mb-6">
-          <label className="font-semibold mb-2">Teléfono</label>
-          <input
+          <Label className="font-semibold mb-2">Teléfono</Label>
+          <Input
             className={inputClass(errorsCreate.phone)}
             value={phone}
             onChange={(e) => setPhone(e.target.value)}
@@ -356,8 +345,8 @@ export function Teachers() {
         <h2 className="text-xl font-bold mb-8">Editar Docente</h2>
 
         <div className="flex flex-col mb-6">
-          <label className="font-semibold mb-2">Nombre</label>
-          <input
+          <Label className="font-semibold mb-2">Nombre</Label>
+          <Input
             className={inputClass(errorsEdit.first_name)}
             value={firstName}
             onChange={(e) => setFirstName(e.target.value)}
@@ -368,8 +357,8 @@ export function Teachers() {
         </div>
 
         <div className="flex flex-col mb-6">
-          <label className="font-semibold mb-2">Apellido</label>
-          <input
+          <Label className="font-semibold mb-2">Apellido</Label>
+          <Input
             className={inputClass(errorsEdit.last_name)}
             value={lastName}
             onChange={(e) => setLastName(e.target.value)}
@@ -380,8 +369,8 @@ export function Teachers() {
         </div>
 
         <div className="flex flex-col mb-6">
-          <label className="font-semibold mb-2">DNI</label>
-          <input
+          <Label className="font-semibold mb-2">DNI</Label>
+          <Input
             className={inputClass(errorsEdit.dni)}
             value={dni}
             onChange={(e) => setDni(e.target.value)}
@@ -392,8 +381,8 @@ export function Teachers() {
         </div>
 
         <div className="flex flex-col mb-6">
-          <label className="font-semibold mb-2">Teléfono</label>
-          <input
+          <Label className="font-semibold mb-2">Teléfono</Label>
+          <Input
             className={inputClass(errorsEdit.phone)}
             value={phone}
             onChange={(e) => setPhone(e.target.value)}
