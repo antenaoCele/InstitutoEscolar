@@ -1658,58 +1658,86 @@ export default function WeeklyCalendar() {
             <div className="space-y-3 mb-8">
               <h3 className="font-bold text-lg">Planes</h3>
 
-              {selectedScheduleInfo.plans.map((plan) => (
+              {selectedScheduleInfo.plans.length === 0 ? (
                 <div
-                  key={plan.id}
                   className="
-                    border
-                    rounded-lg
-                    p-4
-                    bg-gray-50
-                  "
+        border
+        rounded-lg
+        p-4
+        bg-gray-50
+        text-gray-500
+      "
                 >
-                  <div className="font-semibold text-black">{plan.name}</div>
-
-                  <div className="mt-2 text-sm">Materias:</div>
-
-                  <ul className="ml-5 list-disc text-sm">
-                    {plan.subjects.map((subject) => (
-                      <li key={subject}>{subject}</li>
-                    ))}
-                  </ul>
+                  No hay planes asignados.
                 </div>
-              ))}
+              ) : (
+                selectedScheduleInfo.plans.map((plan) => (
+                  <div
+                    key={plan.id}
+                    className="
+          border
+          rounded-lg
+          p-4
+          bg-gray-50
+        "
+                  >
+                    <div className="font-semibold text-black">{plan.name}</div>
+
+                    <div className="mt-2 text-sm">Materias:</div>
+
+                    <ul className="ml-5 list-disc text-sm">
+                      {plan.subjects.map((subject) => (
+                        <li key={subject}>{subject}</li>
+                      ))}
+                    </ul>
+                  </div>
+                ))
+              )}
             </div>
 
             {/* Alumnos */}
             <div className="space-y-3 mb-8">
               <h3 className="font-bold text-lg">Alumnos</h3>
 
-              {selectedScheduleInfo.students.map((student) => (
+              {selectedScheduleInfo.students.length === 0 ? (
                 <div
-                  key={student.id}
                   className="
                     border
                     rounded-lg
                     p-4
                     bg-gray-50
+                    text-gray-500
                   "
                 >
-                  <div className="font-semibold">{student.name}</div>
-
-                  <div className="mt-2 text-sm text-gray-600">
-                    Plan: {student.plan}
-                  </div>
-
-                  <div className="mt-2 text-sm">Materias:</div>
-
-                  <ul className="ml-5 list-disc text-sm">
-                    {student.subjects.map((subject) => (
-                      <li key={subject}>{subject}</li>
-                    ))}
-                  </ul>
+                  No hay alumnos asignados.
                 </div>
-              ))}
+              ) : (
+                selectedScheduleInfo.students.map((student) => (
+                  <div
+                    key={student.id}
+                    className="
+                      border
+                      rounded-lg
+                      p-4
+                      bg-gray-50
+                    "
+                  >
+                    <div className="font-semibold">{student.name}</div>
+
+                    <div className="mt-2 text-sm text-gray-600">
+                      Plan: {student.plan}
+                    </div>
+
+                    <div className="mt-2 text-sm">Materias:</div>
+
+                    <ul className="ml-5 list-disc text-sm">
+                      {student.subjects.map((subject) => (
+                        <li key={subject}>{subject}</li>
+                      ))}
+                    </ul>
+                  </div>
+                ))
+              )}
             </div>
 
             {/* Botones */}

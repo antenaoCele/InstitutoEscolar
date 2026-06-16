@@ -195,7 +195,6 @@ export function Teachers() {
   };
 
   let columns = [
-    { header: "ID", accessor: "id" },
     { header: "Apellido", accessor: "last_name" },
     { header: "Nombre", accessor: "first_name" },
     { header: "Teléfono", accessor: "phone" },
