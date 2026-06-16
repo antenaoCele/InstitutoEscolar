@@ -53,16 +53,10 @@ export function Tutors() {
       const tutorsData = tutorsRes.data.data || [];
       const relations = studentTutorsRes.data.data || [];
 
-      console.log("RELATIONS");
-      console.table(relations);
-
       const merged = tutorsData.map((tutor) => {
         const tutorRelations = relations.filter(
           (r) => r.tutor_id === tutor.id && r.student_tutor_id !== null,
         );
-        console.log("Tutor:", tutor.id, tutor.first_name, tutor.last_name);
-
-        console.log("Relaciones encontradas:", tutorRelations);
 
         return {
           ...tutor,
@@ -98,15 +92,6 @@ export function Tutors() {
     try {
       const res = await studentService.getAll();
 
-      console.log("STUDENTS API:");
-      console.table(
-        res.data.data.map((s) => ({
-          id: s.id,
-          name: `${s.last_name}, ${s.first_name}`,
-        })),
-      );
-
-      console.table(res.data.data);
       const uniqueStudents = Array.from(
         new Map((res.data.data || []).map((s) => [s.id, s])).values(),
       );
@@ -207,18 +192,6 @@ export function Tutors() {
         dni: dni,
         phone: phone,
       });
-
-      console.log("TUTOR RESPONSE:");
-      console.log(tutorRes.data);
-
-      console.log("TUTOR DATA:");
-      console.log(tutorRes.data.data);
-
-      console.log("TUTOR ID:");
-      console.log(tutorRes.data.data?.id);
-
-      console.log("SELECTED STUDENT:");
-      console.log(selectedStudentIds);
 
       if (selectedStudentIds.length > 0) {
         await Promise.all(
