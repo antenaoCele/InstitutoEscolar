@@ -39,9 +39,8 @@ export function Students() {
   const [level, setLevel] = useState("");
   const [grade, setGrade] = useState("");
 
-  // Estados para el formulario
-  const [formTeacherId, setFormTeacherId] = useState("");
-  const [formPlanId, setFormPlanId] = useState("");
+  // Estado para manejar múltiples planes en el formulario
+  const [formPlans, setFormPlans] = useState([{ teacher_id: "", plan_id: "" }]);
 
   const [errorsCreate, setErrorsCreate] = useState({});
   const [errorsEdit, setErrorsEdit] = useState({});
@@ -61,8 +60,7 @@ export function Students() {
     setBirthDate("");
     setLevel("");
     setGrade("");
-    setFormTeacherId("");
-    setFormPlanId("");
+    setFormPlans([{ teacher_id: "", plan_id: "" }]);
     setErrorsCreate({});
     setErrorsEdit({});
   };
@@ -92,12 +90,27 @@ export function Students() {
       const { data } = await studentService.getAll(params);
       const rawData = data?.data || [];
 
-      // Eliminar duplicados basados en el ID
-      const uniqueStudents = Array.from(
-        new Map(rawData.map((s) => [s.id, s])).values(),
-      );
+      // Agrupar planes por alumno para visualización múltiple
+      const studentMap = new Map();
+      rawData.forEach((row) => {
+        if (!studentMap.has(row.id)) {
+          studentMap.set(row.id, { ...row, activePlans: [] });
+        }
+        if (row.student_plan_id) {
+          studentMap.get(row.id).activePlans.push({
+            student_plan_id: row.student_plan_id,
+            teacher_id: row.teacher_id,
+            teacher_name: row.teacher_last_name
+              ? `${row.teacher_last_name}, ${row.teacher_first_name}`
+              : "-",
+            plan_id: row.plan_id,
+            plan_name: row.plan_name,
+            start_date: row.start_date,
+          });
+        }
+      });
 
-      setStudents(uniqueStudents);
+      setStudents(Array.from(studentMap.values()));
     } catch {
       setStudents([]);
     }
@@ -161,13 +174,14 @@ export function Students() {
         birth_date: birthDate,
         level,
         grade,
-        formPlans: [{ teacher_id: formTeacherId, plan_id: formPlanId }],
+        formPlans: formPlans.filter((p) => p.teacher_id && p.plan_id),
       });
 
       setOpenCreateModal(false);
       fetchStudents();
       resetForm();
     } catch (error) {
+      console.error("Error al crear:", error.response?.data || error.message);
       const backendErrors = error.response?.data?.errors;
       if (backendErrors) setErrorsCreate(mapErrors(backendErrors));
     }
@@ -178,13 +192,22 @@ export function Students() {
 
     setFirstName(student.first_name || "");
     setLastName(student.last_name || "");
-    setDni(student.dni || "");
+    setDni(student.dni ? String(student.dni) : "");
     setSchool(student.school || "");
     setBirthDate(student.birth_date?.split("T")[0] || "");
     setLevel(student.level || "");
     setGrade(student.grade || "");
-    setFormTeacherId(student.teacher_id || "");
-    setFormPlanId(student.plan_id || "");
+
+    setFormPlans(
+      student.activePlans?.length > 0
+        ? student.activePlans.map((p) => ({
+            teacher_id: p.teacher_id,
+            plan_id: p.plan_id,
+            student_plan_id: p.student_plan_id,
+            start_date: p.start_date?.split("T")[0], // Limpiar formato para el validador
+          }))
+        : [{ teacher_id: "", plan_id: "" }],
+    );
 
     setErrorsEdit({});
     setOpenEditModal(true);
@@ -203,12 +226,14 @@ export function Students() {
   const handleUpdate = async () => {
     const newErrors = {};
 
-    if (!firstName.trim())
+    if (!firstName?.toString().trim())
       newErrors.first_name = "Este campo no puede estar vacío.";
-    if (!lastName.trim())
+    if (!lastName?.toString().trim())
       newErrors.last_name = "Este campo no puede estar vacío.";
-    if (!dni.trim()) newErrors.dni = "Este campo no puede estar vacío.";
-    if (!school.trim()) newErrors.school = "Este campo no puede estar vacío.";
+    if (!dni?.toString().trim())
+      newErrors.dni = "Este campo no puede estar vacío.";
+    if (!school?.toString().trim())
+      newErrors.school = "Este campo no puede estar vacío.";
     if (!birthDate) newErrors.birth_date = "Ingrese una fecha válida.";
     if (!level) newErrors.level = "Seleccione una opción válida.";
     if (!grade) newErrors.grade = "Seleccione una opción válida.";
@@ -231,19 +256,39 @@ export function Students() {
         grade,
       });
 
-      // Si estamos en la vista de activos, también actualizamos el plan/docente
-      if (status === "active" && selectedStudent?.student_plan_id) {
-        await studentPlanService.update(selectedStudent.student_plan_id, {
-          student_id: selectedStudent.id,
-          teacher_id: formTeacherId,
-          plan_id: formPlanId,
-          start_date: selectedStudent.start_date, // Mantenemos la fecha de inicio original
-        });
+      // Actualizar o crear planes dinámicamente
+      if (status === "active") {
+        for (const p of formPlans) {
+          // Solo procesar si tiene docente y plan seleccionados
+          if (!p.teacher_id || !p.plan_id) continue;
+
+          if (p.student_plan_id) {
+            // Actualizar asignación existente
+            await studentPlanService.update(p.student_plan_id, {
+              student_id: selectedStudent.id,
+              teacher_id: p.teacher_id,
+              plan_id: p.plan_id,
+              start_date: p.start_date?.split("T")[0],
+            });
+          } else {
+            // Crear nueva asignación de docente/plan
+            await studentPlanService.create({
+              student_id: selectedStudent.id,
+              teacher_id: p.teacher_id,
+              plan_id: p.plan_id,
+              start_date: new Date().toISOString().slice(0, 10),
+            });
+          }
+        }
       }
 
       setOpenEditModal(false);
       fetchStudents();
     } catch (error) {
+      console.error(
+        "Error al actualizar:",
+        error.response?.data || error.message,
+      );
       const backendErrors = error.response?.data?.errors;
       if (backendErrors) setErrorsEdit(mapErrors(backendErrors));
     }
@@ -256,8 +301,11 @@ export function Students() {
 
   const confirmDelete = async () => {
     try {
-      // Baja lógica del plan activo
-      await studentPlanService.delete(selectedStudent.student_plan_id);
+      // Baja lógica de todos los planes activos vinculados al alumno
+      for (const p of selectedStudent.activePlans || []) {
+        await studentPlanService.delete(p.student_plan_id);
+      }
+
       setOpenDeleteModal(false);
       fetchStudents();
     } catch (error) {
@@ -269,6 +317,28 @@ export function Students() {
   const openCreate = () => {
     resetForm();
     setOpenCreateModal(true);
+  };
+
+  const addPlanRow = () => {
+    setFormPlans([...formPlans, { teacher_id: "", plan_id: "" }]);
+  };
+
+  const removePlanRow = (index) => {
+    const updated = formPlans.filter((_, i) => i !== index);
+    setFormPlans(updated.length ? updated : [{ teacher_id: "", plan_id: "" }]);
+  };
+
+  const updatePlanRow = (index, field, value) => {
+    const updated = [...formPlans];
+    updated[index][field] = value;
+    setFormPlans(updated);
+  };
+
+  const handleScroll = (e, targetId) => {
+    const target = document.getElementById(targetId);
+    if (target && target.scrollTop !== e.target.scrollTop) {
+      target.scrollTop = e.target.scrollTop;
+    }
   };
 
   let columns = [
@@ -295,12 +365,46 @@ export function Students() {
     columns.push(
       {
         header: "Docente",
-        render: (row) =>
-          row.teacher_last_name
-            ? `${row.teacher_last_name}, ${row.teacher_first_name}`
-            : "-",
+        render: (row) => (
+          <div
+            id={`scroll-docente-${row.id}`}
+            onScroll={(e) => handleScroll(e, `scroll-plan-${row.id}`)}
+            className="max-h-24 overflow-y-auto pr-2 space-y-1 scrollbar-thin"
+          >
+            {row.activePlans?.map((p, i) => (
+              <div
+                key={i}
+                className="text-sm border-b border-gray-100 last:border-0 pb-1 truncate"
+                title={p.teacher_name}
+              >
+                {p.teacher_name}
+              </div>
+            ))}
+            {(!row.activePlans || row.activePlans.length === 0) && "-"}
+          </div>
+        ),
       },
-      { header: "Plan", accessor: "plan_name" },
+      {
+        header: "Plan",
+        render: (row) => (
+          <div
+            id={`scroll-plan-${row.id}`}
+            onScroll={(e) => handleScroll(e, `scroll-docente-${row.id}`)}
+            className="max-h-24 overflow-y-auto pr-2 space-y-1 scrollbar-thin"
+          >
+            {row.activePlans?.map((p, i) => (
+              <div
+                key={i}
+                className="text-sm border-b border-gray-100 last:border-0 pb-1 text-gray-700 dark:text-gray-300 truncate"
+                title={p.plan_name}
+              >
+                {p.plan_name}
+              </div>
+            ))}
+            {(!row.activePlans || row.activePlans.length === 0) && "-"}
+          </div>
+        ),
+      },
     );
   }
 
@@ -502,33 +606,62 @@ export function Students() {
           ))}
         </Select>
 
-        <Select
-          label="Docente"
-          value={formTeacherId}
-          onChange={(e) => setFormTeacherId(e.target.value)}
-          error={errorsCreate.teacher_id}
-        >
-          <option value="">Seleccione un docente</option>
-          {teachers.map((t) => (
-            <option key={t.id} value={t.id}>
-              {t.last_name}, {t.first_name}
-            </option>
+        {/* Gestión Dinámica de Clases */}
+        <div className="mt-6 border-t pt-4">
+          <div className="flex justify-between items-center mb-4">
+            <h3 className="font-semibold text-gray-700">Clases Asignadas</h3>
+            <Button size="sm" onClick={addPlanRow}>
+              + Añadir Clase
+            </Button>
+          </div>
+          {formPlans.map((row, idx) => (
+            <div
+              key={idx}
+              className="flex gap-2 items-end mb-3 bg-gray-50 p-2 rounded"
+            >
+              <div className="flex-1">
+                <Select
+                  label={idx === 0 ? "Docente" : ""}
+                  value={row.teacher_id}
+                  onChange={(e) =>
+                    updatePlanRow(idx, "teacher_id", e.target.value)
+                  }
+                >
+                  <option value="">Docente...</option>
+                  {teachers.map((t) => (
+                    <option key={t.id} value={t.id}>
+                      {t.last_name}, {t.first_name}
+                    </option>
+                  ))}
+                </Select>
+              </div>
+              <div className="flex-1">
+                <Select
+                  label={idx === 0 ? "Plan" : ""}
+                  value={row.plan_id}
+                  onChange={(e) =>
+                    updatePlanRow(idx, "plan_id", e.target.value)
+                  }
+                >
+                  <option value="">Plan...</option>
+                  {plans.map((p) => (
+                    <option key={p.id} value={p.id}>
+                      {p.name}
+                    </option>
+                  ))}
+                </Select>
+              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                className="mb-1 text-red-500"
+                onClick={() => removePlanRow(idx)}
+              >
+                ✕
+              </Button>
+            </div>
           ))}
-        </Select>
-
-        <Select
-          label="Plan"
-          value={formPlanId}
-          onChange={(e) => setFormPlanId(e.target.value)}
-          error={errorsCreate.plan_id}
-        >
-          <option value="">Seleccione un plan</option>
-          {plans.map((p) => (
-            <option key={p.id} value={p.id}>
-              {p.name}
-            </option>
-          ))}
-        </Select>
+        </div>
 
         <div className="flex justify-end gap-4 mt-10">
           <Button
@@ -611,36 +744,65 @@ export function Students() {
           ))}
         </Select>
 
+        {/* Gestión Dinámica de Clases en Edición */}
         {status === "active" && (
-          <>
-            <Select
-              label="Docente"
-              value={formTeacherId}
-              onChange={(e) => setFormTeacherId(e.target.value)}
-              error={errorsEdit.teacher_id}
-            >
-              <option value="">Seleccione un docente</option>
-              {teachers.map((t) => (
-                <option key={t.id} value={t.id}>
-                  {t.last_name}, {t.first_name}
-                </option>
-              ))}
-            </Select>
-
-            <Select
-              label="Plan"
-              value={formPlanId}
-              onChange={(e) => setFormPlanId(e.target.value)}
-              error={errorsEdit.plan_id}
-            >
-              <option value="">Seleccione un plan</option>
-              {plans.map((p) => (
-                <option key={p.id} value={p.id}>
-                  {p.name}
-                </option>
-              ))}
-            </Select>
-          </>
+          <div className="mt-6 border-t pt-4">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="font-semibold text-gray-700">Gestionar Clases</h3>
+              <Button size="sm" onClick={addPlanRow}>
+                + Añadir Clase
+              </Button>
+            </div>
+            {formPlans.map((row, idx) => (
+              <div
+                key={idx}
+                className="flex gap-2 items-end mb-3 bg-gray-50 p-2 rounded"
+              >
+                <div className="flex-1">
+                  <Select
+                    label={idx === 0 ? "Docente" : ""}
+                    value={row.teacher_id}
+                    onChange={(e) =>
+                      updatePlanRow(idx, "teacher_id", e.target.value)
+                    }
+                  >
+                    <option value="">Docente...</option>
+                    {teachers.map((t) => (
+                      <option key={t.id} value={t.id}>
+                        {t.last_name}, {t.first_name}
+                      </option>
+                    ))}
+                  </Select>
+                </div>
+                <div className="flex-1">
+                  <Select
+                    label={idx === 0 ? "Plan" : ""}
+                    value={row.plan_id}
+                    onChange={(e) =>
+                      updatePlanRow(idx, "plan_id", e.target.value)
+                    }
+                  >
+                    <option value="">Plan...</option>
+                    {plans.map((p) => (
+                      <option key={p.id} value={p.id}>
+                        {p.name}
+                      </option>
+                    ))}
+                  </Select>
+                </div>
+                {!row.student_plan_id && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="mb-1 text-red-500"
+                    onClick={() => removePlanRow(idx)}
+                  >
+                    ✕
+                  </Button>
+                )}
+              </div>
+            ))}
+          </div>
         )}
 
         <div className="flex justify-end gap-4 mt-10">
