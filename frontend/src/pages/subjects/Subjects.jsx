@@ -17,8 +17,7 @@ export function Subjects() {
   const [teachers, setTeachers] = useState([]);
   const [selectedTeacher, setSelectedTeacher] = useState("");
 
-  const [selectedTeacherId, setSelectedTeacherId] = useState("");
-
+  const [selectedTeacherIds, setSelectedTeacherIds] = useState([]);
   const [teacherSubjects, setTeacherSubjects] = useState([]);
 
   const [name, setName] = useState("");
@@ -50,21 +49,20 @@ export function Subjects() {
       const relations = teacherSubjectsRes.data.data || [];
 
       const merged = subjectsData.map((subject) => {
-        const relation = relations.find((r) => r.subject_id === subject.id);
-
+        const subjectTeachers = relations
+          .filter((r) => r.subject_id === subject.id)
+          .map((r) => ({ id: r.teacher_id, name: r.teacher_name }));
         return {
           ...subject,
-          teacher_subject_id: relation?.id || null,
-          teacher_id: relation?.teacher_id || "",
-          teacher_name: relation?.teacher_name || "",
+          teachers: subjectTeachers,
         };
       });
 
       let filtered = merged;
 
       if (selectedTeacher) {
-        filtered = merged.filter(
-          (s) => String(s.teacher_id) === String(selectedTeacher),
+        filtered = merged.filter((s) =>
+          s.teachers.some((t) => String(t.id) === String(selectedTeacher)),
         );
       }
 
@@ -102,7 +100,7 @@ export function Subjects() {
 
   const resetForm = () => {
     setName("");
-    setSelectedTeacherId("");
+    setSelectedTeacherIds([]);
 
     setErrorsCreate({});
     setErrorsEdit({});
@@ -135,14 +133,13 @@ export function Subjects() {
         return;
       }
 
-      const subjectRes = await subjectService.create({
-        name,
-      });
+      const subjectRes = await subjectService.create({ name });
+      const newSubjectId = subjectRes.data.data.id;
 
-      if (selectedTeacherId) {
+      for (const teacherId of selectedTeacherIds) {
         await teacherSubjectService.create({
-          teacher_id: selectedTeacherId,
-          subject_id: subjectRes.data.data.id,
+          teacher_id: teacherId,
+          subject_id: newSubjectId,
         });
       }
 
@@ -164,18 +161,7 @@ export function Subjects() {
     setSelectedSubject(subject);
 
     setName(subject.name || "");
-
-    try {
-      const relationRes = await teacherSubjectService.getAll();
-
-      const relation = relationRes.data.data.find(
-        (r) => r.subject_id === subject.id,
-      );
-
-      setSelectedTeacherId(relation?.teacher_id || "");
-    } catch {
-      setSelectedTeacherId("");
-    }
+    setSelectedTeacherIds(subject.teachers?.map((t) => t.id) || []);
 
     setErrorsEdit({});
     setOpenEditModal(true);
@@ -195,24 +181,27 @@ export function Subjects() {
 
       await subjectService.update(selectedSubject.id, { name });
 
-      const relationsRes = await teacherSubjectService.getAll();
-
-      const existingRelation = relationsRes.data.data.find(
+      // Sincronizar docentes
+      const relRes = await teacherSubjectService.getAll();
+      const existingRels = relRes.data.data.filter(
         (r) => r.subject_id === selectedSubject.id,
       );
+      const existingIds = existingRels.map((r) => r.teacher_id);
 
-      if (existingRelation && selectedTeacherId) {
-        await teacherSubjectService.update(existingRelation.id, {
-          teacher_id: selectedTeacherId,
-          subject_id: selectedSubject.id,
-        });
-      } else if (existingRelation && !selectedTeacherId) {
-        await teacherSubjectService.delete(existingRelation.id);
-      } else if (!existingRelation && selectedTeacherId) {
-        await teacherSubjectService.create({
-          teacher_id: selectedTeacherId,
-          subject_id: selectedSubject.id,
-        });
+      // Agregar nuevos
+      for (const tId of selectedTeacherIds) {
+        if (!existingIds.includes(tId)) {
+          await teacherSubjectService.create({
+            teacher_id: tId,
+            subject_id: selectedSubject.id,
+          });
+        }
+      }
+      // Eliminar los que ya no están
+      for (const rel of existingRels) {
+        if (!selectedTeacherIds.includes(rel.teacher_id)) {
+          await teacherSubjectService.delete(rel.id);
+        }
       }
 
       setOpenEditModal(false);
@@ -250,7 +239,22 @@ export function Subjects() {
 
   let columns = [
     { header: "Materia", accessor: "name" },
-    { header: "Docente", accessor: "teacher_name" },
+    {
+      header: "Docente(s)",
+      render: (row) => {
+        if (!row.teachers || row.teachers.length === 0) return "-";
+        if (row.teachers.length === 1) return row.teachers[0].name;
+        return (
+          <div className="max-h-16 overflow-y-auto border border-gray-100 p-1 rounded bg-gray-50 text-xs">
+            {row.teachers.map((t, idx) => (
+              <div key={t.id} className="mb-0.5 last:mb-0">
+                {idx + 1}. {t.name}
+              </div>
+            ))}
+          </div>
+        );
+      },
+    },
   ];
 
   if (isAdmin()) {
@@ -356,27 +360,33 @@ export function Subjects() {
         </div>
 
         <div className="flex flex-col mb-6">
-          <Label className="font-semibold mb-2">Docente</Label>
-
-          <Select
-            value={selectedTeacherId}
-            onChange={(e) => setSelectedTeacherId(e.target.value)}
-            className={inputClass(errorsCreate.teacher_id)}
-          >
-            <option value="">Sin docente asignado</option>
-
+          <Label className="font-semibold mb-2">Docentes</Label>
+          <div className="grid grid-cols-1 gap-2 max-h-40 overflow-y-auto p-2 border border-gray-200 rounded">
             {teachers.map((teacher) => (
-              <option key={teacher.id} value={teacher.id}>
+              <Label
+                key={teacher.id}
+                className="flex items-center gap-2 text-sm cursor-pointer hover:bg-gray-50 p-1 rounded"
+              >
+                <Input
+                  type="checkbox"
+                  checked={selectedTeacherIds.includes(teacher.id)}
+                  onChange={(e) => {
+                    if (e.target.checked) {
+                      setSelectedTeacherIds([
+                        ...selectedTeacherIds,
+                        teacher.id,
+                      ]);
+                    } else {
+                      setSelectedTeacherIds(
+                        selectedTeacherIds.filter((id) => id !== teacher.id),
+                      );
+                    }
+                  }}
+                />
                 {teacher.last_name}, {teacher.first_name}
-              </option>
+              </Label>
             ))}
-          </Select>
-
-          {errorsCreate.teacher_id && (
-            <p className="text-red-500 text-sm mt-1">
-              {errorsCreate.teacher_id}
-            </p>
-          )}
+          </div>
         </div>
 
         <div className="flex justify-end gap-4 mt-10">
@@ -421,25 +431,33 @@ export function Subjects() {
         </div>
 
         <div className="flex flex-col mb-6">
-          <Label className="font-semibold mb-2">Docente</Label>
-
-          <Select
-            value={selectedTeacherId}
-            onChange={(e) => setSelectedTeacherId(e.target.value)}
-            className={inputClass(errorsEdit.teacher_id)}
-          >
-            <option value="">Sin docente asignado</option>
-
+          <Label className="font-semibold mb-2">Docentes</Label>
+          <div className="grid grid-cols-1 gap-2 max-h-40 overflow-y-auto p-2 border border-gray-200 rounded">
             {teachers.map((teacher) => (
-              <option key={teacher.id} value={teacher.id}>
+              <Label
+                key={teacher.id}
+                className="flex items-center gap-2 text-sm cursor-pointer hover:bg-gray-50 p-1 rounded"
+              >
+                <Input
+                  type="checkbox"
+                  checked={selectedTeacherIds.includes(teacher.id)}
+                  onChange={(e) => {
+                    if (e.target.checked) {
+                      setSelectedTeacherIds([
+                        ...selectedTeacherIds,
+                        teacher.id,
+                      ]);
+                    } else {
+                      setSelectedTeacherIds(
+                        selectedTeacherIds.filter((id) => id !== teacher.id),
+                      );
+                    }
+                  }}
+                />
                 {teacher.last_name}, {teacher.first_name}
-              </option>
+              </Label>
             ))}
-          </Select>
-
-          {errorsEdit.teacher_id && (
-            <p className="text-red-500 text-sm mt-1">{errorsEdit.teacher_id}</p>
-          )}
+          </div>
         </div>
 
         <div className="flex justify-end gap-4 mt-10">

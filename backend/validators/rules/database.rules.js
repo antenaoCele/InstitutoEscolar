@@ -13,28 +13,27 @@ export const validateFinanceOverlap = (
     const safeTable = ALLOWED_TABLES[table];
     if (!safeTable) throw new Error("Tabla no permitida");
 
-    let { plan_id, start_date, end_date } = req.body;
+    let { plan_id, start_date } = req.body;
+    let new_end_date = req.body.end_date; // Puede ser null o una cadena de fecha
     if (!plan_id || !start_date) return true;
 
     const id = req.params?.id ? Number(req.params.id) : null;
 
-    const safeEndDate = end_date ?? "9999-12-31";
+    // Tratar end_date nulo como una fecha muy lejana en el futuro para la comparación
+    const new_plan_safe_end_date = new_end_date ?? "9999-12-31";
 
     const sql = `
       SELECT id FROM ${safeTable}
       WHERE plan_id = ?
-      AND start_date < ?
+      AND (? IS NULL OR id != ?) -- Excluir el registro actual si se está actualizando
       AND (
-        end_date IS NULL OR end_date > ?
+          start_date <= ? -- existing.start_date <= new_plan_safe_end_date
+          AND
+          ? <= (CASE WHEN end_date IS NULL THEN '9999-12-31' ELSE end_date END) -- new_plan.start_date <= existing_plan_safe_end_date
       )
       `;
 
-    const params = [plan_id, safeEndDate, start_date];
-
-    if (id) {
-      sql += " AND id != ?";
-      params.push(id);
-    }
+    const params = [plan_id, id, id, new_plan_safe_end_date, start_date];
 
     const [rows] = await db.execute(sql, params);
 
