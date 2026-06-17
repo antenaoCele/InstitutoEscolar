@@ -5,6 +5,7 @@ import { ScheduleStudentService } from "../../services/scheduleStudent.service";
 import { studentService } from "../../services/student.service";
 import { Modal } from "../../components/ui/Modal";
 import { isAdmin } from "../../utils/auth";
+import { PencilIcon, TrashBinIcon, CloseLineIcon } from "../../icons";
 
 export default function WeeklyCalendar() {
   // Datos
@@ -49,14 +50,20 @@ export default function WeeklyCalendar() {
 
   // Funciones
   const [isEditing, setIsEditing] = useState(false);
-
+  const [availableStudents, setAvailableStudents] = useState([]);
   const [incompatibleStudents, setIncompatibleStudents] = useState([]);
 
   const fetchTeachers = async () => {
     try {
       const res = await teacherService.getAll();
 
-      setTeachers(res.data.data || []);
+      const orderedTeachers = (res.data.data || []).sort(
+        (a, b) =>
+          a.last_name.localeCompare(b.last_name) ||
+          a.first_name.localeCompare(b.first_name),
+      );
+
+      setTeachers(orderedTeachers);
     } catch (error) {
       console.error("ERROR TEACHERS", error);
     }
@@ -92,16 +99,46 @@ export default function WeeklyCalendar() {
         ).values(),
       ];
 
-      setStudents(uniqueStudents);
+      const orderedStudents = uniqueStudents.sort(
+        (a, b) =>
+          a.last_name.localeCompare(b.last_name) ||
+          a.first_name.localeCompare(b.first_name),
+      );
+
+      setStudents(orderedStudents);
     } catch (error) {
       console.error("ERROR STUDENTS", error);
+    }
+  };
+
+  const fetchAvailableStudents = async (teacherId) => {
+    try {
+      if (!teacherId) {
+        setAvailableStudents([]);
+        return;
+      }
+
+      const response = await teacherService.getAvailableStudents(teacherId);
+
+      setAvailableStudents(
+        (response.data.data || []).sort(
+          (a, b) =>
+            a.last_name.localeCompare(b.last_name) ||
+            a.first_name.localeCompare(b.first_name),
+        ),
+      );
+    } catch (error) {
+      console.error(error);
+      setAvailableStudents([]);
     }
   };
 
   const handleAddStudent = async (isEdit = false) => {
     if (!selectedStudentId) return;
 
-    const student = students.find((s) => s.id === Number(selectedStudentId));
+    const student = availableStudents.find(
+      (s) => s.id === Number(selectedStudentId),
+    );
 
     if (!student) return;
 
@@ -167,7 +204,7 @@ export default function WeeklyCalendar() {
     setSelectedStudentId("");
   };
 
-  const handleRemoveStudent = (studentId) => {
+  const handleRemoveStudent = async (studentId) => {
     setSelectedStudents((prev) =>
       prev.filter((student) => student.id !== studentId),
     );
@@ -175,6 +212,8 @@ export default function WeeklyCalendar() {
     setSelectedStudentPlans((prev) =>
       prev.filter((student) => student.studentId !== studentId),
     );
+
+    await fetchAvailableStudents(teacherId);
 
     setErrorsCreate((prev) => ({
       ...prev,
@@ -415,7 +454,9 @@ export default function WeeklyCalendar() {
 
     setIncompatibleStudents([]);
 
-    setOpenEditModal(true); // ← mover esto acá
+    await fetchAvailableStudents(schedule.teacher_id);
+
+    setOpenEditModal(true);
   };
 
   const fetchScheduleInfo = async (id) => {
@@ -636,9 +677,9 @@ export default function WeeklyCalendar() {
         >
           <option value="">Todas las aulas</option>
 
-          <option value="A">Aula A</option>
+          <option value="A">🟦 Aula A</option>
 
-          <option value="B">Aula B</option>
+          <option value="B">🟥 Aula B</option>
         </select>
 
         {isAdmin() && (
@@ -867,8 +908,12 @@ export default function WeeklyCalendar() {
 
           <select
             value={teacherId}
-            onChange={(e) => {
-              setTeacherId(e.target.value);
+            onChange={async (e) => {
+              const id = e.target.value;
+
+              setTeacherId(id);
+
+              await fetchAvailableStudents(id);
             }}
             className="
               border
@@ -995,27 +1040,34 @@ export default function WeeklyCalendar() {
 
           <div className="flex gap-2">
             <select
+              disabled={!teacherId}
               value={selectedStudentId}
               onChange={(e) => setSelectedStudentId(e.target.value)}
-              className="
+              className={`
                 flex-1
                 border
-                border-gray-300
                 rounded
                 px-3
                 py-2
-              "
+                ${!teacherId ? "bg-gray-100 text-gray-400 cursor-not-allowed" : "bg-white"}
+              `}
             >
-              <option value="">Seleccionar alumno</option>
+              <option value="">
+                {teacherId
+                  ? "Seleccionar alumno"
+                  : "Seleccione primero un docente"}
+              </option>
 
-              {students.map((student) => (
-                <option
-                  key={`${student.id}-${student.first_name}-${student.last_name}`}
-                  value={student.id}
-                >
-                  {student.last_name}, {student.first_name}
-                </option>
-              ))}
+              {availableStudents
+                .filter(
+                  (student) =>
+                    !selectedStudents.some((s) => s.id === student.id),
+                )
+                .map((student) => (
+                  <option key={student.id} value={student.id}>
+                    {student.last_name}, {student.first_name}
+                  </option>
+                ))}
             </select>
 
             <button
@@ -1179,9 +1231,6 @@ export default function WeeklyCalendar() {
             Cancelar
           </button>
 
-          {/* {errorsCreate.general && (
-            <p className="text-red-500 text-sm mb-2">{errorsCreate.general}</p>
-          )} */}
           <button
             onClick={handleCreate}
             className="
@@ -1216,7 +1265,13 @@ export default function WeeklyCalendar() {
 
           <select
             value={teacherId}
-            onChange={(e) => setTeacherId(e.target.value)}
+            onChange={async (e) => {
+              const id = e.target.value;
+
+              setTeacherId(id);
+
+              await fetchAvailableStudents(id);
+            }}
             className="
               border
               border-gray-300
@@ -1336,27 +1391,34 @@ export default function WeeklyCalendar() {
 
           <div className="flex gap-2">
             <select
+              disabled={!teacherId}
               value={selectedStudentId}
               onChange={(e) => setSelectedStudentId(e.target.value)}
-              className="
+              className={`
                 flex-1
                 border
-                border-gray-300
                 rounded
                 px-3
                 py-2
-              "
+                ${!teacherId ? "bg-gray-100 text-gray-400 cursor-not-allowed" : "bg-white"}
+              `}
             >
-              <option value="">Seleccionar alumno</option>
+              <option value="">
+                {teacherId
+                  ? "Seleccionar alumno"
+                  : "Seleccione primero un docente"}
+              </option>
 
-              {students.map((student) => (
-                <option
-                  key={`${student.id}-${student.first_name}-${student.last_name}`}
-                  value={student.id}
-                >
-                  {student.last_name}, {student.first_name}
-                </option>
-              ))}
+              {availableStudents
+                .filter(
+                  (student) =>
+                    !selectedStudents.some((s) => s.id === student.id),
+                )
+                .map((student) => (
+                  <option key={student.id} value={student.id}>
+                    {student.last_name}, {student.first_name}
+                  </option>
+                ))}
             </select>
 
             <button
@@ -1519,9 +1581,6 @@ export default function WeeklyCalendar() {
             Cancelar
           </button>
 
-          {/* {errorsEdit.general && (
-            <p className="text-red-500 text-sm mb-2">{errorsEdit.general}</p>
-          )} */}
           <button
             onClick={handleUpdate}
             className="
@@ -1535,9 +1594,6 @@ export default function WeeklyCalendar() {
           >
             Guardar
           </button>
-          {/* {errorsEdit.plans && (
-            <div className="mt-2 text-sm text-red-500">{errorsEdit.plans}</div>
-          )} */}
         </div>
       </Modal>
 
@@ -1614,12 +1670,12 @@ export default function WeeklyCalendar() {
               {selectedScheduleInfo.plans.length === 0 ? (
                 <div
                   className="
-        border
-        rounded-lg
-        p-4
-        bg-gray-50
-        text-gray-500
-      "
+                    border
+                    rounded-lg
+                    p-4
+                    bg-gray-50
+                    text-gray-500
+                  "
                 >
                   No hay planes asignados.
                 </div>
@@ -1628,11 +1684,11 @@ export default function WeeklyCalendar() {
                   <div
                     key={plan.id}
                     className="
-          border
-          rounded-lg
-          p-4
-          bg-gray-50
-        "
+                      border
+                      rounded-lg
+                      p-4
+                      bg-gray-50
+                    "
                   >
                     <div className="font-semibold text-black">{plan.name}</div>
 
@@ -1707,9 +1763,13 @@ export default function WeeklyCalendar() {
                   py-2
                   border
                   rounded
+                  flex
+                  items-center
+                  justify-center
+                  gap-2
                 "
               >
-                Cerrar
+                <CloseLineIcon className="w-4 h-4" />
               </button>
 
               {isAdmin() && (
@@ -1725,14 +1785,18 @@ export default function WeeklyCalendar() {
                     className="
                       cursor-pointer
                       w-28
-                      px-4
+                      px-2
                       py-2
                       rounded
                       bg-[#0cc0df]
                       text-white
+                      flex
+                      items-center
+                      justify-center
+                      gap-2
                     "
                   >
-                    Editar
+                    <PencilIcon className="w-4 h-4" />
                   </button>
 
                   <button
@@ -1751,9 +1815,13 @@ export default function WeeklyCalendar() {
                       rounded
                       bg-red-500
                       text-white
+                      flex
+                      items-center
+                      justify-center
+                      gap-2
                     "
                   >
-                    Eliminar
+                    <TrashBinIcon className="w-4 h-4" />
                   </button>
                 </>
               )}
