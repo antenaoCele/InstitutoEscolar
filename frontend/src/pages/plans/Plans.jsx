@@ -22,6 +22,7 @@ export function Plans() {
 
   const [subjects, setSubjects] = useState([]);
   const [selectedSubjects, setSelectedSubjects] = useState([]);
+  const [allPlanSubjects, setAllPlanSubjects] = useState([]); // Nuevo estado para todas las relaciones plan-materia
 
   const [openEditModal, setOpenEditModal] = useState(false);
   const [openDeleteModal, setOpenDeleteModal] = useState(false);
@@ -109,6 +110,10 @@ export function Plans() {
 
         const subjectsRes = await subjectService.getAll();
         setSubjects(subjectsRes.data.data || []);
+
+        // Cargar todas las relaciones plan-materia
+        const planSubjectsRes = await PlanSubjectService.getAll();
+        setAllPlanSubjects(planSubjectsRes.data.data || []);
       } catch (error) {
         console.error(error);
       }
@@ -181,6 +186,12 @@ export function Plans() {
 
     setEndDate(planPrice.end_date ? planPrice.end_date.split("T")[0] : "");
 
+    // Cargar las materias asociadas al plan seleccionado
+    const subjectsForThisPlan = allPlanSubjects
+      .filter((ps) => ps.plan_id === planPrice.plan_id)
+      .map((ps) => ps.subject_id);
+    setSelectedSubjects(subjectsForThisPlan);
+
     setErrorsEdit({});
     setOpenEditModal(true);
   };
@@ -201,12 +212,49 @@ export function Plans() {
         end_date: endDate.trim() || null,
       });
 
+      // --- Lógica de sincronización de materias ---
+      const currentPlanSubjects = allPlanSubjects.filter(
+        (ps) => ps.plan_id === selectedPlanPrice.plan_id,
+      );
+      const currentSubjectIds = currentPlanSubjects.map((ps) => ps.subject_id);
+
+      // Materias a añadir
+      const subjectsToAdd = selectedSubjects.filter(
+        (subjectId) => !currentSubjectIds.includes(subjectId),
+      );
+
+      // Materias a eliminar
+      const currentSelectedSubjectIds = new Set(selectedSubjects); // Use a Set for efficient lookup
+      const subjectsToRemove = currentSubjectIds.filter(
+        (subjectId) => !currentSelectedSubjectIds.has(subjectId),
+      );
+
+      // Ejecutar adiciones
+      for (const subjectId of subjectsToAdd) {
+        await PlanSubjectService.create({
+          plan_id: selectedPlanPrice.plan_id,
+          subject_id: subjectId,
+        });
+      }
+
+      // Ejecutar eliminaciones
+      for (const subjectId of subjectsToRemove) {
+        const planSubjectRelation = currentPlanSubjects.find(
+          (ps) => ps.subject_id === subjectId,
+        );
+        if (planSubjectRelation)
+          await PlanSubjectService.delete(planSubjectRelation.id);
+      }
+
       alert("Plan actualizado con éxito");
       setOpenEditModal(false);
       fetchPlanPrices();
       resetForm();
     } catch (error) {
       const backendErrors = error.response?.data?.errors;
+      // Re-fetch all plan-subject relations after update to ensure state consistency
+      const planSubjectsRes = await PlanSubjectService.getAll();
+      setAllPlanSubjects(planSubjectsRes.data.data || []);
       if (backendErrors) {
         setErrorsEdit(mapErrors(backendErrors));
       } else {

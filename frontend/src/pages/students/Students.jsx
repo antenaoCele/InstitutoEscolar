@@ -278,7 +278,7 @@ export function Students() {
 
   const tableTitle = (
     <div className="flex justify-between items-center">
-      <span>Alumnos</span>
+      <span>Alumnos - Total: {filteredStudents.length}</span>
       {showCreateButtons && (
         <Button size="sm" onClick={openCreate} className={buttonClass}>
           +
