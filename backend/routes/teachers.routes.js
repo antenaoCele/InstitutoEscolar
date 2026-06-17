@@ -28,6 +28,15 @@ router.get(
 );
 
 router.get(
+  "/:id/students",
+  authentication,
+  authorization("ADMIN"),
+  ...validateID("teachers"),
+  checkValidations,
+  teachersController.getAvailableStudents,
+);
+
+router.get(
   "/:id",
   authentication,
   ...validateID("teachers"),
