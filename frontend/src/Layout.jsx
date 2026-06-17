@@ -58,8 +58,8 @@ export const Layout = () => {
               </button>
               {openStudents && (
                 <div className="ml-4 flex flex-col gap-2">
-                  <Link to="/students?status=all">Total de alumnos</Link>
-                  <Link to="/students?status=active">Alumnos activos</Link>
+                  <Link to="/students?status=active">Total de alumnos</Link>
+                  <Link to="/students?status=all">Alumnos activos</Link>
                 </div>
               )}
             </>

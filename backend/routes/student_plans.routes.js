@@ -17,6 +17,13 @@ const router = express.Router();
 
 router.get("/", authentication, studentPlansController.getAll);
 
+router.post(
+  "/reactivate",
+  authentication,
+  authorization("ADMIN"),
+  studentPlansController.reactivate,
+);
+
 //OBTENER EL ESTADO DE PAGO DE LOS ALUMNOS Y FILTRARLOS POR DOCENTE(es opcional lo del docente)
 router.get(
   "/account-status",
@@ -58,7 +65,7 @@ router.delete(
   authorization("ADMIN"),
   ...validateID("student_plans"),
   checkValidations,
-  studentPlansController.delete,
+  studentPlansController.softDelete,
 );
 
 export default router;

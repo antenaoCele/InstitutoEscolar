@@ -9,7 +9,7 @@ export const studentsController = {
 
   getAllWithStatus: async (req, res) => {
     try {
-      const { status = "all", teacher_id, plan_id } = req.query;
+      const { status: filterStatus = "all", teacher_id, plan_id } = req.query;
 
       const today = new Date();
       const yearMonth = today.toISOString().slice(0, 7);
@@ -28,7 +28,11 @@ export const studentsController = {
     sp.id AS student_plan_id,
     sp.teacher_id,
     sp.plan_id,
+    sp.start_date,
+    sp.end_date,
 
+    tea.first_name AS teacher_first_name,
+    tea.last_name AS teacher_last_name,
     pl.name AS plan_name,
 
     pp.price,
@@ -54,8 +58,11 @@ export const studentsController = {
     AND sp.start_date <= CURDATE()
     AND (
       sp.end_date IS NULL
-      OR sp.end_date >= CURDATE()
+      OR sp.end_date > CURDATE()
     )
+
+  LEFT JOIN teachers tea
+    ON tea.id = sp.teacher_id
 
   LEFT JOIN plans pl
     ON pl.id = sp.plan_id
@@ -87,7 +94,7 @@ export const studentsController = {
         params.push(plan_id);
       }
 
-      if (status === "active") {
+      if (filterStatus === "active") {
         query += ` AND sp.id IS NOT NULL `;
       }
 
@@ -96,22 +103,22 @@ export const studentsController = {
           s.id,
           sp.id,
           pp.price,
-          t.id
+          t.id,
+          tea.id,
+          pl.id
       `;
 
       const [rows] = await db.execute(query, params);
-      console.log(rows);
 
       const result = rows.map((row) => {
-        const { interest, total_paid, price, expected_total, debt, status } =
-          calculateAccountStatus({
-            price: row.price,
-            total_paid: row.total_paid,
-            today,
-            yearMonth,
-          });
+        const accountData = calculateAccountStatus({
+          price: row.price,
+          total_paid: row.total_paid,
+          today,
+          yearMonth,
+        });
 
-        return {
+        const studentData = {
           id: row.student_id,
           first_name: row.first_name,
           last_name: row.last_name,
@@ -120,24 +127,37 @@ export const studentsController = {
           birth_date: row.birth_date,
           level: row.level,
           grade: row.grade,
-          teacher_id: row.teacher_id,
-          plan_id: row.plan_id,
-          tutor: row.tutor_id
-            ? {
-                id: row.tutor_id,
-                first_name: row.tutor_first_name,
-                last_name: row.tutor_last_name,
-                dni: row.tutor_dni,
-                phone: row.tutor_phone,
-              }
-            : null,
-          price,
-          total_paid,
-          interest,
-          expected_total,
-          debt,
-          status,
+          student_plan_id: row.student_plan_id,
         };
+
+        if (filterStatus === "active" && row.student_plan_id) {
+          Object.assign(studentData, {
+            student_plan_id: row.student_plan_id,
+            teacher_id: row.teacher_id,
+            start_date: row.start_date,
+            end_date: row.end_date,
+            teacher_first_name: row.teacher_first_name,
+            teacher_last_name: row.teacher_last_name,
+            plan_id: row.plan_id,
+            plan_name: row.plan_name,
+            tutor: row.tutor_id
+              ? {
+                  id: row.tutor_id,
+                  first_name: row.tutor_first_name,
+                  last_name: row.tutor_last_name,
+                  dni: row.tutor_dni,
+                  phone: row.tutor_phone,
+                }
+              : null,
+            price: accountData.price,
+            total_paid: accountData.total_paid,
+            interest: accountData.interest,
+            expected_total: accountData.expected_total,
+            debt: accountData.debt,
+            status: accountData.status,
+          });
+        }
+        return studentData;
       });
 
       res.json({
@@ -279,6 +299,51 @@ export const studentsController = {
         success: false,
         message: "Error al obtener alumno",
       });
+    }
+  },
+
+  createWithPlan: async (req, res) => {
+    try {
+      const { formPlans, ...studentData } = req.body;
+      const start_date = new Date().toISOString().slice(0, 10);
+
+      // 1. Crear alumno
+      const [studentResult] = await db.execute(
+        `INSERT INTO students (first_name, last_name, dni, school, birth_date, level, grade) VALUES (?, ?, ?, ?, ?, ?, ?)`,
+        [
+          studentData.first_name,
+          studentData.last_name,
+          studentData.dni,
+          studentData.school,
+          studentData.birth_date,
+          studentData.level,
+          studentData.grade,
+        ],
+      );
+
+      const studentId = studentResult.insertId;
+
+      // 2. Crear relación en student_plans
+      if (formPlans && Array.isArray(formPlans)) {
+        for (const p of formPlans) {
+          if (p.teacher_id && p.plan_id) {
+            await db.execute(
+              `INSERT INTO student_plans (student_id, plan_id, teacher_id, start_date) VALUES (?, ?, ?, ?)`,
+              [studentId, p.plan_id, p.teacher_id, start_date],
+            );
+          }
+        }
+      }
+
+      res.status(201).json({
+        success: true,
+        message: "Alumno y plan creados exitosamente",
+      });
+    } catch (error) {
+      console.error(error);
+      res
+        .status(500)
+        .json({ success: false, message: "Error al crear alumno con plan" });
     }
   },
 };

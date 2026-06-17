@@ -182,4 +182,41 @@ export const studentPlansController = {
       });
     }
   },
+
+  softDelete: async (req, res) => {
+    try {
+      const id = Number(req.params.id);
+      const end_date = new Date().toISOString().slice(0, 10);
+
+      await db.execute(`UPDATE student_plans SET end_date = ? WHERE id = ?`, [
+        end_date,
+        id,
+      ]);
+
+      res.json({ success: true, message: "Baja realizada correctamente" });
+    } catch (error) {
+      res
+        .status(500)
+        .json({ success: false, message: "Error al procesar la baja" });
+    }
+  },
+
+  reactivate: async (req, res) => {
+    try {
+      const { student_id } = req.body;
+      // Buscamos el último plan del alumno para reactivarlo (quitar end_date)
+      await db.execute(
+        `UPDATE student_plans 
+         SET end_date = NULL 
+         WHERE student_id = ? 
+         ORDER BY id DESC LIMIT 1`,
+        [student_id],
+      );
+      res.json({ success: true, message: "Alumno reactivado correctamente" });
+    } catch (error) {
+      res
+        .status(500)
+        .json({ success: false, message: "Error al reactivar al alumno" });
+    }
+  },
 };

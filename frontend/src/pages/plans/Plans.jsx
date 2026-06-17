@@ -184,12 +184,13 @@ export function Plans() {
       planPrice.start_date ? planPrice.start_date.split("T")[0] : "",
     );
 
-    setEndDate(planPrice.end_date ? planPrice.end_date.split("T")[0] : "");
+    // SIEMPRE VACÍA
+    setEndDate("");
 
-    // Cargar las materias asociadas al plan seleccionado
     const subjectsForThisPlan = allPlanSubjects
       .filter((ps) => ps.plan_id === planPrice.plan_id)
       .map((ps) => ps.subject_id);
+
     setSelectedSubjects(subjectsForThisPlan);
 
     setErrorsEdit({});
@@ -503,6 +504,35 @@ export function Plans() {
               {errorsEdit.name || errorsEdit.plan_id}
             </p>
           )}
+        </div>
+
+        <div className="flex flex-col mb-6">
+          <Label className="font-semibold mb-2">Materias</Label>
+
+          <div className="grid grid-cols-2 gap-2 max-h-40 overflow-y-auto p-2 border border-gray-200 rounded">
+            {subjects.map((s) => (
+              <Label key={s.id} className="flex items-center gap-2 text-sm">
+                <Input
+                  type="checkbox"
+                  value={s.id}
+                  checked={selectedSubjects.includes(s.id)}
+                  onChange={(e) => {
+                    const id = Number(e.target.value);
+
+                    if (e.target.checked) {
+                      setSelectedSubjects([...selectedSubjects, id]);
+                    } else {
+                      setSelectedSubjects(
+                        selectedSubjects.filter((sid) => sid !== id),
+                      );
+                    }
+                  }}
+                />
+
+                {s.name}
+              </Label>
+            ))}
+          </div>
         </div>
 
         <div className="flex flex-col mb-6">

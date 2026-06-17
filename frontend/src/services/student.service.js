@@ -10,6 +10,7 @@ export const studentService = {
       },
     }),
   create: (data) => api.post("/students", data),
+  createWithPlan: (data) => api.post("/students", data),
   update: (id, data) => api.put(`/students/${id}`, data),
   delete: (id) => api.delete(`/students/${id}`),
 };

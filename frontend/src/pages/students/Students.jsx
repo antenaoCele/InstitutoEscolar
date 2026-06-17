@@ -10,6 +10,7 @@ import Input from "../../components/form/Input";
 import Select from "../../components/form/Select";
 import SubmitButton from "../../components/form/SubmitButton";
 import { Modal } from "../../components/ui/Modal";
+import { studentPlanService } from "../../services/studenPlan.service";
 import { isAdmin } from "../../utils/auth";
 
 export function Students() {
@@ -38,6 +39,10 @@ export function Students() {
   const [level, setLevel] = useState("");
   const [grade, setGrade] = useState("");
 
+  // Estados para el formulario
+  const [formTeacherId, setFormTeacherId] = useState("");
+  const [formPlanId, setFormPlanId] = useState("");
+
   const [errorsCreate, setErrorsCreate] = useState({});
   const [errorsEdit, setErrorsEdit] = useState({});
 
@@ -56,6 +61,8 @@ export function Students() {
     setBirthDate("");
     setLevel("");
     setGrade("");
+    setFormTeacherId("");
+    setFormPlanId("");
     setErrorsCreate({});
     setErrorsEdit({});
   };
@@ -72,12 +79,14 @@ export function Students() {
     try {
       const params = { status };
 
-      if (selectedTeacher) {
-        params.teacher_id = selectedTeacher;
-      }
+      if (status === "active") {
+        if (selectedTeacher) {
+          params.teacher_id = selectedTeacher;
+        }
 
-      if (selectedPlan) {
-        params.plan_id = selectedPlan;
+        if (selectedPlan) {
+          params.plan_id = selectedPlan;
+        }
       }
 
       const { data } = await studentService.getAll(params);
@@ -97,6 +106,14 @@ export function Students() {
   useEffect(() => {
     fetchStudents();
   }, [location.search, selectedTeacher, selectedPlan]);
+
+  useEffect(() => {
+    if (status === "all") {
+      setSelectedTeacher("");
+      setSelectedPlan("");
+      setSearchSchool("");
+    }
+  }, [status]);
 
   useEffect(() => {
     const fetchFilters = async () => {
@@ -136,7 +153,7 @@ export function Students() {
     try {
       setErrorsCreate({});
 
-      await studentService.create({
+      await studentService.createWithPlan({
         first_name: firstName,
         last_name: lastName,
         dni,
@@ -144,6 +161,7 @@ export function Students() {
         birth_date: birthDate,
         level,
         grade,
+        formPlans: [{ teacher_id: formTeacherId, plan_id: formPlanId }],
       });
 
       setOpenCreateModal(false);
@@ -165,9 +183,21 @@ export function Students() {
     setBirthDate(student.birth_date?.split("T")[0] || "");
     setLevel(student.level || "");
     setGrade(student.grade || "");
+    setFormTeacherId(student.teacher_id || "");
+    setFormPlanId(student.plan_id || "");
 
     setErrorsEdit({});
     setOpenEditModal(true);
+  };
+
+  const handleReactivate = async (studentId) => {
+    try {
+      await studentPlanService.reactivate(studentId);
+      fetchStudents();
+    } catch (error) {
+      console.error(error);
+      alert("Error al reactivar al alumno");
+    }
   };
 
   const handleUpdate = async () => {
@@ -201,6 +231,16 @@ export function Students() {
         grade,
       });
 
+      // Si estamos en la vista de activos, también actualizamos el plan/docente
+      if (status === "active" && selectedStudent?.student_plan_id) {
+        await studentPlanService.update(selectedStudent.student_plan_id, {
+          student_id: selectedStudent.id,
+          teacher_id: formTeacherId,
+          plan_id: formPlanId,
+          start_date: selectedStudent.start_date, // Mantenemos la fecha de inicio original
+        });
+      }
+
       setOpenEditModal(false);
       fetchStudents();
     } catch (error) {
@@ -216,7 +256,8 @@ export function Students() {
 
   const confirmDelete = async () => {
     try {
-      await studentService.delete(selectedStudent.id);
+      // Baja lógica del plan activo
+      await studentPlanService.delete(selectedStudent.student_plan_id);
       setOpenDeleteModal(false);
       fetchStudents();
     } catch (error) {
@@ -249,7 +290,42 @@ export function Students() {
     columns.splice(3, 0, { header: "DNI", accessor: "dni" });
   }
 
-  if (isAdmin() && status !== "active") {
+  // Sumar Docente y Plan solo en Activos
+  if (status === "active") {
+    columns.push(
+      {
+        header: "Docente",
+        render: (row) =>
+          row.teacher_last_name
+            ? `${row.teacher_last_name}, ${row.teacher_first_name}`
+            : "-",
+      },
+      { header: "Plan", accessor: "plan_name" },
+    );
+  }
+
+  // Botón Activar solo en "Total de Alumnos" para alumnos inactivos
+  if (isAdmin() && status === "all") {
+    columns.push({
+      header: "Acciones",
+      render: (row) => (
+        <div className="flex gap-2">
+          {!row.student_plan_id && (
+            <Button
+              size="sm"
+              onClick={() => handleReactivate(row.id)}
+              className={buttonClass}
+            >
+              Activar
+            </Button>
+          )}
+        </div>
+      ),
+    });
+  }
+
+  // Mover botones de acción solo a Alumnos Activos
+  if (isAdmin() && status === "active") {
     columns.push({
       header: "Acciones",
       render: (row) => (
@@ -274,11 +350,13 @@ export function Students() {
     });
   }
 
-  const showCreateButtons = isAdmin() && status !== "active";
+  const showCreateButtons = isAdmin() && status === "active";
 
   const tableTitle = (
     <div className="flex justify-between items-center">
-      <span>Alumnos - Total: {filteredStudents.length}</span>
+      <span>
+        {status === "active" ? "Alumnos Activos" : "Total de Alumnos"}
+      </span>
       {showCreateButtons && (
         <Button size="sm" onClick={openCreate} className={buttonClass}>
           +
@@ -304,40 +382,44 @@ export function Students() {
           className="w-40"
         />
 
-        <Input
-          placeholder="Buscar por colegio o universidad"
-          value={searchSchool}
-          onChange={(e) => setSearchSchool(e.target.value)}
-          className="w-60"
-        />
+        {status === "active" && (
+          <>
+            <Input
+              placeholder="Buscar por colegio o universidad"
+              value={searchSchool}
+              onChange={(e) => setSearchSchool(e.target.value)}
+              className="w-60"
+            />
 
-        <Select
-          value={selectedTeacher}
-          onChange={(e) => setSelectedTeacher(e.target.value)}
-          className="p-2 border border-gray-300 rounded w-60"
-        >
-          <option value="">Todos los docentes</option>
+            <Select
+              value={selectedTeacher}
+              onChange={(e) => setSelectedTeacher(e.target.value)}
+              className="p-2 border border-gray-300 rounded w-60"
+            >
+              <option value="">Todos los docentes</option>
 
-          {teachers.map((teacher) => (
-            <option key={teacher.id} value={teacher.id}>
-              {teacher.last_name}, {teacher.first_name}
-            </option>
-          ))}
-        </Select>
+              {teachers.map((teacher) => (
+                <option key={teacher.id} value={teacher.id}>
+                  {teacher.last_name}, {teacher.first_name}
+                </option>
+              ))}
+            </Select>
 
-        <Select
-          value={selectedPlan}
-          onChange={(e) => setSelectedPlan(e.target.value)}
-          className="p-2 border border-gray-300 rounded w-60"
-        >
-          <option value="">Todos los planes</option>
+            <Select
+              value={selectedPlan}
+              onChange={(e) => setSelectedPlan(e.target.value)}
+              className="p-2 border border-gray-300 rounded w-60"
+            >
+              <option value="">Todos los planes</option>
 
-          {plans.map((plan) => (
-            <option key={plan.id} value={plan.id}>
-              {plan.name}
-            </option>
-          ))}
-        </Select>
+              {plans.map((plan) => (
+                <option key={plan.id} value={plan.id}>
+                  {plan.name}
+                </option>
+              ))}
+            </Select>
+          </>
+        )}
       </div>
 
       <BasicTable
@@ -416,6 +498,34 @@ export function Students() {
           {[1, 2, 3, 4, 5, 6, 7].map((g) => (
             <option key={g} value={g}>
               {g}
+            </option>
+          ))}
+        </Select>
+
+        <Select
+          label="Docente"
+          value={formTeacherId}
+          onChange={(e) => setFormTeacherId(e.target.value)}
+          error={errorsCreate.teacher_id}
+        >
+          <option value="">Seleccione un docente</option>
+          {teachers.map((t) => (
+            <option key={t.id} value={t.id}>
+              {t.last_name}, {t.first_name}
+            </option>
+          ))}
+        </Select>
+
+        <Select
+          label="Plan"
+          value={formPlanId}
+          onChange={(e) => setFormPlanId(e.target.value)}
+          error={errorsCreate.plan_id}
+        >
+          <option value="">Seleccione un plan</option>
+          {plans.map((p) => (
+            <option key={p.id} value={p.id}>
+              {p.name}
             </option>
           ))}
         </Select>
@@ -500,6 +610,38 @@ export function Students() {
             </option>
           ))}
         </Select>
+
+        {status === "active" && (
+          <>
+            <Select
+              label="Docente"
+              value={formTeacherId}
+              onChange={(e) => setFormTeacherId(e.target.value)}
+              error={errorsEdit.teacher_id}
+            >
+              <option value="">Seleccione un docente</option>
+              {teachers.map((t) => (
+                <option key={t.id} value={t.id}>
+                  {t.last_name}, {t.first_name}
+                </option>
+              ))}
+            </Select>
+
+            <Select
+              label="Plan"
+              value={formPlanId}
+              onChange={(e) => setFormPlanId(e.target.value)}
+              error={errorsEdit.plan_id}
+            >
+              <option value="">Seleccione un plan</option>
+              {plans.map((p) => (
+                <option key={p.id} value={p.id}>
+                  {p.name}
+                </option>
+              ))}
+            </Select>
+          </>
+        )}
 
         <div className="flex justify-end gap-4 mt-10">
           <Button

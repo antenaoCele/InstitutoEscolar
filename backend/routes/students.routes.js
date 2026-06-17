@@ -39,7 +39,7 @@ router.post(
   authorization("ADMIN"),
   validateStudents,
   checkValidations,
-  studentsController.create,
+  studentsController.createWithPlan,
 );
 
 router.put(
