@@ -52,6 +52,55 @@ export const teachersController = {
     }
   },
 
+  getAvailableStudents: async (req, res) => {
+    try {
+      const teacherId = Number(req.params.id);
+
+      const [rows] = await db.execute(
+        `
+        SELECT DISTINCT
+          s.id,
+          s.first_name,
+          s.last_name
+        FROM students s
+
+        JOIN student_plans sp
+          ON sp.student_id = s.id
+          AND sp.end_date IS NULL
+
+        JOIN plans p
+          ON p.id = sp.plan_id
+
+        JOIN plan_subjects ps
+          ON ps.plan_id = p.id
+
+        JOIN teacher_subjects ts
+          ON ts.subject_id = ps.subject_id
+
+        WHERE ts.teacher_id = ?
+
+        ORDER BY
+          s.last_name,
+          s.first_name
+        `,
+        [teacherId],
+      );
+
+      res.json({
+        success: true,
+        total: rows.length,
+        data: rows,
+      });
+    } catch (error) {
+      console.error(error);
+
+      res.status(500).json({
+        success: false,
+        message: "Error al obtener alumnos disponibles",
+      });
+    }
+  },
+
   getLiquidations: async (req, res) => {
     const id = Number(req.params.id);
 
