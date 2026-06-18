@@ -1,9 +1,19 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "../../context/Auth.jsx";
 import Button from "../../components/ui/Button";
-import { UserIcon } from "../../icons";
+import { BackIcon, UserIcon } from "../../icons";
+import {
+  PencilIcon,
+  TrashBinIcon,
+  CloseLineIcon,
+  SaveIcon,
+  MoreIcon,
+  CreateIcon,
+} from "../../icons";
 
 export default function UserProfiles() {
+  const buttonClass = "cursor-pointer transition transform hover:scale-105";
+
   const { fetchAuth } = useAuth();
   const [formData, setFormData] = useState({
     id: "",
@@ -142,14 +152,53 @@ export default function UserProfiles() {
 
           <div className="flex justify-end gap-3 pt-4 border-t dark:border-gray-800">
             <Button
-              type="button"
-              className="bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-300"
+              title="Volver"
+              size="icon"
+              variant="outline"
               onClick={() => window.history.back()}
+              className="
+                cursor-pointer
+                w-12
+                h-12
+                flex
+                items-center
+                justify-center
+                transition
+                transform
+                hover:scale-105
+              "
             >
-              Volver
+              <img src={BackIcon} alt="Volver" className="w-5 h-5" />
             </Button>
-            <Button type="submit" className="px-8">
-              Guardar Cambios
+            <Button
+              size="icon"
+              title="Guardar"
+              type="submit"
+              className="
+              cursor-pointer
+              w-12
+              h-12
+              rounded
+              bg-[#0cc0df]
+              text-white
+              flex
+              items-center
+              justify-center
+              transition
+              transform
+              hover:scale-105
+            "
+            >
+              <img
+                src={SaveIcon}
+                alt="Guardar"
+                className="
+                w-5
+                h-5
+                brightness-0
+                invert
+              "
+              />
             </Button>
           </div>
         </form>

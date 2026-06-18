@@ -11,6 +11,15 @@ import { Modal } from "../../components/ui/Modal";
 import { userService } from "../../services/user.service";
 import { isAdmin } from "../../utils/auth";
 
+import {
+  PencilIcon,
+  TrashBinIcon,
+  CloseLineIcon,
+  SaveIcon,
+  MoreIcon,
+  CreateIcon,
+} from "../../icons";
+
 export function Users() {
   const [users, setUsers] = useState([]);
   const [selectedUser, setSelectedUser] = useState(null);
@@ -77,6 +86,11 @@ export function Users() {
       formatted[e.path] = e.msg;
     });
     return formatted;
+  };
+
+  const openCreate = () => {
+    resetForm();
+    setOpenCreateModal(true);
   };
 
   const handleCreate = async () => {
@@ -199,11 +213,12 @@ export function Users() {
       render: (row) => (
         <div className="flex gap-2">
           <Button
+            title="Editar"
             size="sm"
             onClick={() => handleEdit(row)}
             className={buttonClass}
           >
-            Editar
+            <PencilIcon className="w-5 h-5" />
           </Button>
 
           <Button
@@ -211,8 +226,9 @@ export function Users() {
             variant="outline"
             onClick={() => handleDelete(row)}
             className={buttonClass}
+            title="Eliminar"
           >
-            Eliminar
+            <TrashBinIcon className="w-5 h-5" />
           </Button>
         </div>
       ),
@@ -225,14 +241,34 @@ export function Users() {
 
       {showActions && (
         <Button
+          title="Crear Materia"
           size="sm"
-          onClick={() => {
-            resetForm();
-            setOpenCreateModal(true);
-          }}
-          className={buttonClass}
+          onClick={openCreate}
+          className="
+                      cursor-pointer
+                      w-12
+                      h-12
+                      rounded
+                      bg-[#0cc0df]
+                      text-white
+                      flex
+                      items-center
+                      justify-center
+                      transition
+                      transform
+                      hover:scale-105
+                    "
         >
-          +
+          <img
+            src={CreateIcon}
+            alt="More"
+            className="
+                        w-5
+                        h-5
+                        brightness-0
+                        invert
+                      "
+          />
         </Button>
       )}
     </div>
@@ -330,16 +366,43 @@ export function Users() {
         </div>
 
         <div className="flex justify-end gap-4 mt-10">
-          <Button
+          {/* <Button
             variant="outline"
             onClick={() => setOpenCreateModal(false)}
             className={buttonClass}
           >
             Cancelar
-          </Button>
+          </Button> */}
 
-          <Button onClick={handleCreate} className={buttonClass}>
-            Crear
+          <Button
+            size="icon"
+            title="Guardar"
+            onClick={handleCreate}
+            className="
+                        cursor-pointer
+                        w-12
+                        h-12
+                        rounded
+                        bg-[#0cc0df]
+                        text-white
+                        flex
+                        items-center
+                        justify-center
+                        transition
+                        transform
+                        hover:scale-105
+                      "
+          >
+            <img
+              src={SaveIcon}
+              alt="Guardar"
+              className="
+                          w-5
+                          h-5
+                          brightness-0
+                          invert
+                        "
+            />
           </Button>
         </div>
       </Modal>
@@ -411,22 +474,49 @@ export function Users() {
         </div>
 
         <div className="flex justify-end gap-4 mt-10">
-          <Button
+          {/* <Button
             variant="outline"
             onClick={() => setOpenEditModal(false)}
             className={buttonClass}
           >
             Cancelar
-          </Button>
+          </Button> */}
 
-          <Button onClick={handleUpdate} className={buttonClass}>
-            Guardar
+          <Button
+            title="Guardar"
+            size="icon"
+            onClick={handleUpdate}
+            className="
+                        cursor-pointer
+                        w-12
+                        h-12
+                        rounded
+                        bg-[#0cc0df]
+                        text-white
+                        flex
+                        items-center
+                        justify-center
+                        transition
+                        transform
+                        hover:scale-105
+                      "
+          >
+            <img
+              src={SaveIcon}
+              alt="Guardar"
+              className="
+                          w-5
+                          h-5
+                          brightness-0
+                          invert
+                        "
+            />
           </Button>
         </div>
       </Modal>
 
       <Modal isOpen={openDeleteModal} onClose={() => setOpenDeleteModal(false)}>
-        <h2 className="text-lg font-semibold mb-4">¿Eliminar usuario?</h2>
+        <h2 className="text-lg font-semibold mb-4">¿Eliminar Usuario?</h2>
 
         <div className="flex justify-end gap-2">
           <Button
@@ -434,11 +524,11 @@ export function Users() {
             onClick={() => setOpenDeleteModal(false)}
             className={buttonClass}
           >
-            Cancelar
+            No
           </Button>
 
           <Button onClick={confirmDelete} className={buttonClass}>
-            Eliminar
+            Sí
           </Button>
         </div>
       </Modal>
