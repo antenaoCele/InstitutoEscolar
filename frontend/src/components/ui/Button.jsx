@@ -9,6 +9,7 @@ export default function Button({
   onClick,
   className = "",
   disabled = false,
+  title = "",
 }) {
   const sizeClasses = {
     xs: "px-2 py-1 text-xs",
@@ -16,6 +17,7 @@ export default function Button({
     md: "px-4 py-2 text-sm",
     lg: "px-5 py-3 text-base",
     xl: "px-6 py-4 text-lg",
+    icon: "",
   };
 
   const variantClasses = {
@@ -28,6 +30,7 @@ export default function Button({
       type={type}
       onClick={onClick}
       disabled={disabled}
+      title={title}
       className={`
         inline-flex items-center justify-center gap-2
         rounded transition
