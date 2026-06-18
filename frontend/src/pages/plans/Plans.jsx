@@ -11,6 +11,14 @@ import Input from "../../components/form/Input";
 import Select from "../../components/form/Select";
 import { Modal } from "../../components/ui/Modal";
 import { isAdmin } from "../../utils/auth";
+import {
+  PencilIcon,
+  TrashBinIcon,
+  CloseLineIcon,
+  SaveIcon,
+  MoreIcon,
+  CreateIcon,
+} from "../../icons";
 
 export function Plans() {
   const [planPrices, setPlanPrices] = useState([]);
@@ -331,20 +339,22 @@ export function Plans() {
       render: (row) => (
         <div className="flex gap-2">
           <Button
+            title="Editar"
             size="sm"
             onClick={() => handleEdit(row)}
             className={buttonClass}
           >
-            Editar
+            <PencilIcon className="w-5 h-5" />
           </Button>
 
           <Button
+            title="Eliminar"
             size="sm"
             variant="outline"
             onClick={() => handleDelete(row)}
             className={buttonClass}
           >
-            Eliminar
+            <TrashBinIcon className="w-5 h-5" />
           </Button>
         </div>
       ),
@@ -358,8 +368,35 @@ export function Plans() {
       <span>{isCurrentView ? "Planes actuales" : "Historial de planes"}</span>
 
       {showCreateButtons && (
-        <Button size="sm" onClick={openCreate} className={buttonClass}>
-          +
+        <Button
+          title="Crear Materia"
+          size="sm"
+          onClick={openCreate}
+          className="
+              cursor-pointer
+              w-12
+              h-12
+              rounded
+              bg-[#0cc0df]
+              text-white
+              flex
+              items-center
+              justify-center
+              transition
+              transform
+              hover:scale-105
+            "
+        >
+          <img
+            src={CreateIcon}
+            alt="More"
+            className="
+                w-5
+                h-5
+                brightness-0
+                invert
+              "
+          />
         </Button>
       )}
     </div>
@@ -480,10 +517,39 @@ export function Plans() {
         </div>
 
         <div className="flex justify-end gap-4 mt-10">
-          <Button variant="outline" onClick={() => setOpenCreateModal(false)}>
+          {/* <Button variant="outline" onClick={() => setOpenCreateModal(false)}>
             Cancelar
+          </Button> */}
+          <Button
+            title="Guardar"
+            size="icon"
+            onClick={handleCreate}
+            className="
+                        cursor-pointer
+                        w-12
+                        h-12
+                        rounded
+                        bg-[#0cc0df]
+                        text-white
+                        flex
+                        items-center
+                        justify-center
+                        transition
+                        transform
+                        hover:scale-105
+                      "
+          >
+            <img
+              src={SaveIcon}
+              alt="Guardar"
+              className="
+                          w-5
+                          h-5
+                          brightness-0
+                          invert
+                        "
+            />
           </Button>
-          <Button onClick={handleCreate}>Crear</Button>
         </div>
       </Modal>
 
@@ -566,15 +632,44 @@ export function Plans() {
         </div>
 
         <div className="flex justify-end gap-4 mt-10">
-          <Button variant="outline" onClick={() => setOpenEditModal(false)}>
+          {/* <Button variant="outline" onClick={() => setOpenEditModal(false)}>
             Cancelar
+          </Button> */}
+          <Button
+            className="
+              cursor-pointer
+              w-12
+              h-12
+              rounded
+              bg-[#0cc0df]
+              text-white
+              flex
+              items-center
+              justify-center
+              transition
+              transform
+              hover:scale-105
+            "
+            title="Guardar"
+            size="icon"
+            onClick={handleUpdate}
+          >
+            <img
+              src={SaveIcon}
+              alt="Guardar"
+              className="
+                w-5
+                h-5
+                brightness-0
+                invert
+              "
+            />
           </Button>
-          <Button onClick={handleUpdate}>Guardar</Button>
         </div>
       </Modal>
 
       <Modal isOpen={openDeleteModal} onClose={() => setOpenDeleteModal(false)}>
-        <h2 className="text-lg font-semibold mb-4">¿Eliminar plan?</h2>
+        <h2 className="text-lg font-semibold mb-4">¿Eliminar Plan?</h2>
 
         <div className="flex justify-end gap-2">
           <Button
@@ -582,11 +677,11 @@ export function Plans() {
             onClick={() => setOpenDeleteModal(false)}
             className={buttonClass}
           >
-            Cancelar
+            No
           </Button>
 
           <Button onClick={confirmDelete} className={buttonClass}>
-            Eliminar
+            Sí
           </Button>
         </div>
       </Modal>

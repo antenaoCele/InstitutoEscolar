@@ -1,11 +1,20 @@
 import { useEffect, useState } from "react";
 import { teacherService } from "../../services/teacher.service";
 import { ScheduleService } from "../../services/schedule.service";
+import Button from "../../components/ui/Button";
 import { ScheduleStudentService } from "../../services/scheduleStudent.service";
 import { studentService } from "../../services/student.service";
 import { Modal } from "../../components/ui/Modal";
 import { isAdmin } from "../../utils/auth";
-import { PencilIcon, TrashBinIcon, CloseLineIcon } from "../../icons";
+import {
+  PencilIcon,
+  TrashBinIcon,
+  CloseLineIcon,
+  SaveIcon,
+  MoreIcon,
+  CreateIcon,
+  MoreInfoIcon,
+} from "../../icons";
 
 export default function WeeklyCalendar() {
   // Datos
@@ -52,6 +61,8 @@ export default function WeeklyCalendar() {
   const [isEditing, setIsEditing] = useState(false);
   const [availableStudents, setAvailableStudents] = useState([]);
   const [incompatibleStudents, setIncompatibleStudents] = useState([]);
+
+  const buttonClass = "cursor-pointer transition transform hover:scale-105";
 
   const fetchTeachers = async () => {
     try {
@@ -684,17 +695,33 @@ export default function WeeklyCalendar() {
 
         {isAdmin() && (
           <button
+            title="Crear Horario"
             onClick={openCreate}
             className="
               cursor-pointer
-              px-4
-              py-2
-              rounded-lg
+              w-12
+              h-12
+              rounded
               bg-[#0cc0df]
               text-white
+              flex
+              items-center
+              justify-center
+              transition
+              transform
+              hover:scale-105
             "
           >
-            +
+            <img
+              src={CreateIcon}
+              alt="More"
+              className="
+                w-5
+                h-5
+                brightness-0
+                invert
+              "
+            />
           </button>
         )}
       </div>
@@ -854,11 +881,20 @@ export default function WeeklyCalendar() {
 
                               <div className="flex gap-1 mt-1">
                                 <button
+                                  title="Más Info"
                                   onClick={() => handleInfo(schedule)}
                                   className="cursor-pointer ml-auto text-[10px] px-2 py-1 rounded bg-[#0cc0df] text-white"
-                                  title="Más Info"
                                 >
-                                  ⓘ
+                                  <img
+                                    src={MoreInfoIcon}
+                                    alt="Info"
+                                    className="
+                                      w-5
+                                      h-5
+                                      brightness-0
+                                      invert
+                                    "
+                                  />
                                 </button>
                               </div>
                             </div>
@@ -1071,18 +1107,34 @@ export default function WeeklyCalendar() {
             </select>
 
             <button
+              title="Agregar"
               type="button"
               onClick={() => handleAddStudent(false)}
               className="
-                cursor-pointer
-                px-4
-                py-2
-                rounded
-                bg-[#0cc0df]
-                text-white
-              "
+              cursor-pointer
+              w-12
+              h-12
+              rounded
+              bg-[#0cc0df]
+              text-white
+              flex
+              items-center
+              justify-center
+              transition
+              transform
+              hover:scale-105
+            "
             >
-              Agregar
+              <img
+                src={MoreIcon}
+                alt="More"
+                className="
+                w-5
+                h-5
+                brightness-0
+                invert
+              "
+              />
             </button>
           </div>
 
@@ -1215,7 +1267,7 @@ export default function WeeklyCalendar() {
         </div>
 
         <div className="flex justify-end gap-4 mt-10">
-          <button
+          {/* <button
             onClick={() => {
               setOpenCreateModal(false);
               resetForm();
@@ -1229,20 +1281,36 @@ export default function WeeklyCalendar() {
             "
           >
             Cancelar
-          </button>
+          </button> */}
 
           <button
+            title="Guardar"
             onClick={handleCreate}
             className="
-              cursor-pointer transition transform hover:scale-105
-              px-4
-              py-2
+              cursor-pointer
+              w-12
+              h-12
               rounded
               bg-[#0cc0df]
               text-white
+              flex
+              items-center
+              justify-center
+              transition
+              transform
+              hover:scale-105
             "
           >
-            Crear
+            <img
+              src={SaveIcon}
+              alt="Guardar"
+              className="
+                w-5
+                h-5
+                brightness-0
+                invert
+              "
+            />
           </button>
         </div>
       </Modal>
@@ -1422,18 +1490,34 @@ export default function WeeklyCalendar() {
             </select>
 
             <button
+              title="Agregar"
               type="button"
               onClick={() => handleAddStudent(true)}
               className="
-                cursor-pointer
-                px-4
-                py-2
-                rounded
-                bg-[#0cc0df]
-                text-white
-              "
+              cursor-pointer
+              w-12
+              h-12
+              rounded
+              bg-[#0cc0df]
+              text-white
+              flex
+              items-center
+              justify-center
+              transition
+              transform
+              hover:scale-105
+            "
             >
-              Agregar
+              <img
+                src={MoreIcon}
+                alt="More"
+                className="
+                w-5
+                h-5
+                brightness-0
+                invert
+              "
+              />
             </button>
           </div>
 
@@ -1564,7 +1648,7 @@ export default function WeeklyCalendar() {
         </div>
 
         <div className="flex justify-end gap-4 mt-10">
-          <button
+          {/* <button
             onClick={() => {
               setOpenEditModal(false);
               setSelectedSchedule(null);
@@ -1579,54 +1663,55 @@ export default function WeeklyCalendar() {
             "
           >
             Cancelar
-          </button>
+          </button> */}
 
           <button
+            title="Guardar"
             onClick={handleUpdate}
             className="
-              cursor-pointer transition transform hover:scale-105
-              px-4
-              py-2
+              cursor-pointer
+              w-12
+              h-12
               rounded
               bg-[#0cc0df]
               text-white
+              flex
+              items-center
+              justify-center
+              transition
+              transform
+              hover:scale-105
             "
           >
-            Guardar
+            <img
+              src={SaveIcon}
+              alt="Save"
+              className="
+                w-5
+                h-5
+                brightness-0
+                invert
+              "
+            />
           </button>
         </div>
       </Modal>
 
       <Modal isOpen={openDeleteModal} onClose={() => setOpenDeleteModal(false)}>
-        <h2 className="text-lg font-semibold mb-4">¿Eliminar horario?</h2>
+        <h2 className="text-lg font-semibold mb-4">¿Eliminar Horario?</h2>
 
         <div className="flex justify-end gap-2">
-          <button
+          <Button
+            variant="outline"
             onClick={() => setOpenDeleteModal(false)}
-            className="
-              cursor-pointer transition transform hover:scale-105
-              px-4
-              py-2
-              border
-              rounded
-            "
+            className={buttonClass}
           >
-            Cancelar
-          </button>
+            No
+          </Button>
 
-          <button
-            onClick={confirmDelete}
-            className="
-              cursor-pointer transition transform hover:scale-105
-              px-4
-              py-2
-              rounded
-              bg-red-500
-              text-white
-            "
-          >
-            Eliminar
-          </button>
+          <Button onClick={confirmDelete} className={buttonClass}>
+            Sí
+          </Button>
         </div>
       </Modal>
 
@@ -1751,30 +1836,30 @@ export default function WeeklyCalendar() {
 
             {/* Botones */}
             <div className="flex justify-end gap-3 mt-8">
-              <button
+              {/* <button
+                title="Cerrar"
                 onClick={() => {
                   setOpenInfoModal(false);
                   setSelectedScheduleInfo(null);
                 }}
                 className="
                   cursor-pointer
-                  w-28
-                  px-4
-                  py-2
+                  w-12
+                  h-12
                   border
                   rounded
                   flex
                   items-center
                   justify-center
-                  gap-2
                 "
               >
-                <CloseLineIcon className="w-4 h-4" />
-              </button>
+                <CloseLineIcon className="w-5 h-5" />
+              </button> */}
 
               {isAdmin() && (
                 <>
                   <button
+                    title="Editar"
                     onClick={() => {
                       setOpenInfoModal(false);
 
@@ -1784,22 +1869,21 @@ export default function WeeklyCalendar() {
                     }}
                     className="
                       cursor-pointer
-                      w-28
-                      px-2
-                      py-2
+                      w-12
+                      h-12
                       rounded
                       bg-[#0cc0df]
                       text-white
                       flex
                       items-center
                       justify-center
-                      gap-2
                     "
                   >
-                    <PencilIcon className="w-4 h-4" />
+                    <PencilIcon className="w-5 h-5" />
                   </button>
 
                   <button
+                    title="Eliminar"
                     onClick={() => {
                       setOpenInfoModal(false);
 
@@ -1809,19 +1893,17 @@ export default function WeeklyCalendar() {
                     }}
                     className="
                       cursor-pointer
-                      w-28
-                      px-4
-                      py-2
+                      w-12
+                      h-12
                       rounded
                       bg-red-500
                       text-white
                       flex
                       items-center
                       justify-center
-                      gap-2
                     "
                   >
-                    <TrashBinIcon className="w-4 h-4" />
+                    <TrashBinIcon className="w-5 h-5" />
                   </button>
                 </>
               )}

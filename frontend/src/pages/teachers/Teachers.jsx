@@ -9,6 +9,14 @@ import Input from "../../components/form/Input";
 import Select from "../../components/form/Select";
 import { Modal } from "../../components/ui/Modal";
 import { isAdmin } from "../../utils/auth";
+import {
+  PencilIcon,
+  TrashBinIcon,
+  CloseLineIcon,
+  SaveIcon,
+  MoreIcon,
+  CreateIcon,
+} from "../../icons";
 
 export function Teachers() {
   const [teachers, setTeachers] = useState([]);
@@ -210,19 +218,22 @@ export function Teachers() {
       render: (row) => (
         <div className="flex gap-2">
           <Button
+            title="Editar"
             size="sm"
             onClick={() => handleEdit(row)}
             className={buttonClass}
           >
-            Editar
+            <PencilIcon className="w-5 h-5" />
           </Button>
+
           <Button
             size="sm"
             variant="outline"
             onClick={() => handleDelete(row)}
             className={buttonClass}
+            title="Eliminar"
           >
-            Eliminar
+            <TrashBinIcon className="w-5 h-5" />
           </Button>
         </div>
       ),
@@ -235,8 +246,35 @@ export function Teachers() {
     <div className="flex justify-between items-center">
       <span>Docentes</span>
       {showCreateButtons && (
-        <Button size="sm" onClick={openCreate} className={buttonClass}>
-          +
+        <Button
+          title="Crear Docente"
+          size="sm"
+          onClick={openCreate}
+          className="
+                      cursor-pointer
+                      w-12
+                      h-12
+                      rounded
+                      bg-[#0cc0df]
+                      text-white
+                      flex
+                      items-center
+                      justify-center
+                      transition
+                      transform
+                      hover:scale-105
+                    "
+        >
+          <img
+            src={CreateIcon}
+            alt="More"
+            className="
+                        w-5
+                        h-5
+                        brightness-0
+                        invert
+                      "
+          />
         </Button>
       )}
     </div>
@@ -332,10 +370,39 @@ export function Teachers() {
         </div>
 
         <div className="flex justify-end gap-4 mt-10">
-          <Button variant="outline" onClick={() => setOpenCreateModal(false)}>
+          {/* <Button variant="outline" onClick={() => setOpenCreateModal(false)}>
             Cancelar
+          </Button> */}
+          <Button
+            size="icon"
+            title="Guardar"
+            onClick={handleCreate}
+            className="
+                        cursor-pointer
+                        w-12
+                        h-12
+                        rounded
+                        bg-[#0cc0df]
+                        text-white
+                        flex
+                        items-center
+                        justify-center
+                        transition
+                        transform
+                        hover:scale-105
+                      "
+          >
+            <img
+              src={SaveIcon}
+              alt="Guardar"
+              className="
+                          w-5
+                          h-5
+                          brightness-0
+                          invert
+                        "
+            />
           </Button>
-          <Button onClick={handleCreate}>Crear</Button>
         </div>
       </Modal>
 
@@ -392,15 +459,44 @@ export function Teachers() {
         </div>
 
         <div className="flex justify-end gap-4 mt-10">
-          <Button variant="outline" onClick={() => setOpenEditModal(false)}>
+          {/* <Button variant="outline" onClick={() => setOpenEditModal(false)}>
             Cancelar
+          </Button> */}
+          <Button
+            size="icon"
+            className="
+              cursor-pointer
+              w-12
+              h-12
+              rounded
+              bg-[#0cc0df]
+              text-white
+              flex
+              items-center
+              justify-center
+              transition
+              transform
+              hover:scale-105
+            "
+            title="Guardar"
+            onClick={handleUpdate}
+          >
+            <img
+              src={SaveIcon}
+              alt="Guardar"
+              className="
+                w-5
+                h-5
+                brightness-0
+                invert
+              "
+            />
           </Button>
-          <Button onClick={handleUpdate}>Guardar</Button>
         </div>
       </Modal>
 
       <Modal isOpen={openDeleteModal} onClose={() => setOpenDeleteModal(false)}>
-        <h2 className="text-lg font-semibold mb-4">¿Eliminar docente?</h2>
+        <h2 className="text-lg font-semibold mb-4">¿Eliminar Docente?</h2>
 
         <div className="flex justify-end gap-2">
           <Button
@@ -408,10 +504,11 @@ export function Teachers() {
             onClick={() => setOpenDeleteModal(false)}
             className={buttonClass}
           >
-            Cancelar
+            No
           </Button>
+
           <Button onClick={confirmDelete} className={buttonClass}>
-            Eliminar
+            Sí
           </Button>
         </div>
       </Modal>

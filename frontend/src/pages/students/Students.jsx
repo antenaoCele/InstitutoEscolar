@@ -12,6 +12,15 @@ import SubmitButton from "../../components/form/SubmitButton";
 import { Modal } from "../../components/ui/Modal";
 import { studentPlanService } from "../../services/studenPlan.service";
 import { isAdmin } from "../../utils/auth";
+import {
+  PencilIcon,
+  TrashBinIcon,
+  CloseLineIcon,
+  SaveIcon,
+  MoreIcon,
+  CreateIcon,
+  MoreInfoIcon,
+} from "../../icons";
 
 export function Students() {
   const [students, setStudents] = useState([]);
@@ -447,7 +456,7 @@ export function Students() {
             onClick={() => handleDelete(row)}
             className={buttonClass}
           >
-            Eliminar
+            <TrashBinIcon className="w-5 h-5" />
           </Button>
         </div>
       ),

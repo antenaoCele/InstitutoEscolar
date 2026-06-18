@@ -9,6 +9,14 @@ import Input from "../../components/form/Input";
 import Select from "../../components/form/Select";
 import { Modal } from "../../components/ui/Modal";
 import { isAdmin } from "../../utils/auth";
+import {
+  PencilIcon,
+  TrashBinIcon,
+  CloseLineIcon,
+  SaveIcon,
+  MoreIcon,
+  CreateIcon,
+} from "../../icons";
 
 export function Tutors() {
   const [tutors, setTutors] = useState([]);
@@ -360,20 +368,22 @@ export function Tutors() {
       render: (row) => (
         <div className="flex gap-2">
           <Button
+            title="Editar"
             size="sm"
             onClick={() => handleEdit(row)}
             className={buttonClass}
           >
-            Editar
+            <PencilIcon className="w-5 h-5" />
           </Button>
 
           <Button
+            title="Eliminar"
             size="sm"
             variant="outline"
             onClick={() => handleDelete(row)}
             className={buttonClass}
           >
-            Eliminar
+            <TrashBinIcon className="w-5 h-5" />
           </Button>
         </div>
       ),
@@ -387,8 +397,35 @@ export function Tutors() {
       <span>Tutores</span>
 
       {showCreateButtons && (
-        <Button size="sm" onClick={openCreate} className={buttonClass}>
-          +
+        <Button
+          title="Crear Tutor"
+          size="sm"
+          onClick={openCreate}
+          className="
+              cursor-pointer
+              w-12
+              h-12
+              rounded
+              bg-[#0cc0df]
+              text-white
+              flex
+              items-center
+              justify-center
+              transition
+              transform
+              hover:scale-105
+            "
+        >
+          <img
+            src={CreateIcon}
+            alt="More"
+            className="
+                w-5
+                h-5
+                brightness-0
+                invert
+              "
+          />
         </Button>
       )}
     </div>
@@ -532,7 +569,7 @@ export function Tutors() {
         </div>
 
         <div className="flex justify-end gap-4 mt-10">
-          <Button
+          {/* <Button
             variant="outline"
             onClick={() => {
               setOpenCreateModal(false);
@@ -541,10 +578,37 @@ export function Tutors() {
             className={buttonClass}
           >
             Cancelar
-          </Button>
+          </Button> */}
 
-          <Button onClick={handleCreate} className={buttonClass}>
-            Crear
+          <Button
+            title="Guardar"
+            size="icon"
+            onClick={handleCreate}
+            className="
+                        cursor-pointer
+                        w-12
+                        h-12
+                        rounded
+                        bg-[#0cc0df]
+                        text-white
+                        flex
+                        items-center
+                        justify-center
+                        transition
+                        transform
+                        hover:scale-105
+                      "
+          >
+            <img
+              src={SaveIcon}
+              alt="Guardar"
+              className="
+                          w-5
+                          h-5
+                          brightness-0
+                          invert
+                        "
+            />
           </Button>
         </div>
       </Modal>
@@ -655,7 +719,7 @@ export function Tutors() {
         </div>
 
         <div className="flex justify-end gap-4 mt-10">
-          <Button
+          {/* <Button
             variant="outline"
             onClick={() => {
               setOpenEditModal(false);
@@ -664,16 +728,43 @@ export function Tutors() {
             className={buttonClass}
           >
             Cancelar
-          </Button>
+          </Button> */}
 
-          <Button onClick={handleUpdate} className={buttonClass}>
-            Guardar
+          <Button
+            title="Guardar"
+            size="icon"
+            onClick={handleUpdate}
+            className="
+                        cursor-pointer
+                        w-12
+                        h-12
+                        rounded
+                        bg-[#0cc0df]
+                        text-white
+                        flex
+                        items-center
+                        justify-center
+                        transition
+                        transform
+                        hover:scale-105
+                      "
+          >
+            <img
+              src={SaveIcon}
+              alt="Guardar"
+              className="
+                          w-5
+                          h-5
+                          brightness-0
+                          invert
+                        "
+            />
           </Button>
         </div>
       </Modal>
 
       <Modal isOpen={openDeleteModal} onClose={() => setOpenDeleteModal(false)}>
-        <h2 className="text-lg font-semibold mb-4">¿Eliminar tutor?</h2>
+        <h2 className="text-lg font-semibold mb-4">¿Eliminar Tutor?</h2>
 
         <div className="flex justify-end gap-2">
           <Button
@@ -681,11 +772,11 @@ export function Tutors() {
             onClick={() => setOpenDeleteModal(false)}
             className={buttonClass}
           >
-            Cancelar
+            No
           </Button>
 
           <Button onClick={confirmDelete} className={buttonClass}>
-            Eliminar
+            Sí
           </Button>
         </div>
       </Modal>
