@@ -34,7 +34,7 @@ export const Layout = () => {
         <div className="flex items-center justify-between mb-4">
           <h2 className="font-bold text-lg">Matecitos Grupo de Estudio</h2>
           <button
-            className="lg:hidden p-2 text-gray-500 hover:text-gray-700"
+            className="lg:hidden p-2 text-gray-500 hover:text-gray-700 cursor-pointer"
             onClick={() => setIsSidebarOpen(false)}
           >
             ✕
