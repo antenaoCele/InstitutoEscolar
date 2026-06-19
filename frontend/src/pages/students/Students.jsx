@@ -463,7 +463,7 @@ export function Students() {
     });
   }
 
-  const showCreateButtons = isAdmin() && status === "active";
+  const showCreateButtons = isAdmin() && status !== "active";
 
   const tableTitle = (
     <div className="flex justify-between items-center">
@@ -471,8 +471,35 @@ export function Students() {
         {status === "active" ? "Alumnos Activos" : "Total de Alumnos"}
       </span>
       {showCreateButtons && (
-        <Button size="sm" onClick={openCreate} className={buttonClass}>
-          +
+        <Button
+          title="Crear Alumno"
+          size="sm"
+          onClick={openCreate}
+          className="
+                      cursor-pointer
+                      w-12
+                      h-12
+                      rounded
+                      bg-[#0cc0df]
+                      text-white
+                      flex
+                      items-center
+                      justify-center
+                      transition
+                      transform
+                      hover:scale-105
+                    "
+        >
+          <img
+            src={CreateIcon}
+            alt="More"
+            className="
+                        w-5
+                        h-5
+                        brightness-0
+                        invert
+                      "
+          />
         </Button>
       )}
     </div>
