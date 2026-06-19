@@ -8,6 +8,7 @@ import PrivateRoute from "./routes/PrivateRoute.jsx";
 import { Users } from "./pages/users/Users.jsx";
 import { Teachers } from "./pages/teachers/Teachers.jsx";
 import { Students } from "./pages/students/Students.jsx";
+import StudentPayments from "./pages/students/StudentPayments";
 import { Tutors } from "./pages/tutors/Tutors.jsx";
 import { Schedules } from "./pages/schedules/Schedules.jsx";
 import { Subjects } from "./pages/subjects/Subjects.jsx";
@@ -39,6 +40,7 @@ export default function App() {
             <Route path="/subjects" element={<Subjects />} />
             <Route path="/schedules" element={<Schedules />} />
             <Route path="/tutors" element={<Tutors />} />
+            <Route path="/students/payments" element={<StudentPayments />} />
           </Route>
         </Route>
 

@@ -22,6 +22,13 @@ router.get(
   paymentsController.getAll,
 );
 
+router.get("/monthly", paymentsController.getMonthlyPayments);
+
+router.get(
+  "/student/:studentId/plans",
+  paymentsController.getStudentActivePlans,
+);
+
 router.get(
   "/:id",
   authentication,

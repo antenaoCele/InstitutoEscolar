@@ -38,6 +38,10 @@ const navItems = [
         name: "Alumnos activos",
         path: "/students?status=active",
       },
+      {
+        name: "Pagos de alumnos",
+        path: "/students/payments",
+      },
     ],
   },
   {

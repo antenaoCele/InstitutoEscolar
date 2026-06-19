@@ -308,14 +308,7 @@ PAYMENT METHOD
 export const validatePaymentMethod = (field, optional = false) => [
   baseField(field, optional)
     .trim()
-    .isIn([
-      "transferencia",
-      "efectivo",
-      "tarjeta de crédito",
-      "tarjeta de débito",
-      "qr",
-      "otro",
-    ])
+    .isIn(["transferencia", "efectivo", "qr", "otro"])
     .withMessage("Método de pago no válido."),
 ];
 
