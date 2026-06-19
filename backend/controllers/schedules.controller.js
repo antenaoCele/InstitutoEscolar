@@ -218,6 +218,9 @@ export const schedulesController = {
         data: info,
       });
     } catch (error) {
+      console.log("ERROR EN GETINFO");
+      console.log(error);
+
       res.status(500).json({
         success: false,
         message: "Error al obtener la información del horario",

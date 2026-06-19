@@ -305,7 +305,6 @@ export const studentsController = {
   createWithPlan: async (req, res) => {
     try {
       const { formPlans, ...studentData } = req.body;
-      const start_date = new Date().toISOString().slice(0, 10);
 
       // 1. Crear alumno
       const [studentResult] = await db.execute(
@@ -328,8 +327,10 @@ export const studentsController = {
         for (const p of formPlans) {
           if (p.teacher_id && p.plan_id) {
             await db.execute(
-              `INSERT INTO student_plans (student_id, plan_id, teacher_id, start_date) VALUES (?, ?, ?, ?)`,
-              [studentId, p.plan_id, p.teacher_id, start_date],
+              `INSERT INTO student_plans
+         (student_id, plan_id, teacher_id, start_date)
+         VALUES (?, ?, ?, CURDATE())`,
+              [studentId, p.plan_id, p.teacher_id],
             );
           }
         }

@@ -186,12 +186,13 @@ export const studentPlansController = {
   softDelete: async (req, res) => {
     try {
       const id = Number(req.params.id);
-      const end_date = new Date().toISOString().slice(0, 10);
 
-      await db.execute(`UPDATE student_plans SET end_date = ? WHERE id = ?`, [
-        end_date,
-        id,
-      ]);
+      await db.execute(
+        `UPDATE student_plans
+        SET end_date = CURDATE()
+        WHERE id = ?`,
+        [id],
+      );
 
       res.json({ success: true, message: "Baja realizada correctamente" });
     } catch (error) {
