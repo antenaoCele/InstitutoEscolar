@@ -347,4 +347,42 @@ export const studentsController = {
         .json({ success: false, message: "Error al crear alumno con plan" });
     }
   },
+
+  getActiveStudents: async (req, res) => {
+    try {
+      const [rows] = await db.execute(`
+      SELECT DISTINCT
+        s.id,
+        s.first_name,
+        s.last_name,
+        s.dni,
+        s.school,
+        s.birth_date,
+        s.level,
+        s.grade
+      FROM students s
+      INNER JOIN student_plans sp
+        ON sp.student_id = s.id
+      WHERE sp.start_date <= CURDATE()
+      AND (
+        sp.end_date IS NULL
+        OR sp.end_date > CURDATE()
+      )
+      ORDER BY s.last_name, s.first_name
+    `);
+
+      res.json({
+        success: true,
+        total: rows.length,
+        data: rows,
+      });
+    } catch (error) {
+      console.error(error);
+
+      res.status(500).json({
+        success: false,
+        message: "Error al obtener alumnos activos",
+      });
+    }
+  },
 };

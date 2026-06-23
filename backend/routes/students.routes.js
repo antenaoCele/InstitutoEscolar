@@ -15,6 +15,8 @@ import {
 
 const router = express.Router();
 
+router.get("/active", authentication, studentsController.getActiveStudents);
+
 router.get("/", authentication, studentsController.getAllWithStatus);
 
 router.get(

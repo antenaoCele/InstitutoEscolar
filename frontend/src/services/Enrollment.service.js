@@ -6,4 +6,6 @@ export const EnrollmentService = {
   create: (data) => api.post("/enrollments", data),
   update: (id, data) => api.put(`/enrollments/${id}`, data),
   delete: (id) => api.delete(`/enrollments/${id}`),
+  getMonthly: (month, year) =>
+    api.get(`/enrollments/monthly?month=${month}&year=${year}`),
 };

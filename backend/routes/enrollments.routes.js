@@ -18,6 +18,13 @@ const router = express.Router();
 router.get("/", authentication, enrollmentsController.getAll);
 
 router.get(
+  "/monthly",
+  authentication,
+  authorization("ADMIN"),
+  enrollmentsController.getMonthlyEnrollments,
+);
+
+router.get(
   "/:id",
   authentication,
   ...validateID("enrollments"),

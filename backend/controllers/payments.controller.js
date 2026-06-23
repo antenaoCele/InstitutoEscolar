@@ -216,37 +216,28 @@ export const paymentsController = {
         });
       }
 
-      // 3. Calcular interes del pago
+      // 3. Calcular monto e interés automáticamente
       const { total, interest } = calculatePaymentAmount(
         planPrice,
         newPaymentDate,
       );
 
-      // 3. Validar monto exacto
-      const roundedTotal = Math.round(total * 100) / 100;
-      const roundedAmount = Math.round(Number(newAmount) * 100) / 100;
-
-      if (roundedAmount !== roundedTotal) {
-        return res.status(400).json({
-          success: false,
-          message: `El monto debe ser exactamente ${roundedTotal}`,
-        });
-      }
+      const amount = total;
 
       // 4. Actualizar pago
       await db.execute(
         `
-      UPDATE payments SET
-       student_plan_id = ?,
-       amount = ?,
-       plan_price = ?,
-       payment_date = ?,
-       payment_method = ?
-      WHERE id = ?
-      `,
+  UPDATE payments SET
+   student_plan_id = ?,
+   amount = ?,
+   plan_price = ?,
+   payment_date = ?,
+   payment_method = ?
+  WHERE id = ?
+  `,
         [
           newStudentPlanId,
-          newAmount,
+          amount,
           planPrice,
           newPaymentDate,
           newPaymentMethod,
@@ -259,7 +250,7 @@ export const paymentsController = {
         data: {
           id,
           student_plan_id: newStudentPlanId,
-          amount: newAmount,
+          amount,
           plan_price: planPrice,
           interest,
           payment_date: newPaymentDate,
