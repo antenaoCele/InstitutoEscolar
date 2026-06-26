@@ -267,6 +267,7 @@ export const validateUniqueCombination = (
   table,
   fields,
   message = "La combinación ya existe.",
+  extraWhere = "",
 ) => [
   body(fields[0]).custom(async (_, { req }) => {
     const safeTable = ALLOWED_TABLES[table];
@@ -301,9 +302,14 @@ export const validateUniqueCombination = (
     const whereClause = fields.map((f) => `${f} = ?`).join(" AND ");
 
     let sql = `
-      SELECT id FROM ${safeTable}
+      SELECT id
+      FROM ${safeTable}
       WHERE ${whereClause}
     `;
+
+    if (extraWhere) {
+      sql += ` AND ${extraWhere}`;
+    }
 
     const params = [...values];
 
