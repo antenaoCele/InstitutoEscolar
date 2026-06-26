@@ -8,6 +8,8 @@ export const teacherService = {
   getAvailableStudents: (teacherId) =>
     api.get(`/teachers/${teacherId}/students`),
 
+  getAvailablePlans: (teacherId) => api.get(`/teachers/${teacherId}/plans`),
+
   create: (data) => api.post("/teachers", data),
 
   update: (id, data) => api.put(`/teachers/${id}`, data),
