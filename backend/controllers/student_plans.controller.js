@@ -10,17 +10,17 @@ export const studentPlansController = {
   getAll: async (req, res) => {
     try {
       const [rows] = await db.execute(`
-        SELECT 
-        sp.id, 
+      SELECT
+        sp.id,
         s.id AS student_id,
         p.id AS plan_id,
         t.id AS teacher_id,
         sp.start_date,
         sp.end_date
-        FROM student_plans sp 
-        JOIN students s ON sp.student_id = s.id 
-        JOIN plans p ON sp.plan_id = p.id 
-        JOIN teachers t ON sp.teacher_id = t.id
+      FROM student_plans sp
+      JOIN students s ON sp.student_id = s.id
+      JOIN plans p ON sp.plan_id = p.id
+      JOIN teachers t ON sp.teacher_id = t.id
       `);
 
       res.json({
@@ -42,16 +42,16 @@ export const studentPlansController = {
 
       const [rows] = await db.execute(
         `
-        SELECT 
-        sp.id, 
-        s.id AS student_id,
-        p.id AS plan_id,
-        t.id AS teacher_id,
-        sp.start_date,
-        sp.end_date
-        FROM student_plans sp 
-        JOIN students s ON sp.student_id = s.id 
-        JOIN plans p ON sp.plan_id = p.id 
+        SELECT
+          sp.id,
+          s.id AS student_id,
+          p.id AS plan_id,
+          t.id AS teacher_id,
+          sp.start_date,
+          sp.end_date
+        FROM student_plans sp
+        JOIN students s ON sp.student_id = s.id
+        JOIN plans p ON sp.plan_id = p.id
         JOIN teachers t ON sp.teacher_id = t.id
         WHERE sp.id = ?
         `,
@@ -88,7 +88,6 @@ export const studentPlansController = {
         });
       }
 
-      // Fechas
       const firstDay = `${month}-01`;
 
       const nextMonth = new Date(firstDay);
@@ -96,33 +95,31 @@ export const studentPlansController = {
       const nextMonthStr = nextMonth.toISOString().slice(0, 10);
 
       let query = `
-      SELECT 
+      SELECT
         sp.id AS student_plan_id,
         sp.student_id,
         sp.teacher_id,
 
-        -- precio vigente al FINAL del mes
         pp.price,
 
-        -- pagos del mes
-        IFNULL(SUM(p.amount), 0) AS total_paid
+      IFNULL(SUM(p.amount), 0) AS total_paid
 
       FROM student_plans sp
 
-      LEFT JOIN plan_prices pp 
-        ON sp.plan_id = pp.plan_id
-        AND pp.start_date <= LAST_DAY(?)
-        AND (pp.end_date IS NULL OR pp.end_date >= LAST_DAY(?))
+      LEFT JOIN plan_prices pp
+      ON sp.plan_id = pp.plan_id
+      AND pp.start_date <= LAST_DAY(?)
+      AND (pp.end_date IS NULL OR pp.end_date >= LAST_DAY(?))
 
-      LEFT JOIN payments p 
-        ON p.student_plan_id = sp.id
-        AND p.payment_date >= ?
-        AND p.payment_date < ?
+      LEFT JOIN payments p
+      ON p.student_plan_id = sp.id
+      AND p.payment_date >= ?
+      AND p.payment_date < ?
 
-      WHERE 
+      WHERE
         sp.start_date <= LAST_DAY(?)
-        AND (sp.end_date IS NULL OR sp.end_date >= ?)
-    `;
+      AND (sp.end_date IS NULL OR sp.end_date >= ?)
+      `;
 
       const params = [
         firstDay,
@@ -140,7 +137,7 @@ export const studentPlansController = {
 
       query += `
       GROUP BY sp.id, sp.student_id, sp.teacher_id, pp.price
-    `;
+      `;
 
       const [rows] = await db.execute(query, params);
 
@@ -183,6 +180,205 @@ export const studentPlansController = {
     }
   },
 
+  create: async (req, res) => {
+    try {
+      const { teacher_id, plan_id } = req.body;
+
+      const [compatible] = await db.execute(
+        `
+        SELECT 1
+        FROM teacher_subjects ts
+
+        JOIN plan_subjects ps
+        ON ps.subject_id = ts.subject_id
+
+        WHERE
+          ts.teacher_id = ?
+        AND ps.plan_id = ?
+
+        LIMIT 1
+        `,
+        [teacher_id, plan_id],
+      );
+
+      if (!compatible.length) {
+        return res.status(400).json({
+          success: false,
+          message: "El docente seleccionado no puede dictar ese plan.",
+        });
+      }
+
+      const fields = Object.keys(req.body);
+
+      if (!fields.length) {
+        return res.status(400).json({
+          success: false,
+          message: "No se enviaron datos",
+        });
+      }
+
+      const values = Object.values(req.body);
+
+      const placeholders = fields.map(() => "?").join(", ");
+
+      const [result] = await db.execute(
+        `
+        INSERT INTO student_plans
+        (${fields.join(",")})
+
+        VALUES
+        (${placeholders})
+        `,
+        values,
+      );
+
+      const [rows] = await db.execute(
+        `
+        SELECT
+          id,
+          student_id,
+          teacher_id,
+          plan_id,
+          start_date,
+          end_date
+        FROM student_plans
+        WHERE id = ?
+        `,
+        [result.insertId],
+      );
+
+      res.status(201).json({
+        success: true,
+        data: rows[0],
+      });
+    } catch (error) {
+      console.error(error);
+
+      return res.status(500).json({
+        success: false,
+        error,
+      });
+    }
+  },
+
+  update: async (req, res) => {
+    try {
+      const id = Number(req.params.id);
+
+      if (!id || Number.isNaN(id)) {
+        return res.status(400).json({
+          success: false,
+          message: "ID inválido",
+        });
+      }
+
+      const [currentRows] = await db.execute(
+        `
+        SELECT
+          teacher_id,
+          plan_id
+          FROM student_plans
+        WHERE id = ?
+        `,
+        [id],
+      );
+
+      if (!currentRows.length) {
+        return res.status(404).json({
+          success: false,
+          message: "Registro no encontrado",
+        });
+      }
+
+      const current = currentRows[0];
+
+      const teacher_id = req.body.teacher_id ?? current.teacher_id;
+      const plan_id = req.body.plan_id ?? current.plan_id;
+
+      const [compatible] = await db.execute(
+        `
+        SELECT 1
+        FROM teacher_subjects ts
+
+        JOIN plan_subjects ps
+        ON ps.subject_id = ts.subject_id
+
+        WHERE
+          ts.teacher_id = ?
+        AND ps.plan_id = ?
+
+        LIMIT 1
+        `,
+        [teacher_id, plan_id],
+      );
+
+      if (!compatible.length) {
+        return res.status(400).json({
+          success: false,
+          message: "El docente seleccionado no puede dictar ese plan.",
+        });
+      }
+
+      const fields = req.body;
+
+      if (!Object.keys(fields).length) {
+        return res.status(400).json({
+          success: false,
+          message: "No hay campos para actualizar",
+        });
+      }
+
+      const columns = Object.keys(fields)
+        .map((key) => `${key} = ?`)
+        .join(", ");
+
+      const values = Object.values(fields);
+
+      const [result] = await db.execute(
+        `
+        UPDATE student_plans
+        SET ${columns}
+        WHERE id = ?
+        `,
+        [...values, id],
+      );
+
+      if (!result.affectedRows) {
+        return res.status(404).json({
+          success: false,
+          message: "Registro no encontrado",
+        });
+      }
+
+      const [rows] = await db.execute(
+        `
+        SELECT
+          id,
+          student_id,
+          teacher_id,
+          plan_id,
+          start_date,
+          end_date
+        FROM student_plans
+        WHERE id = ?
+        `,
+        [id],
+      );
+
+      res.json({
+        success: true,
+        data: rows[0],
+      });
+    } catch (error) {
+      console.error(error);
+
+      res.status(500).json({
+        success: false,
+        message: "Error al actualizar el registro",
+      });
+    }
+  },
+
   softDelete: async (req, res) => {
     try {
       const id = Number(req.params.id);
@@ -205,12 +401,11 @@ export const studentPlansController = {
   reactivate: async (req, res) => {
     try {
       const { student_id } = req.body;
-      // Buscamos el último plan del alumno para reactivarlo (quitar end_date)
       await db.execute(
-        `UPDATE student_plans 
-         SET end_date = NULL 
-         WHERE student_id = ? 
-         ORDER BY id DESC LIMIT 1`,
+        `UPDATE student_plans
+        SET end_date = NULL
+        WHERE student_id = ?
+        ORDER BY id DESC LIMIT 1`,
         [student_id],
       );
       res.json({ success: true, message: "Alumno reactivado correctamente" });
