@@ -101,6 +101,43 @@ export const teachersController = {
     }
   },
 
+  getAvailablePlans: async (req, res) => {
+    try {
+      const teacherId = Number(req.params.id);
+
+      const [rows] = await db.execute(
+        `
+      SELECT DISTINCT
+        p.id,
+        p.name
+      FROM plans p
+
+      JOIN plan_subjects ps
+        ON ps.plan_id = p.id
+
+      JOIN teacher_subjects ts
+        ON ts.subject_id = ps.subject_id
+
+      WHERE ts.teacher_id = ?
+
+      ORDER BY p.name
+      `,
+        [teacherId],
+      );
+
+      res.json({
+        success: true,
+        total: rows.length,
+        data: rows,
+      });
+    } catch (error) {
+      res.status(500).json({
+        success: false,
+        message: "Error al obtener planes compatibles",
+      });
+    }
+  },
+
   getLiquidations: async (req, res) => {
     const id = Number(req.params.id);
 
