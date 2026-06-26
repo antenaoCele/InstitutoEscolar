@@ -5,6 +5,7 @@ import {
   getPlanPriceAtDate,
   existingPayment,
 } from "../services/payments.service.js";
+import { needsEnrollment } from "../services/enrollments.service.js";
 
 const baseController = createCrudController("payments");
 
@@ -125,8 +126,39 @@ export const paymentsController = {
     try {
       const { student_plan_id, payment_date, payment_method } = req.body;
 
-      // 1. Obtener precio del plan vigente)
+      // Obtener alumno asociado al plan
+      const [studentRows] = await db.execute(
+        `
+      SELECT student_id
+      FROM student_plans
+      WHERE id = ?
+      `,
+        [student_plan_id],
+      );
+
+      if (studentRows.length === 0) {
+        return res.status(404).json({
+          success: false,
+          message: "Plan del alumno no encontrado",
+        });
+      }
+
+      const studentId = studentRows[0].student_id;
+
+      // Verificar si necesita una nueva inscripción
+      if (await needsEnrollment(studentId, payment_date)) {
+        return res.status(400).json({
+          success: false,
+          requiresEnrollment: true,
+          student_id: studentId,
+          message:
+            "El alumno debe realizar una nueva inscripción antes de registrar el pago.",
+        });
+      }
+
+      // Obtener precio vigente del plan
       const planPrice = await getPlanPriceAtDate(student_plan_id, payment_date);
+
       if (!planPrice) {
         return res.status(400).json({
           success: false,
@@ -134,7 +166,7 @@ export const paymentsController = {
         });
       }
 
-      // 2. Verificar si ya pagó ese mes
+      // Verificar si ya pagó ese mes
       if (await existingPayment(student_plan_id, payment_date)) {
         return res.status(400).json({
           success: false,
@@ -142,7 +174,7 @@ export const paymentsController = {
         });
       }
 
-      // 3. Calcular interes del pago
+      // Calcular monto e interés
       const { total, interest } = calculatePaymentAmount(
         planPrice,
         payment_date,
@@ -150,11 +182,17 @@ export const paymentsController = {
 
       const amount = total;
 
-      // 4. Insertar pago
+      // Registrar pago
       const [result] = await db.execute(
         `
       INSERT INTO payments
-      (student_plan_id, amount, plan_price, payment_date, payment_method)
+      (
+        student_plan_id,
+        amount,
+        plan_price,
+        payment_date,
+        payment_method
+      )
       VALUES (?, ?, ?, ?, ?)
       `,
         [student_plan_id, amount, planPrice, payment_date, payment_method],
@@ -173,7 +211,8 @@ export const paymentsController = {
         },
       });
     } catch (error) {
-      console.log(error);
+      console.error(error);
+
       res.status(500).json({
         success: false,
         message: "Error al crear el pago",
