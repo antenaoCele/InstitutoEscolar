@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import { useLocation } from "react-router-dom";
 import BasicTable from "../../components/tables/BasicTables/BasicTablesOne";
 import { studentService } from "../../services/student.service";
 import { teacherService } from "../../services/teacher.service";
@@ -29,6 +28,7 @@ export function Students() {
   const [openEditModal, setOpenEditModal] = useState(false);
   const [openDeleteModal, setOpenDeleteModal] = useState(false);
   const [openCreateModal, setOpenCreateModal] = useState(false);
+  const [openViewModal, setOpenViewModal] = useState(false);
 
   const [searchFirstLastName, setSearchFirstLastName] = useState("");
   const [searchDNI, setSearchDNI] = useState("");
@@ -48,16 +48,21 @@ export function Students() {
   const [level, setLevel] = useState("");
   const [grade, setGrade] = useState("");
 
+  const [removedClasses, setRemovedClasses] = useState([]);
+
   // Estado para manejar múltiples planes en el formulario
-  const [formPlans, setFormPlans] = useState([{ teacher_id: "", plan_id: "" }]);
+  const [formClasses, setFormClasses] = useState([
+    {
+      teacher_id: "",
+      plan_id: "",
+      availablePlans: [],
+    },
+  ]);
 
   const [errorsCreate, setErrorsCreate] = useState({});
   const [errorsEdit, setErrorsEdit] = useState({});
 
-  const location = useLocation();
-
-  const params = new URLSearchParams(location.search);
-  const status = params.get("status") || "all";
+  const [selectedStatus, setSelectedStatus] = useState("");
 
   const buttonClass = "cursor-pointer transition transform hover:scale-105";
 
@@ -69,9 +74,16 @@ export function Students() {
     setBirthDate("");
     setLevel("");
     setGrade("");
-    setFormPlans([{ teacher_id: "", plan_id: "" }]);
+    setFormClasses([
+      {
+        teacher_id: "",
+        plan_id: "",
+        availablePlans: [],
+      },
+    ]);
     setErrorsCreate({});
     setErrorsEdit({});
+    setRemovedClasses([]);
   };
 
   const mapErrors = (errors) => {
@@ -84,16 +96,18 @@ export function Students() {
 
   const fetchStudents = async () => {
     try {
-      const params = { status };
+      const params = {};
 
-      if (status === "active") {
-        if (selectedTeacher) {
-          params.teacher_id = selectedTeacher;
-        }
+      if (selectedTeacher) {
+        params.teacher_id = selectedTeacher;
+      }
 
-        if (selectedPlan) {
-          params.plan_id = selectedPlan;
-        }
+      if (selectedPlan) {
+        params.plan_id = selectedPlan;
+      }
+
+      if (selectedStatus) {
+        params.status = selectedStatus;
       }
 
       const { data } = await studentService.getAll(params);
@@ -106,20 +120,33 @@ export function Students() {
           studentMap.set(row.id, { ...row, activePlans: [] });
         }
         if (row.student_plan_id) {
-          studentMap.get(row.id).activePlans.push({
-            student_plan_id: row.student_plan_id,
-            teacher_id: row.teacher_id,
-            teacher_name: row.teacher_last_name
-              ? `${row.teacher_last_name}, ${row.teacher_first_name}`
-              : "-",
-            plan_id: row.plan_id,
-            plan_name: row.plan_name,
-            start_date: row.start_date,
-          });
+          const student = studentMap.get(row.id);
+
+          const exists = student.activePlans.some(
+            (p) => p.student_plan_id === row.student_plan_id,
+          );
+
+          if (!exists && row.student_plan_id) {
+            student.activePlans.push({
+              student_plan_id: row.student_plan_id,
+              teacher_id: row.teacher_id,
+              teacher_name: row.teacher_last_name
+                ? `${row.teacher_last_name}, ${row.teacher_first_name}`
+                : "-",
+              plan_id: row.plan_id,
+              plan_name: row.plan_name,
+              start_date: row.start_date,
+            });
+          }
         }
       });
 
       setStudents(Array.from(studentMap.values()));
+      const studentsData = Array.from(studentMap.values());
+
+      console.log(studentsData);
+
+      setStudents(studentsData);
     } catch {
       setStudents([]);
     }
@@ -127,15 +154,7 @@ export function Students() {
 
   useEffect(() => {
     fetchStudents();
-  }, [location.search, selectedTeacher, selectedPlan]);
-
-  useEffect(() => {
-    if (status === "all") {
-      setSelectedTeacher("");
-      setSelectedPlan("");
-      setSearchSchool("");
-    }
-  }, [status]);
+  }, [selectedTeacher, selectedPlan, selectedStatus]);
 
   useEffect(() => {
     const fetchFilters = async () => {
@@ -183,7 +202,7 @@ export function Students() {
         birth_date: birthDate,
         level,
         grade,
-        formPlans: formPlans.filter((p) => p.teacher_id && p.plan_id),
+        formClasses: formClasses.filter((p) => p.teacher_id && p.plan_id),
       });
 
       setOpenCreateModal(false);
@@ -196,7 +215,12 @@ export function Students() {
     }
   };
 
-  const handleEdit = (student) => {
+  const handleView = (student) => {
+    setSelectedStudent(student);
+    setOpenViewModal(true);
+  };
+
+  const handleEdit = async (student) => {
     setSelectedStudent(student);
 
     setFirstName(student.first_name || "");
@@ -207,29 +231,28 @@ export function Students() {
     setLevel(student.level || "");
     setGrade(student.grade || "");
 
-    setFormPlans(
-      student.activePlans?.length > 0
-        ? student.activePlans.map((p) => ({
-            teacher_id: p.teacher_id,
-            plan_id: p.plan_id,
-            student_plan_id: p.student_plan_id,
-            start_date: p.start_date?.split("T")[0], // Limpiar formato para el validador
-          }))
-        : [{ teacher_id: "", plan_id: "" }],
+    const rows = await Promise.all(
+      (student.activePlans || []).map(async (p) => {
+        const response = await teacherService.getAvailablePlans(p.teacher_id);
+
+        return {
+          teacher_id: p.teacher_id,
+          plan_id: p.plan_id,
+          student_plan_id: p.student_plan_id,
+          start_date: p.start_date?.split("T")[0],
+
+          availablePlans: (response.data.data || []).sort((a, b) =>
+            a.name.localeCompare(b.name),
+          ),
+        };
+      }),
     );
 
-    setErrorsEdit({});
-    setOpenEditModal(true);
-  };
+    setFormClasses(rows);
 
-  const handleReactivate = async (studentId) => {
-    try {
-      await studentPlanService.reactivate(studentId);
-      fetchStudents();
-    } catch (error) {
-      console.error(error);
-      alert("Error al reactivar al alumno");
-    }
+    setErrorsEdit({});
+    setRemovedClasses([]);
+    setOpenEditModal(true);
   };
 
   const handleUpdate = async () => {
@@ -265,39 +288,52 @@ export function Students() {
         grade,
       });
 
-      // Actualizar o crear planes dinámicamente
-      if (status === "active") {
-        for (const p of formPlans) {
-          // Solo procesar si tiene docente y plan seleccionados
-          if (!p.teacher_id || !p.plan_id) continue;
+      console.log("FORM CLASSES");
+      console.table(formClasses);
 
-          if (p.student_plan_id) {
-            // Actualizar asignación existente
-            await studentPlanService.update(p.student_plan_id, {
-              student_id: selectedStudent.id,
-              teacher_id: p.teacher_id,
-              plan_id: p.plan_id,
-              start_date: p.start_date?.split("T")[0],
-            });
-          } else {
-            // Crear nueva asignación de docente/plan
-            await studentPlanService.create({
+      const duplicated = formClasses.filter(
+        (item, index, self) =>
+          self.findIndex((x) => x.student_plan_id === item.student_plan_id) !==
+          index,
+      );
+
+      console.log("Duplicados:");
+      console.table(duplicated);
+
+      // Actualizar o crear planes dinámicamente
+      await Promise.all(
+        formClasses
+          .filter((p) => p.teacher_id && p.plan_id)
+          .map(async (p) => {
+            if (p.student_plan_id) {
+              return studentPlanService.update(p.student_plan_id, {
+                student_id: selectedStudent.id,
+                teacher_id: p.teacher_id,
+                plan_id: p.plan_id,
+                start_date: p.start_date,
+              });
+            }
+
+            return studentPlanService.create({
               student_id: selectedStudent.id,
               teacher_id: p.teacher_id,
               plan_id: p.plan_id,
               start_date: new Date().toISOString().slice(0, 10),
             });
-          }
-        }
-      }
+          }),
+      );
+
+      // Eliminar las clases quitadas por el usuario
+      await Promise.all(
+        removedClasses.map((id) => studentPlanService.delete(id)),
+      );
 
       setOpenEditModal(false);
       fetchStudents();
+      setRemovedClasses([]);
     } catch (error) {
-      console.error(
-        "Error al actualizar:",
-        error.response?.data || error.message,
-      );
+      console.log("ERROR COMPLETO");
+      console.log(JSON.stringify(error.response?.data, null, 2));
       const backendErrors = error.response?.data?.errors;
       if (backendErrors) setErrorsEdit(mapErrors(backendErrors));
     }
@@ -328,19 +364,72 @@ export function Students() {
     setOpenCreateModal(true);
   };
 
-  const addPlanRow = () => {
-    setFormPlans([...formPlans, { teacher_id: "", plan_id: "" }]);
+  const addClassRow = () => {
+    setFormClasses((prev) => [
+      ...prev,
+      {
+        teacher_id: "",
+        plan_id: "",
+        availablePlans: [],
+      },
+    ]);
   };
 
-  const removePlanRow = (index) => {
-    const updated = formPlans.filter((_, i) => i !== index);
-    setFormPlans(updated.length ? updated : [{ teacher_id: "", plan_id: "" }]);
+  const removeClassRow = (index) => {
+    const row = formClasses[index];
+
+    // Si la clase ya existía en la BD, la marcamos para eliminar
+    if (row.student_plan_id) {
+      setRemovedClasses((prev) => [...prev, row.student_plan_id]);
+    }
+
+    const updated = formClasses.filter((_, i) => i !== index);
+
+    setFormClasses(
+      updated.length
+        ? updated
+        : [
+            {
+              teacher_id: "",
+              plan_id: "",
+              availablePlans: [],
+            },
+          ],
+    );
   };
 
-  const updatePlanRow = (index, field, value) => {
-    const updated = [...formPlans];
-    updated[index][field] = value;
-    setFormPlans(updated);
+  const loadAvailablePlans = async (idx, teacherId) => {
+    const response = await teacherService.getAvailablePlans(teacherId);
+
+    const plans = (response.data.data || []).sort((a, b) =>
+      a.name.localeCompare(b.name),
+    );
+
+    setFormClasses((prev) =>
+      prev.map((row, index) =>
+        index === idx
+          ? {
+              ...row,
+              teacher_id: teacherId,
+              plan_id: "",
+              availablePlans: plans,
+            }
+          : row,
+      ),
+    );
+  };
+
+  const updateClassRow = (idx, field, value) => {
+    setFormClasses((prev) =>
+      prev.map((row, index) =>
+        index === idx
+          ? {
+              ...row,
+              [field]: value,
+            }
+          : row,
+      ),
+    );
   };
 
   const handleScroll = (e, targetId) => {
@@ -354,102 +443,122 @@ export function Students() {
     { header: "Apellido", accessor: "last_name" },
     { header: "Nombre", accessor: "first_name" },
     {
-      header: "Fecha de Nacimiento",
-      render: (row) =>
-        row.birth_date
-          ? new Date(row.birth_date).toLocaleDateString("es-AR")
-          : "-",
+      header: "Estado",
+      render: (row) => {
+        const active = row.activePlans?.length > 0;
+
+        return (
+          <span
+            className={`font-medium ${
+              active ? "text-green-600" : "text-red-600"
+            }`}
+          >
+            ● {active ? "Activo" : "Inactivo"}
+          </span>
+        );
+      },
     },
-    { header: "Colegio o Universidad", accessor: "school" },
-    { header: "Nivel", accessor: "level" },
-    { header: "Grado", accessor: "grade" },
   ];
 
-  if (isAdmin()) {
-    columns.splice(3, 0, { header: "DNI", accessor: "dni" });
-  }
-
   // Sumar Docente y Plan solo en Activos
-  if (status === "active") {
-    columns.push(
-      {
-        header: "Docente",
-        render: (row) => (
+  columns.push(
+    {
+      header: "Docente",
+      render: (row) => {
+        const uniqueTeachers = [
+          ...new Map(
+            (row.activePlans || []).map((p) => [p.teacher_id, p]),
+          ).values(),
+        ];
+
+        return (
           <div
-            id={`scroll-docente-${row.id}`}
-            onScroll={(e) => handleScroll(e, `scroll-plan-${row.id}`)}
-            className="max-h-24 overflow-y-auto pr-2 space-y-1 scrollbar-thin"
+            className="
+          h-10
+          overflow-y-auto
+          overflow-x-hidden
+          flex
+          flex-col
+          gap-1
+          pr-1
+        "
           >
-            {row.activePlans?.map((p, i) => (
+            {uniqueTeachers.map((teacher) => (
               <div
-                key={i}
-                className="text-sm border-b border-gray-100 last:border-0 pb-1 truncate"
-                title={p.teacher_name}
+                key={teacher.teacher_id}
+                className="
+      text-sm
+      truncate
+      whitespace-nowrap
+      flex-shrink-0
+    "
               >
-                {p.teacher_name}
+                {teacher.teacher_name}
               </div>
             ))}
-            {(!row.activePlans || row.activePlans.length === 0) && "-"}
           </div>
-        ),
+        );
       },
-      {
-        header: "Plan",
-        render: (row) => (
+    },
+    {
+      header: "Plan",
+      render: (row) => {
+        const uniquePlans = [
+          ...new Map(
+            (row.activePlans || []).map((p) => [p.plan_id, p]),
+          ).values(),
+        ];
+
+        return (
           <div
-            id={`scroll-plan-${row.id}`}
-            onScroll={(e) => handleScroll(e, `scroll-docente-${row.id}`)}
-            className="max-h-24 overflow-y-auto pr-2 space-y-1 scrollbar-thin"
+            className="
+          h-10
+          overflow-y-auto
+          overflow-x-hidden
+          flex
+          flex-col
+          gap-1
+          pr-1
+        "
           >
-            {row.activePlans?.map((p, i) => (
+            {uniquePlans.map((plan) => (
               <div
-                key={i}
-                className="text-sm border-b border-gray-100 last:border-0 pb-1 text-gray-700 dark:text-gray-300 truncate"
-                title={p.plan_name}
+                key={plan.plan_id}
+                className="
+              text-sm
+              truncate
+              whitespace-nowrap
+              flex-shrink-0
+            "
               >
-                {p.plan_name}
+                {plan.plan_name}
               </div>
             ))}
-            {(!row.activePlans || row.activePlans.length === 0) && "-"}
           </div>
-        ),
+        );
       },
-    );
-  }
+    },
+  );
 
   // Botón Activar solo en "Total de Alumnos" para alumnos inactivos
-  if (isAdmin() && status === "all") {
+  if (isAdmin()) {
     columns.push({
       header: "Acciones",
       render: (row) => (
         <div className="flex gap-2">
-          {!row.student_plan_id && (
-            <Button
-              size="sm"
-              onClick={() => handleReactivate(row.id)}
-              className={buttonClass}
-            >
-              Activar
-            </Button>
-          )}
-        </div>
-      ),
-    });
-  }
+          <Button size="sm" variant="outline" onClick={() => handleView(row)}>
+            Ver
+          </Button>
 
-  // Mover botones de acción solo a Alumnos Activos
-  if (isAdmin() && status === "active") {
-    columns.push({
-      header: "Acciones",
-      render: (row) => (
-        <div className="flex gap-2">
           <Button
+            title="Editar"
             size="sm"
             onClick={() => handleEdit(row)}
             className={buttonClass}
           >
-            Editar
+            <PencilIcon className="w-5 h-5" />
           </Button>
+
           <Button
             size="sm"
             variant="outline"
@@ -463,13 +572,11 @@ export function Students() {
     });
   }
 
-  const showCreateButtons = isAdmin() && status !== "active";
+  const showCreateButtons = isAdmin();
 
   const tableTitle = (
     <div className="flex justify-between items-center">
-      <span>
-        {status === "active" ? "Alumnos Activos" : "Total de Alumnos"}
-      </span>
+      <span>Alumnos</span>
       {showCreateButtons && (
         <Button
           title="Crear Alumno"
@@ -509,57 +616,65 @@ export function Students() {
     <>
       <div className="flex gap-3 mb-4 flex-wrap">
         <Input
-          placeholder="Buscar por nombre o apellido"
+          placeholder="Nombre o apellido"
           value={searchFirstLastName}
           onChange={(e) => setSearchFirstLastName(e.target.value)}
-          className="w-60"
+          className="min-w-56"
         />
 
         <Input
-          placeholder="Buscar por DNI"
+          placeholder="DNI"
           value={searchDNI}
           onChange={(e) => setSearchDNI(e.target.value)}
-          className="w-40"
+          className="min-w-56"
         />
 
-        {status === "active" && (
-          <>
-            <Input
-              placeholder="Buscar por colegio o universidad"
-              value={searchSchool}
-              onChange={(e) => setSearchSchool(e.target.value)}
-              className="w-60"
-            />
+        <Select
+          value={selectedStatus}
+          onChange={(e) => setSelectedStatus(e.target.value)}
+          className="p-2 border border-gray-300 rounded min-w-56"
+        >
+          <option value="">Todos los alumnos</option>
+          <option value="active">Activos</option>
+          <option value="inactive">Inactivos</option>
+        </Select>
 
-            <Select
-              value={selectedTeacher}
-              onChange={(e) => setSelectedTeacher(e.target.value)}
-              className="p-2 border border-gray-300 rounded w-60"
-            >
-              <option value="">Todos los docentes</option>
+        <Select
+          value={selectedTeacher}
+          onChange={(e) => setSelectedTeacher(e.target.value)}
+          className="p-2 border border-gray-300 rounded min-w-56"
+        >
+          <option value="">Todos los docentes</option>
 
-              {teachers.map((teacher) => (
-                <option key={teacher.id} value={teacher.id}>
-                  {teacher.last_name}, {teacher.first_name}
-                </option>
-              ))}
-            </Select>
+          {[...teachers]
+            .sort((a, b) =>
+              `${a.last_name}, ${a.first_name}`.localeCompare(
+                `${b.last_name}, ${b.first_name}`,
+                "es",
+              ),
+            )
+            .map((teacher) => (
+              <option key={teacher.id} value={teacher.id}>
+                {teacher.last_name}, {teacher.first_name}
+              </option>
+            ))}
+        </Select>
 
-            <Select
-              value={selectedPlan}
-              onChange={(e) => setSelectedPlan(e.target.value)}
-              className="p-2 border border-gray-300 rounded w-60"
-            >
-              <option value="">Todos los planes</option>
+        <Select
+          value={selectedPlan}
+          onChange={(e) => setSelectedPlan(e.target.value)}
+          className="p-2 border border-gray-300 rounded min-w-56"
+        >
+          <option value="">Todos los planes</option>
 
-              {plans.map((plan) => (
-                <option key={plan.id} value={plan.id}>
-                  {plan.name}
-                </option>
-              ))}
-            </Select>
-          </>
-        )}
+          {[...plans]
+            .sort((a, b) => a.name.localeCompare(b.name, "es"))
+            .map((plan) => (
+              <option key={plan.id} value={plan.id}>
+                {plan.name}
+              </option>
+            ))}
+        </Select>
       </div>
 
       <BasicTable
@@ -576,7 +691,14 @@ export function Students() {
         </div>
       )}
 
-      <Modal isOpen={openCreateModal} onClose={() => setOpenCreateModal(false)}>
+      <Modal
+        isOpen={openCreateModal}
+        onClose={() => {
+          setOpenCreateModal(false);
+          resetForm();
+          setSelectedStudent(null);
+        }}
+      >
         <h2 className="text-xl font-bold mb-8">Crear Alumno</h2>
 
         <Input
@@ -629,12 +751,12 @@ export function Students() {
         </Select>
 
         <Select
-          label="Grado"
+          label="Grado o año"
           value={grade}
           onChange={(e) => setGrade(e.target.value)}
           error={errorsCreate.grade}
         >
-          <option value="">Seleccione un grado</option>
+          <option value="">Seleccione un grado o año</option>
           {[1, 2, 3, 4, 5, 6, 7].map((g) => (
             <option key={g} value={g}>
               {g}
@@ -646,11 +768,11 @@ export function Students() {
         <div className="mt-6 border-t pt-4">
           <div className="flex justify-between items-center mb-4">
             <h3 className="font-semibold text-gray-700">Clases Asignadas</h3>
-            <Button size="sm" onClick={addPlanRow}>
+            <Button size="sm" onClick={addClassRow}>
               + Añadir Clase
             </Button>
           </div>
-          {formPlans.map((row, idx) => (
+          {formClasses.map((row, idx) => (
             <div
               key={idx}
               className="flex gap-2 items-end mb-3 bg-gray-50 p-2 rounded"
@@ -659,16 +781,20 @@ export function Students() {
                 <Select
                   label={idx === 0 ? "Docente" : ""}
                   value={row.teacher_id}
-                  onChange={(e) =>
-                    updatePlanRow(idx, "teacher_id", e.target.value)
-                  }
+                  onChange={(e) => loadAvailablePlans(idx, e.target.value)}
                 >
-                  <option value="">Docente...</option>
-                  {teachers.map((t) => (
-                    <option key={t.id} value={t.id}>
-                      {t.last_name}, {t.first_name}
-                    </option>
-                  ))}
+                  <option value="">Seleccione un Docente</option>
+                  {[...teachers]
+                    .sort(
+                      (a, b) =>
+                        a.last_name.localeCompare(b.last_name) ||
+                        a.first_name.localeCompare(b.first_name),
+                    )
+                    .map((t) => (
+                      <option key={t.id} value={t.id}>
+                        {t.last_name}, {t.first_name}
+                      </option>
+                    ))}
                 </Select>
               </div>
               <div className="flex-1">
@@ -676,25 +802,32 @@ export function Students() {
                   label={idx === 0 ? "Plan" : ""}
                   value={row.plan_id}
                   onChange={(e) =>
-                    updatePlanRow(idx, "plan_id", e.target.value)
+                    updateClassRow(idx, "plan_id", e.target.value)
                   }
                 >
-                  <option value="">Plan...</option>
-                  {plans.map((p) => (
+                  <option value="">Seleccione un Plan</option>
+
+                  {row.availablePlans?.map((p) => (
                     <option key={p.id} value={p.id}>
                       {p.name}
                     </option>
                   ))}
                 </Select>
               </div>
-              <Button
-                variant="outline"
-                size="sm"
-                className="mb-1 text-red-500"
-                onClick={() => removePlanRow(idx)}
-              >
-                ✕
-              </Button>
+              <div className="flex flex-col">
+                <div className="h-6"></div>
+
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setOpenCreateModal(false);
+                    resetForm();
+                    setSelectedStudent(null);
+                  }}
+                >
+                  ✕
+                </Button>
+              </div>
             </div>
           ))}
         </div>
@@ -714,7 +847,14 @@ export function Students() {
         </div>
       </Modal>
 
-      <Modal isOpen={openEditModal} onClose={() => setOpenEditModal(false)}>
+      <Modal
+        isOpen={openEditModal}
+        onClose={() => {
+          setOpenEditModal(false);
+          resetForm();
+          setSelectedStudent(null);
+        }}
+      >
         <h2 className="text-xl font-bold mb-8">Editar Alumno</h2>
 
         <Input
@@ -767,12 +907,12 @@ export function Students() {
         </Select>
 
         <Select
-          label="Grado"
+          label="Grado o año"
           value={grade}
           onChange={(e) => setGrade(e.target.value)}
           error={errorsEdit.grade}
         >
-          <option value="">Seleccione un grado</option>
+          <option value="">Seleccione un grado o año</option>
           {[1, 2, 3, 4, 5, 6, 7].map((g) => (
             <option key={g} value={g}>
               {g}
@@ -781,65 +921,81 @@ export function Students() {
         </Select>
 
         {/* Gestión Dinámica de Clases en Edición */}
-        {status === "active" && (
-          <div className="mt-6 border-t pt-4">
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="font-semibold text-gray-700">Gestionar Clases</h3>
-              <Button size="sm" onClick={addPlanRow}>
-                + Añadir Clase
-              </Button>
-            </div>
-            {formPlans.map((row, idx) => (
-              <div
-                key={idx}
-                className="flex gap-2 items-end mb-3 bg-gray-50 p-2 rounded"
-              >
-                <div className="flex-1">
-                  <Select
-                    label={idx === 0 ? "Docente" : ""}
-                    value={row.teacher_id}
-                    onChange={(e) =>
-                      updatePlanRow(idx, "teacher_id", e.target.value)
-                    }
-                  >
-                    <option value="">Docente...</option>
-                    {teachers.map((t) => (
+        <div className="mt-6 border-t pt-4">
+          <div className="flex justify-between items-center mb-4">
+            <h3 className="font-semibold text-gray-700">Gestionar Clases</h3>
+            <Button size="sm" onClick={addClassRow}>
+              + Añadir Clase
+            </Button>
+          </div>
+          {formClasses.map((row, idx) => (
+            <div
+              key={idx}
+              className="flex gap-2 items-end mb-3 bg-gray-50 p-2 rounded"
+            >
+              <div className="flex-1">
+                <Select
+                  label={idx === 0 ? "Docente" : ""}
+                  value={row.teacher_id}
+                  onChange={(e) => loadAvailablePlans(idx, e.target.value)}
+                >
+                  <option value="">Seleccione un Docente</option>
+                  {[...teachers]
+                    .sort(
+                      (a, b) =>
+                        a.last_name.localeCompare(b.last_name) ||
+                        a.first_name.localeCompare(b.first_name),
+                    )
+                    .map((t) => (
                       <option key={t.id} value={t.id}>
                         {t.last_name}, {t.first_name}
                       </option>
                     ))}
-                  </Select>
-                </div>
-                <div className="flex-1">
-                  <Select
-                    label={idx === 0 ? "Plan" : ""}
-                    value={row.plan_id}
-                    onChange={(e) =>
-                      updatePlanRow(idx, "plan_id", e.target.value)
-                    }
-                  >
-                    <option value="">Plan...</option>
-                    {plans.map((p) => (
-                      <option key={p.id} value={p.id}>
-                        {p.name}
-                      </option>
-                    ))}
-                  </Select>
-                </div>
-                {!row.student_plan_id && (
+                </Select>
+              </div>
+              <div className="flex-1">
+                <Select
+                  label={idx === 0 ? "Plan" : ""}
+                  value={row.plan_id}
+                  onChange={(e) =>
+                    updateClassRow(idx, "plan_id", e.target.value)
+                  }
+                >
+                  <option value="">Seleccione un Plan</option>
+                  {row.availablePlans?.map((p) => (
+                    <option key={p.id} value={p.id}>
+                      {p.name}
+                    </option>
+                  ))}
+                </Select>
+              </div>
+              {/* {!row.student_plan_id && (
+                <div className="flex items-end pb-1">
                   <Button
                     variant="outline"
                     size="sm"
-                    className="mb-1 text-red-500"
-                    onClick={() => removePlanRow(idx)}
+                    className="text-red-500"
+                    onClick={() => removeClassRow(idx)}
                   >
                     ✕
                   </Button>
-                )}
+                </div>
+              )} */}
+              <div className="flex flex-col">
+                <div className="h-6"></div>
+
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="text-red-500 h-11 w-11"
+                  onClick={() => removeClassRow(idx)}
+                >
+                  ✕
+                </Button>
               </div>
-            ))}
-          </div>
-        )}
+            </div>
+          ))}
+        </div>
 
         <div className="flex justify-end gap-4 mt-10">
           <Button
@@ -853,6 +1009,49 @@ export function Students() {
           <Button onClick={handleUpdate} className={buttonClass}>
             Guardar
           </Button>
+        </div>
+      </Modal>
+
+      <Modal isOpen={openViewModal} onClose={() => setOpenViewModal(false)}>
+        <h2 className="text-xl font-bold mb-8">
+          {selectedStudent?.first_name} {selectedStudent?.last_name}
+        </h2>
+
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <h4 className="font-semibold">DNI</h4>
+            <p>{selectedStudent?.dni}</p>
+          </div>
+
+          <div>
+            <h4 className="font-semibold">Fecha de nacimiento</h4>
+            <p>
+              {selectedStudent?.birth_date
+                ? new Date(selectedStudent.birth_date).toLocaleDateString(
+                    "es-AR",
+                  )
+                : "-"}
+            </p>
+          </div>
+
+          <div>
+            <h4 className="font-semibold">Colegio o Universidad</h4>
+            <p>{selectedStudent?.school}</p>
+          </div>
+
+          <div>
+            <h4 className="font-semibold">Nivel</h4>
+            <p>{selectedStudent?.level}</p>
+          </div>
+
+          <div>
+            <h4 className="font-semibold">Grado o Año</h4>
+            <p>{selectedStudent?.grade}°</p>
+          </div>
+        </div>
+
+        <div className="flex justify-end mt-8">
+          <Button onClick={() => setOpenViewModal(false)}>Cerrar</Button>
         </div>
       </Modal>
 
