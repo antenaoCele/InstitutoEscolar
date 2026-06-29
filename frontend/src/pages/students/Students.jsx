@@ -19,6 +19,7 @@ import {
   MoreIcon,
   CreateIcon,
   MoreInfoIcon,
+  ViewIcon,
 } from "../../icons";
 
 export function Students() {
@@ -509,8 +510,13 @@ export function Students() {
       header: "Acciones",
       render: (row) => (
         <div className="flex gap-2">
-          <Button size="sm" variant="outline" onClick={() => handleView(row)}>
-            Ver
+          <Button
+            title="Ver"
+            size="sm"
+            onClick={() => handleView(row)}
+            className={buttonClass}
+          >
+            <img src={ViewIcon} alt="Ver" className="w-5 h-5 invert" />
           </Button>
 
           <Button
