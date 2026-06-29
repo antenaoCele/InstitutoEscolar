@@ -10,17 +10,21 @@ export const schedulesController = {
     try {
       const [rows] = await db.execute(`
       SELECT
-        s.id,
-        s.teacher_id,
-        t.first_name,
-        t.last_name,
-        s.start_time,
-        s.end_time,
-        s.day,
-        s.classroom
+          s.id,
+          s.teacher_id,
+          s.plan_id,
+          p.name AS plan_name,
+          t.first_name,
+          t.last_name,
+          s.start_time,
+          s.end_time,
+          s.day,
+          s.classroom
       FROM schedules s
       JOIN teachers t
-        ON t.id = s.teacher_id
+          ON t.id = s.teacher_id
+      LEFT JOIN plans p
+          ON p.id = s.plan_id
       ORDER BY s.day, s.start_time
     `);
 
@@ -49,6 +53,7 @@ export const schedulesController = {
         SELECT
           s.id,
           s.teacher_id,
+          s.plan_id AS plan_name,
           t.first_name,
           t.last_name,
           s.start_time,
@@ -93,50 +98,31 @@ export const schedulesController = {
         `
         SELECT
             s.id AS schedule_id,
-
             t.first_name AS teacher_first_name,
             t.last_name AS teacher_last_name,
-
             s.classroom,
-
             st.id AS student_id,
             st.first_name AS student_first_name,
             st.last_name AS student_last_name,
-
             p.id AS plan_id,
             p.name AS plan_name,
-
             sub.id AS subject_id,
             sub.name AS subject_name
-
         FROM schedules s
-
         JOIN teachers t
             ON t.id = s.teacher_id
-
+        JOIN plans p
+            ON p.id = s.plan_id
         LEFT JOIN schedule_students ss
             ON ss.schedule_id = s.id
-
         LEFT JOIN students st
             ON st.id = ss.student_id
-
-        LEFT JOIN student_plans sp
-            ON sp.student_id = st.id
-            AND sp.end_date IS NULL
-
-        LEFT JOIN plans p
-            ON p.id = sp.plan_id
-
         LEFT JOIN plan_subjects ps
             ON ps.plan_id = p.id
-
         LEFT JOIN subjects sub
             ON sub.id = ps.subject_id
-
         WHERE s.id = ?
-
         ORDER BY
-            p.id,
             st.last_name,
             sub.name
         `,
@@ -207,10 +193,6 @@ export const schedulesController = {
             student.subjects.push(row.subject_name);
           }
         }
-
-        // if (row.subject_name && !student.subjects.includes(row.subject_name)) {
-        //   student.subjects.push(row.subject_name);
-        // }
       });
 
       res.json({
@@ -236,21 +218,23 @@ export const schedulesController = {
 
       await connection.beginTransaction();
 
-      const { teacher_id, start_time, day, classroom, students } = req.body;
+      const { teacher_id, plan_id, start_time, day, classroom, students } =
+        req.body;
 
       const [result] = await connection.execute(
         `
         INSERT INTO schedules
         (
         teacher_id,
+        plan_id,
         start_time,
         end_time,
         day,
         classroom
         )
-        VALUES (?, ?, ADDTIME(?, '01:30:00'), ?, ?)
+        VALUES (?,?, ?, ADDTIME(?, '01:30:00'), ?, ?)
         `,
-        [teacher_id, start_time, start_time, day, classroom],
+        [teacher_id, plan_id, start_time, start_time, day, classroom],
       );
 
       const scheduleId = result.insertId;
@@ -274,6 +258,7 @@ export const schedulesController = {
         SELECT
           id,
           teacher_id,
+          plan_id,
           start_time,
           end_time,
           day,
@@ -320,7 +305,8 @@ export const schedulesController = {
 
       const id = Number(req.params.id);
 
-      const { teacher_id, start_time, day, classroom, students } = req.body;
+      const { teacher_id, plan_id, start_time, day, classroom, students } =
+        req.body;
 
       const [rows] = await connection.execute(
         "SELECT * FROM schedules WHERE id = ?",
@@ -330,6 +316,7 @@ export const schedulesController = {
       const current = rows[0];
 
       const newTeacherId = teacher_id ?? current.teacher_id;
+      const newPlanId = plan_id ?? current.plan_id;
       const newStartTime = start_time ?? current.start_time;
       const newDay = day ?? current.day;
       const newClassroom = classroom ?? current.classroom;
@@ -338,13 +325,22 @@ export const schedulesController = {
         `
         UPDATE schedules
         SET teacher_id = ?,
+            plan_id = ?,
             start_time = ?,
             end_time = ADDTIME(?, '01:30:00'),
             day = ?,
             classroom = ?
         WHERE id = ?
         `,
-        [newTeacherId, newStartTime, newStartTime, newDay, newClassroom, id],
+        [
+          newTeacherId,
+          newPlanId,
+          newStartTime,
+          newStartTime,
+          newDay,
+          newClassroom,
+          id,
+        ],
       );
 
       await connection.execute(
@@ -374,6 +370,7 @@ export const schedulesController = {
         SELECT
           id,
           teacher_id,
+          plan_id,
           start_time,
           end_time,
           day,
