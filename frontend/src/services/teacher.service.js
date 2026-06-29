@@ -5,8 +5,13 @@ export const teacherService = {
 
   getById: (id) => api.get(`/teachers/${id}`),
 
-  getAvailableStudents: (teacherId) =>
-    api.get(`/teachers/${teacherId}/students`),
+  getAvailableStudents(id, planId) {
+    return api.get(`/teachers/${id}/students`, {
+      params: {
+        plan_id: planId,
+      },
+    });
+  },
 
   getAvailablePlans: (teacherId) => api.get(`/teachers/${teacherId}/plans`),
 
