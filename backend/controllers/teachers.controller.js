@@ -55,35 +55,29 @@ export const teachersController = {
   getAvailableStudents: async (req, res) => {
     try {
       const teacherId = Number(req.params.id);
+      const planId = Number(req.query.plan_id);
 
       const [rows] = await db.execute(
         `
         SELECT DISTINCT
-          s.id,
-          s.first_name,
-          s.last_name
+            s.id,
+            s.first_name,
+            s.last_name
         FROM students s
-
         JOIN student_plans sp
-          ON sp.student_id = s.id
-          AND sp.end_date IS NULL
-
-        JOIN plans p
-          ON p.id = sp.plan_id
-
-        JOIN plan_subjects ps
-          ON ps.plan_id = p.id
-
-        JOIN teacher_subjects ts
-          ON ts.subject_id = ps.subject_id
-
-        WHERE ts.teacher_id = ?
-
+            ON sp.student_id = s.id
+        WHERE
+            sp.teacher_id = ?
+            AND sp.plan_id = ?
+            AND (
+                sp.end_date IS NULL
+                OR sp.end_date > CURDATE()
+            )
         ORDER BY
-          s.last_name,
-          s.first_name
+            s.last_name,
+            s.first_name
         `,
-        [teacherId],
+        [teacherId, planId],
       );
 
       res.json({
