@@ -58,6 +58,7 @@ import CreateIcon from "./icons8-crear-48.png";
 import MoreInfoIcon from "./icons8-info-50.png";
 import BackIcon from "./icons8-izquierda-negro-2-50.png";
 import CloseSessionIcon from "./icons8-cerrar.png";
+import ViewIcon from "./icons8-ver-50 (1).png";
 
 export {
   ErrorHexaIcon,
@@ -120,4 +121,5 @@ export {
   MoreInfoIcon,
   BackIcon,
   CloseSessionIcon,
+  ViewIcon,
 };
