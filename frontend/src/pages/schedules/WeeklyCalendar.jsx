@@ -17,52 +17,103 @@ import {
 } from "../../icons";
 
 export default function WeeklyCalendar() {
-  // Datos
+  // ======================================================
+  // DATOS
+  // ======================================================
   const [teachers, setTeachers] = useState([]);
   const [students, setStudents] = useState([]);
   const [schedules, setSchedules] = useState([]);
   const [scheduleStudents, setScheduleStudents] = useState([]);
 
-  // Filtros del calendario
+  // ======================================================
+  // FILTROS DEL CALENDARIO
+  // ======================================================
   const [selectedTeacher, setSelectedTeacher] = useState("");
   const [selectedStudent, setSelectedStudent] = useState("");
   const [selectedClassroom, setSelectedClassroom] = useState("");
 
-  // Modales
+  // ======================================================
+  // MODALES
+  // ======================================================
   const [openCreateModal, setOpenCreateModal] = useState(false);
   const [openEditModal, setOpenEditModal] = useState(false);
   const [openDeleteModal, setOpenDeleteModal] = useState(false);
   const [openInfoModal, setOpenInfoModal] = useState(false);
 
-  // Horario seleccionado
+  // ======================================================
+  // HORARIO SELECCIONADO
+  // ======================================================
   const [selectedSchedule, setSelectedSchedule] = useState(null);
   const [selectedScheduleInfo, setSelectedScheduleInfo] = useState(null);
 
-  // Formulario
+  // ======================================================
+  // FORMULARIO DEL HORARIO
+  // ======================================================
   const [teacherId, setTeacherId] = useState("");
+  const [selectedPlan, setSelectedPlan] = useState("");
+
   const [selectedDay, setSelectedDay] = useState("");
   const [selectedTime, setSelectedTime] = useState("");
   const [classroom, setClassroom] = useState("");
 
-  // Alumno a agregar
+  // ======================================================
+  // ALUMNOS DEL HORARIO
+  // ======================================================
   const [selectedStudentId, setSelectedStudentId] = useState("");
 
-  // Alumnos agregados al horario
   const [selectedStudents, setSelectedStudents] = useState([]);
-
-  // Planes y materias de esos alumnos
   const [selectedStudentPlans, setSelectedStudentPlans] = useState([]);
 
-  // Errores
+  const [availableStudents, setAvailableStudents] = useState([]);
+  const [availablePlans, setAvailablePlans] = useState([]);
+
+  const [incompatibleStudents, setIncompatibleStudents] = useState([]);
+
+  // ======================================================
+  // ESTADO DEL COMPONENTE
+  // ======================================================
+  const [isEditing, setIsEditing] = useState(false);
+
+  // ======================================================
+  // ERRORES
+  // ======================================================
   const [errorsCreate, setErrorsCreate] = useState({});
   const [errorsEdit, setErrorsEdit] = useState({});
 
-  // Funciones
-  const [isEditing, setIsEditing] = useState(false);
-  const [availableStudents, setAvailableStudents] = useState([]);
-  const [incompatibleStudents, setIncompatibleStudents] = useState([]);
+  // ======================================================
+  // CONSTANTES
+  // ======================================================
+
+  const days = [
+    { name: "Lunes", value: 1 },
+    { name: "Martes", value: 2 },
+    { name: "Miércoles", value: 3 },
+    { name: "Jueves", value: 4 },
+    { name: "Viernes", value: 5 },
+    { name: "Sábado", value: 6 },
+  ];
+
+  const classrooms = [
+    { name: "Aula A", value: "A" },
+    { name: "Aula B", value: "B" },
+  ];
+
+  const timeSlots = [
+    "08:00 - 09:30",
+    "09:30 - 11:00",
+    "11:00 - 12:30",
+    "15:00 - 16:30",
+    "16:30 - 18:00",
+    "18:00 - 19:30",
+    "19:30 - 21:00",
+    "21:00 - 22:30",
+  ];
 
   const buttonClass = "cursor-pointer transition transform hover:scale-105";
+
+  // ======================================================
+  // FETCH DATOS PRINCIPALES
+  // ======================================================
 
   const fetchTeachers = async () => {
     try {
@@ -77,26 +128,6 @@ export default function WeeklyCalendar() {
       setTeachers(orderedTeachers);
     } catch (error) {
       console.error("ERROR TEACHERS", error);
-    }
-  };
-
-  const fetchSchedules = async () => {
-    try {
-      const res = await ScheduleService.getAll();
-
-      setSchedules(res.data.data || []);
-    } catch (error) {
-      console.error("ERROR SCHEDULES", error);
-    }
-  };
-
-  const fetchScheduleStudents = async () => {
-    try {
-      const res = await ScheduleStudentService.getAll();
-
-      setScheduleStudents(res.data.data || []);
-    } catch (error) {
-      console.error(error);
     }
   };
 
@@ -122,14 +153,41 @@ export default function WeeklyCalendar() {
     }
   };
 
-  const fetchAvailableStudents = async (teacherId) => {
+  const fetchSchedules = async () => {
+    try {
+      const res = await ScheduleService.getAll();
+
+      setSchedules(res.data.data || []);
+    } catch (error) {
+      console.error("ERROR SCHEDULES", error);
+    }
+  };
+
+  const fetchScheduleStudents = async () => {
+    try {
+      const res = await ScheduleStudentService.getAll();
+
+      setScheduleStudents(res.data.data || []);
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  // ======================================================
+  // FETCH AUXILIARES
+  // ======================================================
+
+  const fetchAvailableStudents = async (teacherId, planId) => {
     try {
       if (!teacherId) {
         setAvailableStudents([]);
         return;
       }
 
-      const response = await teacherService.getAvailableStudents(teacherId);
+      const response = await teacherService.getAvailableStudents(
+        teacherId,
+        planId,
+      );
 
       setAvailableStudents(
         (response.data.data || []).sort(
@@ -144,6 +202,331 @@ export default function WeeklyCalendar() {
     }
   };
 
+  const fetchAvailablePlans = async (teacherId) => {
+    try {
+      if (!teacherId) {
+        setAvailablePlans([]);
+        return;
+      }
+
+      const res = await teacherService.getAvailablePlans(teacherId);
+
+      const orderedPlans = (res.data.data || []).sort((a, b) =>
+        a.name.localeCompare(b.name),
+      );
+
+      setAvailablePlans(orderedPlans);
+    } catch (error) {
+      console.error(error);
+      setAvailablePlans([]);
+    }
+  };
+
+  const fetchScheduleInfo = async (id) => {
+    try {
+      const res = await ScheduleService.getInfo(id);
+
+      setSelectedScheduleInfo(res.data.data);
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  // ======================================================
+  // RESETEO
+  // ======================================================
+
+  const resetForm = () => {
+    // Formulario
+    setTeacherId("");
+    setSelectedPlan("");
+    setSelectedDay("");
+    setSelectedTime("");
+    setClassroom("");
+
+    // Alumno
+    setSelectedStudentId("");
+    setSelectedStudents([]);
+    setSelectedStudentPlans([]);
+
+    // Datos auxiliares
+    setAvailablePlans([]);
+    setAvailableStudents([]);
+    setIncompatibleStudents([]);
+
+    // Errores
+    setErrorsCreate({});
+    setErrorsEdit({});
+  };
+
+  // ======================================================
+  // HANDLES CRUD
+  // ======================================================
+  const openCreate = () => {
+    setIsEditing(false);
+
+    resetForm();
+
+    setOpenCreateModal(true);
+  };
+
+  const handleCreate = async () => {
+    try {
+      setErrorsCreate({});
+
+      const newErrors = {};
+
+      if (!teacherId) {
+        newErrors.teacher_id = "Seleccione una opción válida.";
+      }
+      if (!selectedPlan) {
+        newErrors.plan_id = "Seleccione una opción válida.";
+      }
+      if (!selectedDay) {
+        newErrors.day = "Seleccione una opción válida.";
+      }
+      if (!selectedTime) {
+        newErrors.start_time = "Seleccione una opción válida.";
+      }
+      if (!classroom) {
+        newErrors.classroom = "Seleccione una opción válida.";
+      }
+      if (selectedStudents.length === 0) {
+        newErrors.students = "Seleccione al menos una opción válida.";
+      }
+      if (Object.keys(newErrors).length > 0) {
+        setErrorsCreate(newErrors);
+        return;
+      }
+
+      await ScheduleService.create({
+        teacher_id: teacherId,
+        plan_id: selectedPlan,
+        start_time: selectedTime,
+        day: selectedDay,
+        classroom,
+        students: selectedStudents.map((student) => student.id),
+      });
+
+      setOpenCreateModal(false);
+
+      resetForm();
+
+      fetchSchedules();
+      fetchScheduleStudents();
+    } catch (error) {
+      console.error(error);
+
+      alert(JSON.stringify(error.response?.data, null, 2));
+
+      const backendErrors = error.response?.data?.errors;
+
+      if (backendErrors?.length) {
+        const formatted = {};
+
+        backendErrors.forEach((e) => {
+          if (
+            e.msg ===
+            "El horario se superpone con otro del mismo docente o aula."
+          ) {
+            formatted.start_time = e.msg;
+          } else if (
+            e.msg ===
+            "El alumno ya está inscripto en otra clase en ese mismo horario."
+          ) {
+            formatted.studentConflict = e.msg;
+          } else if (e.msg === "La clase ya alcanzó el máximo de 5 alumnos.") {
+            formatted.general = e.msg;
+          } else {
+            formatted[e.path] = e.msg;
+          }
+        });
+
+        setErrorsCreate(formatted);
+      }
+    }
+  };
+
+  const handleEdit = async (schedule) => {
+    setIsEditing(true);
+
+    setErrorsEdit({});
+
+    setSelectedSchedule(schedule);
+
+    setTeacherId(schedule.teacher_id);
+    setSelectedPlan(schedule.plan_id || "");
+
+    await fetchAvailablePlans(schedule.teacher_id);
+    setSelectedDay(schedule.day);
+    setSelectedTime(schedule.start_time.slice(0, 5));
+    setClassroom(schedule.classroom);
+
+    const studentsForSchedule = scheduleStudents.filter(
+      (ss) => ss.schedule_id === schedule.id,
+    );
+
+    setSelectedStudents(
+      studentsForSchedule.map((student) => ({
+        id: student.student_id,
+        first_name: student.first_name,
+        last_name: student.last_name,
+      })),
+    );
+
+    const plans = await Promise.all(
+      studentsForSchedule.map(async (student) => {
+        const response = await studentService.getPlans(
+          student.student_id,
+          schedule.teacher_id,
+        );
+
+        return {
+          studentId: student.student_id,
+          studentName: `${student.last_name}, ${student.first_name}`,
+          plans: response.data.data,
+          selectedPlans: response.data.data,
+        };
+      }),
+    );
+
+    setSelectedStudentPlans(plans);
+
+    setIncompatibleStudents([]);
+
+    await fetchAvailableStudents(schedule.teacher_id, schedule.plan_id);
+
+    setOpenEditModal(true);
+  };
+
+  const handleUpdate = async () => {
+    if (incompatibleStudents.length > 0) {
+      setErrorsEdit((prev) => ({
+        ...prev,
+        plans:
+          "No es posible guardar mientras existan alumnos incompatibles con el docente seleccionado.",
+      }));
+
+      return;
+    }
+
+    try {
+      setErrorsEdit({});
+
+      const newErrors = {};
+
+      if (!teacherId) {
+        newErrors.teacher_id = "Seleccione una opción válida.";
+      }
+      if (!selectedPlan) {
+        newErrors.plan_id = "Seleccione una opción válida.";
+      }
+      if (!selectedDay) {
+        newErrors.day = "Seleccione una opción válida.";
+      }
+      if (!selectedTime) {
+        newErrors.start_time = "Seleccione una opción válida.";
+      }
+      if (!classroom) {
+        newErrors.classroom = "Seleccione una opción válida.";
+      }
+      if (selectedStudents.length === 0) {
+        newErrors.students = "Seleccione al menos una opción válida.";
+      }
+      if (Object.keys(newErrors).length > 0) {
+        setErrorsEdit(newErrors);
+        return;
+      }
+
+      await ScheduleService.update(selectedSchedule.id, {
+        teacher_id: teacherId,
+        plan_id: selectedPlan,
+        start_time: selectedTime,
+        day: selectedDay,
+        classroom,
+        students: selectedStudents.map((student) => student.id),
+        schedule_id: selectedSchedule.id,
+      });
+
+      setOpenEditModal(false);
+
+      resetForm();
+
+      fetchSchedules();
+      fetchScheduleStudents();
+    } catch (error) {
+      console.error(error);
+
+      alert(JSON.stringify(error.response?.data, null, 2));
+
+      const backendErrors = error.response?.data?.errors;
+
+      if (backendErrors?.length) {
+        const formatted = {};
+
+        backendErrors.forEach((e) => {
+          if (
+            e.msg ===
+            "El horario se superpone con otro del mismo docente o aula."
+          ) {
+            formatted.start_time = e.msg;
+          } else if (
+            e.msg ===
+            "El alumno ya está inscripto en otra clase en ese mismo horario."
+          ) {
+            formatted.studentConflict = e.msg;
+          } else if (e.msg === "La clase ya alcanzó el máximo de 5 alumnos.") {
+            formatted.general = e.msg;
+          } else {
+            formatted[e.path] = e.msg;
+          }
+        });
+
+        setErrorsEdit(formatted);
+      }
+    }
+  };
+
+  const handleDelete = (schedule) => {
+    setSelectedSchedule(schedule);
+
+    setOpenDeleteModal(true);
+  };
+
+  const confirmDelete = async () => {
+    try {
+      await ScheduleService.delete(selectedSchedule.id);
+
+      setOpenDeleteModal(false);
+
+      setSelectedSchedule(null);
+
+      fetchSchedules();
+      fetchScheduleStudents();
+    } catch (error) {
+      console.error(error);
+
+      const backendErrors = error.response?.data?.errors;
+
+      if (backendErrors?.length) {
+        setErrorsEdit({
+          general: backendErrors[0].msg,
+        });
+      }
+    }
+  };
+
+  const handleInfo = async (schedule) => {
+    setSelectedSchedule(schedule);
+
+    await fetchScheduleInfo(schedule.id);
+
+    setOpenInfoModal(true);
+  };
+
+  // ======================================================
+  // HANDLES AUXILIARES
+  // ======================================================
   const handleAddStudent = async (isEdit = false) => {
     if (!selectedStudentId) return;
 
@@ -224,7 +607,7 @@ export default function WeeklyCalendar() {
       prev.filter((student) => student.studentId !== studentId),
     );
 
-    await fetchAvailableStudents(teacherId);
+    await fetchAvailableStudents(teacherId, selectedPlan);
 
     setErrorsCreate((prev) => ({
       ...prev,
@@ -257,6 +640,10 @@ export default function WeeklyCalendar() {
       }),
     );
   };
+
+  // ======================================================
+  // USEEFFECTS
+  // ======================================================
 
   useEffect(() => {
     if (isEditing || !openCreateModal) return;
@@ -309,327 +696,9 @@ export default function WeeklyCalendar() {
     checkCompatibility();
   }, [teacherId, selectedStudents, isEditing]);
 
-  const resetForm = () => {
-    setTeacherId("");
-    setSelectedDay("");
-    setSelectedTime("");
-    setClassroom("");
-
-    setSelectedStudentId("");
-
-    setSelectedStudents([]);
-    setSelectedStudentPlans([]);
-
-    setErrorsCreate({});
-    setErrorsEdit({});
-
-    setIncompatibleStudents([]);
-  };
-
-  const mapErrors = (errors) => {
-    const formatted = {};
-
-    errors.forEach((e) => {
-      formatted[e.path] = e.msg;
-    });
-    return formatted;
-  };
-
-  const openCreate = () => {
-    setIsEditing(false);
-
-    resetForm();
-
-    setOpenCreateModal(true);
-  };
-
-  const handleCreate = async () => {
-    try {
-      setErrorsCreate({});
-
-      const newErrors = {};
-
-      if (!teacherId) {
-        newErrors.teacher_id = "Seleccione una opción válida.";
-      }
-
-      if (!selectedDay) {
-        newErrors.day = "Seleccione una opción válida.";
-      }
-
-      if (!selectedTime) {
-        newErrors.start_time = "Seleccione una opción válida.";
-      }
-
-      if (!classroom) {
-        newErrors.classroom = "Seleccione una opción válida.";
-      }
-
-      if (selectedStudents.length === 0) {
-        newErrors.students = "Seleccione al menos una opción válida.";
-      }
-
-      if (Object.keys(newErrors).length > 0) {
-        setErrorsCreate(newErrors);
-        return;
-      }
-
-      await ScheduleService.create({
-        teacher_id: teacherId,
-        start_time: selectedTime,
-        day: selectedDay,
-        classroom,
-        students: selectedStudents.map((student) => student.id),
-      });
-
-      setOpenCreateModal(false);
-
-      resetForm();
-
-      fetchSchedules();
-      fetchScheduleStudents();
-    } catch (error) {
-      console.error(error);
-
-      alert(JSON.stringify(error.response?.data, null, 2));
-
-      const backendErrors = error.response?.data?.errors;
-
-      if (backendErrors?.length) {
-        const formatted = {};
-
-        backendErrors.forEach((e) => {
-          if (
-            e.msg ===
-            "El horario se superpone con otro del mismo docente o aula."
-          ) {
-            formatted.start_time = e.msg;
-          } else if (
-            e.msg ===
-            "El alumno ya está inscripto en otra clase en ese mismo horario."
-          ) {
-            formatted.studentConflict = e.msg;
-          } else if (e.msg === "La clase ya alcanzó el máximo de 5 alumnos.") {
-            formatted.general = e.msg;
-          } else {
-            formatted[e.path] = e.msg;
-          }
-        });
-
-        setErrorsCreate(formatted);
-      }
-    }
-  };
-
-  const handleEdit = async (schedule) => {
-    setIsEditing(true);
-
-    setErrorsEdit({});
-
-    setSelectedSchedule(schedule);
-
-    setTeacherId(schedule.teacher_id);
-    setSelectedDay(schedule.day);
-    setSelectedTime(schedule.start_time.slice(0, 5));
-    setClassroom(schedule.classroom);
-
-    const studentsForSchedule = scheduleStudents.filter(
-      (ss) => ss.schedule_id === schedule.id,
-    );
-
-    setSelectedStudents(
-      studentsForSchedule.map((student) => ({
-        id: student.student_id,
-        first_name: student.first_name,
-        last_name: student.last_name,
-      })),
-    );
-
-    const plans = await Promise.all(
-      studentsForSchedule.map(async (student) => {
-        const response = await studentService.getPlans(
-          student.student_id,
-          schedule.teacher_id,
-        );
-
-        return {
-          studentId: student.student_id,
-          studentName: `${student.last_name}, ${student.first_name}`,
-          plans: response.data.data,
-          selectedPlans: response.data.data,
-        };
-      }),
-    );
-
-    setSelectedStudentPlans(plans);
-
-    setIncompatibleStudents([]);
-
-    await fetchAvailableStudents(schedule.teacher_id);
-
-    setOpenEditModal(true);
-  };
-
-  const fetchScheduleInfo = async (id) => {
-    try {
-      const res = await ScheduleService.getInfo(id);
-
-      setSelectedScheduleInfo(res.data.data);
-    } catch (error) {
-      console.error(error);
-    }
-  };
-
-  const handleInfo = async (schedule) => {
-    setSelectedSchedule(schedule);
-
-    await fetchScheduleInfo(schedule.id);
-
-    setOpenInfoModal(true);
-  };
-
-  const handleUpdate = async () => {
-    if (incompatibleStudents.length > 0) {
-      setErrorsEdit((prev) => ({
-        ...prev,
-        plans:
-          "No es posible guardar mientras existan alumnos incompatibles con el docente seleccionado.",
-      }));
-
-      return;
-    }
-
-    try {
-      setErrorsEdit({});
-
-      const newErrors = {};
-
-      if (!teacherId) {
-        newErrors.teacher_id = "Seleccione una opción válida.";
-      }
-
-      if (!selectedDay) {
-        newErrors.day = "Seleccione una opción válida.";
-      }
-
-      if (!selectedTime) {
-        newErrors.start_time = "Seleccione una opción válida.";
-      }
-
-      if (!classroom) {
-        newErrors.classroom = "Seleccione una opción válida.";
-      }
-
-      if (selectedStudents.length === 0) {
-        newErrors.students = "Seleccione al menos una opción válida.";
-      }
-
-      if (Object.keys(newErrors).length > 0) {
-        setErrorsEdit(newErrors);
-        return;
-      }
-
-      await ScheduleService.update(selectedSchedule.id, {
-        teacher_id: teacherId,
-        start_time: selectedTime,
-        day: selectedDay,
-        classroom,
-        students: selectedStudents.map((student) => student.id),
-        schedule_id: selectedSchedule.id,
-      });
-
-      setOpenEditModal(false);
-
-      resetForm();
-
-      fetchSchedules();
-      fetchScheduleStudents();
-    } catch (error) {
-      console.error(error);
-
-      alert(JSON.stringify(error.response?.data, null, 2));
-
-      const backendErrors = error.response?.data?.errors;
-
-      if (backendErrors?.length) {
-        const formatted = {};
-
-        backendErrors.forEach((e) => {
-          if (
-            e.msg ===
-            "El horario se superpone con otro del mismo docente o aula."
-          ) {
-            formatted.start_time = e.msg;
-          } else if (
-            e.msg ===
-            "El alumno ya está inscripto en otra clase en ese mismo horario."
-          ) {
-            formatted.studentConflict = e.msg;
-          } else if (e.msg === "La clase ya alcanzó el máximo de 5 alumnos.") {
-            formatted.general = e.msg;
-          } else {
-            formatted[e.path] = e.msg;
-          }
-        });
-
-        setErrorsEdit(formatted);
-      }
-    }
-  };
-
-  const handleDelete = (schedule) => {
-    setSelectedSchedule(schedule);
-
-    setOpenDeleteModal(true);
-  };
-
-  const confirmDelete = async () => {
-    try {
-      await ScheduleService.delete(selectedSchedule.id);
-
-      setOpenDeleteModal(false);
-
-      setSelectedSchedule(null);
-
-      fetchSchedules();
-      fetchScheduleStudents();
-    } catch (error) {
-      console.error(error);
-
-      const backendErrors = error.response?.data?.errors;
-
-      if (backendErrors?.length) {
-        setErrorsEdit({
-          general: backendErrors[0].msg,
-        });
-      }
-    }
-  };
-
-  const timeSlots = [
-    "08:00 - 09:30",
-    "09:30 - 11:00",
-    "11:00 - 12:30",
-    "15:00 - 16:30",
-    "16:30 - 18:00",
-    "18:00 - 19:30",
-    "19:30 - 21:00",
-    "21:00 - 22:30",
-  ];
-
-  const days = [
-    { name: "Lunes", value: 1 },
-    { name: "Martes", value: 2 },
-    { name: "Miércoles", value: 3 },
-    { name: "Jueves", value: 4 },
-    { name: "Viernes", value: 5 },
-    { name: "Sábado", value: 6 },
-  ];
-
-  const classrooms = [
-    { name: "Aula A", value: "A" },
-    { name: "Aula B", value: "B" },
-  ];
+  // ======================================================
+  // DATOS DERIVADOS
+  // ======================================================
 
   const studentScheduleIds = scheduleStudents
     .filter(
@@ -649,6 +718,9 @@ export default function WeeklyCalendar() {
     return teacherOk && classroomOk && studentOk;
   });
 
+  // ======================================================
+  // RETUNR
+  // ======================================================
   return (
     <>
       {/* Encabezado */}
@@ -816,17 +888,6 @@ export default function WeeklyCalendar() {
                         "
                       >
                         {schedulesInSlot.map((schedule) => {
-                          const cardColor =
-                            schedule.classroom === "A"
-                              ? `
-                                    bg-blue-200
-                                    border-blue-600
-                                  `
-                              : `
-                                    bg-red-200
-                                    border-red-600
-                                  `;
-
                           const students = scheduleStudents.filter(
                             (ss) => ss.schedule_id === schedule.id,
                           );
@@ -949,7 +1010,11 @@ export default function WeeklyCalendar() {
 
               setTeacherId(id);
 
-              await fetchAvailableStudents(id);
+              setSelectedPlan("");
+
+              setAvailableStudents([]);
+
+              await fetchAvailablePlans(id);
             }}
             className="
               border
@@ -972,6 +1037,50 @@ export default function WeeklyCalendar() {
             <p className="text-red-500 text-sm mt-1">
               {errorsCreate.teacher_id}
             </p>
+          )}
+        </div>
+
+        {/* Plan */}
+
+        <div className="flex flex-col mb-4">
+          <label className="font-semibold mb-2">Plan</label>
+
+          <select
+            disabled={!teacherId}
+            value={selectedPlan}
+            onChange={async (e) => {
+              const plan = e.target.value;
+
+              setSelectedPlan(plan);
+
+              await fetchAvailableStudents(teacherId, plan);
+            }}
+            className={`
+              border
+              border-gray-300
+              rounded
+              px-3
+              py-2
+              ${
+                !teacherId
+                  ? "bg-gray-100 text-gray-400 cursor-not-allowed"
+                  : "bg-white"
+              }
+            `}
+          >
+            <option value="">
+              {teacherId ? "Seleccionar plan" : "Seleccione primero un docente"}
+            </option>
+
+            {availablePlans.map((plan) => (
+              <option key={plan.id} value={plan.id}>
+                {plan.name}
+              </option>
+            ))}
+          </select>
+
+          {errorsCreate.plan_id && (
+            <p className="text-red-500 text-sm mt-1">{errorsCreate.plan_id}</p>
           )}
         </div>
 
@@ -1338,7 +1447,11 @@ export default function WeeklyCalendar() {
 
               setTeacherId(id);
 
-              await fetchAvailableStudents(id);
+              setSelectedPlan("");
+
+              setAvailableStudents([]);
+
+              await fetchAvailablePlans(id);
             }}
             className="
               border
@@ -1359,6 +1472,50 @@ export default function WeeklyCalendar() {
 
           {errorsEdit.teacher_id && (
             <p className="mt-1 text-sm text-red-500">{errorsEdit.teacher_id}</p>
+          )}
+        </div>
+
+        {/* Plan */}
+
+        <div className="flex flex-col mb-4">
+          <label className="font-semibold mb-2">Plan</label>
+
+          <select
+            disabled={!teacherId}
+            value={selectedPlan}
+            onChange={async (e) => {
+              const plan = e.target.value;
+
+              setSelectedPlan(plan);
+
+              await fetchAvailableStudents(teacherId, plan);
+            }}
+            className={`
+              border
+              border-gray-300
+              rounded
+              px-3
+              py-2
+              ${
+                !teacherId
+                  ? "bg-gray-100 text-gray-400 cursor-not-allowed"
+                  : "bg-white"
+              }
+            `}
+          >
+            <option value="">
+              {teacherId ? "Seleccionar plan" : "Seleccione primero un docente"}
+            </option>
+
+            {availablePlans.map((plan) => (
+              <option key={plan.id} value={plan.id}>
+                {plan.name}
+              </option>
+            ))}
+          </select>
+
+          {errorsEdit.plan_id && (
+            <p className="text-red-500 text-sm mt-1">{errorsEdit.plan_id}</p>
           )}
         </div>
 
