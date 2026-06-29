@@ -398,10 +398,40 @@ export function Students() {
     );
   };
 
-  const loadAvailablePlans = async (idx, teacherId) => {
+  const updateClassRow = (idx, field, value) => {
+    setFormClasses((prev) =>
+      prev.map((row, index) =>
+        index === idx
+          ? {
+              ...row,
+              [field]: value,
+            }
+          : row,
+      ),
+    );
+  };
+
+  const handleTeacherChange = async (idx, teacherId) => {
+    if (!teacherId) {
+      setFormClasses((prev) =>
+        prev.map((row, index) =>
+          index === idx
+            ? {
+                ...row,
+                teacher_id: "",
+                plan_id: "",
+                availablePlans: [],
+              }
+            : row,
+        ),
+      );
+
+      return;
+    }
+
     const response = await teacherService.getAvailablePlans(teacherId);
 
-    const plans = (response.data.data || []).sort((a, b) =>
+    const availablePlans = (response.data.data || []).sort((a, b) =>
       a.name.localeCompare(b.name),
     );
 
@@ -412,20 +442,7 @@ export function Students() {
               ...row,
               teacher_id: teacherId,
               plan_id: "",
-              availablePlans: plans,
-            }
-          : row,
-      ),
-    );
-  };
-
-  const updateClassRow = (idx, field, value) => {
-    setFormClasses((prev) =>
-      prev.map((row, index) =>
-        index === idx
-          ? {
-              ...row,
-              [field]: value,
+              availablePlans,
             }
           : row,
       ),
@@ -461,84 +478,30 @@ export function Students() {
   ];
 
   // Sumar Docente y Plan solo en Activos
-  columns.push(
-    {
-      header: "Docente",
-      render: (row) => {
-        const uniqueTeachers = [
-          ...new Map(
-            (row.activePlans || []).map((p) => [p.teacher_id, p]),
-          ).values(),
-        ];
-
-        return (
-          <div
-            className="
-          h-10
+  columns.push({
+    header: "Docente y Plan",
+    render: (row) => (
+      <div
+        className="
+          h-14
           overflow-y-auto
           overflow-x-hidden
           flex
           flex-col
-          gap-1
+          gap-2
           pr-1
         "
-          >
-            {uniqueTeachers.map((teacher) => (
-              <div
-                key={teacher.teacher_id}
-                className="
-      text-sm
-      truncate
-      whitespace-nowrap
-      flex-shrink-0
-    "
-              >
-                {teacher.teacher_name}
-              </div>
-            ))}
-          </div>
-        );
-      },
-    },
-    {
-      header: "Plan",
-      render: (row) => {
-        const uniquePlans = [
-          ...new Map(
-            (row.activePlans || []).map((p) => [p.plan_id, p]),
-          ).values(),
-        ];
+      >
+        {(row.activePlans || []).map((p) => (
+          <div key={p.student_plan_id}>
+            <div className="font-medium text-sm">{p.teacher_name}</div>
 
-        return (
-          <div
-            className="
-          h-10
-          overflow-y-auto
-          overflow-x-hidden
-          flex
-          flex-col
-          gap-1
-          pr-1
-        "
-          >
-            {uniquePlans.map((plan) => (
-              <div
-                key={plan.plan_id}
-                className="
-              text-sm
-              truncate
-              whitespace-nowrap
-              flex-shrink-0
-            "
-              >
-                {plan.plan_name}
-              </div>
-            ))}
+            <div className="text-xs text-gray-500">{p.plan_name}</div>
           </div>
-        );
-      },
-    },
-  );
+        ))}
+      </div>
+    ),
+  });
 
   // Botón Activar solo en "Total de Alumnos" para alumnos inactivos
   if (isAdmin()) {
@@ -583,29 +546,29 @@ export function Students() {
           size="sm"
           onClick={openCreate}
           className="
-                      cursor-pointer
-                      w-12
-                      h-12
-                      rounded
-                      bg-[#0cc0df]
-                      text-white
-                      flex
-                      items-center
-                      justify-center
-                      transition
-                      transform
-                      hover:scale-105
-                    "
+            cursor-pointer
+            w-12
+            h-12
+            rounded
+            bg-[#0cc0df]
+            text-white
+            flex
+            items-center
+            justify-center
+            transition
+            transform
+            hover:scale-105
+          "
         >
           <img
             src={CreateIcon}
             alt="More"
             className="
-                        w-5
-                        h-5
-                        brightness-0
-                        invert
-                      "
+              w-5
+              h-5
+              brightness-0
+              invert
+            "
           />
         </Button>
       )}
@@ -775,13 +738,21 @@ export function Students() {
           {formClasses.map((row, idx) => (
             <div
               key={idx}
-              className="flex gap-2 items-end mb-3 bg-gray-50 p-2 rounded"
+              className="
+                border
+                border-gray-200
+                rounded-xl
+                p-4
+                mb-4
+                bg-white
+                shadow-sm
+              "
             >
               <div className="flex-1">
                 <Select
                   label={idx === 0 ? "Docente" : ""}
                   value={row.teacher_id}
-                  onChange={(e) => loadAvailablePlans(idx, e.target.value)}
+                  onChange={(e) => handleTeacherChange(idx, e.target.value)}
                 >
                   <option value="">Seleccione un Docente</option>
                   {[...teachers]
@@ -817,14 +788,7 @@ export function Students() {
               <div className="flex flex-col">
                 <div className="h-6"></div>
 
-                <Button
-                  variant="outline"
-                  onClick={() => {
-                    setOpenCreateModal(false);
-                    resetForm();
-                    setSelectedStudent(null);
-                  }}
-                >
+                <Button variant="outline" onClick={() => removeClassRow(idx)}>
                   ✕
                 </Button>
               </div>
@@ -931,13 +895,23 @@ export function Students() {
           {formClasses.map((row, idx) => (
             <div
               key={idx}
-              className="flex gap-2 items-end mb-3 bg-gray-50 p-2 rounded"
+              className="
+                border
+                border-gray-200
+                rounded-xl
+                p-4
+                mb-4
+                bg-white
+                shadow-sm
+              "
             >
               <div className="flex-1">
                 <Select
                   label={idx === 0 ? "Docente" : ""}
                   value={row.teacher_id}
-                  onChange={(e) => loadAvailablePlans(idx, e.target.value)}
+                  onChange={(e) =>
+                    updateClassRow(idx, "plan_id", e.target.value)
+                  }
                 >
                   <option value="">Seleccione un Docente</option>
                   {[...teachers]
@@ -957,9 +931,7 @@ export function Students() {
                 <Select
                   label={idx === 0 ? "Plan" : ""}
                   value={row.plan_id}
-                  onChange={(e) =>
-                    updateClassRow(idx, "plan_id", e.target.value)
-                  }
+                  onChange={(e) => handleTeacherChange(idx, e.target.value)}
                 >
                   <option value="">Seleccione un Plan</option>
                   {row.availablePlans?.map((p) => (
