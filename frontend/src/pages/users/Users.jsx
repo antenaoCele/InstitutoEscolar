@@ -21,30 +21,52 @@ import {
 } from "../../icons";
 
 export function Users() {
+  // ======================================================
+  // DATOS
+  // ======================================================
   const [users, setUsers] = useState([]);
-  const [selectedUser, setSelectedUser] = useState(null);
 
+  // ======================================================
+  // FILTROS
+  // ======================================================
+  const [search, setSearch] = useState("");
+
+  // ======================================================
+  // MODALES
+  // ======================================================
   const [openCreateModal, setOpenCreateModal] = useState(false);
   const [openEditModal, setOpenEditModal] = useState(false);
   const [openDeleteModal, setOpenDeleteModal] = useState(false);
 
-  const [search, setSearch] = useState("");
+  // ======================================================
+  // USUARIO SELECCIONADO
+  // ======================================================
+  const [selectedUser, setSelectedUser] = useState(null);
 
+  // ======================================================
+  // FORMULARIO DEL USUARIO
+  // ======================================================
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [role, setRole] = useState("DOCENTE");
 
-  const [errors, setErrors] = useState({});
-
+  // ======================================================
+  // ESTADO DEL COMPONENTE
+  // ======================================================
   const location = useLocation();
-
   const params = new URLSearchParams(location.search);
   const roleFilter = params.get("role") || "all";
 
-  const showActions = isAdmin() && roleFilter === "all";
+  // ======================================================
+  // ERRORES
+  // ======================================================
+  const [errors, setErrors] = useState({});
 
+  // ======================================================
+  // CONSTANTES
+  // ======================================================
   const buttonClass = "cursor-pointer transition transform hover:scale-105";
 
   const inputClass = (error) =>
@@ -53,6 +75,9 @@ export function Users() {
     focus:outline-none focus:ring-1 focus:ring-[#0cc0df] focus:border-[#0cc0df]
     ${error ? "border-red-500 focus:ring-red-500 focus:border-red-500" : ""}`;
 
+  // ======================================================
+  // FETCH DATOS PRINCIPALES
+  // ======================================================
   const fetchUsers = async () => {
     try {
       const { data } = await userService.getAll({
@@ -66,10 +91,9 @@ export function Users() {
     }
   };
 
-  useEffect(() => {
-    fetchUsers();
-  }, [location.search]);
-
+  // ======================================================
+  // RESETEO
+  // ======================================================
   const resetForm = () => {
     setFirstName("");
     setLastName("");
@@ -80,6 +104,9 @@ export function Users() {
     setErrors({});
   };
 
+  // ======================================================
+  // FUNCIONES AUXILIARES
+  // ======================================================
   const mapErrors = (errors) => {
     const formatted = {};
     errors.forEach((e) => {
@@ -88,6 +115,9 @@ export function Users() {
     return formatted;
   };
 
+  // ======================================================
+  // HANDLES CRUD
+  // ======================================================
   const openCreate = () => {
     resetForm();
     setOpenCreateModal(true);
@@ -178,6 +208,18 @@ export function Users() {
     }
   };
 
+  // ======================================================
+  // USEEFFECTS
+  // ======================================================
+  useEffect(() => {
+    fetchUsers();
+  }, [location.search]);
+
+  // ======================================================
+  // DATOS DERIVADOS
+  // ======================================================
+  const showActions = isAdmin() && roleFilter === "all";
+
   const filteredUsers = users.filter((u) => {
     const text = search.toLowerCase();
 
@@ -241,39 +283,42 @@ export function Users() {
 
       {showActions && (
         <Button
-          title="Crear Materia"
+          title="Crear Usuario"
           size="sm"
           onClick={openCreate}
           className="
-                      cursor-pointer
-                      w-12
-                      h-12
-                      rounded
-                      bg-[#0cc0df]
-                      text-white
-                      flex
-                      items-center
-                      justify-center
-                      transition
-                      transform
-                      hover:scale-105
-                    "
+            cursor-pointer
+            w-12
+            h-12
+            rounded
+            bg-[#0cc0df]
+            text-white
+            flex
+            items-center
+            justify-center
+            transition
+            transform
+            hover:scale-105
+          "
         >
           <img
             src={CreateIcon}
             alt="More"
             className="
-                        w-5
-                        h-5
-                        brightness-0
-                        invert
-                      "
+              w-5
+              h-5
+              brightness-0
+              invert
+            "
           />
         </Button>
       )}
     </div>
   );
 
+  // ======================================================
+  // RETURN
+  // ======================================================
   return (
     <>
       <div className="flex gap-3 mb-4 flex-wrap">
@@ -379,29 +424,29 @@ export function Users() {
             title="Guardar"
             onClick={handleCreate}
             className="
-                        cursor-pointer
-                        w-12
-                        h-12
-                        rounded
-                        bg-[#0cc0df]
-                        text-white
-                        flex
-                        items-center
-                        justify-center
-                        transition
-                        transform
-                        hover:scale-105
-                      "
+              cursor-pointer
+              w-12
+              h-12
+              rounded
+              bg-[#0cc0df]
+              text-white
+              flex
+              items-center
+              justify-center
+              transition
+              transform
+              hover:scale-105
+            "
           >
             <img
               src={SaveIcon}
               alt="Guardar"
               className="
-                          w-5
-                          h-5
-                          brightness-0
-                          invert
-                        "
+                w-5
+                h-5
+                brightness-0
+                invert
+              "
             />
           </Button>
         </div>
@@ -487,29 +532,29 @@ export function Users() {
             size="icon"
             onClick={handleUpdate}
             className="
-                        cursor-pointer
-                        w-12
-                        h-12
-                        rounded
-                        bg-[#0cc0df]
-                        text-white
-                        flex
-                        items-center
-                        justify-center
-                        transition
-                        transform
-                        hover:scale-105
-                      "
+              cursor-pointer
+              w-12
+              h-12
+              rounded
+              bg-[#0cc0df]
+              text-white
+              flex
+              items-center
+              justify-center
+              transition
+              transform
+              hover:scale-105
+            "
           >
             <img
               src={SaveIcon}
               alt="Guardar"
               className="
-                          w-5
-                          h-5
-                          brightness-0
-                          invert
-                        "
+                w-5
+                h-5
+                brightness-0
+                invert
+              "
             />
           </Button>
         </div>

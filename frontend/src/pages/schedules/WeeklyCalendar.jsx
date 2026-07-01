@@ -51,7 +51,6 @@ export default function WeeklyCalendar() {
   // ======================================================
   const [teacherId, setTeacherId] = useState("");
   const [selectedPlan, setSelectedPlan] = useState("");
-
   const [selectedDay, setSelectedDay] = useState("");
   const [selectedTime, setSelectedTime] = useState("");
   const [classroom, setClassroom] = useState("");
@@ -60,13 +59,10 @@ export default function WeeklyCalendar() {
   // ALUMNOS DEL HORARIO
   // ======================================================
   const [selectedStudentId, setSelectedStudentId] = useState("");
-
   const [selectedStudents, setSelectedStudents] = useState([]);
   const [selectedStudentPlans, setSelectedStudentPlans] = useState([]);
-
   const [availableStudents, setAvailableStudents] = useState([]);
   const [availablePlans, setAvailablePlans] = useState([]);
-
   const [incompatibleStudents, setIncompatibleStudents] = useState([]);
 
   // ======================================================
@@ -83,6 +79,7 @@ export default function WeeklyCalendar() {
   // ======================================================
   // CONSTANTES
   // ======================================================
+  const buttonClass = "cursor-pointer transition transform hover:scale-105";
 
   const days = [
     { name: "Lunes", value: 1 },
@@ -109,12 +106,9 @@ export default function WeeklyCalendar() {
     "21:00 - 22:30",
   ];
 
-  const buttonClass = "cursor-pointer transition transform hover:scale-105";
-
   // ======================================================
   // FETCH DATOS PRINCIPALES
   // ======================================================
-
   const fetchTeachers = async () => {
     try {
       const res = await teacherService.getAll();
@@ -176,7 +170,6 @@ export default function WeeklyCalendar() {
   // ======================================================
   // FETCH AUXILIARES
   // ======================================================
-
   const fetchAvailableStudents = async (teacherId, planId) => {
     try {
       if (!teacherId) {
@@ -235,7 +228,6 @@ export default function WeeklyCalendar() {
   // ======================================================
   // RESETEO
   // ======================================================
-
   const resetForm = () => {
     // Formulario
     setTeacherId("");
@@ -644,7 +636,6 @@ export default function WeeklyCalendar() {
   // ======================================================
   // USEEFFECTS
   // ======================================================
-
   useEffect(() => {
     if (isEditing || !openCreateModal) return;
 
@@ -699,7 +690,6 @@ export default function WeeklyCalendar() {
   // ======================================================
   // DATOS DERIVADOS
   // ======================================================
-
   const studentScheduleIds = scheduleStudents
     .filter(
       (ss) =>
@@ -719,7 +709,7 @@ export default function WeeklyCalendar() {
   });
 
   // ======================================================
-  // RETUNR
+  // RETURN
   // ======================================================
   return (
     <>

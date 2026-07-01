@@ -3,31 +3,58 @@ import { eventService } from "../../services/event.service";
 import { Modal } from "../../components/ui/Modal";
 import { isAdmin } from "../../utils/auth";
 import { studentService } from "../../services/student.service";
+import {
+  PencilIcon,
+  TrashBinIcon,
+  CloseLineIcon,
+  SaveIcon,
+  MoreIcon,
+  CreateIcon,
+} from "../../icons";
 
 export default function MonthlyCalendar() {
+  // ======================================================
+  // DATOS
+  // ======================================================
+  const [events, setEvents] = useState([]);
+  const [holidays, setHolidays] = useState([]);
+  const [birthdays, setBirthdays] = useState([]);
+
+  // ======================================================
+  // ESTADO DEL CALENDARIO
+  // ======================================================
   const [currentDate, setCurrentDate] = useState(new Date());
 
+  // ======================================================
+  // MODALES
+  // ======================================================
   const [openCreateModal, setOpenCreateModal] = useState(false);
-
-  const [selectedEvent, setSelectedEvent] = useState(null);
-
   const [openEditModal, setOpenEditModal] = useState(false);
   const [openDeleteModal, setOpenDeleteModal] = useState(false);
 
+  // ======================================================
+  // EVENTO SELECCIONADO
+  // ======================================================
+  const [selectedEvent, setSelectedEvent] = useState(null);
+
+  // ======================================================
+  // FORMULARIO DEL EVENTO
+  // ======================================================
   const [eventName, setEventName] = useState("");
   const [eventDate, setEventDate] = useState("");
   const [eventTime, setEventTime] = useState("");
 
-  const [events, setEvents] = useState([]);
-
-  const [holidays, setHolidays] = useState([]);
-
-  const [birthdays, setBirthdays] = useState([]);
-
+  // ======================================================
+  // ERRORES
+  // ======================================================
   const [errorsCreate, setErrorsCreate] = useState({});
   const [errorsEdit, setErrorsEdit] = useState({});
 
+  // ======================================================
+  // CONSTANTES
+  // ======================================================
   const year = currentDate.getFullYear();
+
   const month = currentDate.getMonth();
 
   const monthsNames = [
@@ -45,6 +72,9 @@ export default function MonthlyCalendar() {
     "diciembre",
   ];
 
+  // ======================================================
+  // FETCH DATOS PRINCIPALES
+  // ======================================================
   const fetchEvents = async () => {
     try {
       const response = await eventService.getAll();
@@ -86,18 +116,9 @@ export default function MonthlyCalendar() {
     }
   };
 
-  useEffect(() => {
-    fetchEvents();
-  }, []);
-
-  useEffect(() => {
-    fetchHolidays();
-  }, [year]);
-
-  useEffect(() => {
-    fetchBirthdays();
-  }, []);
-
+  // ======================================================
+  // RESETEO
+  // ======================================================
   const resetForm = () => {
     setEventName("");
     setEventDate("");
@@ -106,6 +127,9 @@ export default function MonthlyCalendar() {
     setSelectedEvent(null);
   };
 
+  // ======================================================
+  // FUNCIONES AUXILARES
+  // ======================================================
   const mapErrors = (errors) => {
     const formatted = {};
 
@@ -115,6 +139,9 @@ export default function MonthlyCalendar() {
     return formatted;
   };
 
+  // ======================================================
+  // HANDLES CRUD
+  // ======================================================
   const openCreate = () => {
     resetForm();
     setOpenCreateModal(true);
@@ -129,15 +156,12 @@ export default function MonthlyCalendar() {
       if (!eventName.trim()) {
         newErrors.name = "Este campo no puede estar vacío.";
       }
-
       if (!eventDate) {
         newErrors.date = "Ingrese una fecha válida.";
       }
-
       if (!eventTime) {
         newErrors.hour = "Ingrese una hora válida.";
       }
-
       if (Object.keys(newErrors).length > 0) {
         setErrorsCreate(newErrors);
         return;
@@ -189,15 +213,12 @@ export default function MonthlyCalendar() {
       if (!eventName.trim()) {
         newErrors.name = "Este campo no puede estar vacío.";
       }
-
       if (!eventDate) {
         newErrors.date = "Ingrese una fecha válida.";
       }
-
       if (!eventTime) {
         newErrors.hour = "Ingrese una hora válida.";
       }
-
       if (Object.keys(newErrors).length > 0) {
         setErrorsEdit(newErrors);
         return;
@@ -252,6 +273,9 @@ export default function MonthlyCalendar() {
     }
   };
 
+  // ======================================================
+  // HANDLES AUXILIARES
+  // ======================================================
   const handlePreviousMonth = () => {
     setCurrentDate(new Date(year, month - 1));
   };
@@ -260,6 +284,24 @@ export default function MonthlyCalendar() {
     setCurrentDate(new Date(year, month + 1));
   };
 
+  // ======================================================
+  // USEEFFECTS
+  // ======================================================
+  useEffect(() => {
+    fetchEvents();
+  }, []);
+
+  useEffect(() => {
+    fetchHolidays();
+  }, [year]);
+
+  useEffect(() => {
+    fetchBirthdays();
+  }, []);
+
+  // ======================================================
+  // DATOS DERIVADOS
+  // ======================================================
   const daysInMonth = new Date(year, month + 1, 0).getDate();
 
   const firstDayIndex = (new Date(year, month, 1).getDay() + 6) % 7;
@@ -270,11 +312,14 @@ export default function MonthlyCalendar() {
 
   const gridCells = [...blanks, ...days];
 
+  // ======================================================
+  // RETURN
+  // ======================================================
   return (
     <div className="bg-white rounded-xl border border-gray-200 p-5">
       {/* Encabezado */}
 
-      <div className="flex justify-between items-center mb-6">
+      <div className="flex justify-center items-center gap-4 mb-6">
         <button
           onClick={handlePreviousMonth}
           className="
@@ -288,7 +333,7 @@ export default function MonthlyCalendar() {
             transition
           "
         >
-          ←
+          ◀
         </button>
 
         <h2 className="text-2xl font-bold capitalize">
@@ -308,26 +353,40 @@ export default function MonthlyCalendar() {
             transition
           "
         >
-          →
+          ▶
         </button>
       </div>
 
       {isAdmin() && (
         <div className="flex justify-end mb-6">
           <button
+            title="Crear Evento"
             onClick={() => setOpenCreateModal(true)}
             className="
-                cursor-pointer transition transform hover:scale-105
-                px-4
-                py-2
-                rounded-lg
-                bg-[#0cc0df]
-                text-white
-                hover:opacity-90
-                transition
-              "
+              cursor-pointer
+              w-12
+              h-12
+              rounded
+              bg-[#0cc0df]
+              text-white
+              flex
+              items-center
+              justify-center
+              transition
+              transform
+              hover:scale-105
+            "
           >
-            Crear Evento
+            <img
+              src={CreateIcon}
+              alt="More"
+              className="
+                w-5
+                h-5
+                brightness-0
+                invert
+              "
+            />
           </button>
         </div>
       )}
@@ -461,33 +520,35 @@ export default function MonthlyCalendar() {
                               {isAdmin() && (
                                 <div className="flex gap-1 mt-1">
                                   <button
+                                    title="Editar"
                                     onClick={() => handleEdit(event)}
                                     className="
-                                  cursor-pointer transition transform hover:scale-105
-                                  text-[10px]
-                                  px-2
-                                  py-1
-                                  rounded
-                                  bg-[#0cc0df]
-                                  text-white
-                                "
+                                      cursor-pointer transition transform hover:scale-105
+                                      text-[10px]
+                                      px-2
+                                      py-1
+                                      rounded
+                                      bg-[#0cc0df]
+                                      text-white
+                                    "
                                   >
-                                    Editar
+                                    <PencilIcon className="w-5 h-5" />
                                   </button>
 
                                   <button
+                                    title="Eliminar"
                                     onClick={() => handleDelete(event)}
                                     className="
-                                    cursor-pointer transition transform hover:scale-105
-                                    text-[10px]
-                                    px-2
-                                    py-1
-                                    rounded
-                                    bg-red-500
-                                    text-white
-                                  "
+                                      cursor-pointer transition transform hover:scale-105
+                                      text-[10px]
+                                      px-2
+                                      py-1
+                                      rounded
+                                      bg-red-500
+                                      text-white
+                                    "
                                   >
-                                    Eliminar
+                                    <TrashBinIcon className="w-5 h-5" />
                                   </button>
                                 </div>
                               )}
@@ -688,7 +749,7 @@ export default function MonthlyCalendar() {
         </div>
 
         <div className="flex justify-end gap-4 mt-10">
-          <button
+          {/* <button
             onClick={() => {
               setOpenEditModal(false);
               resetForm();
@@ -702,9 +763,10 @@ export default function MonthlyCalendar() {
             "
           >
             Cancelar
-          </button>
+          </button> */}
 
           <button
+            title="Guardar"
             onClick={handleUpdate}
             className="
               cursor-pointer transition transform hover:scale-105
@@ -715,7 +777,16 @@ export default function MonthlyCalendar() {
               text-white
             "
           >
-            Guardar
+            <img
+              src={SaveIcon}
+              alt="Guardar"
+              className="
+                w-5
+                h-5
+                brightness-0
+                invert
+              "
+            />
           </button>
         </div>
       </Modal>

@@ -19,31 +19,55 @@ import {
 } from "../../icons";
 
 export function Teachers() {
+  // ======================================================
+  // DATOS
+  // ======================================================
   const [teachers, setTeachers] = useState([]);
-  const [selectedTeacher, setSelectedTeacher] = useState(null);
-
   const [plans, setPlans] = useState([]);
-  const [selectedPlan, setSelectedPlan] = useState("");
 
+  // ======================================================
+  // FILTROS
+  // ======================================================
+  const [selectedPlan, setSelectedPlan] = useState("");
+  const [searchFirstLastName, setSearchFirstLastName] = useState("");
+  const [searchDNI, setSearchDNI] = useState("");
+
+  // ======================================================
+  // MODALES
+  // ======================================================
   const [openEditModal, setOpenEditModal] = useState(false);
   const [openDeleteModal, setOpenDeleteModal] = useState(false);
   const [openCreateModal, setOpenCreateModal] = useState(false);
 
-  const [searchFirstLastName, setSearchFirstLastName] = useState("");
-  const [searchDNI, setSearchDNI] = useState("");
+  // ======================================================
+  // DOCENTE SELECCIONADO
+  // ======================================================
+  const [selectedTeacher, setSelectedTeacher] = useState(null);
 
+  // ======================================================
+  // FORMULARIO DEL DOCENTE
+  // ======================================================
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [dni, setDni] = useState("");
   const [phone, setPhone] = useState("");
 
+  // ======================================================
+  // ESTADO DEL COMPONENTE
+  // ======================================================
+  const location = useLocation();
+  const params = new URLSearchParams(location.search);
+
+  // ======================================================
+  // ERRORES
+  // ======================================================
   const [errorsCreate, setErrorsCreate] = useState({});
   const [errorsEdit, setErrorsEdit] = useState({});
 
-  const location = useLocation();
-
-  const params = new URLSearchParams(location.search);
-  const status = params.get("status") || "all";
+  // ======================================================
+  // CONSTANTES
+  // ======================================================
+  const buttonClass = "cursor-pointer transition transform hover:scale-105";
 
   const inputClass = (error) =>
     `w-full p-2 border rounded mb-1 
@@ -51,25 +75,9 @@ export function Teachers() {
     focus:outline-none focus:ring-1 focus:ring-[#0cc0df] focus:border-[#0cc0df]
     ${error ? "border-red-500 focus:ring-red-500 focus:border-red-500" : ""}`;
 
-  const buttonClass = "cursor-pointer transition transform hover:scale-105";
-
-  const resetForm = () => {
-    setFirstName("");
-    setLastName("");
-    setDni("");
-    setPhone("");
-    setErrorsCreate({});
-    setErrorsEdit({});
-  };
-
-  const mapErrors = (errors) => {
-    const formatted = {};
-    errors.forEach((e) => {
-      formatted[e.path] = e.msg;
-    });
-    return formatted;
-  };
-
+  // ======================================================
+  // FETCH DATOS PRINCIPALES
+  // ======================================================
   const fetchTeachers = async () => {
     try {
       const queryParams = {};
@@ -86,37 +94,49 @@ export function Teachers() {
     }
   };
 
-  useEffect(() => {
-    fetchTeachers();
-  }, [selectedPlan]);
+  // ======================================================
+  // FETCH AUXILIARES
+  // ======================================================
+  const fetchFilters = async () => {
+    try {
+      const plansRes = await planService.getAll();
 
-  useEffect(() => {
-    const fetchFilters = async () => {
-      try {
-        const plansRes = await planService.getAll();
+      setPlans(plansRes.data.data || []);
+    } catch (error) {
+      console.error(error);
+    }
+  };
 
-        setPlans(plansRes.data.data || []);
-      } catch (error) {
-        console.error(error);
-      }
-    };
+  // ======================================================
+  // RESETEO
+  // ======================================================
+  const resetForm = () => {
+    setFirstName("");
+    setLastName("");
+    setDni("");
+    setPhone("");
+    setErrorsCreate({});
+    setErrorsEdit({});
+  };
 
-    fetchFilters();
-  }, []);
+  // ======================================================
+  // FUNCIONES AUXILIARES
+  // ======================================================
+  const mapErrors = (errors) => {
+    const formatted = {};
+    errors.forEach((e) => {
+      formatted[e.path] = e.msg;
+    });
+    return formatted;
+  };
 
-  const filteredTeachers = teachers.filter((t) => {
-    const textName = searchFirstLastName.toLowerCase();
-    const textDNI = searchDNI;
-
-    const matchName =
-      !textName ||
-      t.first_name?.toLowerCase().includes(textName) ||
-      t.last_name?.toLowerCase().includes(textName);
-
-    const matchDNI = !textDNI || t.dni?.toString().includes(textDNI);
-
-    return matchName && matchDNI;
-  });
+  // ======================================================
+  // HANDLES CRUD
+  // ======================================================
+  const openCreate = () => {
+    resetForm();
+    setOpenCreateModal(true);
+  };
 
   const handleCreate = async () => {
     try {
@@ -197,10 +217,35 @@ export function Teachers() {
     }
   };
 
-  const openCreate = () => {
-    resetForm();
-    setOpenCreateModal(true);
-  };
+  // ======================================================
+  // USEEFFECTS
+  // ======================================================
+  useEffect(() => {
+    fetchTeachers();
+  }, [selectedPlan]);
+
+  useEffect(() => {
+    fetchFilters();
+  }, []);
+
+  // ======================================================
+  // DATOS DERIVADOS
+  // ======================================================
+  const filteredTeachers = teachers.filter((t) => {
+    const textName = searchFirstLastName.toLowerCase();
+    const textDNI = searchDNI;
+
+    const matchName =
+      !textName ||
+      t.first_name?.toLowerCase().includes(textName) ||
+      t.last_name?.toLowerCase().includes(textName);
+
+    const matchDNI = !textDNI || t.dni?.toString().includes(textDNI);
+
+    return matchName && matchDNI;
+  });
+
+  const showCreateButtons = isAdmin();
 
   let columns = [
     { header: "Apellido", accessor: "last_name" },
@@ -240,8 +285,6 @@ export function Teachers() {
     });
   }
 
-  const showCreateButtons = isAdmin();
-
   const tableTitle = (
     <div className="flex justify-between items-center">
       <span>Docentes</span>
@@ -251,35 +294,38 @@ export function Teachers() {
           size="sm"
           onClick={openCreate}
           className="
-                      cursor-pointer
-                      w-12
-                      h-12
-                      rounded
-                      bg-[#0cc0df]
-                      text-white
-                      flex
-                      items-center
-                      justify-center
-                      transition
-                      transform
-                      hover:scale-105
-                    "
+            cursor-pointer
+            w-12
+            h-12
+            rounded
+            bg-[#0cc0df]
+            text-white
+            flex
+            items-center
+            justify-center
+            transition
+            transform
+            hover:scale-105
+          "
         >
           <img
             src={CreateIcon}
             alt="More"
             className="
-                        w-5
-                        h-5
-                        brightness-0
-                        invert
-                      "
+              w-5
+              h-5
+              brightness-0
+              invert
+            "
           />
         </Button>
       )}
     </div>
   );
 
+  // ======================================================
+  // RETURN
+  // ======================================================
   return (
     <>
       {/* BUSCADORES */}
@@ -378,29 +424,29 @@ export function Teachers() {
             title="Guardar"
             onClick={handleCreate}
             className="
-                        cursor-pointer
-                        w-12
-                        h-12
-                        rounded
-                        bg-[#0cc0df]
-                        text-white
-                        flex
-                        items-center
-                        justify-center
-                        transition
-                        transform
-                        hover:scale-105
-                      "
+              cursor-pointer
+              w-12
+              h-12
+              rounded
+              bg-[#0cc0df]
+              text-white
+              flex
+              items-center
+              justify-center
+              transition
+              transform
+              hover:scale-105
+            "
           >
             <img
               src={SaveIcon}
               alt="Guardar"
               className="
-                          w-5
-                          h-5
-                          brightness-0
-                          invert
-                        "
+                w-5
+                h-5
+                brightness-0
+                invert
+              "
             />
           </Button>
         </div>

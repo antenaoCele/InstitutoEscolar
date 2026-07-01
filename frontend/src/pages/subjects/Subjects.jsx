@@ -19,25 +19,46 @@ import {
 } from "../../icons";
 
 export function Subjects() {
+  // ======================================================
+  // DATOS
+  // ======================================================
   const [subjects, setSubjects] = useState([]);
-  const [selectedSubject, setSelectedSubject] = useState(null);
-
   const [teachers, setTeachers] = useState([]);
-  const [selectedTeacher, setSelectedTeacher] = useState("");
-
-  const [selectedTeacherIds, setSelectedTeacherIds] = useState([]);
   const [teacherSubjects, setTeacherSubjects] = useState([]);
 
-  const [name, setName] = useState("");
+  // ======================================================
+  // FILTROS
+  // ======================================================
+  const [selectedTeacherIds, setSelectedTeacherIds] = useState([]);
   const [searchName, setSearchName] = useState("");
 
+  // ======================================================
+  // MODALES
+  // ======================================================
   const [openCreateModal, setOpenCreateModal] = useState(false);
   const [openEditModal, setOpenEditModal] = useState(false);
   const [openDeleteModal, setOpenDeleteModal] = useState(false);
 
+  // ======================================================
+  // MATERIA SELECCIONADA
+  // ======================================================
+  const [selectedSubject, setSelectedSubject] = useState(null);
+
+  // ======================================================
+  // FORMULARIO DE LA MATERIA
+  // ======================================================
+  const [name, setName] = useState("");
+  const [selectedTeacher, setSelectedTeacher] = useState("");
+
+  // ======================================================
+  // ERRORES
+  // ======================================================
   const [errorsCreate, setErrorsCreate] = useState({});
   const [errorsEdit, setErrorsEdit] = useState({});
 
+  // ======================================================
+  // CONSTANTES
+  // ======================================================
   const buttonClass = "cursor-pointer transition transform hover:scale-105";
 
   const inputClass = (error) =>
@@ -46,6 +67,9 @@ export function Subjects() {
     focus:outline-none focus:ring-1 focus:ring-[#0cc0df] focus:border-[#0cc0df]
     ${error ? "border-red-500 focus:ring-red-500 focus:border-red-500" : ""}`;
 
+  // ======================================================
+  // FETCH DATOS PRINCIPALES
+  // ======================================================
   const fetchSubjects = async () => {
     try {
       const [subjectsRes, teacherSubjectsRes] = await Promise.all([
@@ -82,6 +106,9 @@ export function Subjects() {
     }
   };
 
+  // ======================================================
+  // FETCH AUXILIARES
+  // ======================================================
   const fetchTeachers = async () => {
     try {
       const res = await teacherService.getAll();
@@ -92,20 +119,9 @@ export function Subjects() {
     }
   };
 
-  useEffect(() => {
-    fetchSubjects();
-  }, [selectedTeacher]);
-
-  useEffect(() => {
-    fetchTeachers();
-  }, []);
-
-  const filteredSubjects = subjects.filter((s) => {
-    return (
-      !searchName || s.name?.toLowerCase().includes(searchName.toLowerCase())
-    );
-  });
-
+  // ======================================================
+  // RESETEO
+  // ======================================================
   const resetForm = () => {
     setName("");
     setSelectedTeacherIds([]);
@@ -114,6 +130,9 @@ export function Subjects() {
     setErrorsEdit({});
   };
 
+  // ======================================================
+  // FUNCIONES AUXILIARES
+  // ======================================================
   const mapErrors = (errors) => {
     const formatted = {};
 
@@ -124,6 +143,9 @@ export function Subjects() {
     return formatted;
   };
 
+  // ======================================================
+  // HANDLES CRUD
+  // ======================================================
   const openCreate = () => {
     resetForm();
     setOpenCreateModal(true);
@@ -245,6 +267,28 @@ export function Subjects() {
     }
   };
 
+  // ======================================================
+  // USEEFFECTS
+  // ======================================================
+  useEffect(() => {
+    fetchSubjects();
+  }, [selectedTeacher]);
+
+  useEffect(() => {
+    fetchTeachers();
+  }, []);
+
+  // ======================================================
+  // DATOS DERIVADOS
+  // ======================================================
+  const filteredSubjects = subjects.filter((s) => {
+    return (
+      !searchName || s.name?.toLowerCase().includes(searchName.toLowerCase())
+    );
+  });
+
+  const showCreateButtons = isAdmin();
+
   let columns = [
     { header: "Materia", accessor: "name" },
     {
@@ -293,8 +337,6 @@ export function Subjects() {
     });
   }
 
-  const showCreateButtons = isAdmin();
-
   const tableTitle = (
     <div className="flex justify-between items-center">
       <span>Materias</span>
@@ -305,35 +347,38 @@ export function Subjects() {
           size="sm"
           onClick={openCreate}
           className="
-              cursor-pointer
-              w-12
-              h-12
-              rounded
-              bg-[#0cc0df]
-              text-white
-              flex
-              items-center
-              justify-center
-              transition
-              transform
-              hover:scale-105
-            "
+            cursor-pointer
+            w-12
+            h-12
+            rounded
+            bg-[#0cc0df]
+            text-white
+            flex
+            items-center
+            justify-center
+            transition
+            transform
+            hover:scale-105
+          "
         >
           <img
             src={CreateIcon}
             alt="More"
             className="
-                w-5
-                h-5
-                brightness-0
-                invert
-              "
+              w-5
+              h-5
+              brightness-0
+              invert
+            "
           />
         </Button>
       )}
     </div>
   );
 
+  // ======================================================
+  // RETURN
+  // ======================================================
   return (
     <>
       <div className="flex gap-3 mb-4 flex-wrap">

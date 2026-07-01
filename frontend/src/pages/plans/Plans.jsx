@@ -21,40 +21,61 @@ import {
 } from "../../icons";
 
 export function Plans() {
+  // ======================================================
+  // DATOS
+  // ======================================================
   const [planPrices, setPlanPrices] = useState([]);
   const [currentPlans, setCurrentPlans] = useState([]);
-  const [selectedPlanPrice, setSelectedPlanPrice] = useState(null);
-
   const [plans, setPlans] = useState([]);
-  const [selectedPlan, setSelectedPlan] = useState("");
-
   const [subjects, setSubjects] = useState([]);
-  const [selectedSubjects, setSelectedSubjects] = useState([]);
   const [allPlanSubjects, setAllPlanSubjects] = useState([]); // Nuevo estado para todas las relaciones plan-materia
 
-  const [openEditModal, setOpenEditModal] = useState(false);
-  const [openDeleteModal, setOpenDeleteModal] = useState(false);
-  const [openCreateModal, setOpenCreateModal] = useState(false);
-
+  // ======================================================
+  // FILTROS
+  // ======================================================
   const [searchPlanName, setSearchPlanName] = useState("");
   const [searchPrice, setSearchPrice] = useState("");
 
+  // ======================================================
+  // MODALES
+  // ======================================================
+  const [openCreateModal, setOpenCreateModal] = useState(false);
+  const [openEditModal, setOpenEditModal] = useState(false);
+  const [openDeleteModal, setOpenDeleteModal] = useState(false);
+
+  // ======================================================
+  // PLAN SELECCIONADO
+  // ======================================================
+  const [selectedPlanPrice, setSelectedPlanPrice] = useState(null);
+
+  // ======================================================
+  // FORMULARIO DEL PLAN
+  // ======================================================
+  const [selectedPlan, setSelectedPlan] = useState("");
+  const [selectedSubjects, setSelectedSubjects] = useState([]);
   const [price, setPrice] = useState("");
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
 
+  // ======================================================
+  // ESTADO DEL COMPONENTE
+  // ======================================================
+  const [searchParams] = useSearchParams();
+  const view = searchParams.get("type") || "current";
+  const isCurrentView = view === "current";
+  const isHistoryView = view === "history";
+  const isPlanUser = !isAdmin();
+
+  // ======================================================
+  // ERRORES
+  // ======================================================
   const [errorsCreate, setErrorsCreate] = useState({});
   const [errorsEdit, setErrorsEdit] = useState({});
 
-  const [searchParams] = useSearchParams();
-
-  const view = searchParams.get("type") || "current";
-
-  const isCurrentView = view === "current";
-
-  const isHistoryView = view === "history";
-
-  const isPlanUser = !isAdmin();
+  // ======================================================
+  // CONSTANTES
+  // ======================================================
+  const buttonClass = "cursor-pointer transition transform hover:scale-105";
 
   const inputClass = (error) =>
     `w-full p-2 border rounded mb-1 
@@ -62,8 +83,21 @@ export function Plans() {
     focus:outline-none focus:ring-1 focus:ring-[#0cc0df] focus:border-[#0cc0df]
     ${error ? "border-red-500 focus:ring-red-500 focus:border-red-500" : ""}`;
 
-  const buttonClass = "cursor-pointer transition transform hover:scale-105";
+  // ======================================================
+  // FETCH DATOS PRINCIPALES
+  // ======================================================
+  const fetchPlanPrices = async () => {
+    try {
+      const { data } = await PlanPriceService.getAll();
+      setPlanPrices(data?.data || []);
+    } catch {
+      setPlanPrices([]);
+    }
+  };
 
+  // ======================================================
+  // RESETEO
+  // ======================================================
   const resetForm = () => {
     setSelectedPlan("");
     setPrice("");
@@ -74,6 +108,9 @@ export function Plans() {
     setErrorsEdit({});
   };
 
+  // ======================================================
+  // FUNCIONES AUXILIARES
+  // ======================================================
   const mapErrors = (errors) => {
     const formatted = {};
 
@@ -84,63 +121,14 @@ export function Plans() {
     return formatted;
   };
 
-  const fetchPlanPrices = async () => {
-    try {
-      const { data } = await PlanPriceService.getAll();
-      setPlanPrices(data?.data || []);
-    } catch {
-      setPlanPrices([]);
-    }
+  // ======================================================
+  // HANDLES CRUD
+  // ======================================================
+  const openCreate = () => {
+    resetForm();
+    setOpenCreateModal(true);
   };
 
-  useEffect(() => {
-    const loadData = async () => {
-      try {
-        if (isCurrentView) {
-          const { data } = await planService.getCurrent();
-          setCurrentPlans(data?.data || []);
-        } else {
-          await fetchPlanPrices();
-        }
-      } catch (error) {
-        console.error(error);
-      }
-    };
-
-    loadData();
-  }, [view]);
-
-  useEffect(() => {
-    const fetchFilters = async () => {
-      try {
-        const plansRes = await planService.getAll();
-        setPlans(plansRes.data.data || []);
-
-        const subjectsRes = await subjectService.getAll();
-        setSubjects(subjectsRes.data.data || []);
-
-        // Cargar todas las relaciones plan-materia
-        const planSubjectsRes = await PlanSubjectService.getAll();
-        setAllPlanSubjects(planSubjectsRes.data.data || []);
-      } catch (error) {
-        console.error(error);
-      }
-    };
-
-    fetchFilters();
-  }, []);
-
-  const filteredPlans = planPrices.filter((p) => {
-    const textPlan = searchPlanName.toLowerCase();
-    const textPrice = searchPrice;
-
-    const matchPlan =
-      !textPlan || p.plan_name?.toLowerCase().includes(textPlan);
-
-    const matchPrice = !textPrice || p.price?.toString().includes(textPrice);
-
-    return matchPlan && matchPrice;
-  });
   const handleCreate = async () => {
     try {
       setErrorsCreate({});
@@ -181,6 +169,7 @@ export function Plans() {
       }
     }
   };
+
   const handleEdit = (planPrice) => {
     setSelectedPlanPrice(planPrice);
 
@@ -296,10 +285,60 @@ export function Plans() {
     }
   };
 
-  const openCreate = () => {
-    resetForm();
-    setOpenCreateModal(true);
-  };
+  // ======================================================
+  // USEEFFECTS
+  // ======================================================
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        if (isCurrentView) {
+          const { data } = await planService.getCurrent();
+          setCurrentPlans(data?.data || []);
+        } else {
+          await fetchPlanPrices();
+        }
+      } catch (error) {
+        console.error(error);
+      }
+    };
+
+    loadData();
+  }, [view]);
+
+  useEffect(() => {
+    const fetchFilters = async () => {
+      try {
+        const plansRes = await planService.getAll();
+        setPlans(plansRes.data.data || []);
+
+        const subjectsRes = await subjectService.getAll();
+        setSubjects(subjectsRes.data.data || []);
+
+        // Cargar todas las relaciones plan-materia
+        const planSubjectsRes = await PlanSubjectService.getAll();
+        setAllPlanSubjects(planSubjectsRes.data.data || []);
+      } catch (error) {
+        console.error(error);
+      }
+    };
+
+    fetchFilters();
+  }, []);
+
+  // ======================================================
+  // DATOS DERIVADOS
+  // ======================================================
+  const filteredPlans = planPrices.filter((p) => {
+    const textPlan = searchPlanName.toLowerCase();
+    const textPrice = searchPrice;
+
+    const matchPlan =
+      !textPlan || p.plan_name?.toLowerCase().includes(textPlan);
+
+    const matchPrice = !textPrice || p.price?.toString().includes(textPrice);
+
+    return matchPlan && matchPrice;
+  });
 
   let columns = [];
 
@@ -369,7 +408,7 @@ export function Plans() {
 
       {showCreateButtons && (
         <Button
-          title="Crear Materia"
+          title="Crear Plan"
           size="sm"
           onClick={openCreate}
           className="
