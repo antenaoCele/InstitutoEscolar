@@ -3,8 +3,8 @@ import BasicTable from "../../components/tables/BasicTables/BasicTablesOne";
 import { studentService } from "../../services/student.service";
 import { teacherService } from "../../services/teacher.service";
 import { planService } from "../../services/plan.service";
-import Button from "../../components/ui/Button";
 import Label from "../../components/form/Label";
+import Button from "../../components/ui/Button";
 import Input from "../../components/form/Input";
 import Select from "../../components/form/Select";
 import SubmitButton from "../../components/form/SubmitButton";
@@ -12,35 +12,50 @@ import { Modal } from "../../components/ui/Modal";
 import { studentPlanService } from "../../services/studenPlan.service";
 import { isAdmin } from "../../utils/auth";
 import {
-  PencilIcon,
-  TrashBinIcon,
-  CloseLineIcon,
-  SaveIcon,
-  MoreIcon,
-  CreateIcon,
-  MoreInfoIcon,
-  ViewIcon,
-} from "../../icons";
+  ViewButton,
+  EditButton,
+  DeleteButton,
+  PlusButton,
+  YesButton,
+  NoButton,
+  SaveButton,
+  AddButton,
+} from "../../components/ui/ActionButtons";
 
 export function Students() {
+  // ======================================================
+  // DATOS
+  // ======================================================
   const [students, setStudents] = useState([]);
-  const [selectedStudent, setSelectedStudent] = useState(null);
+  const [teachers, setTeachers] = useState([]);
+  const [plans, setPlans] = useState([]);
 
-  const [openEditModal, setOpenEditModal] = useState(false);
-  const [openDeleteModal, setOpenDeleteModal] = useState(false);
-  const [openCreateModal, setOpenCreateModal] = useState(false);
-  const [openViewModal, setOpenViewModal] = useState(false);
-
+  // ======================================================
+  // FILTROS
+  // ======================================================
+  const [selectedTeacher, setSelectedTeacher] = useState("");
+  const [selectedPlan, setSelectedPlan] = useState("");
+  const [selectedStatus, setSelectedStatus] = useState("");
   const [searchFirstLastName, setSearchFirstLastName] = useState("");
   const [searchDNI, setSearchDNI] = useState("");
   const [searchSchool, setSearchSchool] = useState("");
 
-  const [teachers, setTeachers] = useState([]);
-  const [plans, setPlans] = useState([]);
+  // ======================================================
+  // MODALES
+  // ======================================================
+  const [openCreateModal, setOpenCreateModal] = useState(false);
+  const [openEditModal, setOpenEditModal] = useState(false);
+  const [openDeleteModal, setOpenDeleteModal] = useState(false);
+  const [openViewModal, setOpenViewModal] = useState(false);
 
-  const [selectedTeacher, setSelectedTeacher] = useState("");
-  const [selectedPlan, setSelectedPlan] = useState("");
+  // ======================================================
+  // ALUMNO SELECCIONADO
+  // ======================================================
+  const [selectedStudent, setSelectedStudent] = useState(null);
 
+  // ======================================================
+  // FORMULARIO DEL ALUMNO
+  // ======================================================
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [dni, setDni] = useState("");
@@ -49,9 +64,9 @@ export function Students() {
   const [level, setLevel] = useState("");
   const [grade, setGrade] = useState("");
 
-  const [removedClasses, setRemovedClasses] = useState([]);
-
-  // Estado para manejar múltiples planes en el formulario
+  // ======================================================
+  // PLANES DEL ALUMNO
+  // ======================================================
   const [formClasses, setFormClasses] = useState([
     {
       teacher_id: "",
@@ -60,41 +75,22 @@ export function Students() {
     },
   ]);
 
+  const [removedClasses, setRemovedClasses] = useState([]);
+
+  // ======================================================
+  // ERRORES
+  // ======================================================
   const [errorsCreate, setErrorsCreate] = useState({});
   const [errorsEdit, setErrorsEdit] = useState({});
 
-  const [selectedStatus, setSelectedStatus] = useState("");
-
+  // ======================================================
+  // CONSTANTES
+  // ======================================================
   const buttonClass = "cursor-pointer transition transform hover:scale-105";
 
-  const resetForm = () => {
-    setFirstName("");
-    setLastName("");
-    setDni("");
-    setSchool("");
-    setBirthDate("");
-    setLevel("");
-    setGrade("");
-    setFormClasses([
-      {
-        teacher_id: "",
-        plan_id: "",
-        availablePlans: [],
-      },
-    ]);
-    setErrorsCreate({});
-    setErrorsEdit({});
-    setRemovedClasses([]);
-  };
-
-  const mapErrors = (errors) => {
-    const formatted = {};
-    errors.forEach((e) => {
-      formatted[e.path] = e.msg;
-    });
-    return formatted;
-  };
-
+  // ======================================================
+  // FETCH DATOS PRINCIPALES
+  // ======================================================
   const fetchStudents = async () => {
     try {
       const params = {};
@@ -153,43 +149,62 @@ export function Students() {
     }
   };
 
-  useEffect(() => {
-    fetchStudents();
-  }, [selectedTeacher, selectedPlan, selectedStatus]);
+  // ======================================================
+  // FETCH AUXILIARES
+  // ======================================================
+  const fetchFilters = async () => {
+    try {
+      const teachersRes = await teacherService.getAll();
+      const plansRes = await planService.getAll();
 
-  useEffect(() => {
-    const fetchFilters = async () => {
-      try {
-        const teachersRes = await teacherService.getAll();
-        const plansRes = await planService.getAll();
+      setTeachers(teachersRes.data.data || []);
+      setPlans(plansRes.data.data || []);
+    } catch (error) {
+      console.error(error);
+    }
+  };
 
-        setTeachers(teachersRes.data.data || []);
-        setPlans(plansRes.data.data || []);
-      } catch (error) {
-        console.error(error);
-      }
-    };
+  // ======================================================
+  // RESETEO
+  // ======================================================
+  const resetForm = () => {
+    setFirstName("");
+    setLastName("");
+    setDni("");
+    setSchool("");
+    setBirthDate("");
+    setLevel("");
+    setGrade("");
+    setFormClasses([
+      {
+        teacher_id: "",
+        plan_id: "",
+        availablePlans: [],
+      },
+    ]);
+    setErrorsCreate({});
+    setErrorsEdit({});
+    setRemovedClasses([]);
+  };
 
-    fetchFilters();
-  }, []);
+  // ======================================================
+  // FUNCIONES AUXILIARES
+  // ======================================================
+  const mapErrors = (errors) => {
+    const formatted = {};
+    errors.forEach((e) => {
+      formatted[e.path] = e.msg;
+    });
+    return formatted;
+  };
 
-  const filteredStudents = students.filter((s) => {
-    const textName = searchFirstLastName.toLowerCase();
-    const textDNI = searchDNI;
-    const textSchool = searchSchool.toLowerCase();
-
-    const matchName =
-      !textName ||
-      s.first_name?.toLowerCase().includes(textName) ||
-      s.last_name?.toLowerCase().includes(textName);
-
-    const matchDNI = !textDNI || s.dni?.toString().includes(textDNI);
-
-    const matchSchool =
-      !textSchool || s.school?.toLowerCase().includes(textSchool);
-
-    return matchName && matchDNI && matchSchool;
-  });
+  // ======================================================
+  // HANDLES CRUD
+  // ======================================================
+  const openCreate = () => {
+    resetForm();
+    setOpenCreateModal(true);
+  };
 
   const handleCreate = async () => {
     try {
@@ -360,11 +375,9 @@ export function Students() {
     }
   };
 
-  const openCreate = () => {
-    resetForm();
-    setOpenCreateModal(true);
-  };
-
+  // ======================================================
+  // HANDLES AUXILIARES
+  // ======================================================
   const addClassRow = () => {
     setFormClasses((prev) => [
       ...prev,
@@ -457,6 +470,38 @@ export function Students() {
     }
   };
 
+  // ======================================================
+  // USEEFFECTS
+  // ======================================================
+  useEffect(() => {
+    fetchStudents();
+  }, [selectedTeacher, selectedPlan, selectedStatus]);
+
+  useEffect(() => {
+    fetchFilters();
+  }, []);
+
+  // ======================================================
+  // DATOS DERIVADOS
+  // ======================================================
+  const filteredStudents = students.filter((s) => {
+    const textName = searchFirstLastName.toLowerCase();
+    const textDNI = searchDNI;
+    const textSchool = searchSchool.toLowerCase();
+
+    const matchName =
+      !textName ||
+      s.first_name?.toLowerCase().includes(textName) ||
+      s.last_name?.toLowerCase().includes(textName);
+
+    const matchDNI = !textDNI || s.dni?.toString().includes(textDNI);
+
+    const matchSchool =
+      !textSchool || s.school?.toLowerCase().includes(textSchool);
+
+    return matchName && matchDNI && matchSchool;
+  });
+
   let columns = [
     { header: "Apellido", accessor: "last_name" },
     { header: "Nombre", accessor: "first_name" },
@@ -510,33 +555,11 @@ export function Students() {
       header: "Acciones",
       render: (row) => (
         <div className="flex gap-2">
-          <Button
-            title="Ver Más"
-            size="sm"
-            onClick={() => handleView(row)}
-            className={buttonClass}
-          >
-            <img src={ViewIcon} alt="Ver" className="w-5 h-5 invert" />
-          </Button>
+          <ViewButton onClick={() => handleView(row)} />
 
-          <Button
-            title="Editar"
-            size="sm"
-            onClick={() => handleEdit(row)}
-            className={buttonClass}
-          >
-            <PencilIcon className="w-5 h-5" />
-          </Button>
+          <EditButton onClick={() => handleEdit(row)} />
 
-          <Button
-            title="Eliminar"
-            size="sm"
-            variant="outline"
-            onClick={() => handleDelete(row)}
-            className={buttonClass}
-          >
-            <TrashBinIcon className="w-5 h-5" />
-          </Button>
+          <DeleteButton onClick={() => handleDelete(row)} />
         </div>
       ),
     });
@@ -548,40 +571,14 @@ export function Students() {
     <div className="flex justify-between items-center">
       <span>Alumnos</span>
       {showCreateButtons && (
-        <Button
-          title="Crear Alumno"
-          size="sm"
-          onClick={openCreate}
-          className="
-            cursor-pointer
-            w-12
-            h-12
-            rounded
-            bg-[#0cc0df]
-            text-white
-            flex
-            items-center
-            justify-center
-            transition
-            transform
-            hover:scale-105
-          "
-        >
-          <img
-            src={CreateIcon}
-            alt="More"
-            className="
-              w-5
-              h-5
-              brightness-0
-              invert
-            "
-          />
-        </Button>
+        <PlusButton title="Crear Alumno" onClick={openCreate} />
       )}
     </div>
   );
 
+  // ======================================================
+  // RETURN
+  // ======================================================
   return (
     <>
       <div className="flex gap-3 mb-4 flex-wrap">
@@ -738,18 +735,7 @@ export function Students() {
         <div className="mt-6 border-t pt-4">
           <div className="flex justify-between items-center mb-4">
             <h3 className="font-semibold text-gray-700">Clases Asignadas</h3>
-            <Button title="Añadir Clase" ize="sm" onClick={addClassRow}>
-              <img
-                src={MoreIcon}
-                alt="Añadir"
-                className="
-                w-5
-                h-5
-                brightness-0
-                invert
-              "
-              />
-            </Button>
+            <AddButton title="Añadir Clase" size="sm" onClick={addClassRow} />
           </div>
           {formClasses.map((row, idx) => (
             <div
@@ -812,31 +798,16 @@ export function Students() {
           ))}
         </div>
 
+        <h2 className="text-xl font-bold mb-8">¿Crear?</h2>
         <div className="flex justify-end gap-4 mt-10">
-          {/* <Button
-            variant="outline"
-            onClick={() => setOpenCreateModal(false)}
-            className={buttonClass}
-          >
-            Cancelar
-          </Button> */}
-
-          <Button
-            title="Guardar"
-            onClick={handleCreate}
-            className={buttonClass}
-          >
-            <img
-              src={SaveIcon}
-              alt="Guardar"
-              className="
-                w-5
-                h-5
-                brightness-0
-                invert
-              "
+          <div className="flex justify-end gap-3">
+            <NoButton
+              title="Cancelar"
+              onClick={() => setOpenCreateModal(false)}
             />
-          </Button>
+
+            <YesButton title="Aceptar" onClick={handleCreate} />
+          </div>
         </div>
       </Modal>
 
@@ -917,18 +888,7 @@ export function Students() {
         <div className="mt-6 border-t pt-4">
           <div className="flex justify-between items-center mb-4">
             <h3 className="font-semibold text-gray-700">Gestionar Clases</h3>
-            <Button title="Añadir Clase" size="sm" onClick={addClassRow}>
-              <img
-                src={MoreIcon}
-                alt="Añadir"
-                className="
-                w-5
-                h-5
-                brightness-0
-                invert
-              "
-              />
-            </Button>
+            <AddButton title="Añadir Clase" size="sm" onClick={addClassRow} />
           </div>
           {formClasses.map((row, idx) => (
             <div
@@ -1007,31 +967,11 @@ export function Students() {
           ))}
         </div>
 
+        <h2 className="text-xl font-bold mb-8">¿Editar?</h2>
         <div className="flex justify-end gap-4 mt-10">
-          {/* <Button
-            variant="outline"
-            onClick={() => setOpenEditModal(false)}
-            className={buttonClass}
-          >
-            Cancelar
-          </Button> */}
+          <NoButton title="Cancelar" onClick={() => setOpenEditModal(false)} />
 
-          <Button
-            title="Guardar"
-            onClick={handleUpdate}
-            className={buttonClass}
-          >
-            <img
-              src={SaveIcon}
-              alt="Guardar"
-              className="
-                w-5
-                h-5
-                brightness-0
-                invert
-              "
-            />
-          </Button>
+          <YesButton title="Aceptar" onClick={handleUpdate} />
         </div>
       </Modal>
 
@@ -1082,17 +1022,12 @@ export function Students() {
         <h2 className="text-lg font-semibold mb-4">¿Eliminar alumno?</h2>
 
         <div className="flex justify-end gap-2">
-          <Button
-            variant="outline"
+          <NoButton
+            title="Cancelar"
             onClick={() => setOpenDeleteModal(false)}
-            className={buttonClass}
-          >
-            Cancelar
-          </Button>
+          />
 
-          <Button onClick={confirmDelete} className={buttonClass}>
-            Eliminar
-          </Button>
+          <YesButton title="Aceptar" onClick={confirmDelete} />
         </div>
       </Modal>
     </>
