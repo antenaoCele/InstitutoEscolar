@@ -53,7 +53,7 @@ import { ReactComponent as MoreDotIcon } from "./moredot.svg?react";
 import { ReactComponent as AlertHexaIcon } from "./alert-hexa.svg?react";
 import { ReactComponent as ErrorHexaIcon } from "./info-hexa.svg?react";
 import SaveIcon from "./icons8-guardar-32.png";
-import MoreIcon from "./icons8-agregar-24.png";
+import MoreIcon from "./icons8-añadir-48-dos.png";
 import CreateIcon from "./icons8-crear-48.png";
 import MoreInfoIcon from "./icons8-info-50.png";
 import BackIcon from "./icons8-izquierda-negro-2-50.png";

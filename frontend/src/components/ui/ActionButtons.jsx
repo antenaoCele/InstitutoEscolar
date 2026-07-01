@@ -65,8 +65,8 @@ export function AddButton({ onClick }) {
 
 export function PlusButton({ onClick }) {
   return (
-    <Button title="Agregar" size="sm" onClick={onClick} className={baseClass}>
-      <img src={PlusSign} alt="Agregar" className={imgClass} />
+    <Button title="Crear" size="sm" onClick={onClick} className={baseClass}>
+      <img src={PlusSign} alt="Crear" className={imgClass} />
     </Button>
   );
 }
