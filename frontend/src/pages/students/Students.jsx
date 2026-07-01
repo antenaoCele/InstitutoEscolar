@@ -511,7 +511,7 @@ export function Students() {
       render: (row) => (
         <div className="flex gap-2">
           <Button
-            title="Ver"
+            title="Ver Más"
             size="sm"
             onClick={() => handleView(row)}
             className={buttonClass}
@@ -529,6 +529,7 @@ export function Students() {
           </Button>
 
           <Button
+            title="Eliminar"
             size="sm"
             variant="outline"
             onClick={() => handleDelete(row)}
@@ -737,8 +738,17 @@ export function Students() {
         <div className="mt-6 border-t pt-4">
           <div className="flex justify-between items-center mb-4">
             <h3 className="font-semibold text-gray-700">Clases Asignadas</h3>
-            <Button size="sm" onClick={addClassRow}>
-              + Añadir Clase
+            <Button title="Añadir Clase" ize="sm" onClick={addClassRow}>
+              <img
+                src={MoreIcon}
+                alt="Añadir"
+                className="
+                w-5
+                h-5
+                brightness-0
+                invert
+              "
+              />
             </Button>
           </div>
           {formClasses.map((row, idx) => (
@@ -803,16 +813,29 @@ export function Students() {
         </div>
 
         <div className="flex justify-end gap-4 mt-10">
-          <Button
+          {/* <Button
             variant="outline"
             onClick={() => setOpenCreateModal(false)}
             className={buttonClass}
           >
             Cancelar
-          </Button>
+          </Button> */}
 
-          <Button onClick={handleCreate} className={buttonClass}>
-            Crear
+          <Button
+            title="Guardar"
+            onClick={handleCreate}
+            className={buttonClass}
+          >
+            <img
+              src={SaveIcon}
+              alt="Guardar"
+              className="
+                w-5
+                h-5
+                brightness-0
+                invert
+              "
+            />
           </Button>
         </div>
       </Modal>
@@ -894,8 +917,17 @@ export function Students() {
         <div className="mt-6 border-t pt-4">
           <div className="flex justify-between items-center mb-4">
             <h3 className="font-semibold text-gray-700">Gestionar Clases</h3>
-            <Button size="sm" onClick={addClassRow}>
-              + Añadir Clase
+            <Button title="Añadir Clase" size="sm" onClick={addClassRow}>
+              <img
+                src={MoreIcon}
+                alt="Añadir"
+                className="
+                w-5
+                h-5
+                brightness-0
+                invert
+              "
+              />
             </Button>
           </div>
           {formClasses.map((row, idx) => (
@@ -976,16 +1008,29 @@ export function Students() {
         </div>
 
         <div className="flex justify-end gap-4 mt-10">
-          <Button
+          {/* <Button
             variant="outline"
             onClick={() => setOpenEditModal(false)}
             className={buttonClass}
           >
             Cancelar
-          </Button>
+          </Button> */}
 
-          <Button onClick={handleUpdate} className={buttonClass}>
-            Guardar
+          <Button
+            title="Guardar"
+            onClick={handleUpdate}
+            className={buttonClass}
+          >
+            <img
+              src={SaveIcon}
+              alt="Guardar"
+              className="
+                w-5
+                h-5
+                brightness-0
+                invert
+              "
+            />
           </Button>
         </div>
       </Modal>
@@ -1028,9 +1073,9 @@ export function Students() {
           </div>
         </div>
 
-        <div className="flex justify-end mt-8">
+        {/* <div className="flex justify-end mt-8">
           <Button onClick={() => setOpenViewModal(false)}>Cerrar</Button>
-        </div>
+        </div> */}
       </Modal>
 
       <Modal isOpen={openDeleteModal} onClose={() => setOpenDeleteModal(false)}>
