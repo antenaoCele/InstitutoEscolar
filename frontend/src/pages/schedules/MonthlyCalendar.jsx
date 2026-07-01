@@ -108,7 +108,7 @@ export default function MonthlyCalendar() {
 
   const fetchBirthdays = async () => {
     try {
-      const response = await studentService.getAll();
+      const response = await studentService.getActiveStudents();
 
       setBirthdays(response.data.data || []);
     } catch (error) {
