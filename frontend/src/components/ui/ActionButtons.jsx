@@ -9,7 +9,7 @@ import {
   ViewIcon,
   YesIcon,
   NoIcon,
-  PlusSign,
+  PlusSignIcon,
 } from "../../icons";
 
 const baseClass =
@@ -66,7 +66,7 @@ export function AddButton({ onClick }) {
 export function PlusButton({ onClick }) {
   return (
     <Button title="Crear" size="sm" onClick={onClick} className={baseClass}>
-      <img src={PlusSign} alt="Crear" className={imgClass} />
+      <img src={PlusSignIcon} alt="Crear" className={imgClass} />
     </Button>
   );
 }
