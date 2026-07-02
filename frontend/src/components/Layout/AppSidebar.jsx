@@ -2,32 +2,49 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { useTheme } from "../../context/ThemeContext";
 import { useSidebar } from "../../context/SidebarContext";
-import SidebarWidget from "./SidebarWidget";
-import Button from "../ui/Button";
 
 import {
-  BoxCubeIcon,
   CalenderIcon,
   ChevronDownIcon,
   GridIcon,
-  ListIcon,
   PageIcon,
-  PlugInIcon,
-  TableIcon,
   UserCircleIcon,
   GroupIcon,
+  TutorsIcon,
+  TeachersIcon,
+  SubjectsIcon,
 } from "../../icons";
+
+const SidebarIcon = ({ children }) => (
+  <span className="flex items-center justify-center w-6 h-6 shrink-0">
+    {children}
+  </span>
+);
+
+const SidebarPngIcon = ({ src, alt }) => (
+  <SidebarIcon>
+    <img src={src} alt={alt} className="w-5 h-5 object-contain" />
+  </SidebarIcon>
+);
 
 const BRAND_COLOR = "#0cc0df";
 
 const navItems = [
   {
-    icon: <GridIcon />,
+    icon: (
+      <SidebarIcon>
+        <GridIcon className="w-5 h-5" />
+      </SidebarIcon>
+    ),
     name: "Inicio",
     path: "/",
   },
   {
-    icon: <GroupIcon />,
+    icon: (
+      <SidebarIcon>
+        <GroupIcon className="w-5 h-5" />
+      </SidebarIcon>
+    ),
     name: "Alumnos",
     subItems: [
       {
@@ -45,17 +62,21 @@ const navItems = [
     ],
   },
   {
-    icon: <GroupIcon />,
+    icon: <SidebarPngIcon src={TeachersIcon} alt="Docentes" />,
     name: "Docentes",
     path: "/teachers",
   },
   {
-    icon: <ListIcon />,
+    icon: <SidebarPngIcon src={SubjectsIcon} alt="Materias" />,
     name: "Materias",
     path: "/subjects",
   },
   {
-    icon: <PageIcon />,
+    icon: (
+      <SidebarIcon>
+        <PageIcon className="w-5 h-5" />
+      </SidebarIcon>
+    ),
     name: "Planes",
     subItems: [
       {
@@ -69,7 +90,11 @@ const navItems = [
     ],
   },
   {
-    icon: <CalenderIcon />,
+    icon: (
+      <SidebarIcon>
+        <CalenderIcon className="w-5 h-5" />
+      </SidebarIcon>
+    ),
     name: "Horarios",
     subItems: [
       {
@@ -83,12 +108,16 @@ const navItems = [
     ],
   },
   {
-    icon: <GroupIcon />,
+    icon: <SidebarPngIcon src={TutorsIcon} alt="Tutores" />,
     name: "Tutores",
     path: "/tutors",
   },
   {
-    icon: <UserCircleIcon />,
+    icon: (
+      <SidebarIcon>
+        <UserCircleIcon className="w-5 h-5" />
+      </SidebarIcon>
+    ),
     name: "Usuarios",
     subItems: [
       {
@@ -189,7 +218,7 @@ const AppSidebar = () => {
                     : {}
                 }
               >
-                <span>{nav.icon}</span>
+                {nav.icon}
 
                 {(isExpanded || isHovered || isMobileOpen) && (
                   <>
@@ -254,7 +283,7 @@ const AppSidebar = () => {
                   : {}
               }
             >
-              <span>{nav.icon}</span>
+              {nav.icon}
 
               {(isExpanded || isHovered || isMobileOpen) && (
                 <span className="ml-3">{nav.name}</span>
