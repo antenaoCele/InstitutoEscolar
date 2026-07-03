@@ -183,6 +183,97 @@ export const studentsController = {
     }
   },
 
+  getInfo: async (req, res) => {
+    try {
+      const studentId = Number(req.params.id);
+
+      // Información principal del alumno
+      const [[student]] = await db.execute(
+        `
+      SELECT
+        id,
+        first_name,
+        last_name,
+        dni,
+        school,
+        birth_date,
+        level,
+        grade
+      FROM students
+      WHERE id = ?
+      `,
+        [studentId],
+      );
+
+      if (!student) {
+        return res.status(404).json({
+          success: false,
+          message: "Alumno no encontrado",
+        });
+      }
+
+      // Tutores
+      const [tutors] = await db.execute(
+        `
+      SELECT
+          t.id,
+          t.first_name,
+          t.last_name,
+          t.dni,
+          t.phone
+      FROM student_tutors st
+      JOIN tutors t
+          ON t.id = st.tutor_id
+      WHERE st.student_id = ?
+      ORDER BY t.last_name, t.first_name
+      `,
+        [studentId],
+      );
+
+      // Planes activos
+      const [plans] = await db.execute(
+        `
+      SELECT
+        sp.id,
+        p.name AS plan_name,
+        te.first_name,
+        te.last_name,
+        sp.start_date
+      FROM student_plans sp
+
+      JOIN plans p
+        ON p.id = sp.plan_id
+
+      JOIN teachers te
+        ON te.id = sp.teacher_id
+
+      WHERE
+        sp.student_id = ?
+        AND sp.end_date IS NULL
+
+      ORDER BY p.name
+      `,
+        [studentId],
+      );
+
+      res.json({
+        success: true,
+        data: {
+          student,
+          tutors,
+          plans,
+        },
+      });
+    } catch (error) {
+      console.error(error);
+
+      res.status(500).json({
+        success: false,
+        message: "Error al obtener la información del alumno",
+      });
+    }
+  },
+
   getPlans: async (req, res) => {
     try {
       const studentId = Number(req.params.id);

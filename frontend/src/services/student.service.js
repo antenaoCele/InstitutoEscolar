@@ -7,6 +7,8 @@ export const studentService = {
 
   getById: (id) => api.get(`/students/${id}`),
 
+  getInfo: (id) => api.get(`/students/${id}/info`),
+
   getPlans: (studentId, teacherId) =>
     api.get(`/students/${studentId}/plans`, {
       params: {
@@ -15,7 +17,10 @@ export const studentService = {
     }),
 
   create: (data) => api.post("/students", data),
+
   createWithPlan: (data) => api.post("/students", data),
+
   update: (id, data) => api.put(`/students/${id}`, data),
+
   delete: (id) => api.delete(`/students/${id}`),
 };

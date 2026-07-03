@@ -20,6 +20,14 @@ router.get("/active", authentication, studentsController.getActiveStudents);
 router.get("/", authentication, studentsController.getAllWithStatus);
 
 router.get(
+  "/:id/info",
+  authentication,
+  ...validateID("students"),
+  checkValidations,
+  studentsController.getInfo,
+);
+
+router.get(
   "/:id/plans",
   authentication,
   ...validateID("students"),
