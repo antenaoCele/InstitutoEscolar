@@ -69,9 +69,9 @@ export function Students() {
   // ======================================================
   const [formClasses, setFormClasses] = useState([
     {
-      teacher_id: "",
       plan_id: "",
-      availablePlans: [],
+      teacher_id: "",
+      availableTeachers: [],
     },
   ]);
 
@@ -174,9 +174,9 @@ export function Students() {
     setGrade("");
     setFormClasses([
       {
-        teacher_id: "",
         plan_id: "",
-        availablePlans: [],
+        teacher_id: "",
+        availableTeachers: [],
       },
     ]);
     setErrorsCreate({});
@@ -227,10 +227,16 @@ export function Students() {
       if (backendErrors) setErrorsCreate(mapErrors(backendErrors));
     }
   };
+  const handleView = async (student) => {
+    try {
+      const { data } = await studentService.getInfo(student.id);
 
-  const handleView = (student) => {
-    setSelectedStudent(student);
-    setOpenViewModal(true);
+      setSelectedStudent(data.data);
+
+      setOpenViewModal(true);
+    } catch (error) {
+      console.error(error);
+    }
   };
 
   const handleEdit = async (student) => {
@@ -246,7 +252,7 @@ export function Students() {
 
     const rows = await Promise.all(
       (student.activePlans || []).map(async (p) => {
-        const response = await teacherService.getAvailablePlans(p.teacher_id);
+        const response = await teacherService.getTeachersByPlan(p.plan_id);
 
         return {
           teacher_id: p.teacher_id,
@@ -254,9 +260,7 @@ export function Students() {
           student_plan_id: p.student_plan_id,
           start_date: p.start_date?.split("T")[0],
 
-          availablePlans: (response.data.data || []).sort(
-            sortByProperty("name"),
-          ),
+          availableTeachers: (response.data.data || []).sort(sortByPersonName),
         };
       }),
     );
@@ -379,9 +383,9 @@ export function Students() {
     setFormClasses((prev) => [
       ...prev,
       {
-        teacher_id: "",
         plan_id: "",
-        availablePlans: [],
+        teacher_id: "",
+        availableTeachers: [],
       },
     ]);
   };
@@ -401,9 +405,9 @@ export function Students() {
         ? updated
         : [
             {
-              teacher_id: "",
               plan_id: "",
-              availablePlans: [],
+              teacher_id: "",
+              availableTeachers: [],
             },
           ],
     );
@@ -422,16 +426,16 @@ export function Students() {
     );
   };
 
-  const handleTeacherChange = async (idx, teacherId) => {
-    if (!teacherId) {
+  const handlePlanChange = async (idx, planId) => {
+    if (!planId) {
       setFormClasses((prev) =>
         prev.map((row, index) =>
           index === idx
             ? {
                 ...row,
-                teacher_id: "",
                 plan_id: "",
-                availablePlans: [],
+                teacher_id: "",
+                availableTeachers: [],
               }
             : row,
         ),
@@ -440,24 +444,28 @@ export function Students() {
       return;
     }
 
-    const response = await teacherService.getAvailablePlans(teacherId);
+    try {
+      const response = await teacherService.getTeachersByPlan(planId);
 
-    const availablePlans = (response.data.data || []).sort(
-      sortByProperty("name"),
-    );
+      const availableTeachers = (response.data.data || []).sort(
+        sortByPersonName,
+      );
 
-    setFormClasses((prev) =>
-      prev.map((row, index) =>
-        index === idx
-          ? {
-              ...row,
-              teacher_id: teacherId,
-              plan_id: "",
-              availablePlans,
-            }
-          : row,
-      ),
-    );
+      setFormClasses((prev) =>
+        prev.map((row, index) =>
+          index === idx
+            ? {
+                ...row,
+                plan_id: planId,
+                teacher_id: "",
+                availableTeachers,
+              }
+            : row,
+        ),
+      );
+    } catch (error) {
+      console.error(error);
+    }
   };
 
   const handleScroll = (e, targetId) => {
@@ -522,9 +530,8 @@ export function Students() {
     },
   ];
 
-  // Sumar Docente y Plan solo en Activos
   columns.push({
-    header: "Docente y Plan",
+    header: "Plan y Docente",
     render: (row) => (
       <div
         className="
@@ -539,9 +546,9 @@ export function Students() {
       >
         {(row.activePlans || []).map((p) => (
           <div key={p.student_plan_id}>
-            <div className="font-medium text-sm">{p.teacher_name}</div>
+            <div className="font-medium text-sm">{p.plan_name}</div>
 
-            <div className="text-xs text-gray-500">{p.plan_name}</div>
+            <div className="text-xs text-gray-500">{p.teacher_name}</div>
           </div>
         ))}
       </div>
@@ -574,6 +581,8 @@ export function Students() {
       )}
     </div>
   );
+
+  const student = selectedStudent?.student;
 
   // ======================================================
   // RETURN
@@ -751,31 +760,32 @@ export function Students() {
             >
               <div className="flex-1">
                 <Select
-                  label={idx === 0 ? "Docente" : ""}
-                  value={row.teacher_id}
-                  onChange={(e) => handleTeacherChange(idx, e.target.value)}
+                  label={idx === 0 ? "Plan" : ""}
+                  value={row.plan_id}
+                  onChange={(e) => handlePlanChange(idx, e.target.value)}
                 >
-                  <option value="">Seleccione un Docente</option>
-                  {[...teachers].sort(sortByPersonName).map((t) => (
-                    <option key={t.id} value={t.id}>
-                      {t.last_name}, {t.first_name}
+                  <option value="">Seleccione un Plan</option>
+
+                  {[...plans].sort(sortByProperty("name")).map((plan) => (
+                    <option key={plan.id} value={plan.id}>
+                      {plan.name}
                     </option>
                   ))}
                 </Select>
               </div>
               <div className="flex-1">
                 <Select
-                  label={idx === 0 ? "Plan" : ""}
-                  value={row.plan_id}
+                  label={idx === 0 ? "Docente" : ""}
+                  value={row.teacher_id}
                   onChange={(e) =>
-                    updateClassRow(idx, "plan_id", e.target.value)
+                    updateClassRow(idx, "teacher_id", e.target.value)
                   }
                 >
-                  <option value="">Seleccione un Plan</option>
+                  <option value="">Seleccione un Docente</option>
 
-                  {row.availablePlans?.map((p) => (
-                    <option key={p.id} value={p.id}>
-                      {p.name}
+                  {row.availableTeachers?.map((teacher) => (
+                    <option key={teacher.id} value={teacher.id}>
+                      {teacher.last_name}, {teacher.first_name}
                     </option>
                   ))}
                 </Select>
@@ -898,30 +908,32 @@ export function Students() {
             >
               <div className="flex-1">
                 <Select
-                  label={idx === 0 ? "Docente" : ""}
-                  value={row.teacher_id}
-                  onChange={(e) => handleTeacherChange(idx, e.target.value)}
+                  label={idx === 0 ? "Plan" : ""}
+                  value={row.plan_id}
+                  onChange={(e) => handlePlanChange(idx, e.target.value)}
                 >
-                  <option value="">Seleccione un Docente</option>
-                  {[...teachers].sort(sortByPersonName).map((t) => (
-                    <option key={t.id} value={t.id}>
-                      {t.last_name}, {t.first_name}
+                  <option value="">Seleccione un Plan</option>
+
+                  {[...plans].sort(sortByProperty("name")).map((plan) => (
+                    <option key={plan.id} value={plan.id}>
+                      {plan.name}
                     </option>
                   ))}
                 </Select>
               </div>
               <div className="flex-1">
                 <Select
-                  label={idx === 0 ? "Plan" : ""}
-                  value={row.plan_id}
+                  label={idx === 0 ? "Docente" : ""}
+                  value={row.teacher_id}
                   onChange={(e) =>
-                    updateClassRow(idx, "plan_id", e.target.value)
+                    updateClassRow(idx, "teacher_id", e.target.value)
                   }
                 >
-                  <option value="">Seleccione un Plan</option>
-                  {row.availablePlans?.map((p) => (
-                    <option key={p.id} value={p.id}>
-                      {p.name}
+                  <option value="">Seleccione un Docente</option>
+
+                  {row.availableTeachers?.map((teacher) => (
+                    <option key={teacher.id} value={teacher.id}>
+                      {teacher.last_name}, {teacher.first_name}
                     </option>
                   ))}
                 </Select>
@@ -951,46 +963,129 @@ export function Students() {
       </Modal>
 
       <Modal isOpen={openViewModal} onClose={() => setOpenViewModal(false)}>
-        <h2 className="text-xl font-bold mb-8">
-          {selectedStudent?.first_name} {selectedStudent?.last_name}
-        </h2>
+        <h2 className="text-xl font-bold mb-8">Datos del Alumno</h2>
 
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <h4 className="font-semibold">DNI</h4>
-            <p>{selectedStudent?.dni}</p>
-          </div>
+        {/* <h3 className="text-lg font-semibold mb-4">Alumno</h3> */}
 
-          <div>
-            <h4 className="font-semibold">Fecha de nacimiento</h4>
-            <p>
-              {selectedStudent?.birth_date
-                ? new Date(selectedStudent.birth_date).toLocaleDateString(
-                    "es-AR",
-                  )
-                : "-"}
-            </p>
-          </div>
+        <div className="rounded-lg border border-gray-200 p-4">
+          <div className="grid grid-cols-3 gap-4">
+            <div>
+              <h4 className="font-semibold">Alumno</h4>
+              <p className="text-gray-500">
+                {" "}
+                {student?.last_name}, {student?.first_name}
+              </p>
+            </div>
 
-          <div>
-            <h4 className="font-semibold">Colegio o Universidad</h4>
-            <p>{selectedStudent?.school}</p>
-          </div>
+            <div>
+              <h4 className="font-semibold">DNI</h4>
+              <p className="text-gray-500">{student?.dni}</p>
+            </div>
 
-          <div>
-            <h4 className="font-semibold">Nivel</h4>
-            <p>{selectedStudent?.level}</p>
-          </div>
+            <div>
+              <h4 className="font-semibold">Nacimiento</h4>
+              <p className="text-gray-500">
+                {student?.birth_date
+                  ? new Date(student.birth_date).toLocaleDateString("es-AR")
+                  : "-"}
+              </p>
+            </div>
 
-          <div>
-            <h4 className="font-semibold">Grado o Año</h4>
-            <p>{selectedStudent?.grade}°</p>
+            <div>
+              <h4 className="font-semibold">Institución</h4>
+              <p className="text-gray-500">{student?.school}</p>
+            </div>
+
+            <div>
+              <h4 className="font-semibold">Nivel</h4>
+              <p className="text-gray-500">{student?.level}</p>
+            </div>
+
+            <div>
+              <h4 className="font-semibold">Grado o año</h4>
+              <p className="text-gray-500">{student?.grade}°</p>
+            </div>
           </div>
         </div>
 
-        {/* <div className="flex justify-end mt-8">
-          <Button onClick={() => setOpenViewModal(false)}>Cerrar</Button>
-        </div> */}
+        <hr className="my-6" />
+
+        {/* <h3 className="text-lg font-semibold mb-4">Tutores</h3> */}
+
+        {selectedStudent?.tutors?.length > 0 ? (
+          <div className="space-y-4">
+            {selectedStudent.tutors.map((tutor) => (
+              <div
+                key={tutor.id}
+                className="rounded-lg border border-gray-200 p-4"
+              >
+                <div className="grid grid-cols-3 gap-4">
+                  <div>
+                    <h4 className="font-semibold">Tutor</h4>
+                    <p className="text-gray-500">
+                      {tutor.last_name}, {tutor.first_name}
+                    </p>
+                  </div>
+
+                  <div>
+                    <h4 className="font-semibold">DNI</h4>
+                    <p className="text-gray-500">{tutor.dni}</p>
+                  </div>
+
+                  <div>
+                    <h4 className="font-semibold">Teléfono</h4>
+                    <p className="text-gray-500">{tutor.phone || "-"}</p>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <p className="text-gray-500">
+            Este alumno no posee tutores registrados.
+          </p>
+        )}
+
+        <hr className="my-6" />
+
+        {/* <h3 className="text-lg font-semibold mb-4">Planes Activos</h3> */}
+
+        {selectedStudent?.plans?.length > 0 ? (
+          <div className="space-y-4">
+            {selectedStudent.plans.map((plan) => (
+              <div
+                key={plan.id}
+                className="rounded-lg border border-gray-200 p-4"
+              >
+                <div className="grid grid-cols-3 gap-4">
+                  <div>
+                    <h4 className="font-semibold">Plan</h4>
+                    <p className="text-gray-500">{plan.plan_name}</p>
+                  </div>
+
+                  <div>
+                    <h4 className="font-semibold">Docente</h4>
+                    <p className="text-gray-500">
+                      {plan.last_name}, {plan.first_name}
+                    </p>
+                  </div>
+
+                  <div>
+                    <h4 className="font-semibold">Fecha de inicio</h4>
+
+                    <p className="text-gray-500">
+                      {plan.start_date
+                        ? new Date(plan.start_date).toLocaleDateString("es-AR")
+                        : "-"}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <p className="text-gray-500">El alumno no posee planes activos.</p>
+        )}
       </Modal>
 
       <Modal isOpen={openDeleteModal} onClose={() => setOpenDeleteModal(false)}>
