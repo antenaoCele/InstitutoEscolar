@@ -17,6 +17,7 @@ import {
   MoreIcon,
   CreateIcon,
 } from "../../icons";
+import { sortByProperty, sortByPersonName } from "../../utils/sort";
 
 export function Subjects() {
   // ======================================================
@@ -281,11 +282,13 @@ export function Subjects() {
   // ======================================================
   // DATOS DERIVADOS
   // ======================================================
-  const filteredSubjects = subjects.filter((s) => {
-    return (
-      !searchName || s.name?.toLowerCase().includes(searchName.toLowerCase())
-    );
-  });
+  const filteredSubjects = [...subjects]
+    .filter((s) => {
+      return (
+        !searchName || s.name?.toLowerCase().includes(searchName.toLowerCase())
+      );
+    })
+    .sort(sortByProperty("name"));
 
   const showCreateButtons = isAdmin();
 
@@ -396,11 +399,23 @@ export function Subjects() {
         >
           <option value="">Todos los docentes</option>
 
-          {teachers.map((teacher) => (
-            <option key={teacher.id} value={teacher.id}>
-              {teacher.last_name}, {teacher.first_name}
-            </option>
-          ))}
+          {[...teachers]
+            .sort((a, b) => {
+              const last = a.last_name.localeCompare(b.last_name, "es", {
+                sensitivity: "base",
+              });
+
+              if (last !== 0) return last;
+
+              return a.first_name.localeCompare(b.first_name, "es", {
+                sensitivity: "base",
+              });
+            })
+            .map((teacher) => (
+              <option key={teacher.id} value={teacher.id}>
+                {teacher.last_name}, {teacher.first_name}
+              </option>
+            ))}
         </Select>
       </div>
 
@@ -444,45 +459,46 @@ export function Subjects() {
         <div className="flex flex-col mb-6">
           <Label className="font-semibold mb-2">Docentes</Label>
           <div className="grid grid-cols-1 gap-2 max-h-40 overflow-y-auto p-2 border border-gray-200 rounded">
-            {teachers.map((teacher) => (
-              <Label
-                key={teacher.id}
-                className="flex items-center gap-2 text-sm cursor-pointer hover:bg-gray-50 p-1 rounded"
-              >
-                <Input
-                  type="checkbox"
-                  checked={selectedTeacherIds.includes(teacher.id)}
-                  onChange={(e) => {
-                    if (e.target.checked) {
-                      setSelectedTeacherIds([
-                        ...selectedTeacherIds,
-                        teacher.id,
-                      ]);
-                    } else {
-                      setSelectedTeacherIds(
-                        selectedTeacherIds.filter((id) => id !== teacher.id),
-                      );
-                    }
-                  }}
-                />
-                {teacher.last_name}, {teacher.first_name}
-              </Label>
-            ))}
+            {[...teachers]
+              .sort((a, b) => {
+                const last = a.last_name.localeCompare(b.last_name, "es", {
+                  sensitivity: "base",
+                });
+
+                if (last !== 0) return last;
+
+                return a.first_name.localeCompare(b.first_name, "es", {
+                  sensitivity: "base",
+                });
+              })
+              .map((teacher) => (
+                <Label
+                  key={teacher.id}
+                  className="flex items-center gap-2 text-sm cursor-pointer hover:bg-gray-50 p-1 rounded"
+                >
+                  <Input
+                    type="checkbox"
+                    checked={selectedTeacherIds.includes(teacher.id)}
+                    onChange={(e) => {
+                      if (e.target.checked) {
+                        setSelectedTeacherIds([
+                          ...selectedTeacherIds,
+                          teacher.id,
+                        ]);
+                      } else {
+                        setSelectedTeacherIds(
+                          selectedTeacherIds.filter((id) => id !== teacher.id),
+                        );
+                      }
+                    }}
+                  />
+                  {teacher.last_name}, {teacher.first_name}
+                </Label>
+              ))}
           </div>
         </div>
 
         <div className="flex justify-end gap-4 mt-10">
-          {/* <Button
-            variant="outline"
-            onClick={() => {
-              setOpenCreateModal(false);
-              resetForm();
-            }}
-            className={buttonClass}
-          >
-            Cancelar
-          </Button> */}
-
           <Button
             size="icon"
             title="Guardar"
@@ -542,30 +558,42 @@ export function Subjects() {
         <div className="flex flex-col mb-6">
           <Label className="font-semibold mb-2">Docentes</Label>
           <div className="grid grid-cols-1 gap-2 max-h-40 overflow-y-auto p-2 border border-gray-200 rounded">
-            {teachers.map((teacher) => (
-              <Label
-                key={teacher.id}
-                className="flex items-center gap-2 text-sm cursor-pointer hover:bg-gray-50 p-1 rounded"
-              >
-                <Input
-                  type="checkbox"
-                  checked={selectedTeacherIds.includes(teacher.id)}
-                  onChange={(e) => {
-                    if (e.target.checked) {
-                      setSelectedTeacherIds([
-                        ...selectedTeacherIds,
-                        teacher.id,
-                      ]);
-                    } else {
-                      setSelectedTeacherIds(
-                        selectedTeacherIds.filter((id) => id !== teacher.id),
-                      );
-                    }
-                  }}
-                />
-                {teacher.last_name}, {teacher.first_name}
-              </Label>
-            ))}
+            {[...teachers]
+              .sort((a, b) => {
+                const last = a.last_name.localeCompare(b.last_name, "es", {
+                  sensitivity: "base",
+                });
+
+                if (last !== 0) return last;
+
+                return a.first_name.localeCompare(b.first_name, "es", {
+                  sensitivity: "base",
+                });
+              })
+              .map((teacher) => (
+                <Label
+                  key={teacher.id}
+                  className="flex items-center gap-2 text-sm cursor-pointer hover:bg-gray-50 p-1 rounded"
+                >
+                  <Input
+                    type="checkbox"
+                    checked={selectedTeacherIds.includes(teacher.id)}
+                    onChange={(e) => {
+                      if (e.target.checked) {
+                        setSelectedTeacherIds([
+                          ...selectedTeacherIds,
+                          teacher.id,
+                        ]);
+                      } else {
+                        setSelectedTeacherIds(
+                          selectedTeacherIds.filter((id) => id !== teacher.id),
+                        );
+                      }
+                    }}
+                  />
+                  {teacher.last_name}, {teacher.first_name}
+                </Label>
+              ))}
           </div>
         </div>
 

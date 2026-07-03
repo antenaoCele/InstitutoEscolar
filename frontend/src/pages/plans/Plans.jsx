@@ -9,7 +9,14 @@ import Label from "../../components/form/Label";
 import Input from "../../components/form/Input";
 import { Modal } from "../../components/ui/Modal";
 import { isAdmin } from "../../utils/auth";
-import { PencilIcon, TrashBinIcon, SaveIcon, CreateIcon } from "../../icons";
+import {
+  PencilIcon,
+  TrashBinIcon,
+  CloseLineIcon,
+  SaveIcon,
+  MoreIcon,
+  CreateIcon,
+} from "../../icons";
 
 export function Plans() {
   // ======================================================
@@ -317,33 +324,53 @@ export function Plans() {
   // ======================================================
   // DATOS DERIVADOS
   // ======================================================
-  const filteredCurrentPlans = currentPlans.filter((p) => {
+  const filteredPlans = planPrices.filter((p) => {
     const textPlan = searchPlanName.toLowerCase();
-    return !textPlan || p.name?.toLowerCase().includes(textPlan);
+    const textPrice = searchPrice;
+
+    const matchPlan =
+      !textPlan || p.plan_name?.toLowerCase().includes(textPlan);
+
+    const matchPrice = !textPrice || p.price?.toString().includes(textPrice);
+
+    return matchPlan && matchPrice;
   });
 
-  // Historial del plan seleccionado, ordenado por fecha de inicio (más reciente primero)
-  const historyForSelectedPlan = selectedPlanForHistory
-    ? planPrices
-        .filter((pp) => pp.plan_id === selectedPlanForHistory.id)
-        .sort((a, b) => new Date(b.start_date) - new Date(a.start_date))
-    : [];
+  let columns = [];
 
-  const columns = [
-    {
-      header: "Plan",
-      accessor: "name",
-    },
-    {
-      header: "Materias",
-      render: (row) => row.subjects?.join(", ") || "-",
-    },
-    {
-      header: "Precio Actual",
-      accessor: "current_price",
-    },
-    {
-      header: "Historial",
+  if (isCurrentView) {
+    columns = [
+      {
+        header: "Plan",
+        accessor: "name",
+      },
+      {
+        header: "Materias",
+        render: (row) => row.subjects?.join(", ") || "-",
+      },
+      {
+        header: "Precio Actual",
+        accessor: "current_price",
+      },
+    ];
+  } else {
+    columns = [
+      { header: "Plan", accessor: "plan_name" },
+      { header: "Precio", accessor: "price" },
+      {
+        header: "Fecha Inicio",
+        render: (row) => row.start_date?.split("T")[0] || "-",
+      },
+      {
+        header: "Fecha Fin",
+        render: (row) => row.end_date?.split("T")[0] || "-",
+      },
+    ];
+  }
+
+  if (!isPlanUser && isHistoryView) {
+    columns.push({
+      header: "Acciones",
       render: (row) => (
         <Button
           title="Ver historial"
@@ -411,7 +438,7 @@ export function Plans() {
       <BasicTable
         title={tableTitle}
         columns={columns}
-        data={filteredCurrentPlans}
+        data={isCurrentView ? currentPlans : filteredPlans}
       />
 
       {/* ================== MODAL: CREAR PLAN ================== */}
