@@ -21,6 +21,7 @@ import {
   SaveButton,
   AddButton,
 } from "../../components/ui/ActionButtons";
+import { sortByLastName } from "../../utils/sort";
 
 export function Students() {
   // ======================================================
@@ -138,10 +139,7 @@ export function Students() {
         }
       });
 
-      setStudents(Array.from(studentMap.values()));
       const studentsData = Array.from(studentMap.values());
-
-      console.log(studentsData);
 
       setStudents(studentsData);
     } catch {
@@ -484,23 +482,25 @@ export function Students() {
   // ======================================================
   // DATOS DERIVADOS
   // ======================================================
-  const filteredStudents = students.filter((s) => {
-    const textName = searchFirstLastName.toLowerCase();
-    const textDNI = searchDNI;
-    const textSchool = searchSchool.toLowerCase();
+  const filteredStudents = [...students]
+    .filter((s) => {
+      const textName = searchFirstLastName.toLowerCase();
+      const textDNI = searchDNI;
+      const textSchool = searchSchool.toLowerCase();
 
-    const matchName =
-      !textName ||
-      s.first_name?.toLowerCase().includes(textName) ||
-      s.last_name?.toLowerCase().includes(textName);
+      const matchName =
+        !textName ||
+        s.first_name?.toLowerCase().includes(textName) ||
+        s.last_name?.toLowerCase().includes(textName);
 
-    const matchDNI = !textDNI || s.dni?.toString().includes(textDNI);
+      const matchDNI = !textDNI || s.dni?.toString().includes(textDNI);
 
-    const matchSchool =
-      !textSchool || s.school?.toLowerCase().includes(textSchool);
+      const matchSchool =
+        !textSchool || s.school?.toLowerCase().includes(textSchool);
 
-    return matchName && matchDNI && matchSchool;
-  });
+      return matchName && matchDNI && matchSchool;
+    })
+    .sort(sortByLastName);
 
   let columns = [
     { header: "Apellido", accessor: "last_name" },
@@ -907,9 +907,7 @@ export function Students() {
                 <Select
                   label={idx === 0 ? "Docente" : ""}
                   value={row.teacher_id}
-                  onChange={(e) =>
-                    updateClassRow(idx, "plan_id", e.target.value)
-                  }
+                  onChange={(e) => handleTeacherChange(idx, e.target.value)}
                 >
                   <option value="">Seleccione un Docente</option>
                   {[...teachers]
@@ -929,7 +927,9 @@ export function Students() {
                 <Select
                   label={idx === 0 ? "Plan" : ""}
                   value={row.plan_id}
-                  onChange={(e) => handleTeacherChange(idx, e.target.value)}
+                  onChange={(e) =>
+                    updateClassRow(idx, "plan_id", e.target.value)
+                  }
                 >
                   <option value="">Seleccione un Plan</option>
                   {row.availablePlans?.map((p) => (
@@ -939,18 +939,6 @@ export function Students() {
                   ))}
                 </Select>
               </div>
-              {/* {!row.student_plan_id && (
-                <div className="flex items-end pb-1">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="text-red-500"
-                    onClick={() => removeClassRow(idx)}
-                  >
-                    ✕
-                  </Button>
-                </div>
-              )} */}
               <div className="flex flex-col">
                 <div className="h-6"></div>
 

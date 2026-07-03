@@ -61,12 +61,20 @@ import CloseSessionIcon from "./icons8-cerrar.png";
 import ViewIcon from "./icons8-ver-50.png";
 import YesIcon from "./icons8-check-mark-48.png";
 import NoIcon from "./icons8-cancel-48.png";
-import PlusSign from "./icons8-añadir-48.png";
+import PlusSignIcon from "./icons8-añadir-48.png";
+import TutorsIcon from "./icons8-padre-50.png";
+import TutorIcon from "./icons8-tutor-50.png";
+import TeachersIcon from "./icons8-profesor-48.png";
+import SubjectsIcon from "./icons8-libro-50.png";
 
 export {
+  TutorIcon,
+  TutorsIcon,
+  TeachersIcon,
+  SubjectsIcon,
   YesIcon,
   NoIcon,
-  PlusSign,
+  PlusSignIcon,
   ErrorHexaIcon,
   AlertHexaIcon,
   MoreDotIcon,
