@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import BasicTable from "../../components/tables/BasicTables/BasicTablesOne";
 import { planService } from "../../services/plan.service";
 import { PlanPriceService } from "../../services/PlanPrice.service";
@@ -7,6 +8,7 @@ import { PlanSubjectService } from "../../services/PlanSubject.service";
 import Button from "../../components/ui/Button";
 import Label from "../../components/form/Label";
 import Input from "../../components/form/Input";
+import Select from "../../components/form/Select";
 import { Modal } from "../../components/ui/Modal";
 import { isAdmin } from "../../utils/auth";
 import { PencilIcon, TrashBinIcon, SaveIcon, CreateIcon } from "../../icons";
@@ -16,16 +18,17 @@ export function Plans() {
   // ======================================================
   // DATOS
   // ======================================================
-  const [planPrices, setPlanPrices] = useState([]); // historial completo (todos los planes)
-  const [currentPlans, setCurrentPlans] = useState([]); // vista principal (planes actuales)
+  const [planPrices, setPlanPrices] = useState([]);
+  const [currentPlans, setCurrentPlans] = useState([]);
   const [plans, setPlans] = useState([]);
   const [subjects, setSubjects] = useState([]);
-  const [allPlanSubjects, setAllPlanSubjects] = useState([]);
+  const [allPlanSubjects, setAllPlanSubjects] = useState([]); // Nuevo estado para todas las relaciones plan-materia
 
   // ======================================================
   // FILTROS
   // ======================================================
   const [searchPlanName, setSearchPlanName] = useState("");
+  const [searchPrice, setSearchPrice] = useState("");
 
   // ======================================================
   // MODALES
@@ -33,13 +36,11 @@ export function Plans() {
   const [openCreateModal, setOpenCreateModal] = useState(false);
   const [openEditModal, setOpenEditModal] = useState(false);
   const [openDeleteModal, setOpenDeleteModal] = useState(false);
-  const [openHistoryModal, setOpenHistoryModal] = useState(false);
 
   // ======================================================
   // PLAN SELECCIONADO
   // ======================================================
-  const [selectedPlanPrice, setSelectedPlanPrice] = useState(null); // fila de precio (para editar/eliminar)
-  const [selectedPlanForHistory, setSelectedPlanForHistory] = useState(null); // plan (fila de la tabla principal)
+  const [selectedPlanPrice, setSelectedPlanPrice] = useState(null);
 
   // ======================================================
   // FORMULARIO DEL PLAN
@@ -53,6 +54,10 @@ export function Plans() {
   // ======================================================
   // ESTADO DEL COMPONENTE
   // ======================================================
+  const [searchParams] = useSearchParams();
+  const view = searchParams.get("type") || "current";
+  const isCurrentView = view === "current";
+  const isHistoryView = view === "history";
   const isPlanUser = !isAdmin();
 
   // ======================================================
@@ -84,15 +89,6 @@ export function Plans() {
     }
   };
 
-  const fetchCurrentPlans = async () => {
-    try {
-      const { data } = await planService.getCurrent();
-      setCurrentPlans(data?.data || []);
-    } catch {
-      setCurrentPlans([]);
-    }
-  };
-
   // ======================================================
   // RESETEO
   // ======================================================
@@ -117,12 +113,6 @@ export function Plans() {
     });
 
     return formatted;
-  };
-
-  const refreshAll = async () => {
-    await Promise.all([fetchPlanPrices(), fetchCurrentPlans()]);
-    const plansRes = await planService.getAll();
-    setPlans(plansRes.data.data || []);
   };
 
   // ======================================================
@@ -160,7 +150,9 @@ export function Plans() {
 
       alert("Plan creado con éxito");
       setOpenCreateModal(false);
-      await refreshAll();
+      fetchPlanPrices();
+      const plansRes = await planService.getAll();
+      setPlans(plansRes.data.data || []);
       resetForm();
     } catch (error) {
       const backendErrors = error.response?.data?.errors;
@@ -172,13 +164,6 @@ export function Plans() {
     }
   };
 
-  // Abre el modal de historial para un plan de la tabla principal
-  const handleOpenHistory = (planRow) => {
-    setSelectedPlanForHistory(planRow);
-    setOpenHistoryModal(true);
-  };
-
-  // Edita una fila puntual del historial (precio) de un plan
   const handleEdit = (planPrice) => {
     setSelectedPlanPrice(planPrice);
 
@@ -225,15 +210,18 @@ export function Plans() {
       );
       const currentSubjectIds = currentPlanSubjects.map((ps) => ps.subject_id);
 
+      // Materias a añadir
       const subjectsToAdd = selectedSubjects.filter(
         (subjectId) => !currentSubjectIds.includes(subjectId),
       );
 
-      const currentSelectedSubjectIds = new Set(selectedSubjects);
+      // Materias a eliminar
+      const currentSelectedSubjectIds = new Set(selectedSubjects); // Use a Set for efficient lookup
       const subjectsToRemove = currentSubjectIds.filter(
         (subjectId) => !currentSelectedSubjectIds.has(subjectId),
       );
 
+      // Ejecutar adiciones
       for (const subjectId of subjectsToAdd) {
         await PlanSubjectService.create({
           plan_id: selectedPlanPrice.plan_id,
@@ -241,6 +229,7 @@ export function Plans() {
         });
       }
 
+      // Ejecutar eliminaciones
       for (const subjectId of subjectsToRemove) {
         const planSubjectRelation = currentPlanSubjects.find(
           (ps) => ps.subject_id === subjectId,
@@ -251,12 +240,11 @@ export function Plans() {
 
       alert("Plan actualizado con éxito");
       setOpenEditModal(false);
-      await refreshAll();
-      const planSubjectsRes = await PlanSubjectService.getAll();
-      setAllPlanSubjects(planSubjectsRes.data.data || []);
+      fetchPlanPrices();
       resetForm();
     } catch (error) {
       const backendErrors = error.response?.data?.errors;
+      // Re-fetch all plan-subject relations after update to ensure state consistency
       const planSubjectsRes = await PlanSubjectService.getAll();
       setAllPlanSubjects(planSubjectsRes.data.data || []);
       if (backendErrors) {
@@ -280,8 +268,11 @@ export function Plans() {
       await planService.delete(selectedPlanPrice.plan_id);
 
       setOpenDeleteModal(false);
-      setOpenHistoryModal(false);
-      await refreshAll();
+      fetchPlanPrices();
+
+      // Actualizamos la lista de planes para que se refleje en los filtros/formularios
+      const plansRes = await planService.getAll();
+      setPlans(plansRes.data.data || []);
     } catch (error) {
       console.error(error.response?.data || error.message);
       alert(error.response?.data?.message || "Error al eliminar");
@@ -292,9 +283,21 @@ export function Plans() {
   // USEEFFECTS
   // ======================================================
   useEffect(() => {
-    fetchCurrentPlans();
-    fetchPlanPrices();
-  }, []);
+    const loadData = async () => {
+      try {
+        if (isCurrentView) {
+          const { data } = await planService.getCurrent();
+          setCurrentPlans(data?.data || []);
+        } else {
+          await fetchPlanPrices();
+        }
+      } catch (error) {
+        console.error(error);
+      }
+    };
+
+    loadData();
+  }, [view]);
 
   useEffect(() => {
     const fetchFilters = async () => {
@@ -305,6 +308,7 @@ export function Plans() {
         const subjectsRes = await subjectService.getAll();
         setSubjects(subjectsRes.data.data || []);
 
+        // Cargar todas las relaciones plan-materia
         const planSubjectsRes = await PlanSubjectService.getAll();
         setAllPlanSubjects(planSubjectsRes.data.data || []);
       } catch (error) {
@@ -1092,24 +1096,37 @@ export function Plans() {
     {
       header: "Historial",
       render: (row) => (
-        <Button
-          title="Ver historial"
-          size="sm"
-          variant="outline"
-          onClick={() => handleOpenHistory(row)}
-          className={buttonClass}
-        >
-          Ver historial
-        </Button>
+        <div className="flex gap-2">
+          <Button
+            title="Editar"
+            size="sm"
+            onClick={() => handleEdit(row)}
+            className={buttonClass}
+          >
+            <PencilIcon className="w-5 h-5" />
+          </Button>
+
+          <Button
+            title="Eliminar"
+            size="sm"
+            variant="outline"
+            onClick={() => handleDelete(row)}
+            className={buttonClass}
+          >
+            <TrashBinIcon className="w-5 h-5" />
+          </Button>
+        </div>
       ),
-    },
-  ];
+    });
+  }
+
+  const showCreateButtons = isAdmin() && isHistoryView;
 
   const tableTitle = (
     <div className="flex justify-between items-center">
-      <span>Planes</span>
+      <span>{isCurrentView ? "Planes actuales" : "Historial de planes"}</span>
 
-      {isAdmin() && (
+      {showCreateButtons && (
         <Button
           title="Crear Plan"
           size="sm"
@@ -1153,6 +1170,15 @@ export function Plans() {
           onChange={(e) => setSearchPlanName(e.target.value)}
           className="p-2 border border-gray-300 rounded w-60"
         />
+
+        {isHistoryView && (
+          <Input
+            placeholder="Buscar por precio"
+            value={searchPrice}
+            onChange={(e) => setSearchPrice(e.target.value)}
+            className="p-2 border border-gray-300 rounded w-40"
+          />
+        )}
       </div>
 
       <BasicTable
@@ -1161,7 +1187,14 @@ export function Plans() {
         data={filteredCurrentPlans}
       />
 
-      {/* ================== MODAL: CREAR PLAN ================== */}
+      {isHistoryView && showCreateButtons && (
+        <div className="mt-8">
+          <Button onClick={openCreate} className={buttonClass}>
+            Crear Plan
+          </Button>
+        </div>
+      )}
+
       <Modal isOpen={openCreateModal} onClose={() => setOpenCreateModal(false)}>
         <h2 className="text-xl font-bold mb-8">Crear Plan</h2>
 
@@ -1243,6 +1276,9 @@ export function Plans() {
         </div>
 
         <div className="flex justify-end gap-4 mt-10">
+          {/* <Button variant="outline" onClick={() => setOpenCreateModal(false)}>
+            Cancelar
+          </Button> */}
           <Button
             title="Guardar"
             size="icon"
@@ -1276,83 +1312,6 @@ export function Plans() {
         </div>
       </Modal>
 
-      {/* ================== MODAL: HISTORIAL DE PRECIOS DEL PLAN ================== */}
-      <Modal
-        isOpen={openHistoryModal}
-        onClose={() => setOpenHistoryModal(false)}
-      >
-        <h2 className="text-xl font-bold mb-6">
-          Historial de precios{" "}
-          {selectedPlanForHistory ? `- ${selectedPlanForHistory.name}` : ""}
-        </h2>
-
-        {historyForSelectedPlan.length === 0 ? (
-          <p className="text-gray-400 text-sm">
-            Este plan no tiene historial de precios registrado.
-          </p>
-        ) : (
-          <div className="max-h-96 overflow-y-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="text-left border-b border-gray-200">
-                  <th className="py-2 pr-2">Precio</th>
-                  <th className="py-2 pr-2">Fecha Inicio</th>
-                  <th className="py-2 pr-2">Fecha Fin</th>
-                  {!isPlanUser && <th className="py-2 pr-2">Acciones</th>}
-                </tr>
-              </thead>
-              <tbody>
-                {historyForSelectedPlan.map((pp) => (
-                  <tr key={pp.id} className="border-b border-gray-100">
-                    <td className="py-2 pr-2">{pp.price}</td>
-                    <td className="py-2 pr-2">
-                      {pp.start_date?.split("T")[0] || "-"}
-                    </td>
-                    <td className="py-2 pr-2">
-                      {pp.end_date?.split("T")[0] || "-"}
-                    </td>
-                    {!isPlanUser && (
-                      <td className="py-2 pr-2">
-                        <div className="flex gap-2">
-                          <Button
-                            title="Editar"
-                            size="sm"
-                            onClick={() => handleEdit(pp)}
-                            className={buttonClass}
-                          >
-                            <PencilIcon className="w-4 h-4" />
-                          </Button>
-                          <Button
-                            title="Eliminar"
-                            size="sm"
-                            variant="outline"
-                            onClick={() => handleDelete(pp)}
-                            className={buttonClass}
-                          >
-                            <TrashBinIcon className="w-4 h-4" />
-                          </Button>
-                        </div>
-                      </td>
-                    )}
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-
-        <div className="flex justify-end mt-8">
-          <Button
-            variant="outline"
-            onClick={() => setOpenHistoryModal(false)}
-            className={buttonClass}
-          >
-            Cerrar
-          </Button>
-        </div>
-      </Modal>
-
-      {/* ================== MODAL: EDITAR PRECIO ================== */}
       <Modal isOpen={openEditModal} onClose={() => setOpenEditModal(false)}>
         <h2 className="text-xl font-bold mb-8">Editar Plan</h2>
 
@@ -1432,6 +1391,9 @@ export function Plans() {
         </div>
 
         <div className="flex justify-end gap-4 mt-10">
+          {/* <Button variant="outline" onClick={() => setOpenEditModal(false)}>
+            Cancelar
+          </Button> */}
           <Button
             className="
               cursor-pointer
@@ -1465,7 +1427,6 @@ export function Plans() {
         </div>
       </Modal>
 
-      {/* ================== MODAL: ELIMINAR ================== */}
       <Modal isOpen={openDeleteModal} onClose={() => setOpenDeleteModal(false)}>
         <h2 className="text-lg font-semibold mb-4">¿Eliminar Plan?</h2>
 
