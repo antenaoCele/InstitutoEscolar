@@ -19,6 +19,7 @@ import {
   MoreIcon,
   CreateIcon,
 } from "../../icons";
+import { sortByProperty } from "../../utils/sort";
 
 export function Plans() {
   // ======================================================
@@ -328,17 +329,22 @@ export function Plans() {
   // ======================================================
   // DATOS DERIVADOS
   // ======================================================
-  const filteredPlans = planPrices.filter((p) => {
-    const textPlan = searchPlanName.toLowerCase();
-    const textPrice = searchPrice;
 
-    const matchPlan =
-      !textPlan || p.plan_name?.toLowerCase().includes(textPlan);
+  const filteredPlans = [...planPrices]
+    .filter((p) => {
+      const textPlan = searchPlanName.toLowerCase();
+      const textPrice = searchPrice;
 
-    const matchPrice = !textPrice || p.price?.toString().includes(textPrice);
+      const matchPlan =
+        !textPlan || p.plan_name?.toLowerCase().includes(textPlan);
 
-    return matchPlan && matchPrice;
-  });
+      const matchPrice = !textPrice || p.price?.toString().includes(textPrice);
+
+      return matchPlan && matchPrice;
+    })
+    .sort(sortByProperty("plan_name"));
+
+  const sortedCurrentPlans = [...currentPlans].sort(sortByProperty("name"));
 
   let columns = [];
 
@@ -464,7 +470,7 @@ export function Plans() {
       <BasicTable
         title={tableTitle}
         columns={columns}
-        data={isCurrentView ? currentPlans : filteredPlans}
+        data={isCurrentView ? sortedCurrentPlans : filteredPlans}
       />
 
       {isHistoryView && showCreateButtons && (

@@ -17,6 +17,7 @@ import {
   MoreIcon,
   CreateIcon,
 } from "../../icons";
+import { sortByProperty, sortByPersonName } from "../../utils/sort";
 
 export function Tutors() {
   const [tutors, setTutors] = useState([]);
@@ -104,15 +105,7 @@ export function Tutors() {
         new Map((res.data.data || []).map((s) => [s.id, s])).values(),
       );
 
-      setStudents(
-        uniqueStudents.sort((a, b) =>
-          `${a.last_name} ${a.first_name}`.localeCompare(
-            `${b.last_name} ${b.first_name}`,
-            "es",
-            { sensitivity: "base" },
-          ),
-        ),
-      );
+      setStudents([...uniqueStudents].sort(sortByPersonName));
     } catch (error) {
       console.error(error);
     }
@@ -126,20 +119,22 @@ export function Tutors() {
     fetchStudents();
   }, []);
 
-  const filteredTutors = tutors.filter((t) => {
-    const textName = searchFirstLastName.toLowerCase();
+  const filteredTutors = [...tutors]
+    .filter((t) => {
+      const textName = searchFirstLastName.toLowerCase();
 
-    const matchName =
-      !textName ||
-      t.first_name?.toLowerCase().includes(textName) ||
-      t.last_name?.toLowerCase().includes(textName);
+      const matchName =
+        !textName ||
+        t.first_name?.toLowerCase().includes(textName) ||
+        t.last_name?.toLowerCase().includes(textName);
 
-    const textDNI = searchDNI;
+      const textDNI = searchDNI;
 
-    const matchDNI = !textDNI || t.dni?.toString().includes(textDNI);
+      const matchDNI = !textDNI || t.dni?.toString().includes(textDNI);
 
-    return matchName && matchDNI;
-  });
+      return matchName && matchDNI;
+    })
+    .sort(sortByPersonName);
 
   const resetForm = () => {
     setFirstName("");
@@ -336,12 +331,12 @@ export function Tutors() {
         return (
           <div
             className={`
-          h-20
-          overflow-y-auto
-          flex
-          flex-col
-          ${hasScroll ? "justify-start" : "justify-center"}
-        `}
+            h-20
+            overflow-y-auto
+            flex
+            flex-col
+            ${hasScroll ? "justify-start" : "justify-center"}
+          `}
           >
             <div className="flex flex-col gap-1">
               {row.student_names?.length ? (
@@ -402,29 +397,29 @@ export function Tutors() {
           size="sm"
           onClick={openCreate}
           className="
-              cursor-pointer
-              w-12
-              h-12
-              rounded
-              bg-[#0cc0df]
-              text-white
-              flex
-              items-center
-              justify-center
-              transition
-              transform
-              hover:scale-105
-            "
+            cursor-pointer
+            w-12
+            h-12
+            rounded
+            bg-[#0cc0df]
+            text-white
+            flex
+            items-center
+            justify-center
+            transition
+            transform
+            hover:scale-105
+          "
         >
           <img
             src={CreateIcon}
             alt="More"
             className="
-                w-5
-                h-5
-                brightness-0
-                invert
-              "
+              w-5
+              h-5
+              brightness-0
+              invert
+            "
           />
         </Button>
       )}
@@ -585,29 +580,29 @@ export function Tutors() {
             size="icon"
             onClick={handleCreate}
             className="
-                        cursor-pointer
-                        w-12
-                        h-12
-                        rounded
-                        bg-[#0cc0df]
-                        text-white
-                        flex
-                        items-center
-                        justify-center
-                        transition
-                        transform
-                        hover:scale-105
-                      "
+              cursor-pointer
+              w-12
+              h-12
+              rounded
+              bg-[#0cc0df]
+              text-white
+              flex
+              items-center
+              justify-center
+              transition
+              transform
+              hover:scale-105
+            "
           >
             <img
               src={SaveIcon}
               alt="Guardar"
               className="
-                          w-5
-                          h-5
-                          brightness-0
-                          invert
-                        "
+                w-5
+                h-5
+                brightness-0
+                invert
+              "
             />
           </Button>
         </div>
@@ -678,39 +673,27 @@ export function Tutors() {
           <Label className="font-semibold mb-2">Alumno</Label>
 
           <div className="border border-gray-300 rounded p-3 max-h-40 overflow-y-auto">
-            {[...students]
-              .sort((a, b) => {
-                const nameA = `${a.last_name} ${a.first_name}`;
-                const nameB = `${b.last_name} ${b.first_name}`;
-
-                return nameA.localeCompare(nameB, "es", {
-                  sensitivity: "base",
-                });
-              })
-              .map((student) => (
-                <label
-                  key={student.id}
-                  className="flex items-center gap-2 mb-2"
-                >
-                  <input
-                    type="checkbox"
-                    checked={selectedStudentIds.includes(student.id)}
-                    onChange={(e) => {
-                      if (e.target.checked) {
-                        setSelectedStudentIds([
-                          ...selectedStudentIds,
-                          student.id,
-                        ]);
-                      } else {
-                        setSelectedStudentIds(
-                          selectedStudentIds.filter((id) => id !== student.id),
-                        );
-                      }
-                    }}
-                  />
-                  {student.last_name}, {student.first_name}
-                </label>
-              ))}
+            {students.map((student) => (
+              <label key={student.id} className="flex items-center gap-2 mb-2">
+                <input
+                  type="checkbox"
+                  checked={selectedStudentIds.includes(student.id)}
+                  onChange={(e) => {
+                    if (e.target.checked) {
+                      setSelectedStudentIds([
+                        ...selectedStudentIds,
+                        student.id,
+                      ]);
+                    } else {
+                      setSelectedStudentIds(
+                        selectedStudentIds.filter((id) => id !== student.id),
+                      );
+                    }
+                  }}
+                />
+                {student.last_name}, {student.first_name}
+              </label>
+            ))}
           </div>
 
           {errorsEdit.student_id && (

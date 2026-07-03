@@ -18,10 +18,9 @@ import {
   PlusButton,
   YesButton,
   NoButton,
-  SaveButton,
   AddButton,
 } from "../../components/ui/ActionButtons";
-import { sortByLastName } from "../../utils/sort";
+import { sortByProperty, sortByPersonName } from "../../utils/sort";
 
 export function Students() {
   // ======================================================
@@ -255,8 +254,8 @@ export function Students() {
           student_plan_id: p.student_plan_id,
           start_date: p.start_date?.split("T")[0],
 
-          availablePlans: (response.data.data || []).sort((a, b) =>
-            a.name.localeCompare(b.name),
+          availablePlans: (response.data.data || []).sort(
+            sortByProperty("name"),
           ),
         };
       }),
@@ -443,8 +442,8 @@ export function Students() {
 
     const response = await teacherService.getAvailablePlans(teacherId);
 
-    const availablePlans = (response.data.data || []).sort((a, b) =>
-      a.name.localeCompare(b.name),
+    const availablePlans = (response.data.data || []).sort(
+      sortByProperty("name"),
     );
 
     setFormClasses((prev) =>
@@ -500,7 +499,7 @@ export function Students() {
 
       return matchName && matchDNI && matchSchool;
     })
-    .sort(sortByLastName);
+    .sort(sortByPersonName);
 
   let columns = [
     { header: "Apellido", accessor: "last_name" },
@@ -757,17 +756,11 @@ export function Students() {
                   onChange={(e) => handleTeacherChange(idx, e.target.value)}
                 >
                   <option value="">Seleccione un Docente</option>
-                  {[...teachers]
-                    .sort(
-                      (a, b) =>
-                        a.last_name.localeCompare(b.last_name) ||
-                        a.first_name.localeCompare(b.first_name),
-                    )
-                    .map((t) => (
-                      <option key={t.id} value={t.id}>
-                        {t.last_name}, {t.first_name}
-                      </option>
-                    ))}
+                  {[...teachers].sort(sortByPersonName).map((t) => (
+                    <option key={t.id} value={t.id}>
+                      {t.last_name}, {t.first_name}
+                    </option>
+                  ))}
                 </Select>
               </div>
               <div className="flex-1">
@@ -910,17 +903,11 @@ export function Students() {
                   onChange={(e) => handleTeacherChange(idx, e.target.value)}
                 >
                   <option value="">Seleccione un Docente</option>
-                  {[...teachers]
-                    .sort(
-                      (a, b) =>
-                        a.last_name.localeCompare(b.last_name) ||
-                        a.first_name.localeCompare(b.first_name),
-                    )
-                    .map((t) => (
-                      <option key={t.id} value={t.id}>
-                        {t.last_name}, {t.first_name}
-                      </option>
-                    ))}
+                  {[...teachers].sort(sortByPersonName).map((t) => (
+                    <option key={t.id} value={t.id}>
+                      {t.last_name}, {t.first_name}
+                    </option>
+                  ))}
                 </Select>
               </div>
               <div className="flex-1">
