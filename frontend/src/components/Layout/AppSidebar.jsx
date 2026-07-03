@@ -31,12 +31,8 @@ const navItems = [
     name: "Alumnos",
     subItems: [
       {
-        name: "Total de alumnos",
-        path: "/students?status=all",
-      },
-      {
-        name: "Alumnos activos",
-        path: "/students?status=active",
+        name: "Estudiantes",
+        path: "/students",
       },
       {
         name: "Pagos de alumnos",
@@ -70,7 +66,7 @@ const navItems = [
   },
   {
     icon: <CalenderIcon />,
-    name: "Horarios",
+    name: "Calendario",
     subItems: [
       {
         name: "Calendario Semanal",
