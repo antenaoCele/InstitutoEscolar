@@ -15,6 +15,14 @@ export const teacherService = {
 
   getAvailablePlans: (teacherId) => api.get(`/teachers/${teacherId}/plans`),
 
+  getTeachersByPlan(planId) {
+    return api.get("/teachers", {
+      params: {
+        plan_id: planId,
+      },
+    });
+  },
+
   create: (data) => api.post("/teachers", data),
 
   update: (id, data) => api.put(`/teachers/${id}`, data),
