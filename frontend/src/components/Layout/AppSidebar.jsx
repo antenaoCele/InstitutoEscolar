@@ -74,16 +74,7 @@ const navItems = [
       </SidebarIcon>
     ),
     name: "Planes",
-    subItems: [
-      {
-        name: "Planes actuales",
-        path: "/plans?type=current",
-      },
-      {
-        name: "Historial de planes",
-        path: "/plans?type=history",
-      },
-    ],
+    path: "/plans",
   },
   {
     icon: <CalenderIcon />,
