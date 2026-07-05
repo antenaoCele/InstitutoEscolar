@@ -9,8 +9,17 @@ import Label from "../../components/form/Label";
 import Input from "../../components/form/Input";
 import { Modal } from "../../components/ui/Modal";
 import { isAdmin } from "../../utils/auth";
-import { PencilIcon, TrashBinIcon, SaveIcon, CreateIcon } from "../../icons";
+import { PencilIcon, SaveIcon, CreateIcon } from "../../icons";
 import { sortByProperty } from "../../utils/sort";
+import {
+  ViewButton,
+  EditButton,
+  DeleteButton,
+  PlusButton,
+  YesButton,
+  NoButton,
+  AddButton,
+} from "../../components/ui/ActionButtons";
 
 export function Plans() {
   // ======================================================
@@ -32,14 +41,13 @@ export function Plans() {
   // ======================================================
   const [openCreateModal, setOpenCreateModal] = useState(false);
   const [openEditModal, setOpenEditModal] = useState(false);
-  const [openDeleteModal, setOpenDeleteModal] = useState(false);
   const [openHistoryModal, setOpenHistoryModal] = useState(false);
 
   // ======================================================
   // PLAN SELECCIONADO
   // ======================================================
-  const [selectedPlanPrice, setSelectedPlanPrice] = useState(null); // fila de precio (para editar/eliminar)
-  const [selectedPlanForHistory, setSelectedPlanForHistory] = useState(null); // plan (fila de la tabla principal)
+  const [selectedPlanPrice, setSelectedPlanPrice] = useState(null); // precio activo que se está reemplazando (editar)
+  const [selectedPlanForHistory, setSelectedPlanForHistory] = useState(null); // plan (fila de la tabla principal) -> ver historial
 
   // ======================================================
   // FORMULARIO DEL PLAN
@@ -104,6 +112,7 @@ export function Plans() {
     setSelectedSubjects([]);
     setErrorsCreate({});
     setErrorsEdit({});
+    setSelectedPlanPrice(null);
   };
 
   // ======================================================
@@ -117,6 +126,41 @@ export function Plans() {
     });
 
     return formatted;
+  };
+
+  // Devuelve la fecha de hoy en formato "YYYY-MM-DD"
+  const getTodayDateString = () => {
+    const today = new Date();
+    const year = today.getFullYear();
+    const month = String(today.getMonth() + 1).padStart(2, "0");
+    const day = String(today.getDate()).padStart(2, "0");
+    return `${year}-${month}-${day}`;
+  };
+
+  // Devuelve la fecha de ayer en formato "YYYY-MM-DD"
+  // (usada como fecha de cierre del precio anterior, para no solapar
+  // con el nuevo precio que arranca hoy)
+  const getYesterdayDateString = () => {
+    const yesterday = new Date();
+    yesterday.setDate(yesterday.getDate() - 1);
+    const year = yesterday.getFullYear();
+    const month = String(yesterday.getMonth() + 1).padStart(2, "0");
+    const day = String(yesterday.getDate()).padStart(2, "0");
+    return `${year}-${month}-${day}`;
+  };
+
+  // Devuelve el precio actualmente vigente de un plan (sin fecha de baja,
+  // o en su defecto el de fecha de inicio más reciente)
+  const getActivePlanPrice = (planId) => {
+    const pricesForPlan = planPrices.filter((pp) => pp.plan_id === planId);
+    if (pricesForPlan.length === 0) return null;
+
+    const activeWithoutEndDate = pricesForPlan.find((pp) => !pp.end_date);
+    if (activeWithoutEndDate) return activeWithoutEndDate;
+
+    return [...pricesForPlan].sort(
+      (a, b) => new Date(b.start_date) - new Date(a.start_date),
+    )[0];
   };
 
   const refreshAll = async () => {
@@ -172,26 +216,18 @@ export function Plans() {
     }
   };
 
-  // Abre el modal de historial para un plan de la tabla principal
+  // Abre el modal de historial (solo lectura) para un plan de la tabla principal
   const handleOpenHistory = (planRow) => {
     setSelectedPlanForHistory(planRow);
     setOpenHistoryModal(true);
   };
 
-  // Edita una fila puntual del historial (precio) de un plan
+  // Carga el formulario de edición con el precio recibido
   const handleEdit = (planPrice) => {
     setSelectedPlanPrice(planPrice);
 
     setSelectedPlan(planPrice.plan_name || "");
-
     setPrice(planPrice.price ? String(planPrice.price) : "");
-
-    setStartDate(
-      planPrice.start_date ? planPrice.start_date.split("T")[0] : "",
-    );
-
-    // SIEMPRE VACÍA
-    setEndDate("");
 
     const subjectsForThisPlan = allPlanSubjects
       .filter((ps) => ps.plan_id === planPrice.plan_id)
@@ -203,20 +239,48 @@ export function Plans() {
     setOpenEditModal(true);
   };
 
+  // Editar desde la tabla principal: busca el precio vigente del plan y abre el modal
+  const handleEditPlan = (planRow) => {
+    const activePrice = getActivePlanPrice(planRow.id);
+
+    if (!activePrice) {
+      alert("Este plan no tiene un precio activo registrado.");
+      return;
+    }
+
+    handleEdit({
+      ...activePrice,
+      plan_name: activePrice.plan_name || planRow.name,
+    });
+  };
+
   const handleUpdate = async () => {
     try {
       setErrorsEdit({});
+
+      const today = getTodayDateString();
+      const yesterday = getYesterdayDateString();
 
       // Actualizar nombre del plan si cambió
       await planService.update(selectedPlanPrice.plan_id, {
         name: selectedPlan,
       });
 
+      // Dar de baja el precio vigente: se le asigna fecha de fin = ayer,
+      // para que no se superponga con el nuevo precio que arranca hoy
       await PlanPriceService.update(selectedPlanPrice.id, {
         plan_id: selectedPlanPrice.plan_id,
+        price: selectedPlanPrice.price,
+        start_date: selectedPlanPrice.start_date?.split("T")[0] || null,
+        end_date: yesterday,
+      });
+
+      // Dar de alta el nuevo precio, vigente desde hoy
+      await PlanPriceService.create({
+        plan_id: selectedPlanPrice.plan_id,
         price: Number(price),
-        start_date: startDate || null,
-        end_date: endDate.trim() || null,
+        start_date: today,
+        end_date: null,
       });
 
       // --- Lógica de sincronización de materias ---
@@ -264,27 +328,6 @@ export function Plans() {
       } else {
         alert(error.response?.data?.message || "Error al actualizar el plan");
       }
-    }
-  };
-
-  const handleDelete = (planPrice) => {
-    setSelectedPlanPrice(planPrice);
-    setOpenDeleteModal(true);
-  };
-
-  const confirmDelete = async () => {
-    try {
-      // Primero eliminamos el precio del plan
-      await PlanPriceService.delete(selectedPlanPrice.id);
-      // Luego eliminamos el plan base asociado
-      await planService.delete(selectedPlanPrice.plan_id);
-
-      setOpenDeleteModal(false);
-      setOpenHistoryModal(false);
-      await refreshAll();
-    } catch (error) {
-      console.error(error.response?.data || error.message);
-      alert(error.response?.data?.message || "Error al eliminar");
     }
   };
 
@@ -345,20 +388,21 @@ export function Plans() {
       header: "Precio Actual",
       accessor: "current_price",
     },
-    {
-      header: "Historial",
-      render: (row) => (
-        <Button
-          title="Ver historial"
-          size="sm"
-          variant="outline"
-          onClick={() => handleOpenHistory(row)}
-          className={buttonClass}
-        >
-          Ver historial
-        </Button>
-      ),
-    },
+
+    ...(!isPlanUser
+      ? [
+          {
+            header: "Historial",
+            render: (row) => (
+              <ViewButton onClick={() => handleOpenHistory(row)} />
+            ),
+          },
+          {
+            header: "Editar",
+            render: (row) => <EditButton onClick={() => handleEditPlan(row)} />,
+          },
+        ]
+      : []),
   ];
 
   const tableTitle = (
@@ -532,7 +576,7 @@ export function Plans() {
         </div>
       </Modal>
 
-      {/* ================== MODAL: HISTORIAL DE PRECIOS DEL PLAN ================== */}
+      {/* ================== MODAL: HISTORIAL DE PRECIOS DEL PLAN (SOLO LECTURA) ================== */}
       <Modal
         isOpen={openHistoryModal}
         onClose={() => setOpenHistoryModal(false)}
@@ -554,7 +598,6 @@ export function Plans() {
                   <th className="py-2 pr-2">Precio</th>
                   <th className="py-2 pr-2">Fecha Inicio</th>
                   <th className="py-2 pr-2">Fecha Fin</th>
-                  {!isPlanUser && <th className="py-2 pr-2">Acciones</th>}
                 </tr>
               </thead>
               <tbody>
@@ -567,29 +610,6 @@ export function Plans() {
                     <td className="py-2 pr-2">
                       {pp.end_date?.split("T")[0] || "-"}
                     </td>
-                    {!isPlanUser && (
-                      <td className="py-2 pr-2">
-                        <div className="flex gap-2">
-                          <Button
-                            title="Editar"
-                            size="sm"
-                            onClick={() => handleEdit(pp)}
-                            className={buttonClass}
-                          >
-                            <PencilIcon className="w-4 h-4" />
-                          </Button>
-                          <Button
-                            title="Eliminar"
-                            size="sm"
-                            variant="outline"
-                            onClick={() => handleDelete(pp)}
-                            className={buttonClass}
-                          >
-                            <TrashBinIcon className="w-4 h-4" />
-                          </Button>
-                        </div>
-                      </td>
-                    )}
                   </tr>
                 ))}
               </tbody>
@@ -608,8 +628,14 @@ export function Plans() {
         </div>
       </Modal>
 
-      {/* ================== MODAL: EDITAR PRECIO ================== */}
-      <Modal isOpen={openEditModal} onClose={() => setOpenEditModal(false)}>
+      {/* ================== MODAL: EDITAR PLAN (genera un nuevo precio vigente) ================== */}
+      <Modal
+        isOpen={openEditModal}
+        onClose={() => {
+          setOpenEditModal(false);
+          resetForm();
+        }}
+      >
         <h2 className="text-xl font-bold mb-8">Editar Plan</h2>
 
         <div className="flex flex-col mb-6">
@@ -658,33 +684,18 @@ export function Plans() {
         </div>
 
         <div className="flex flex-col mb-6">
-          <Label className="font-semibold mb-2">Precio</Label>
+          <Label className="font-semibold mb-2">Precio Nuevo</Label>
           <Input
             type="number"
             className={inputClass(errorsEdit.price)}
             value={price}
             onChange={(e) => setPrice(e.target.value)}
           />
-        </div>
-
-        <div className="flex flex-col mb-6">
-          <Label className="font-semibold mb-2">Fecha Inicio</Label>
-          <Input
-            type="date"
-            className={inputClass(errorsEdit.start_date)}
-            value={startDate}
-            onChange={(e) => setStartDate(e.target.value)}
-          />
-        </div>
-
-        <div className="flex flex-col mb-6">
-          <Label className="font-semibold mb-2">Fecha Fin (Opcional)</Label>
-          <Input
-            type="date"
-            className={inputClass(errorsEdit.end_date)}
-            value={endDate}
-            onChange={(e) => setEndDate(e.target.value)}
-          />
+          <p className="text-gray-400 text-xs mt-1">
+            El precio actual se dará de baja automáticamente con la fecha de
+            ayer, y este nuevo precio quedará vigente desde hoy hasta la próxima
+            edición.
+          </p>
         </div>
 
         <div className="flex justify-end gap-4 mt-10">
@@ -717,25 +728,6 @@ export function Plans() {
                 invert
               "
             />
-          </Button>
-        </div>
-      </Modal>
-
-      {/* ================== MODAL: ELIMINAR ================== */}
-      <Modal isOpen={openDeleteModal} onClose={() => setOpenDeleteModal(false)}>
-        <h2 className="text-lg font-semibold mb-4">¿Eliminar Plan?</h2>
-
-        <div className="flex justify-end gap-2">
-          <Button
-            variant="outline"
-            onClick={() => setOpenDeleteModal(false)}
-            className={buttonClass}
-          >
-            No
-          </Button>
-
-          <Button onClick={confirmDelete} className={buttonClass}>
-            Sí
           </Button>
         </div>
       </Modal>
