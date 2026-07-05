@@ -742,7 +742,7 @@ export function Students() {
         {/* Gestión Dinámica de Clases */}
         <div className="mt-6 border-t pt-4">
           <div className="flex justify-between items-center mb-4">
-            <h3 className="font-semibold text-gray-700">Clases Asignadas</h3>
+            <h2 className="text-xl font-bold mb-8">Asignar Clases</h2>
             <AddButton title="Añadir Clase" size="sm" onClick={addClassRow} />
           </div>
           {formClasses.map((row, idx) => (
@@ -890,7 +890,7 @@ export function Students() {
         {/* Gestión Dinámica de Clases en Edición */}
         <div className="mt-6 border-t pt-4">
           <div className="flex justify-between items-center mb-4">
-            <h3 className="font-semibold text-gray-700">Gestionar Clases</h3>
+            <h2 className="text-xl font-bold mb-8">Asignar Clases</h2>
             <AddButton title="Añadir Clase" size="sm" onClick={addClassRow} />
           </div>
           {formClasses.map((row, idx) => (
