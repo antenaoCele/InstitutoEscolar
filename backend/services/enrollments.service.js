@@ -5,17 +5,16 @@ export async function existingEnrollment(
   paymentDate,
   excludeId = null,
 ) {
-  const dateObj = new Date(paymentDate);
-  const yearMonth = dateObj.toISOString().slice(0, 7);
+  const year = new Date(paymentDate).getFullYear();
 
   let sql = `
     SELECT id
     FROM enrollments
     WHERE student_id = ?
-    AND DATE_FORMAT(payment_date, '%Y-%m') = ?
+    AND YEAR(payment_date) = ?
   `;
 
-  const params = [studentId, yearMonth];
+  const params = [studentId, year];
 
   if (excludeId) {
     sql += " AND id != ?";
@@ -23,63 +22,16 @@ export async function existingEnrollment(
   }
 
   const [rows] = await db.execute(sql, params);
-
   return rows.length > 0;
 }
 
 export async function needsEnrollment(studentId, paymentDate) {
-  // Última inscripción
-  const [enrollmentRows] = await db.execute(
-    `
-    SELECT MAX(payment_date) AS last_enrollment
-    FROM enrollments
-    WHERE student_id = ?
-    `,
-    [studentId],
+  const year = new Date(paymentDate).getFullYear();
+
+  const [rows] = await db.execute(
+    `SELECT id FROM enrollments WHERE student_id = ? AND YEAR(payment_date) = ?`,
+    [studentId, year],
   );
 
-  const lastEnrollment = enrollmentRows[0].last_enrollment;
-
-  // Nunca se inscribió
-  if (!lastEnrollment) {
-    return true;
-  }
-
-  // Último pago realizado
-  const [paymentRows] = await db.execute(
-    `
-    SELECT MAX(p.payment_date) AS last_payment
-    FROM payments p
-    JOIN student_plans sp
-      ON p.student_plan_id = sp.id
-    WHERE sp.student_id = ?
-    `,
-    [studentId],
-  );
-
-  const lastPayment = paymentRows[0].last_payment;
-
-  // Se acaba de inscribir y todavía no pagó ninguna cuota
-  if (!lastPayment) {
-    return false;
-  }
-
-  const previous = new Date(lastPayment);
-  const current = new Date(paymentDate);
-
-  const monthDiff =
-    (current.getFullYear() - previous.getFullYear()) * 12 +
-    (current.getMonth() - previous.getMonth());
-
-  // Cambio de año
-  if (current.getFullYear() > previous.getFullYear()) {
-    return true;
-  }
-
-  // Dejó pasar un mes completo
-  if (monthDiff >= 2) {
-    return true;
-  }
-
-  return false;
+  return rows.length === 0;
 }

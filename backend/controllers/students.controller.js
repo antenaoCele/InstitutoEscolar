@@ -485,4 +485,25 @@ export const studentsController = {
       });
     }
   },
+
+  closeYear: async (req, res) => {
+    try {
+      const year = req.body.year || new Date().getFullYear();
+
+      const [result] = await db.execute(
+        `UPDATE student_plans SET end_date = ? WHERE end_date IS NULL`,
+        [`${year}-12-31`],
+      );
+
+      res.json({
+        success: true,
+        message: `Se dieron de baja ${result.affectedRows} planes activos.`,
+      });
+    } catch (error) {
+      console.error(error);
+      res
+        .status(500)
+        .json({ success: false, message: "Error al cerrar el año" });
+    }
+  },
 };

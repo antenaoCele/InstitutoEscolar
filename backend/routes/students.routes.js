@@ -52,6 +52,13 @@ router.post(
   studentsController.createWithPlan,
 );
 
+router.post(
+  "/close-year",
+  authentication,
+  authorization("ADMIN"),
+  studentsController.closeYear,
+);
+
 router.put(
   "/:id",
   authentication,

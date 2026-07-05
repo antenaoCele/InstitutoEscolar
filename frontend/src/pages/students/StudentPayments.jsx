@@ -21,16 +21,40 @@ export default function StudentPayments() {
   const [selectedStudent, setSelectedStudent] = useState("");
   const [selectedStudentPlan, setSelectedStudentPlan] = useState("");
   const [paymentMethod, setPaymentMethod] = useState("");
-  const [paymentDate, setPaymentDate] = useState(
-    new Date().toISOString().split("T")[0],
-  );
-  const [enrollmentStudent, setEnrollmentStudent] = useState("");
+
+  // Fecha local (evita el corrimiento de día por UTC-3 de toISOString)
+  const getLocalDateString = () => {
+    const d = new Date();
+    const offset = d.getTimezoneOffset();
+    return new Date(d.getTime() - offset * 60000).toISOString().split("T")[0];
+  };
+
+  const [paymentDate, setPaymentDate] = useState(getLocalDateString());
+
+  // Inscripción: ahora se pueden tildar varios alumnos (hermanos)
+  const [enrollmentStudents, setEnrollmentStudents] = useState([]);
   const [enrollmentAmount, setEnrollmentAmount] = useState("");
-  const [enrollmentDate, setEnrollmentDate] = useState(
-    new Date().toISOString().split("T")[0],
-  );
+  const [enrollmentDate, setEnrollmentDate] = useState(getLocalDateString());
+
+  // Edición de inscripción (sigue siendo de a un alumno por vez)
+  const [enrollmentStudent, setEnrollmentStudent] = useState("");
   const [openEditEnrollmentModal, setOpenEditEnrollmentModal] = useState(false);
   const [editingEnrollmentId, setEditingEnrollmentId] = useState(null);
+
+  // ======================================================
+  // MODAL DE FEEDBACK (reemplaza los alert())
+  // ======================================================
+  const [feedbackModal, setFeedbackModal] = useState({
+    open: false,
+    type: "error",
+    message: "",
+  });
+
+  const showFeedback = (message, type = "error") =>
+    setFeedbackModal({ open: true, type, message });
+
+  const closeFeedback = () =>
+    setFeedbackModal((prev) => ({ ...prev, open: false }));
 
   const [month, setMonth] = useState(new Date().getMonth() + 1);
   const [year, setYear] = useState(new Date().getFullYear());
@@ -53,7 +77,6 @@ export default function StudentPayments() {
     try {
       const { data } = await studentService.getActiveStudents();
       setStudents(data.data || []);
-      console.log(data.data);
     } catch (error) {
       console.error(error);
     }
@@ -138,36 +161,65 @@ export default function StudentPayments() {
         payment_method: paymentMethod,
       });
 
-      alert("OK");
-    } catch (error) {
-      console.log("ERROR COMPLETO:", error);
-      console.log("RESPONSE:", error.response);
-      console.log("DATA:", error.response?.data);
+      await fetchPayments();
 
-      alert(JSON.stringify(error.response?.data));
+      setOpenCreateModal(false);
+      setSelectedStudent("");
+      setSelectedStudentPlan("");
+      setPaymentMethod("");
+
+      showFeedback("Pago registrado correctamente.", "success");
+    } catch (error) {
+      const data = error.response?.data;
+
+      const message = data?.requiresEnrollment
+        ? "El alumno debe realizar una nueva inscripción antes de registrar el pago."
+        : data?.message || "Error al registrar el pago.";
+
+      showFeedback(message, "error");
     }
   };
 
+  // ======================================================
+  // INSCRIPCIÓN: selección múltiple de alumnos (hermanos)
+  // ======================================================
+  const toggleEnrollmentStudent = (studentId) => {
+    setEnrollmentStudents((prev) =>
+      prev.includes(studentId)
+        ? prev.filter((id) => id !== studentId)
+        : [...prev, studentId],
+    );
+  };
+
   const handleCreateEnrollment = async () => {
+    if (!enrollmentStudents.length) {
+      showFeedback("Seleccione al menos un alumno.", "error");
+      return;
+    }
+
     try {
-      await EnrollmentService.create({
-        student_id: enrollmentStudent,
-        amount: enrollmentAmount,
-        payment_date: enrollmentDate,
-      });
+      await Promise.all(
+        enrollmentStudents.map((studentId) =>
+          EnrollmentService.create({
+            student_id: studentId,
+            amount: enrollmentAmount,
+            payment_date: enrollmentDate,
+          }),
+        ),
+      );
 
       await fetchEnrollments();
 
-      alert("Inscripción registrada");
-
       setOpenCreateEnrollmentModal(false);
-
-      setEnrollmentStudent("");
+      setEnrollmentStudents([]);
       setEnrollmentAmount("");
-    } catch (error) {
-      console.error(error);
 
-      alert(error.response?.data?.message || "Error al registrar inscripción");
+      showFeedback("Inscripción/es registrada/s correctamente.", "success");
+    } catch (error) {
+      showFeedback(
+        error.response?.data?.message || "Error al registrar inscripción.",
+        "error",
+      );
     }
   };
 
@@ -195,11 +247,12 @@ export default function StudentPayments() {
 
       setOpenEditEnrollmentModal(false);
 
-      alert("Inscripción actualizada");
+      showFeedback("Inscripción actualizada.", "success");
     } catch (error) {
-      console.error(error);
-
-      alert(error.response?.data?.message || "Error al editar inscripción");
+      showFeedback(
+        error.response?.data?.message || "Error al editar inscripción.",
+        "error",
+      );
     }
   };
 
@@ -213,11 +266,12 @@ export default function StudentPayments() {
 
       await fetchEnrollments();
 
-      alert("Inscripción eliminada");
+      showFeedback("Inscripción eliminada.", "success");
     } catch (error) {
-      console.error(error);
-
-      alert(error.response?.data?.message || "Error al eliminar inscripción");
+      showFeedback(
+        error.response?.data?.message || "Error al eliminar inscripción.",
+        "error",
+      );
     }
   };
 
@@ -277,6 +331,23 @@ export default function StudentPayments() {
     },
   ];
 
+  // Títulos de tabla con el botón correspondiente arriba de cada una
+  const paymentsTableTitle = (
+    <div className="flex justify-between items-center">
+      <span>Pagos de alumnos</span>
+      <Button onClick={() => setOpenCreateModal(true)}>Registrar cuota</Button>
+    </div>
+  );
+
+  const enrollmentsTableTitle = (
+    <div className="flex justify-between items-center">
+      <span>Inscripciones</span>
+      <Button onClick={() => setOpenCreateEnrollmentModal(true)}>
+        Registrar inscripción
+      </Button>
+    </div>
+  );
+
   return (
     <>
       <div className="flex justify-center items-center gap-4 mb-6">
@@ -306,15 +377,7 @@ export default function StudentPayments() {
           </p>
         </div>
       </div>
-      <div className="flex gap-3 mb-4">
-        <Button onClick={() => setOpenCreateModal(true)}>
-          Registrar cuota
-        </Button>
 
-        <Button onClick={() => setOpenCreateEnrollmentModal(true)}>
-          Registrar inscripción
-        </Button>
-      </div>
       <Modal isOpen={openCreateModal} onClose={() => setOpenCreateModal(false)}>
         <h2 className="text-xl font-bold mb-6">Registrar pago</h2>
 
@@ -364,32 +427,43 @@ export default function StudentPayments() {
 
           <option value="transferencia">Transferencia</option>
           <option value="qr"> Código QR</option>
-          <option value="qr">Otro</option>
+          <option value="otro">Otro</option>
         </Select>
 
         <div className="flex justify-end gap-3 mt-6">
           <Button onClick={handleCreatePayment}>Registrar</Button>
         </div>
       </Modal>
+
       <Modal
         isOpen={openCreateEnrollmentModal}
-        onClose={() => setOpenCreateEnrollmentModal(false)}
+        onClose={() => {
+          setOpenCreateEnrollmentModal(false);
+          setEnrollmentStudents([]);
+        }}
       >
         <h2 className="text-xl font-bold mb-6">Registrar inscripción</h2>
 
-        <Select
-          label="Alumno"
-          value={enrollmentStudent}
-          onChange={(e) => setEnrollmentStudent(e.target.value)}
-        >
-          <option value="">Seleccione un alumno</option>
+        <Label>Alumnos (tildá uno o más si son hermanos)</Label>
+        <div className="max-h-56 overflow-y-auto border border-gray-200 rounded-lg p-3 space-y-1 mb-4">
+          {students.length === 0 && (
+            <p className="text-sm text-gray-500">No hay alumnos activos.</p>
+          )}
 
-          {students.map((student) => (
-            <option key={student.id} value={student.id}>
-              {student.last_name}, {student.first_name}
-            </option>
+          {students.map((s) => (
+            <label
+              key={s.id}
+              className="flex items-center gap-2 cursor-pointer"
+            >
+              <input
+                type="checkbox"
+                checked={enrollmentStudents.includes(s.id)}
+                onChange={() => toggleEnrollmentStudent(s.id)}
+              />
+              {s.last_name}, {s.first_name}
+            </label>
           ))}
-        </Select>
+        </div>
 
         <Input
           type="number"
@@ -408,7 +482,10 @@ export default function StudentPayments() {
         <div className="flex justify-end gap-3 mt-6">
           <Button
             variant="outline"
-            onClick={() => setOpenCreateEnrollmentModal(false)}
+            onClick={() => {
+              setOpenCreateEnrollmentModal(false);
+              setEnrollmentStudents([]);
+            }}
           >
             Cancelar
           </Button>
@@ -416,6 +493,7 @@ export default function StudentPayments() {
           <Button onClick={handleCreateEnrollment}>Registrar</Button>
         </div>
       </Modal>
+
       <Modal
         isOpen={openEditEnrollmentModal}
         onClose={() => setOpenEditEnrollmentModal(false)}
@@ -461,10 +539,33 @@ export default function StudentPayments() {
           <Button onClick={handleUpdateEnrollment}>Guardar</Button>
         </div>
       </Modal>
-      <BasicTable title="Pagos de alumnos" columns={columns} data={payments} />
+
+      {/* Modal de feedback (éxito / error) — reemplaza los alert() */}
+      <Modal isOpen={feedbackModal.open} onClose={closeFeedback}>
+        <h2
+          className={`text-lg font-semibold mb-4 ${
+            feedbackModal.type === "error" ? "text-red-600" : "text-green-600"
+          }`}
+        >
+          {feedbackModal.type === "error" ? "Error" : "Listo"}
+        </h2>
+
+        <p className="text-gray-600">{feedbackModal.message}</p>
+
+        <div className="flex justify-end mt-6">
+          <Button onClick={closeFeedback}>Cerrar</Button>
+        </div>
+      </Modal>
+
+      <BasicTable
+        title={paymentsTableTitle}
+        columns={columns}
+        data={payments}
+      />
+
       <div className="mt-8">
         <BasicTable
-          title="Inscripciones"
+          title={enrollmentsTableTitle}
           columns={enrollmentColumns}
           data={enrollments}
         />
