@@ -392,14 +392,14 @@ export function Plans() {
     ...(!isPlanUser
       ? [
           {
-            header: "Historial",
+            header: "Acciones",
             render: (row) => (
-              <ViewButton onClick={() => handleOpenHistory(row)} />
+              <div className="flex gap-2">
+                <ViewButton onClick={() => handleOpenHistory(row)} />
+
+                <EditButton onClick={() => handleEditPlan(row)} />
+              </div>
             ),
-          },
-          {
-            header: "Editar",
-            render: (row) => <EditButton onClick={() => handleEditPlan(row)} />,
           },
         ]
       : []),
