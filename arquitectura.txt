@@ -1,8 +1,3 @@
-Listado de rutas de carpetas para el volumen OS
-El número de serie del volumen es 00000044 B411:4C15
-C:.
-|   estructura.txt
-|   
 +---backend
 |   |   .env
 |   |   .gitignore
@@ -77,6 +72,10 @@ C:.
 |   |           20260314213439_fix_payments_table.cjs
 |   |           20260326015931_fix_schedules_table.cjs
 |   |           20260531195223_create_events_table.cjs
+|   |           20260606051514_fix_schedules_table.cjs
+|   |           20260619152752_fix_schedules_table.cjs
+|   |           20260630201452_fix_schedules_table.cjs
+|   |           20260630201536_fix_student_plans_table.cjs
 |   |           
 |   +---http
 |   |       enrollments.http
@@ -4186,6 +4185,7 @@ C:.
 |   |       users.routes.js
 |   |       
 |   +---services
+|   |       enrollments.service.js
 |   |       payments.service.js
 |   |       
 |   +---utils
@@ -13569,6 +13569,7 @@ C:.
         |   |           BasicTablesOne.jsx
         |   |           
         |   +---ui
+        |   |   |   ActionButtons.jsx
         |   |   |   Alert.jsx
         |   |   |   Button.jsx
         |   |   |   Modal.jsx
@@ -13661,6 +13662,25 @@ C:.
         |       grid.svg
         |       group.svg
         |       horizontal-dots.svg
+        |       icons8-agregar-24.png
+        |       icons8-aï¿½adir-48-dos.png
+        |       icons8-aï¿½adir-48.png
+        |       icons8-cancel-48.png
+        |       icons8-cerrar.png
+        |       icons8-check-mark-48.png
+        |       icons8-crear-48.png
+        |       icons8-crear-50.png
+        |       icons8-guardar-32.png
+        |       icons8-guardar-50.png
+        |       icons8-info-50.png
+        |       icons8-izquierda-2-50.png
+        |       icons8-izquierda-negro-2-50.png
+        |       icons8-libro-50.png
+        |       icons8-padre-50.png
+        |       icons8-profesor-48.png
+        |       icons8-tutor-50.png
+        |       icons8-ver-50 (1).png
+        |       icons8-ver-50.png
         |       index.js
         |       info-error.svg
         |       info-hexa.svg
@@ -13704,6 +13724,7 @@ C:.
         |   |       WeeklyCalendar.jsx
         |   |       
         |   +---students
+        |   |       StudentPayments.jsx
         |   |       Students.jsx
         |   |       
         |   +---subjects
@@ -13716,10 +13737,7 @@ C:.
         |   |       Tutors.jsx
         |   |       
         |   \---users
-        |           AllUsers.jsx
-        |           CreateUser.jsx
-        |           DetailsUser.jsx
-        |           UpdateUser.jsx
+        |           Users.jsx
         |           
         +---routes
         |       PrivateRoute.jsx
@@ -13747,4 +13765,5 @@ C:.
         \---utils
                 api.js
                 auth.js
+                sort.js
                 
