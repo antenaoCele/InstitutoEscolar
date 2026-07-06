@@ -10,13 +10,15 @@ import Select from "../../components/form/Select";
 import { Modal } from "../../components/ui/Modal";
 import { isAdmin } from "../../utils/auth";
 import {
-  PencilIcon,
-  TrashBinIcon,
-  CloseLineIcon,
-  SaveIcon,
-  MoreIcon,
-  CreateIcon,
-} from "../../icons";
+  ViewButton,
+  EditButton,
+  DeleteButton,
+  PlusButton,
+  YesButton,
+  NoButton,
+  AddButton,
+} from "../../components/ui/ActionButtons";
+import { sortByPersonName } from "../../utils/sort";
 
 export function Teachers() {
   // ======================================================
@@ -231,19 +233,21 @@ export function Teachers() {
   // ======================================================
   // DATOS DERIVADOS
   // ======================================================
-  const filteredTeachers = teachers.filter((t) => {
-    const textName = searchFirstLastName.toLowerCase();
-    const textDNI = searchDNI;
+  const filteredTeachers = [...teachers]
+    .filter((t) => {
+      const textName = searchFirstLastName.toLowerCase();
+      const textDNI = searchDNI;
 
-    const matchName =
-      !textName ||
-      t.first_name?.toLowerCase().includes(textName) ||
-      t.last_name?.toLowerCase().includes(textName);
+      const matchName =
+        !textName ||
+        t.first_name?.toLowerCase().includes(textName) ||
+        t.last_name?.toLowerCase().includes(textName);
 
-    const matchDNI = !textDNI || t.dni?.toString().includes(textDNI);
+      const matchDNI = !textDNI || t.dni?.toString().includes(textDNI);
 
-    return matchName && matchDNI;
-  });
+      return matchName && matchDNI;
+    })
+    .sort(sortByPersonName);
 
   const showCreateButtons = isAdmin();
 
@@ -262,24 +266,9 @@ export function Teachers() {
       header: "Acciones",
       render: (row) => (
         <div className="flex gap-2">
-          <Button
-            title="Editar"
-            size="sm"
-            onClick={() => handleEdit(row)}
-            className={buttonClass}
-          >
-            <PencilIcon className="w-5 h-5" />
-          </Button>
+          <EditButton onClick={() => handleEdit(row)} />
 
-          <Button
-            size="sm"
-            variant="outline"
-            onClick={() => handleDelete(row)}
-            className={buttonClass}
-            title="Eliminar"
-          >
-            <TrashBinIcon className="w-5 h-5" />
-          </Button>
+          <DeleteButton onClick={() => handleDelete(row)} />
         </div>
       ),
     });
@@ -289,36 +278,11 @@ export function Teachers() {
     <div className="flex justify-between items-center">
       <span>Docentes</span>
       {showCreateButtons && (
-        <Button
-          title="Crear Docente"
-          size="sm"
-          onClick={openCreate}
-          className="
-            cursor-pointer
-            w-12
-            h-12
-            rounded
-            bg-[#0cc0df]
-            text-white
-            flex
-            items-center
-            justify-center
-            transition
-            transform
-            hover:scale-105
-          "
-        >
-          <img
-            src={CreateIcon}
-            alt="More"
-            className="
-              w-5
-              h-5
-              brightness-0
-              invert
-            "
-          />
-        </Button>
+        <div className="flex justify-between items-center">
+          {showCreateButtons && (
+            <PlusButton title="Crear Docente" onClick={openCreate} />
+          )}
+        </div>
       )}
     </div>
   );
@@ -360,184 +324,99 @@ export function Teachers() {
       )}
 
       {/* CREATE MODAL */}
-      <Modal isOpen={openCreateModal} onClose={() => setOpenCreateModal(false)}>
+      <Modal
+        isOpen={openCreateModal}
+        onClose={() => {
+          setOpenCreateModal(false);
+          resetForm();
+        }}
+      >
         <h2 className="text-xl font-bold mb-8">Crear Docente</h2>
 
-        <div className="flex flex-col mb-6">
-          <Label className="font-semibold mb-2">Nombre</Label>
-          <Input
-            className={inputClass(errorsCreate.first_name)}
-            value={firstName}
-            onChange={(e) => setFirstName(e.target.value)}
-          />
-          {errorsCreate.first_name && (
-            <p className="text-red-500 text-sm mt-1">
-              {errorsCreate.first_name}
-            </p>
-          )}
-        </div>
+        <Input
+          label="Nombre"
+          value={firstName}
+          onChange={(e) => setFirstName(e.target.value)}
+          error={errorsCreate.first_name}
+        />
 
-        <div className="flex flex-col mb-6">
-          <Label className="font-semibold mb-2">Apellido</Label>
-          <Input
-            className={inputClass(errorsCreate.last_name)}
-            value={lastName}
-            onChange={(e) => setLastName(e.target.value)}
-          />
-          {errorsCreate.last_name && (
-            <p className="text-red-500 text-sm mt-1">
-              {errorsCreate.last_name}
-            </p>
-          )}
-        </div>
+        <Input
+          label="Apellido"
+          value={lastName}
+          onChange={(e) => setLastName(e.target.value)}
+          error={errorsCreate.last_name}
+        />
 
-        <div className="flex flex-col mb-6">
-          <Label className="font-semibold mb-2">DNI</Label>
-          <Input
-            className={inputClass(errorsCreate.dni)}
-            value={dni}
-            onChange={(e) => setDni(e.target.value)}
-          />
-          {errorsCreate.dni && (
-            <p className="text-red-500 text-sm mt-1">{errorsCreate.dni}</p>
-          )}
-        </div>
+        <Input
+          label="DNI"
+          value={dni}
+          onChange={(e) => setDni(e.target.value)}
+          error={errorsCreate.dni}
+        />
 
-        <div className="flex flex-col mb-6">
-          <Label className="font-semibold mb-2">Teléfono</Label>
-          <Input
-            className={inputClass(errorsCreate.phone)}
-            value={phone}
-            onChange={(e) => setPhone(e.target.value)}
-          />
-          {errorsCreate.phone && (
-            <p className="text-red-500 text-sm mt-1">{errorsCreate.phone}</p>
-          )}
-        </div>
+        <Input
+          label="Teléfono"
+          value={phone}
+          onChange={(e) => setPhone(e.target.value)}
+          error={errorsCreate.phone}
+        />
 
+        <h2 className="text-xl font-bold mb-8">¿Crear?</h2>
         <div className="flex justify-end gap-4 mt-10">
-          {/* <Button variant="outline" onClick={() => setOpenCreateModal(false)}>
-            Cancelar
-          </Button> */}
-          <Button
-            size="icon"
-            title="Guardar"
-            onClick={handleCreate}
-            className="
-              cursor-pointer
-              w-12
-              h-12
-              rounded
-              bg-[#0cc0df]
-              text-white
-              flex
-              items-center
-              justify-center
-              transition
-              transform
-              hover:scale-105
-            "
-          >
-            <img
-              src={SaveIcon}
-              alt="Guardar"
-              className="
-                w-5
-                h-5
-                brightness-0
-                invert
-              "
+          <div className="flex justify-end gap-3">
+            <NoButton
+              title="Cancelar"
+              onClick={() => setOpenCreateModal(false)}
             />
-          </Button>
+
+            <YesButton title="Aceptar" onClick={handleCreate} />
+          </div>
         </div>
       </Modal>
 
       {/* EDIT MODAL */}
-      <Modal isOpen={openEditModal} onClose={() => setOpenEditModal(false)}>
+      <Modal
+        isOpen={openEditModal}
+        onClose={() => {
+          setOpenEditModal(false);
+          resetForm();
+        }}
+      >
         <h2 className="text-xl font-bold mb-8">Editar Docente</h2>
 
-        <div className="flex flex-col mb-6">
-          <Label className="font-semibold mb-2">Nombre</Label>
-          <Input
-            className={inputClass(errorsEdit.first_name)}
-            value={firstName}
-            onChange={(e) => setFirstName(e.target.value)}
-          />
-          {errorsEdit.first_name && (
-            <p className="text-red-500 text-sm mt-1">{errorsEdit.first_name}</p>
-          )}
-        </div>
+        <Input
+          label="Nombre"
+          value={firstName}
+          onChange={(e) => setFirstName(e.target.value)}
+          error={errorsEdit.first_name}
+        />
 
-        <div className="flex flex-col mb-6">
-          <Label className="font-semibold mb-2">Apellido</Label>
-          <Input
-            className={inputClass(errorsEdit.last_name)}
-            value={lastName}
-            onChange={(e) => setLastName(e.target.value)}
-          />
-          {errorsEdit.last_name && (
-            <p className="text-red-500 text-sm mt-1">{errorsEdit.last_name}</p>
-          )}
-        </div>
+        <Input
+          label="Apellido"
+          value={lastName}
+          onChange={(e) => setLastName(e.target.value)}
+          error={errorsEdit.last_name}
+        />
 
-        <div className="flex flex-col mb-6">
-          <Label className="font-semibold mb-2">DNI</Label>
-          <Input
-            className={inputClass(errorsEdit.dni)}
-            value={dni}
-            onChange={(e) => setDni(e.target.value)}
-          />
-          {errorsEdit.dni && (
-            <p className="text-red-500 text-sm mt-1">{errorsEdit.dni}</p>
-          )}
-        </div>
+        <Input
+          label="DNI"
+          value={dni}
+          onChange={(e) => setDni(e.target.value)}
+          error={errorsEdit.dni}
+        />
 
-        <div className="flex flex-col mb-6">
-          <Label className="font-semibold mb-2">Teléfono</Label>
-          <Input
-            className={inputClass(errorsEdit.phone)}
-            value={phone}
-            onChange={(e) => setPhone(e.target.value)}
-          />
-          {errorsEdit.phone && (
-            <p className="text-red-500 text-sm mt-1">{errorsEdit.phone}</p>
-          )}
-        </div>
+        <Input
+          label="Teléfono"
+          value={phone}
+          onChange={(e) => setPhone(e.target.value)}
+          error={errorsEdit.phone}
+        />
 
+        <h2 className="text-xl font-bold mb-8">¿Editar?</h2>
         <div className="flex justify-end gap-4 mt-10">
-          {/* <Button variant="outline" onClick={() => setOpenEditModal(false)}>
-            Cancelar
-          </Button> */}
-          <Button
-            size="icon"
-            className="
-              cursor-pointer
-              w-12
-              h-12
-              rounded
-              bg-[#0cc0df]
-              text-white
-              flex
-              items-center
-              justify-center
-              transition
-              transform
-              hover:scale-105
-            "
-            title="Guardar"
-            onClick={handleUpdate}
-          >
-            <img
-              src={SaveIcon}
-              alt="Guardar"
-              className="
-                w-5
-                h-5
-                brightness-0
-                invert
-              "
-            />
-          </Button>
+          <NoButton title="Cancelar" onClick={() => setOpenEditModal(false)} />
+
+          <YesButton title="Aceptar" onClick={handleUpdate} />
         </div>
       </Modal>
 
@@ -545,17 +424,12 @@ export function Teachers() {
         <h2 className="text-lg font-semibold mb-4">¿Eliminar Docente?</h2>
 
         <div className="flex justify-end gap-2">
-          <Button
-            variant="outline"
+          <NoButton
+            title="Cancelar"
             onClick={() => setOpenDeleteModal(false)}
-            className={buttonClass}
-          >
-            No
-          </Button>
+          />
 
-          <Button onClick={confirmDelete} className={buttonClass}>
-            Sí
-          </Button>
+          <YesButton title="Aceptar" onClick={confirmDelete} />
         </div>
       </Modal>
     </>
