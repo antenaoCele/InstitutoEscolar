@@ -18,9 +18,11 @@ import {
   PlusButton,
   YesButton,
   NoButton,
-  AddButton,
 } from "../../components/ui/ActionButtons";
 import { sortByProperty, sortByPersonName } from "../../utils/sort";
+import { useFeedbackModal } from "../../hooks/useFeedbackModal";
+import { mapErrors } from "../../validators/helpers/errorHelpers";
+import { validateStudentForm } from "../../validators/entities/student.validator";
 
 export function Students() {
   // ======================================================
@@ -49,6 +51,11 @@ export function Students() {
   const [openViewModal, setOpenViewModal] = useState(false);
 
   // ======================================================
+  // MODAL DE FEEDBACK (hook compartido, reemplaza alert())
+  // ======================================================
+  const { feedbackModal, showFeedback, closeFeedback } = useFeedbackModal();
+
+  // ======================================================
   // ALUMNO SELECCIONADO
   // ======================================================
   const [selectedStudent, setSelectedStudent] = useState(null);
@@ -65,15 +72,10 @@ export function Students() {
   const [grade, setGrade] = useState("");
 
   // ======================================================
-  // PLANES DEL ALUMNO
+  // PLANES DEL ALUMNO (se seleccionan con checkboxes)
+  // Cada fila: { plan_id, teacher_id, availableTeachers, student_plan_id?, start_date? }
   // ======================================================
-  const [formClasses, setFormClasses] = useState([
-    {
-      plan_id: "",
-      teacher_id: "",
-      availableTeachers: [],
-    },
-  ]);
+  const [formClasses, setFormClasses] = useState([]);
 
   const [removedClasses, setRemovedClasses] = useState([]);
 
@@ -172,27 +174,10 @@ export function Students() {
     setBirthDate("");
     setLevel("");
     setGrade("");
-    setFormClasses([
-      {
-        plan_id: "",
-        teacher_id: "",
-        availableTeachers: [],
-      },
-    ]);
+    setFormClasses([]);
     setErrorsCreate({});
     setErrorsEdit({});
     setRemovedClasses([]);
-  };
-
-  // ======================================================
-  // FUNCIONES AUXILIARES
-  // ======================================================
-  const mapErrors = (errors) => {
-    const formatted = {};
-    errors.forEach((e) => {
-      formatted[e.path] = e.msg;
-    });
-    return formatted;
   };
 
   // ======================================================
@@ -204,6 +189,21 @@ export function Students() {
   };
 
   const handleCreate = async () => {
+    const errors = validateStudentForm({
+      firstName,
+      lastName,
+      dni,
+      school,
+      birthDate,
+      level,
+      grade,
+    });
+
+    if (Object.keys(errors).length > 0) {
+      setErrorsCreate(errors);
+      return;
+    }
+
     try {
       setErrorsCreate({});
 
@@ -224,9 +224,16 @@ export function Students() {
     } catch (error) {
       console.error("Error al crear:", error.response?.data || error.message);
       const backendErrors = error.response?.data?.errors;
-      if (backendErrors) setErrorsCreate(mapErrors(backendErrors));
+      if (backendErrors) {
+        setErrorsCreate(mapErrors(backendErrors));
+      } else {
+        showFeedback(
+          error.response?.data?.message || "Error al crear el alumno.",
+        );
+      }
     }
   };
+
   const handleView = async (student) => {
     try {
       const { data } = await studentService.getInfo(student.id);
@@ -236,6 +243,10 @@ export function Students() {
       setOpenViewModal(true);
     } catch (error) {
       console.error(error);
+      showFeedback(
+        error.response?.data?.message ||
+          "Error al obtener la información del alumno.",
+      );
     }
   };
 
@@ -273,22 +284,18 @@ export function Students() {
   };
 
   const handleUpdate = async () => {
-    const newErrors = {};
+    const errors = validateStudentForm({
+      firstName,
+      lastName,
+      dni,
+      school,
+      birthDate,
+      level,
+      grade,
+    });
 
-    if (!firstName?.toString().trim())
-      newErrors.first_name = "Este campo no puede estar vacío.";
-    if (!lastName?.toString().trim())
-      newErrors.last_name = "Este campo no puede estar vacío.";
-    if (!dni?.toString().trim())
-      newErrors.dni = "Este campo no puede estar vacío.";
-    if (!school?.toString().trim())
-      newErrors.school = "Este campo no puede estar vacío.";
-    if (!birthDate) newErrors.birth_date = "Ingrese una fecha válida.";
-    if (!level) newErrors.level = "Seleccione una opción válida.";
-    if (!grade) newErrors.grade = "Seleccione una opción válida.";
-
-    if (Object.keys(newErrors).length > 0) {
-      setErrorsEdit(newErrors);
+    if (Object.keys(errors).length > 0) {
+      setErrorsEdit(errors);
       return;
     }
 
@@ -304,18 +311,6 @@ export function Students() {
         level,
         grade,
       });
-
-      console.log("FORM CLASSES");
-      console.table(formClasses);
-
-      const duplicated = formClasses.filter(
-        (item, index, self) =>
-          self.findIndex((x) => x.student_plan_id === item.student_plan_id) !==
-          index,
-      );
-
-      console.log("Duplicados:");
-      console.table(duplicated);
 
       // Actualizar o crear planes dinámicamente
       await Promise.all(
@@ -349,10 +344,15 @@ export function Students() {
       fetchStudents();
       setRemovedClasses([]);
     } catch (error) {
-      console.log("ERROR COMPLETO");
-      console.log(JSON.stringify(error.response?.data, null, 2));
+      console.error(error.response?.data || error.message);
       const backendErrors = error.response?.data?.errors;
-      if (backendErrors) setErrorsEdit(mapErrors(backendErrors));
+      if (backendErrors) {
+        setErrorsEdit(mapErrors(backendErrors));
+      } else {
+        showFeedback(
+          error.response?.data?.message || "Error al editar el alumno.",
+        );
+      }
     }
   };
 
@@ -372,75 +372,24 @@ export function Students() {
       fetchStudents();
     } catch (error) {
       console.error(error.response?.data || error.message);
-      alert(error.response?.data?.message || "Error al eliminar");
+      setOpenDeleteModal(false);
+      showFeedback(error.response?.data?.message || "Error al eliminar");
     }
   };
 
   // ======================================================
-  // HANDLES AUXILIARES
+  // HANDLES DE PLANES (checkboxes)
   // ======================================================
-  const addClassRow = () => {
-    setFormClasses((prev) => [
-      ...prev,
-      {
-        plan_id: "",
-        teacher_id: "",
-        availableTeachers: [],
-      },
-    ]);
-  };
+  const togglePlan = async (planId, checked) => {
+    if (!checked) {
+      const row = formClasses.find((r) => r.plan_id === planId);
 
-  const removeClassRow = (index) => {
-    const row = formClasses[index];
+      // Si la clase ya existía en la BD, la marcamos para eliminar
+      if (row?.student_plan_id) {
+        setRemovedClasses((prev) => [...prev, row.student_plan_id]);
+      }
 
-    // Si la clase ya existía en la BD, la marcamos para eliminar
-    if (row.student_plan_id) {
-      setRemovedClasses((prev) => [...prev, row.student_plan_id]);
-    }
-
-    const updated = formClasses.filter((_, i) => i !== index);
-
-    setFormClasses(
-      updated.length
-        ? updated
-        : [
-            {
-              plan_id: "",
-              teacher_id: "",
-              availableTeachers: [],
-            },
-          ],
-    );
-  };
-
-  const updateClassRow = (idx, field, value) => {
-    setFormClasses((prev) =>
-      prev.map((row, index) =>
-        index === idx
-          ? {
-              ...row,
-              [field]: value,
-            }
-          : row,
-      ),
-    );
-  };
-
-  const handlePlanChange = async (idx, planId) => {
-    if (!planId) {
-      setFormClasses((prev) =>
-        prev.map((row, index) =>
-          index === idx
-            ? {
-                ...row,
-                plan_id: "",
-                teacher_id: "",
-                availableTeachers: [],
-              }
-            : row,
-        ),
-      );
-
+      setFormClasses((prev) => prev.filter((r) => r.plan_id !== planId));
       return;
     }
 
@@ -451,21 +400,21 @@ export function Students() {
         sortByPersonName,
       );
 
-      setFormClasses((prev) =>
-        prev.map((row, index) =>
-          index === idx
-            ? {
-                ...row,
-                plan_id: planId,
-                teacher_id: "",
-                availableTeachers,
-              }
-            : row,
-        ),
-      );
+      setFormClasses((prev) => [
+        ...prev,
+        { plan_id: planId, teacher_id: "", availableTeachers },
+      ]);
     } catch (error) {
       console.error(error);
     }
+  };
+
+  const updateClassRowByPlan = (planId, field, value) => {
+    setFormClasses((prev) =>
+      prev.map((row) =>
+        row.plan_id === planId ? { ...row, [field]: value } : row,
+      ),
+    );
   };
 
   const handleScroll = (e, targetId) => {
@@ -583,6 +532,62 @@ export function Students() {
   );
 
   const student = selectedStudent?.student;
+
+  // ======================================================
+  // BLOQUE REUTILIZABLE: checkboxes de planes (Crear/Editar)
+  // ======================================================
+  const renderPlanCheckboxes = () => (
+    <div className="mt-6 border-t pt-4">
+      <h2 className="text-xl font-bold mb-4">Asignar Clases</h2>
+
+      <div className="grid grid-cols-2 gap-3">
+        {[...plans].sort(sortByProperty("name")).map((plan) => {
+          const row = formClasses.find((r) => r.plan_id === plan.id);
+
+          return (
+            <div
+              key={plan.id}
+              className="
+                border
+                border-gray-200
+                rounded-xl
+                p-3
+                bg-white
+                shadow-sm
+              "
+            >
+              <label className="flex items-center gap-2 font-medium cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={!!row}
+                  onChange={(e) => togglePlan(plan.id, e.target.checked)}
+                />
+                {plan.name}
+              </label>
+
+              {row && (
+                <Select
+                  className="mt-2"
+                  value={row.teacher_id}
+                  onChange={(e) =>
+                    updateClassRowByPlan(plan.id, "teacher_id", e.target.value)
+                  }
+                >
+                  <option value="">Seleccione un Docente</option>
+
+                  {row.availableTeachers?.map((teacher) => (
+                    <option key={teacher.id} value={teacher.id}>
+                      {teacher.last_name}, {teacher.first_name}
+                    </option>
+                  ))}
+                </Select>
+              )}
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
 
   // ======================================================
   // RETURN
@@ -739,67 +744,7 @@ export function Students() {
           ))}
         </Select>
 
-        {/* Gestión Dinámica de Clases */}
-        <div className="mt-6 border-t pt-4">
-          <div className="flex justify-between items-center mb-4">
-            <h2 className="text-xl font-bold mb-8">Asignar Clases</h2>
-            <AddButton title="Añadir Clase" size="sm" onClick={addClassRow} />
-          </div>
-          {formClasses.map((row, idx) => (
-            <div
-              key={idx}
-              className="
-                border
-                border-gray-200
-                rounded-xl
-                p-4
-                mb-4
-                bg-white
-                shadow-sm
-              "
-            >
-              <div className="flex-1">
-                <Select
-                  label={idx === 0 ? "Plan" : ""}
-                  value={row.plan_id}
-                  onChange={(e) => handlePlanChange(idx, e.target.value)}
-                >
-                  <option value="">Seleccione un Plan</option>
-
-                  {[...plans].sort(sortByProperty("name")).map((plan) => (
-                    <option key={plan.id} value={plan.id}>
-                      {plan.name}
-                    </option>
-                  ))}
-                </Select>
-              </div>
-              <div className="flex-1">
-                <Select
-                  label={idx === 0 ? "Docente" : ""}
-                  value={row.teacher_id}
-                  onChange={(e) =>
-                    updateClassRow(idx, "teacher_id", e.target.value)
-                  }
-                >
-                  <option value="">Seleccione un Docente</option>
-
-                  {row.availableTeachers?.map((teacher) => (
-                    <option key={teacher.id} value={teacher.id}>
-                      {teacher.last_name}, {teacher.first_name}
-                    </option>
-                  ))}
-                </Select>
-              </div>
-              <div className="flex flex-col">
-                <div className="h-6"></div>
-
-                <Button variant="outline" onClick={() => removeClassRow(idx)}>
-                  ✕
-                </Button>
-              </div>
-            </div>
-          ))}
-        </div>
+        {renderPlanCheckboxes()}
 
         <h2 className="text-xl font-bold mb-8">¿Crear?</h2>
         <div className="flex justify-end gap-4 mt-10">
@@ -887,72 +832,7 @@ export function Students() {
           ))}
         </Select>
 
-        {/* Gestión Dinámica de Clases en Edición */}
-        <div className="mt-6 border-t pt-4">
-          <div className="flex justify-between items-center mb-4">
-            <h2 className="text-xl font-bold mb-8">Asignar Clases</h2>
-            <AddButton title="Añadir Clase" size="sm" onClick={addClassRow} />
-          </div>
-          {formClasses.map((row, idx) => (
-            <div
-              key={idx}
-              className="
-                border
-                border-gray-200
-                rounded-xl
-                p-4
-                mb-4
-                bg-white
-                shadow-sm
-              "
-            >
-              <div className="flex-1">
-                <Select
-                  label={idx === 0 ? "Plan" : ""}
-                  value={row.plan_id}
-                  onChange={(e) => handlePlanChange(idx, e.target.value)}
-                >
-                  <option value="">Seleccione un Plan</option>
-
-                  {[...plans].sort(sortByProperty("name")).map((plan) => (
-                    <option key={plan.id} value={plan.id}>
-                      {plan.name}
-                    </option>
-                  ))}
-                </Select>
-              </div>
-              <div className="flex-1">
-                <Select
-                  label={idx === 0 ? "Docente" : ""}
-                  value={row.teacher_id}
-                  onChange={(e) =>
-                    updateClassRow(idx, "teacher_id", e.target.value)
-                  }
-                >
-                  <option value="">Seleccione un Docente</option>
-
-                  {row.availableTeachers?.map((teacher) => (
-                    <option key={teacher.id} value={teacher.id}>
-                      {teacher.last_name}, {teacher.first_name}
-                    </option>
-                  ))}
-                </Select>
-              </div>
-              <div className="flex flex-col">
-                <div className="h-6"></div>
-
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="text-red-500 h-11 w-11"
-                  onClick={() => removeClassRow(idx)}
-                >
-                  ✕
-                </Button>
-              </div>
-            </div>
-          ))}
-        </div>
+        {renderPlanCheckboxes()}
 
         <h2 className="text-xl font-bold mb-8">¿Editar?</h2>
         <div className="flex justify-end gap-4 mt-10">
@@ -964,8 +844,6 @@ export function Students() {
 
       <Modal isOpen={openViewModal} onClose={() => setOpenViewModal(false)}>
         <h2 className="text-xl font-bold mb-8">Datos del Alumno</h2>
-
-        {/* <h3 className="text-lg font-semibold mb-4">Alumno</h3> */}
 
         <div className="rounded-lg border border-gray-200 p-4">
           <div className="grid grid-cols-3 gap-4">
@@ -1010,8 +888,6 @@ export function Students() {
 
         <hr className="my-6" />
 
-        {/* <h3 className="text-lg font-semibold mb-4">Tutores</h3> */}
-
         {selectedStudent?.tutors?.length > 0 ? (
           <div className="space-y-4">
             {selectedStudent.tutors.map((tutor) => (
@@ -1047,8 +923,6 @@ export function Students() {
         )}
 
         <hr className="my-6" />
-
-        {/* <h3 className="text-lg font-semibold mb-4">Planes Activos</h3> */}
 
         {selectedStudent?.plans?.length > 0 ? (
           <div className="space-y-4">
@@ -1098,6 +972,23 @@ export function Students() {
           />
 
           <YesButton title="Aceptar" onClick={confirmDelete} />
+        </div>
+      </Modal>
+
+      {/* Modal de feedback (errores/éxito) — viene del hook useFeedbackModal */}
+      <Modal isOpen={feedbackModal.open} onClose={closeFeedback}>
+        <h2
+          className={`text-lg font-semibold mb-4 ${
+            feedbackModal.type === "error" ? "text-red-600" : "text-green-600"
+          }`}
+        >
+          {feedbackModal.type === "error" ? "Error" : "Listo"}
+        </h2>
+
+        <p className="text-gray-600">{feedbackModal.message}</p>
+
+        <div className="flex justify-end mt-6">
+          <Button onClick={closeFeedback}>Cerrar</Button>
         </div>
       </Modal>
     </>

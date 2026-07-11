@@ -1,4 +1,5 @@
 import { createContext, useContext, useState } from "react";
+import { useEffect } from "react";
 
 const AuthContext = createContext(null);
 
@@ -12,6 +13,7 @@ export const AuthProvider = ({ children }) => {
   });
 
   const [error, setError] = useState(null);
+  const [sessionExpired, setSessionExpired] = useState(false);
 
   // =========================
   // LOGIN
@@ -101,6 +103,21 @@ export const AuthProvider = ({ children }) => {
     return response;
   };
 
+  // =========================
+  // SESION EXPIRADA
+  // =========================
+  useEffect(() => {
+    const handleSessionExpired = () => {
+      setSessionExpired(true);
+    };
+
+    window.addEventListener("sessionExpired", handleSessionExpired);
+
+    return () => {
+      window.removeEventListener("sessionExpired", handleSessionExpired);
+    };
+  }, []);
+
   return (
     <AuthContext.Provider
       value={{
@@ -111,6 +128,8 @@ export const AuthProvider = ({ children }) => {
         fetchAuth,
         isAuthenticated: !!token,
         setError,
+        sessionExpired,
+        setSessionExpired,
       }}
     >
       {children}
