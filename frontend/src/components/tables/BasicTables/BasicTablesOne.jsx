@@ -85,13 +85,14 @@ export default function BasicTable({ title, columns, data }) {
                       <TableCell
                         key={j}
                         className="
-                          px-5 py-4
+                          px-5
+                          h-24
+                          align-middle
                           text-theme-sm
                           text-gray-700
                           transition-colors
                           duration-150
                           group-hover:bg-cyan-50
-
                           dark:text-neutral-200
                           dark:group-hover:bg-neutral-900
                         "
