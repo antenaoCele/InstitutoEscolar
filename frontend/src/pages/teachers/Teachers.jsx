@@ -266,9 +266,9 @@ export function Teachers() {
   const showCreateButtons = isAdmin();
 
   let columns = [
-    { header: "Apellido", accessor: "last_name" },
-    { header: "Nombre", accessor: "first_name" },
-    { header: "Teléfono", accessor: "phone" },
+    { header: "Apellidos", accessor: "last_name" },
+    { header: "Nombres", accessor: "first_name" },
+    { header: "Teléfonos", accessor: "phone" },
   ];
 
   if (isAdmin()) {

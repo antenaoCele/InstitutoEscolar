@@ -209,7 +209,7 @@ export function Subjects() {
 
   let columns = [
     {
-      header: "Materia",
+      header: "Materias",
       accessor: "name",
     },
     {

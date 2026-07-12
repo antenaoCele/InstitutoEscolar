@@ -466,10 +466,10 @@ export function Students() {
     .sort(sortByPersonName);
 
   let columns = [
-    { header: "Apellido", accessor: "last_name" },
-    { header: "Nombre", accessor: "first_name" },
+    { header: "Apellidos", accessor: "last_name" },
+    { header: "Nombres", accessor: "first_name" },
     {
-      header: "Estado",
+      header: "Estados",
       render: (row) => {
         const active = row.activePlans?.length > 0;
 
@@ -487,7 +487,7 @@ export function Students() {
   ];
 
   columns.push({
-    header: "Plan y Docente",
+    header: "Planes y Docentes",
     render: (row) => (
       <div
         className="
