@@ -40,6 +40,8 @@ export function Students() {
   const [searchDNI, setSearchDNI] = useState("");
   const [searchSchool, setSearchSchool] = useState("");
 
+  //hacer un componente de filtros
+
   // ======================================================
   // MODALES
   // ======================================================
@@ -1010,8 +1012,6 @@ export function Students() {
 
         <hr className="my-6" />
 
-        {/* <h3 className="text-lg font-semibold mb-4">Tutores</h3> */}
-
         {selectedStudent?.tutors?.length > 0 ? (
           <div className="space-y-4">
             {selectedStudent.tutors.map((tutor) => (
@@ -1047,8 +1047,6 @@ export function Students() {
         )}
 
         <hr className="my-6" />
-
-        {/* <h3 className="text-lg font-semibold mb-4">Planes Activos</h3> */}
 
         {selectedStudent?.plans?.length > 0 ? (
           <div className="space-y-4">
