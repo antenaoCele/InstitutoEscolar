@@ -4,6 +4,8 @@ import { planService } from "../../services/plan.service";
 import { PlanPriceService } from "../../services/PlanPrice.service";
 import { subjectService } from "../../services/subject.service";
 import { PlanSubjectService } from "../../services/PlanSubject.service";
+import { teacherPlansService } from "../../services/teacherPlans.service";
+import { teacherService } from "../../services/teacher.service";
 import Button from "../../components/ui/Button";
 import Label from "../../components/form/Label";
 import Input from "../../components/form/Input";
@@ -19,6 +21,7 @@ import {
   YesButton,
   NoButton,
   AddButton,
+  AssignTeacherButton,
 } from "../../components/ui/ActionButtons";
 
 export function Plans() {
@@ -30,6 +33,14 @@ export function Plans() {
   const [plans, setPlans] = useState([]);
   const [subjects, setSubjects] = useState([]);
   const [allPlanSubjects, setAllPlanSubjects] = useState([]);
+
+  const [openTeachersModal, setOpenTeachersModal] = useState(false);
+
+  const [selectedPlanTeachers, setSelectedPlanTeachers] = useState(null);
+
+  const [selectedTeacherIds, setSelectedTeacherIds] = useState([]);
+
+  const [teachers, setTeachers] = useState([]);
 
   // ======================================================
   // FILTROS
@@ -254,6 +265,39 @@ export function Plans() {
     });
   };
 
+  const handleManageTeachers = async (plan) => {
+    try {
+      const { data } = await teacherPlansService.getByPlan(plan.id);
+
+      setSelectedPlanTeachers(plan);
+
+      setSelectedTeacherIds((data.data || []).map((row) => row.teacher_id));
+
+      setOpenTeachersModal(true);
+    } catch (error) {
+      console.error(error);
+      alert("No fue posible obtener los docentes del plan.");
+    }
+  };
+
+  const handleSaveTeachers = async () => {
+    try {
+      await teacherPlansService.updateByPlan(selectedPlanTeachers.id, {
+        teacher_ids: selectedTeacherIds,
+      });
+
+      alert("Docentes asignados correctamente.");
+
+      setOpenTeachersModal(false);
+      setSelectedTeacherIds([]);
+      setSelectedPlanTeachers(null);
+    } catch (error) {
+      console.error(error);
+
+      alert(error.response?.data?.message ?? "Error al guardar los docentes.");
+    }
+  };
+
   const handleUpdate = async () => {
     try {
       setErrorsEdit({});
@@ -350,6 +394,9 @@ export function Plans() {
 
         const planSubjectsRes = await PlanSubjectService.getAll();
         setAllPlanSubjects(planSubjectsRes.data.data || []);
+
+        const teachersRes = await teacherService.getAll();
+        setTeachers(teachersRes.data.data || []);
       } catch (error) {
         console.error(error);
       }
@@ -393,13 +440,29 @@ export function Plans() {
       ? [
           {
             header: "Acciones",
-            render: (row) => (
-              <div className="flex gap-2">
-                <ViewButton onClick={() => handleOpenHistory(row)} />
+            render: (row) => {
+              const hasSubjects = allPlanSubjects.some(
+                (ps) => ps.plan_id === row.id,
+              );
 
-                <EditButton onClick={() => handleEditPlan(row)} />
-              </div>
-            ),
+              return (
+                <div className="flex gap-2">
+                  <ViewButton onClick={() => handleOpenHistory(row)} />
+
+                  <EditButton onClick={() => handleEditPlan(row)} />
+
+                  <AssignTeacherButton
+                    disabled={!hasSubjects}
+                    title={
+                      hasSubjects
+                        ? "Asignar docentes"
+                        : "Primero agregue una o más materias al plan"
+                    }
+                    onClick={() => handleManageTeachers(row)}
+                  />
+                </div>
+              );
+            },
           },
         ]
       : []),
@@ -729,6 +792,49 @@ export function Plans() {
               "
             />
           </Button>
+        </div>
+      </Modal>
+
+      <Modal
+        isOpen={openTeachersModal}
+        onClose={() => setOpenTeachersModal(false)}
+      >
+        <h2 className="text-xl font-bold mb-8">Asignar docentes</h2>
+
+        <p className="mb-6">
+          Plan:
+          <strong> {selectedPlanTeachers?.name}</strong>
+        </p>
+        <div className="space-y-2 max-h-96 overflow-y-auto">
+          {teachers.map((teacher) => (
+            <label key={teacher.id} className="flex items-center gap-3">
+              <input
+                type="checkbox"
+                checked={selectedTeacherIds.includes(teacher.id)}
+                onChange={(e) => {
+                  if (e.target.checked) {
+                    setSelectedTeacherIds([...selectedTeacherIds, teacher.id]);
+                  } else {
+                    setSelectedTeacherIds(
+                      selectedTeacherIds.filter((id) => id !== teacher.id),
+                    );
+                  }
+                }}
+              />
+              {teacher.last_name}, {teacher.first_name}
+            </label>
+          ))}
+        </div>
+        <div className="flex justify-end gap-4 mt-8">
+          <NoButton
+            onClick={() => {
+              setOpenTeachersModal(false);
+              setSelectedTeacherIds([]);
+              setSelectedPlanTeachers(null);
+            }}
+          />
+
+          <YesButton onClick={handleSaveTeachers} />
         </div>
       </Modal>
     </>
