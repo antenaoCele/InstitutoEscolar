@@ -64,10 +64,12 @@ import NoIcon from "./icons8-cancel-48.png";
 import PlusSignIcon from "./icons8-añadir-48.png";
 import TutorsIcon from "./icons8-padre-50.png";
 import TutorIcon from "./icons8-tutor-50.png";
-import TeachersIcon from "./icons8-profesor-48.png";
+import TeachersIcon from "./icons8-profesor-49.png";
 import SubjectsIcon from "./icons8-libro-50.png";
+import AssignTeacher from "./icons8-agregar-usuario-32.png";
 
 export {
+  AssignTeacher,
   TutorIcon,
   TutorsIcon,
   TeachersIcon,

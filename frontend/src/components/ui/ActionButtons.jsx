@@ -10,6 +10,7 @@ import {
   YesIcon,
   NoIcon,
   PlusSignIcon,
+  AssignTeacher,
 } from "../../icons";
 
 const baseClass =
@@ -17,26 +18,26 @@ const baseClass =
 
 const imgClass = "w-5 h-5 brightness-0 invert";
 
-export function ViewButton({ onClick }) {
+export function ViewButton({ onClick, title = "" }) {
   return (
-    <Button title="Ver Más" size="sm" onClick={onClick} className={baseClass}>
+    <Button title={title} size="sm" onClick={onClick} className={baseClass}>
       <img src={ViewIcon} alt="Ver" className="w-5 h-5 invert" />
     </Button>
   );
 }
 
-export function EditButton({ onClick }) {
+export function EditButton({ onClick, title = "" }) {
   return (
-    <Button title="Editar" size="sm" onClick={onClick} className={baseClass}>
+    <Button title={title} size="sm" onClick={onClick} className={baseClass}>
       <PencilIcon className="w-5 h-5" />
     </Button>
   );
 }
 
-export function DeleteButton({ onClick }) {
+export function DeleteButton({ onClick, title = "" }) {
   return (
     <Button
-      title="Eliminar"
+      title={title}
       size="sm"
       variant="outline"
       onClick={onClick}
@@ -47,34 +48,34 @@ export function DeleteButton({ onClick }) {
   );
 }
 
-export function SaveButton({ onClick }) {
+export function SaveButton({ onClick, title = "" }) {
   return (
-    <Button title="Guardar" size="sm" onClick={onClick} className={baseClass}>
+    <Button title={title} size="sm" onClick={onClick} className={baseClass}>
       <img src={SaveIcon} alt="Guardar" className={imgClass} />
     </Button>
   );
 }
 
-export function AddButton({ onClick }) {
+export function AddButton({ onClick, title = "" }) {
   return (
-    <Button title="Añadir" size="sm" onClick={onClick} className={baseClass}>
+    <Button title={title} size="sm" onClick={onClick} className={baseClass}>
       <img src={MoreIcon} alt="Añadir" className={imgClass} />
     </Button>
   );
 }
 
-export function PlusButton({ onClick }) {
+export function PlusButton({ onClick, title = "" }) {
   return (
-    <Button title="Crear" size="sm" onClick={onClick} className={baseClass}>
+    <Button title={title} size="sm" onClick={onClick} className={baseClass}>
       <img src={PlusSignIcon} alt="Crear" className={imgClass} />
     </Button>
   );
 }
 
-export function BackButton({ onClick }) {
+export function BackButton({ onClick, title = "" }) {
   return (
     <Button
-      title="Volver"
+      title={title}
       size="sm"
       variant="outline"
       onClick={onClick}
@@ -85,24 +86,40 @@ export function BackButton({ onClick }) {
   );
 }
 
-export function YesButton({ onClick }) {
+export function YesButton({ onClick, title = "" }) {
   return (
-    <Button title="Sí" size="sm" onClick={onClick} className={baseClass}>
+    <Button title={title} size="sm" onClick={onClick} className={baseClass}>
       <img src={YesIcon} alt="Sí" className={imgClass} />
     </Button>
   );
 }
 
-export function NoButton({ onClick }) {
+export function NoButton({ onClick, title = "" }) {
   return (
     <Button
-      title="No"
+      title={title}
       size="sm"
       variant="outline"
       onClick={onClick}
       className={baseClass}
     >
       <img src={NoIcon} alt="No" className="w-5 h-5 brightness-0" />
+    </Button>
+  );
+}
+
+export function AssignTeacherButton({ onClick, disabled = false, title = "" }) {
+  return (
+    <Button
+      title={title}
+      size="sm"
+      onClick={onClick}
+      disabled={disabled}
+      className={`${baseClass} ${
+        disabled ? "opacity-40 cursor-not-allowed hover:scale-100" : ""
+      }`}
+    >
+      <img src={AssignTeacher} alt="Asignar Docentes" className={imgClass} />
     </Button>
   );
 }

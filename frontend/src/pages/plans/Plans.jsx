@@ -4,6 +4,8 @@ import { planService } from "../../services/plan.service";
 import { PlanPriceService } from "../../services/PlanPrice.service";
 import { subjectService } from "../../services/subject.service";
 import { PlanSubjectService } from "../../services/PlanSubject.service";
+import { teacherPlansService } from "../../services/teacherPlans.service";
+import { teacherService } from "../../services/teacher.service";
 import Button from "../../components/ui/Button";
 import Label from "../../components/form/Label";
 import Input from "../../components/form/Input";
@@ -19,6 +21,7 @@ import {
   YesButton,
   NoButton,
   AddButton,
+  AssignTeacherButton,
 } from "../../components/ui/ActionButtons";
 
 export function Plans() {
@@ -30,6 +33,14 @@ export function Plans() {
   const [plans, setPlans] = useState([]);
   const [subjects, setSubjects] = useState([]);
   const [allPlanSubjects, setAllPlanSubjects] = useState([]);
+
+  const [openTeachersModal, setOpenTeachersModal] = useState(false);
+
+  const [selectedPlanTeachers, setSelectedPlanTeachers] = useState(null);
+
+  const [selectedTeacherIds, setSelectedTeacherIds] = useState([]);
+
+  const [teachers, setTeachers] = useState([]);
 
   // ======================================================
   // FILTROS
@@ -254,6 +265,39 @@ export function Plans() {
     });
   };
 
+  const handleManageTeachers = async (plan) => {
+    try {
+      const { data } = await teacherPlansService.getByPlan(plan.id);
+
+      setSelectedPlanTeachers(plan);
+
+      setSelectedTeacherIds((data.data || []).map((row) => row.teacher_id));
+
+      setOpenTeachersModal(true);
+    } catch (error) {
+      console.error(error);
+      alert("No fue posible obtener los docentes del plan.");
+    }
+  };
+
+  const handleSaveTeachers = async () => {
+    try {
+      await teacherPlansService.updateByPlan(selectedPlanTeachers.id, {
+        teacher_ids: selectedTeacherIds,
+      });
+
+      await fetchCurrentPlans();
+
+      setOpenTeachersModal(false);
+      setSelectedTeacherIds([]);
+      setSelectedPlanTeachers(null);
+    } catch (error) {
+      console.error(error);
+
+      alert(error.response?.data?.message ?? "Error al guardar los docentes.");
+    }
+  };
+
   const handleUpdate = async () => {
     try {
       setErrorsEdit({});
@@ -313,7 +357,6 @@ export function Plans() {
           await PlanSubjectService.delete(planSubjectRelation.id);
       }
 
-      alert("Plan actualizado con éxito");
       setOpenEditModal(false);
       await refreshAll();
       const planSubjectsRes = await PlanSubjectService.getAll();
@@ -350,6 +393,9 @@ export function Plans() {
 
         const planSubjectsRes = await PlanSubjectService.getAll();
         setAllPlanSubjects(planSubjectsRes.data.data || []);
+
+        const teachersRes = await teacherService.getAll();
+        setTeachers(teachersRes.data.data || []);
       } catch (error) {
         console.error(error);
       }
@@ -377,15 +423,61 @@ export function Plans() {
 
   const columns = [
     {
-      header: "Plan",
+      header: "Planes",
       accessor: "name",
     },
     {
       header: "Materias",
-      render: (row) => row.subjects?.join(", ") || "-",
+      render: (row) => {
+        const subjects = row.subjects || [];
+
+        const containerClass =
+          subjects.length >= 3
+            ? "h-20 overflow-y-auto pr-2"
+            : "h-20 flex flex-col justify-center";
+
+        return (
+          <div className={containerClass}>
+            {subjects.length === 0 ? (
+              <span className="text-gray-400 italic">Sin materias</span>
+            ) : (
+              subjects.map((subject) => (
+                <div key={subject} className="py-1">
+                  {subject}
+                </div>
+              ))
+            )}
+          </div>
+        );
+      },
     },
     {
-      header: "Precio Actual",
+      header: "Docentes",
+      render: (row) => {
+        const teachers = row.teachers || [];
+
+        const containerClass =
+          teachers.length >= 3
+            ? "h-20 overflow-y-auto pr-2"
+            : "h-20 flex flex-col justify-center";
+
+        return (
+          <div className={containerClass}>
+            {teachers.length === 0 ? (
+              <span className="text-gray-400 italic">Sin docentes</span>
+            ) : (
+              teachers.map((teacher) => (
+                <div key={teacher} className="py-1">
+                  {teacher}
+                </div>
+              ))
+            )}
+          </div>
+        );
+      },
+    },
+    {
+      header: "Precios Actuales",
       accessor: "current_price",
     },
 
@@ -393,13 +485,35 @@ export function Plans() {
       ? [
           {
             header: "Acciones",
-            render: (row) => (
-              <div className="flex gap-2">
-                <ViewButton onClick={() => handleOpenHistory(row)} />
+            render: (row) => {
+              const hasSubjects = allPlanSubjects.some(
+                (ps) => ps.plan_id === row.id,
+              );
 
-                <EditButton onClick={() => handleEditPlan(row)} />
-              </div>
-            ),
+              return (
+                <div className="flex gap-2">
+                  <ViewButton
+                    title="Ver Historial"
+                    onClick={() => handleOpenHistory(row)}
+                  />
+
+                  <EditButton
+                    title="Editar Plan"
+                    onClick={() => handleEditPlan(row)}
+                  />
+
+                  <AssignTeacherButton
+                    disabled={!hasSubjects}
+                    title={
+                      hasSubjects
+                        ? "Asignar Docente"
+                        : "Primero agregue una o más materias al plan"
+                    }
+                    onClick={() => handleManageTeachers(row)}
+                  />
+                </div>
+              );
+            },
           },
         ]
       : []),
@@ -409,38 +523,7 @@ export function Plans() {
     <div className="flex justify-between items-center">
       <span>Planes</span>
 
-      {isAdmin() && (
-        <Button
-          title="Crear Plan"
-          size="sm"
-          onClick={openCreate}
-          className="
-              cursor-pointer
-              w-12
-              h-12
-              rounded
-              bg-[#0cc0df]
-              text-white
-              flex
-              items-center
-              justify-center
-              transition
-              transform
-              hover:scale-105
-            "
-        >
-          <img
-            src={CreateIcon}
-            alt="More"
-            className="
-                w-5
-                h-5
-                brightness-0
-                invert
-              "
-          />
-        </Button>
-      )}
+      {isAdmin() && <PlusButton title="Crear Plan" onClick={openCreate} />}
     </div>
   );
 
@@ -548,29 +631,29 @@ export function Plans() {
             size="icon"
             onClick={handleCreate}
             className="
-                        cursor-pointer
-                        w-12
-                        h-12
-                        rounded
-                        bg-[#0cc0df]
-                        text-white
-                        flex
-                        items-center
-                        justify-center
-                        transition
-                        transform
-                        hover:scale-105
-                      "
+              cursor-pointer
+              w-12
+              h-12
+              rounded
+              bg-[#0cc0df]
+              text-white
+              flex
+              items-center
+              justify-center
+              transition
+              transform
+              hover:scale-105
+            "
           >
             <img
               src={SaveIcon}
               alt="Guardar"
               className="
-                          w-5
-                          h-5
-                          brightness-0
-                          invert
-                        "
+                w-5
+                h-5
+                brightness-0
+                invert
+              "
             />
           </Button>
         </div>
@@ -729,6 +812,55 @@ export function Plans() {
               "
             />
           </Button>
+        </div>
+      </Modal>
+
+      <Modal
+        isOpen={openTeachersModal}
+        onClose={() => setOpenTeachersModal(false)}
+      >
+        <h2 className="text-xl font-bold mb-8">Asignar docentes</h2>
+
+        <p className="mb-6">
+          Plan:
+          <strong> {selectedPlanTeachers?.name}</strong>
+        </p>
+        <div className="space-y-2 max-h-96 overflow-y-auto">
+          {[...teachers]
+            .sort((a, b) =>
+              `${a.last_name} ${a.first_name}`.localeCompare(
+                `${b.last_name} ${b.first_name}`,
+              ),
+            )
+            .map((teacher) => (
+              <label key={teacher.id} className="flex items-center gap-3">
+                <input
+                  type="checkbox"
+                  checked={selectedTeacherIds.includes(teacher.id)}
+                  onChange={(e) => {
+                    if (e.target.checked) {
+                      setSelectedTeacherIds((prev) => [...prev, teacher.id]);
+                    } else {
+                      setSelectedTeacherIds((prev) =>
+                        prev.filter((id) => id !== teacher.id),
+                      );
+                    }
+                  }}
+                />
+                {teacher.last_name}, {teacher.first_name}
+              </label>
+            ))}
+        </div>
+        <div className="flex justify-end gap-4 mt-8">
+          <NoButton
+            onClick={() => {
+              setOpenTeachersModal(false);
+              setSelectedTeacherIds([]);
+              setSelectedPlanTeachers(null);
+            }}
+          />
+
+          <YesButton onClick={handleSaveTeachers} />
         </div>
       </Modal>
     </>

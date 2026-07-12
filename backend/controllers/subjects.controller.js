@@ -8,39 +8,59 @@ export const subjectsController = {
 
   getAll: async (req, res) => {
     try {
-      const { teacher_id } = req.query;
+      const [rows] = await db.execute(`
+      SELECT
+        s.id,
+        s.name,
 
-      let query = `
-        SELECT DISTINCT
-          s.id,
-          s.name
-        FROM subjects s
-        LEFT JOIN teacher_subjects ts
-          ON ts.subject_id = s.id
-      `;
+        p.id AS plan_id,
+        p.name AS plan_name
 
-      const params = [];
+      FROM subjects s
 
-      if (teacher_id) {
-        query += ` WHERE ts.teacher_id = ? `;
-        params.push(teacher_id);
+      LEFT JOIN plan_subjects ps
+        ON ps.subject_id = s.id
+
+      LEFT JOIN plans p
+        ON p.id = ps.plan_id
+
+      ORDER BY
+        s.name,
+        p.name
+    `);
+
+      const subjectsMap = new Map();
+
+      for (const row of rows) {
+        if (!subjectsMap.has(row.id)) {
+          subjectsMap.set(row.id, {
+            id: row.id,
+            name: row.name,
+            plans: [],
+          });
+        }
+
+        if (row.plan_id) {
+          subjectsMap.get(row.id).plans.push({
+            id: row.plan_id,
+            name: row.plan_name,
+          });
+        }
       }
 
-      query += ` ORDER BY s.name ASC`;
-
-      const [rows] = await db.execute(query, params);
+      const subjects = [...subjectsMap.values()];
 
       res.json({
         success: true,
-        total: rows.length,
-        data: rows,
+        total: subjects.length,
+        data: subjects,
       });
     } catch (error) {
       console.error(error);
 
       res.status(500).json({
         success: false,
-        message: "Error al obtener materias",
+        message: "Error al obtener materias.",
       });
     }
   },

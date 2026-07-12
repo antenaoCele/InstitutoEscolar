@@ -1,22 +1,18 @@
 import { useEffect, useState } from "react";
 import BasicTable from "../../components/tables/BasicTables/BasicTablesOne";
 import { subjectService } from "../../services/subject.service";
-import { teacherService } from "../../services/teacher.service";
-import { teacherSubjectService } from "../../services/teacherSubject.service";
 import Button from "../../components/ui/Button";
 import Label from "../../components/form/Label";
 import Input from "../../components/form/Input";
-import Select from "../../components/form/Select";
 import { Modal } from "../../components/ui/Modal";
 import { isAdmin } from "../../utils/auth";
 import {
-  PencilIcon,
-  TrashBinIcon,
-  CloseLineIcon,
-  SaveIcon,
-  MoreIcon,
-  CreateIcon,
-} from "../../icons";
+  EditButton,
+  DeleteButton,
+  PlusButton,
+  YesButton,
+  NoButton,
+} from "../../components/ui/ActionButtons";
 import { sortByProperty, sortByPersonName } from "../../utils/sort";
 
 export function Subjects() {
@@ -24,13 +20,10 @@ export function Subjects() {
   // DATOS
   // ======================================================
   const [subjects, setSubjects] = useState([]);
-  const [teachers, setTeachers] = useState([]);
-  const [teacherSubjects, setTeacherSubjects] = useState([]);
 
   // ======================================================
   // FILTROS
   // ======================================================
-  const [selectedTeacherIds, setSelectedTeacherIds] = useState([]);
   const [searchName, setSearchName] = useState("");
 
   // ======================================================
@@ -49,7 +42,7 @@ export function Subjects() {
   // FORMULARIO DE LA MATERIA
   // ======================================================
   const [name, setName] = useState("");
-  const [selectedTeacher, setSelectedTeacher] = useState("");
+  // const [selectedTeacher, setSelectedTeacher] = useState("");
 
   // ======================================================
   // ERRORES
@@ -73,50 +66,14 @@ export function Subjects() {
   // ======================================================
   const fetchSubjects = async () => {
     try {
-      const [subjectsRes, teacherSubjectsRes] = await Promise.all([
-        subjectService.getAll(),
-        teacherSubjectService.getAll(),
-      ]);
+      const subjectsRes = await subjectService.getAll();
 
       const subjectsData = subjectsRes.data.data || [];
-      const relations = teacherSubjectsRes.data.data || [];
 
-      const merged = subjectsData.map((subject) => {
-        const subjectTeachers = relations
-          .filter((r) => r.subject_id === subject.id)
-          .map((r) => ({ id: r.teacher_id, name: r.teacher_name }));
-        return {
-          ...subject,
-          teachers: subjectTeachers,
-        };
-      });
-
-      let filtered = merged;
-
-      if (selectedTeacher) {
-        filtered = merged.filter((s) =>
-          s.teachers.some((t) => String(t.id) === String(selectedTeacher)),
-        );
-      }
-
-      setSubjects(filtered);
-      setTeacherSubjects(relations);
+      setSubjects(subjectsData);
     } catch (error) {
       console.error(error);
       setSubjects([]);
-    }
-  };
-
-  // ======================================================
-  // FETCH AUXILIARES
-  // ======================================================
-  const fetchTeachers = async () => {
-    try {
-      const res = await teacherService.getAll();
-
-      setTeachers(res.data.data || []);
-    } catch (error) {
-      console.error(error);
     }
   };
 
@@ -125,10 +82,7 @@ export function Subjects() {
   // ======================================================
   const resetForm = () => {
     setName("");
-    setSelectedTeacherIds([]);
-
-    setErrorsCreate({});
-    setErrorsEdit({});
+    setSelectedSubject(null);
   };
 
   // ======================================================
@@ -164,15 +118,7 @@ export function Subjects() {
         return;
       }
 
-      const subjectRes = await subjectService.create({ name });
-      const newSubjectId = subjectRes.data.data.id;
-
-      for (const teacherId of selectedTeacherIds) {
-        await teacherSubjectService.create({
-          teacher_id: teacherId,
-          subject_id: newSubjectId,
-        });
-      }
+      await subjectService.create({ name });
 
       setOpenCreateModal(false);
 
@@ -188,13 +134,9 @@ export function Subjects() {
     }
   };
 
-  const handleEdit = async (subject) => {
+  const handleEdit = (subject) => {
     setSelectedSubject(subject);
-
-    setName(subject.name || "");
-    setSelectedTeacherIds(subject.teachers?.map((t) => t.id) || []);
-
-    setErrorsEdit({});
+    setName(subject.name);
     setOpenEditModal(true);
   };
 
@@ -211,29 +153,6 @@ export function Subjects() {
       }
 
       await subjectService.update(selectedSubject.id, { name });
-
-      // Sincronizar docentes
-      const relRes = await teacherSubjectService.getAll();
-      const existingRels = relRes.data.data.filter(
-        (r) => r.subject_id === selectedSubject.id,
-      );
-      const existingIds = existingRels.map((r) => r.teacher_id);
-
-      // Agregar nuevos
-      for (const tId of selectedTeacherIds) {
-        if (!existingIds.includes(tId)) {
-          await teacherSubjectService.create({
-            teacher_id: tId,
-            subject_id: selectedSubject.id,
-          });
-        }
-      }
-      // Eliminar los que ya no están
-      for (const rel of existingRels) {
-        if (!selectedTeacherIds.includes(rel.teacher_id)) {
-          await teacherSubjectService.delete(rel.id);
-        }
-      }
 
       setOpenEditModal(false);
 
@@ -273,10 +192,6 @@ export function Subjects() {
   // ======================================================
   useEffect(() => {
     fetchSubjects();
-  }, [selectedTeacher]);
-
-  useEffect(() => {
-    fetchTeachers();
   }, []);
 
   // ======================================================
@@ -293,19 +208,31 @@ export function Subjects() {
   const showCreateButtons = isAdmin();
 
   let columns = [
-    { header: "Materia", accessor: "name" },
     {
-      header: "Docente(s)",
+      header: "Materia",
+      accessor: "name",
+    },
+    {
+      header: "Planes",
       render: (row) => {
-        if (!row.teachers || row.teachers.length === 0) return "-";
-        if (row.teachers.length === 1) return row.teachers[0].name;
+        const plans = row.plans || [];
+
+        const containerClass =
+          plans.length >= 3
+            ? "h-20 overflow-y-auto pr-2"
+            : "h-20 flex flex-col justify-center";
+
         return (
-          <div className="max-h-16 overflow-y-auto border border-gray-100 p-1 rounded bg-gray-50 text-xs">
-            {row.teachers.map((t, idx) => (
-              <div key={t.id} className="mb-0.5 last:mb-0">
-                {idx + 1}. {t.name}
-              </div>
-            ))}
+          <div className={containerClass}>
+            {plans.length === 0 ? (
+              <span className="text-gray-400 italic">Sin planes</span>
+            ) : (
+              plans.map((plan) => (
+                <div key={plan.id} className="py-1">
+                  {plan.name}
+                </div>
+              ))
+            )}
           </div>
         );
       },
@@ -317,24 +244,12 @@ export function Subjects() {
       header: "Acciones",
       render: (row) => (
         <div className="flex gap-2">
-          <Button
-            title="Editar"
-            size="sm"
-            onClick={() => handleEdit(row)}
-            className={buttonClass}
-          >
-            <PencilIcon className="w-5 h-5" />
-          </Button>
+          <EditButton title="Editar Materia" onClick={() => handleEdit(row)} />
 
-          <Button
-            size="sm"
-            variant="outline"
+          <DeleteButton
+            title="Eliminar Materia"
             onClick={() => handleDelete(row)}
-            className={buttonClass}
-            title="Eliminar"
-          >
-            <TrashBinIcon className="w-5 h-5" />
-          </Button>
+          />
         </div>
       ),
     });
@@ -345,36 +260,7 @@ export function Subjects() {
       <span>Materias</span>
 
       {showCreateButtons && (
-        <Button
-          title="Crear Materia"
-          size="sm"
-          onClick={openCreate}
-          className="
-            cursor-pointer
-            w-12
-            h-12
-            rounded
-            bg-[#0cc0df]
-            text-white
-            flex
-            items-center
-            justify-center
-            transition
-            transform
-            hover:scale-105
-          "
-        >
-          <img
-            src={CreateIcon}
-            alt="More"
-            className="
-              w-5
-              h-5
-              brightness-0
-              invert
-            "
-          />
-        </Button>
+        <PlusButton title="Crear Materia" onClick={openCreate} />
       )}
     </div>
   );
@@ -391,32 +277,6 @@ export function Subjects() {
           onChange={(e) => setSearchName(e.target.value)}
           className="p-2 border border-gray-300 rounded w-60"
         />
-
-        <Select
-          value={selectedTeacher}
-          onChange={(e) => setSelectedTeacher(e.target.value)}
-          className="p-2 border border-gray-300 rounded w-60"
-        >
-          <option value="">Todos los docentes</option>
-
-          {[...teachers]
-            .sort((a, b) => {
-              const last = a.last_name.localeCompare(b.last_name, "es", {
-                sensitivity: "base",
-              });
-
-              if (last !== 0) return last;
-
-              return a.first_name.localeCompare(b.first_name, "es", {
-                sensitivity: "base",
-              });
-            })
-            .map((teacher) => (
-              <option key={teacher.id} value={teacher.id}>
-                {teacher.last_name}, {teacher.first_name}
-              </option>
-            ))}
-        </Select>
       </div>
 
       <BasicTable
@@ -456,79 +316,15 @@ export function Subjects() {
           )}
         </div>
 
-        <div className="flex flex-col mb-6">
-          <Label className="font-semibold mb-2">Docentes</Label>
-          <div className="grid grid-cols-1 gap-2 max-h-40 overflow-y-auto p-2 border border-gray-200 rounded">
-            {[...teachers]
-              .sort((a, b) => {
-                const last = a.last_name.localeCompare(b.last_name, "es", {
-                  sensitivity: "base",
-                });
-
-                if (last !== 0) return last;
-
-                return a.first_name.localeCompare(b.first_name, "es", {
-                  sensitivity: "base",
-                });
-              })
-              .map((teacher) => (
-                <Label
-                  key={teacher.id}
-                  className="flex items-center gap-2 text-sm cursor-pointer hover:bg-gray-50 p-1 rounded"
-                >
-                  <Input
-                    type="checkbox"
-                    checked={selectedTeacherIds.includes(teacher.id)}
-                    onChange={(e) => {
-                      if (e.target.checked) {
-                        setSelectedTeacherIds([
-                          ...selectedTeacherIds,
-                          teacher.id,
-                        ]);
-                      } else {
-                        setSelectedTeacherIds(
-                          selectedTeacherIds.filter((id) => id !== teacher.id),
-                        );
-                      }
-                    }}
-                  />
-                  {teacher.last_name}, {teacher.first_name}
-                </Label>
-              ))}
-          </div>
-        </div>
-
         <div className="flex justify-end gap-4 mt-10">
-          <Button
-            size="icon"
-            title="Guardar"
-            onClick={handleCreate}
-            className="
-              cursor-pointer
-              w-12
-              h-12
-              rounded
-              bg-[#0cc0df]
-              text-white
-              flex
-              items-center
-              justify-center
-              transition
-              transform
-              hover:scale-105
-            "
-          >
-            <img
-              src={SaveIcon}
-              alt="Guardar"
-              className="
-                w-5
-                h-5
-                brightness-0
-                invert
-              "
+          <div className="flex justify-end gap-3">
+            <NoButton
+              title="Cancelar"
+              onClick={() => setOpenCreateModal(false)}
             />
-          </Button>
+
+            <YesButton title="Aceptar" onClick={handleCreate} />
+          </div>
         </div>
       </Modal>
 
@@ -555,90 +351,10 @@ export function Subjects() {
           )}
         </div>
 
-        <div className="flex flex-col mb-6">
-          <Label className="font-semibold mb-2">Docentes</Label>
-          <div className="grid grid-cols-1 gap-2 max-h-40 overflow-y-auto p-2 border border-gray-200 rounded">
-            {[...teachers]
-              .sort((a, b) => {
-                const last = a.last_name.localeCompare(b.last_name, "es", {
-                  sensitivity: "base",
-                });
-
-                if (last !== 0) return last;
-
-                return a.first_name.localeCompare(b.first_name, "es", {
-                  sensitivity: "base",
-                });
-              })
-              .map((teacher) => (
-                <Label
-                  key={teacher.id}
-                  className="flex items-center gap-2 text-sm cursor-pointer hover:bg-gray-50 p-1 rounded"
-                >
-                  <Input
-                    type="checkbox"
-                    checked={selectedTeacherIds.includes(teacher.id)}
-                    onChange={(e) => {
-                      if (e.target.checked) {
-                        setSelectedTeacherIds([
-                          ...selectedTeacherIds,
-                          teacher.id,
-                        ]);
-                      } else {
-                        setSelectedTeacherIds(
-                          selectedTeacherIds.filter((id) => id !== teacher.id),
-                        );
-                      }
-                    }}
-                  />
-                  {teacher.last_name}, {teacher.first_name}
-                </Label>
-              ))}
-          </div>
-        </div>
-
         <div className="flex justify-end gap-4 mt-10">
-          {/* <Button
-            variant="outline"
-            onClick={() => {
-              setOpenEditModal(false);
-              resetForm();
-            }}
-            className={buttonClass}
-          >
-            Cancelar
-          </Button> */}
+          <NoButton title="Cancelar" onClick={() => setOpenEditModal(false)} />
 
-          <Button
-            title="Guardar"
-            size="icon"
-            onClick={handleUpdate}
-            className="
-              cursor-pointer
-              w-12
-              h-12
-              rounded
-              bg-[#0cc0df]
-              text-white
-              flex
-              items-center
-              justify-center
-              transition
-              transform
-              hover:scale-105
-            "
-          >
-            <img
-              src={SaveIcon}
-              alt="Guardar"
-              className="
-                w-5
-                h-5
-                brightness-0
-                invert
-              "
-            />
-          </Button>
+          <YesButton title="Aceptar" onClick={handleUpdate} />
         </div>
       </Modal>
 
@@ -646,17 +362,12 @@ export function Subjects() {
         <h2 className="text-lg font-semibold mb-4">¿Eliminar Materia?</h2>
 
         <div className="flex justify-end gap-2">
-          <Button
-            variant="outline"
+          <NoButton
+            title="Cancelar"
             onClick={() => setOpenDeleteModal(false)}
-            className={buttonClass}
-          >
-            No
-          </Button>
+          />
 
-          <Button onClick={confirmDelete} className={buttonClass}>
-            Sí
-          </Button>
+          <YesButton title="Aceptar" onClick={confirmDelete} />
         </div>
       </Modal>
     </>
