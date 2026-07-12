@@ -9,6 +9,12 @@ import { Modal } from "../../components/ui/Modal";
 import { PaymentService } from "../../services/payment.service";
 import { studentService } from "../../services/student.service";
 import { EnrollmentService } from "../../services/enrollment.service";
+import { useFeedbackModal } from "../../hooks/useFeedbackModal";
+import { validatePaymentForm } from "../../validators/entities/payments.validator";
+import {
+  validateEnrollmentForm,
+  validateEditEnrollmentForm,
+} from "../../validators/entities/enrollments.validator";
 
 export default function StudentPayments() {
   const [payments, setPayments] = useState([]);
@@ -31,30 +37,20 @@ export default function StudentPayments() {
 
   const [paymentDate, setPaymentDate] = useState(getLocalDateString());
 
-  // Inscripción: ahora se pueden tildar varios alumnos (hermanos)
+  // Inscripción: se pueden tildar varios alumnos (hermanos)
   const [enrollmentStudents, setEnrollmentStudents] = useState([]);
   const [enrollmentAmount, setEnrollmentAmount] = useState("");
   const [enrollmentDate, setEnrollmentDate] = useState(getLocalDateString());
 
-  // Edición de inscripción (sigue siendo de a un alumno por vez)
+  // Edición de inscripción (de a un alumno por vez)
   const [enrollmentStudent, setEnrollmentStudent] = useState("");
   const [openEditEnrollmentModal, setOpenEditEnrollmentModal] = useState(false);
   const [editingEnrollmentId, setEditingEnrollmentId] = useState(null);
 
   // ======================================================
-  // MODAL DE FEEDBACK (reemplaza los alert())
+  // MODAL DE FEEDBACK (hook compartido, reemplaza los alert())
   // ======================================================
-  const [feedbackModal, setFeedbackModal] = useState({
-    open: false,
-    type: "error",
-    message: "",
-  });
-
-  const showFeedback = (message, type = "error") =>
-    setFeedbackModal({ open: true, type, message });
-
-  const closeFeedback = () =>
-    setFeedbackModal((prev) => ({ ...prev, open: false }));
+  const { feedbackModal, showFeedback, closeFeedback } = useFeedbackModal();
 
   const [month, setMonth] = useState(new Date().getMonth() + 1);
   const [year, setYear] = useState(new Date().getFullYear());
@@ -154,6 +150,18 @@ export default function StudentPayments() {
   };
 
   const handleCreatePayment = async () => {
+    const errors = validatePaymentForm({
+      selectedStudent,
+      selectedStudentPlan,
+      paymentDate,
+      paymentMethod,
+    });
+
+    if (Object.keys(errors).length > 0) {
+      showFeedback(Object.values(errors)[0], "error");
+      return;
+    }
+
     try {
       await PaymentService.create({
         student_plan_id: selectedStudentPlan,
@@ -192,8 +200,14 @@ export default function StudentPayments() {
   };
 
   const handleCreateEnrollment = async () => {
-    if (!enrollmentStudents.length) {
-      showFeedback("Seleccione al menos un alumno.", "error");
+    const errors = validateEnrollmentForm({
+      enrollmentStudents,
+      enrollmentAmount,
+      enrollmentDate,
+    });
+
+    if (Object.keys(errors).length > 0) {
+      showFeedback(Object.values(errors)[0], "error");
       return;
     }
 
@@ -236,6 +250,17 @@ export default function StudentPayments() {
   };
 
   const handleUpdateEnrollment = async () => {
+    const errors = validateEditEnrollmentForm({
+      enrollmentStudent,
+      enrollmentAmount,
+      enrollmentDate,
+    });
+
+    if (Object.keys(errors).length > 0) {
+      showFeedback(Object.values(errors)[0], "error");
+      return;
+    }
+
     try {
       await EnrollmentService.update(editingEnrollmentId, {
         student_id: enrollmentStudent,
@@ -540,7 +565,7 @@ export default function StudentPayments() {
         </div>
       </Modal>
 
-      {/* Modal de feedback (éxito / error) — reemplaza los alert() */}
+      {/* Modal de feedback (éxito/error) — viene del hook useFeedbackModal */}
       <Modal isOpen={feedbackModal.open} onClose={closeFeedback}>
         <h2
           className={`text-lg font-semibold mb-4 ${

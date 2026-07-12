@@ -7,6 +7,7 @@ export const Modal = ({
   className = "",
   showCloseButton = true,
   isFullscreen = false,
+  closeOnOverlayClick = true,
 }) => {
   useEffect(() => {
     const handleEscape = (event) => {
@@ -35,7 +36,7 @@ export const Modal = ({
       {!isFullscreen && (
         <div
           className="absolute inset-0 bg-black/40 backdrop-blur-sm"
-          onClick={onClose}
+          onClick={closeOnOverlayClick ? onClose : undefined}
         />
       )}
 

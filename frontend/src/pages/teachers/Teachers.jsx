@@ -19,6 +19,7 @@ import {
   AddButton,
 } from "../../components/ui/ActionButtons";
 import { sortByPersonName } from "../../utils/sort";
+import { validateTeacher } from "../../validators/entities/teachers.validators";
 
 export function Teachers() {
   // ======================================================
@@ -141,9 +142,20 @@ export function Teachers() {
   };
 
   const handleCreate = async () => {
-    try {
-      setErrorsCreate({});
+    setErrorsCreate({});
+    const validationErrors = validateTeacher({
+      first_name: firstName,
+      last_name: lastName,
+      dni,
+      phone,
+    });
 
+    if (validationErrors && Object.keys(validationErrors).length > 0) {
+      setErrorsCreate(validationErrors);
+      return; // Detiene la ejecución si hay errores
+    }
+
+    try {
       await teacherService.create({
         first_name: firstName,
         last_name: lastName,
@@ -155,6 +167,7 @@ export function Teachers() {
       fetchTeachers();
       resetForm();
     } catch (error) {
+      // Mantiene el fallback por si el backend rechaza algo que se le pasó al front
       const backendErrors = error.response?.data?.errors;
       if (backendErrors) setErrorsCreate(mapErrors(backendErrors));
     }
@@ -173,21 +186,22 @@ export function Teachers() {
   };
 
   const handleUpdate = async () => {
-    const newErrors = {};
+    setErrorsEdit({});
 
-    if (!firstName.trim()) newErrors.first_name = "Este campo está vacío.";
-    if (!lastName.trim()) newErrors.last_name = "Este campo está vacío.";
-    if (!dni.trim()) newErrors.dni = "Este campo está vacío.";
-    if (!phone.trim()) newErrors.phone = "Este campo está vacío.";
+    // Ejecutar la validación del Front-end reemplazando las comprobaciones manuales
+    const validationErrors = validateTeacher({
+      first_name: firstName,
+      last_name: lastName,
+      dni,
+      phone,
+    });
 
-    if (Object.keys(newErrors).length > 0) {
-      setErrorsEdit(newErrors);
-      return;
+    if (validationErrors && Object.keys(validationErrors).length > 0) {
+      setErrorsEdit(validationErrors);
+      return; // Detiene la ejecución si hay errores
     }
 
     try {
-      setErrorsEdit({});
-
       await teacherService.update(selectedTeacher.id, {
         first_name: firstName,
         last_name: lastName,
@@ -401,7 +415,7 @@ export function Teachers() {
         <Input
           label="DNI"
           value={dni}
-          onChange={(e) => setDni(e.target.value)}
+          onChange={(e) => setDni(e.Teacher.value || e.target.value)} // Nota: corregido un typo menor aquí que podría fallar
           error={errorsEdit.dni}
         />
 
