@@ -5,6 +5,7 @@ import {
   isValidName,
   isValidLevel,
   isValidGrade,
+  isValidBirthDate,
 } from "../rules/formatRules";
 
 /**
@@ -46,9 +47,9 @@ export const validateStudentForm = ({
     errors.school = "Ingrese un nombre de institución válido.";
   }
 
-  if (isRequired(birth_date)) {
+  if (isRequired(birthDate)) {
     errors.birth_date = "La fecha de nacimiento es obligatoria.";
-  } else if (!isValidBirthDate(birth_date)) {
+  } else if (!isValidBirthDate(birthDate)) {
     errors.birth_date = "Ingrese una fecha de nacimiento válida.";
   }
 

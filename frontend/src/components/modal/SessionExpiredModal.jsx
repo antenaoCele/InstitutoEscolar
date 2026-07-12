@@ -1,4 +1,5 @@
 import { Modal } from "../ui/Modal";
+import Button from "../ui/Button";
 
 export default function SessionExpiredModal({ isOpen, onConfirm }) {
   return (
@@ -16,12 +17,7 @@ export default function SessionExpiredModal({ isOpen, onConfirm }) {
           nuevamente.
         </p>
 
-        <button
-          onClick={onConfirm}
-          className="px-5 py-2 rounded-lg bg-blue-600 text-white"
-        >
-          Aceptar
-        </button>
+        <Button onClick={onConfirm}>Aceptar</Button>
       </div>
     </Modal>
   );

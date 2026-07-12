@@ -9,7 +9,12 @@ export const studentsController = {
 
   getAllWithStatus: async (req, res) => {
     try {
-      const { status: filterStatus = "", teacher_id, plan_id } = req.query;
+      const {
+        status: filterStatus = "",
+        teacher_id,
+        plan_id,
+        payment_status,
+      } = req.query;
 
       const today = new Date();
       const yearMonth = today.toISOString().slice(0, 7);
@@ -168,10 +173,25 @@ export const studentsController = {
         return studentData;
       });
 
+      // FILTRO POR ESTADO DE PAGO DEL MES ACTUAL
+      let filteredResult = result;
+
+      if (payment_status === "paid") {
+        filteredResult = result.filter(
+          (student) => student.student_plan_id && student.status === "PAGADO",
+        );
+      }
+
+      if (payment_status === "pending") {
+        filteredResult = result.filter(
+          (student) => student.student_plan_id && student.status === "DEBE",
+        );
+      }
+
       res.json({
         success: true,
-        total: result.length,
-        data: result,
+        total: filteredResult.length,
+        data: filteredResult,
       });
     } catch (error) {
       console.error(error);

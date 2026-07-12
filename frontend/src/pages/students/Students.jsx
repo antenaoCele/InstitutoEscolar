@@ -41,6 +41,7 @@ export function Students() {
   const [searchFirstLastName, setSearchFirstLastName] = useState("");
   const [searchDNI, setSearchDNI] = useState("");
   const [searchSchool, setSearchSchool] = useState("");
+  const [selectedPaymentStatus, setSelectedPaymentStatus] = useState("");
 
   // ======================================================
   // MODALES
@@ -107,6 +108,10 @@ export function Students() {
 
       if (selectedStatus) {
         params.status = selectedStatus;
+      }
+
+      if (selectedPaymentStatus) {
+        params.payment_status = selectedPaymentStatus;
       }
 
       const { data } = await studentService.getAll(params);
@@ -429,7 +434,7 @@ export function Students() {
   // ======================================================
   useEffect(() => {
     fetchStudents();
-  }, [selectedTeacher, selectedPlan, selectedStatus]);
+  }, [selectedTeacher, selectedPlan, selectedStatus, selectedPaymentStatus]);
 
   useEffect(() => {
     fetchFilters();
@@ -493,13 +498,19 @@ export function Students() {
           pr-1
         "
       >
-        {(row.activePlans || []).map((p) => (
-          <div key={p.student_plan_id}>
-            <div className="font-medium text-sm">{p.plan_name}</div>
+        {row.activePlans?.length > 0 ? (
+          row.activePlans.map((p) => (
+            <div key={p.student_plan_id}>
+              <div className="font-medium text-sm">{p.plan_name}</div>
 
-            <div className="text-xs text-gray-500">{p.teacher_name}</div>
+              <div className="text-xs text-gray-500">{p.teacher_name}</div>
+            </div>
+          ))
+        ) : (
+          <div className="text-sm italic text-gray-500">
+            Editar para asignar plan y docente
           </div>
-        ))}
+        )}
       </div>
     ),
   });
@@ -654,6 +665,16 @@ export function Students() {
                 {plan.name}
               </option>
             ))}
+        </Select>
+
+        <Select
+          value={selectedPaymentStatus}
+          onChange={(e) => setSelectedPaymentStatus(e.target.value)}
+          className="p-2 border border-gray-300 rounded min-w-56"
+        >
+          <option value="">Todos los pagos</option>
+          <option value="paid">Pagaron este mes</option>
+          <option value="pending">Faltan pagar este mes</option>
         </Select>
       </div>
 
