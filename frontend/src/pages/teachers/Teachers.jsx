@@ -280,9 +280,12 @@ export function Teachers() {
       header: "Acciones",
       render: (row) => (
         <div className="flex gap-2">
-          <EditButton onClick={() => handleEdit(row)} />
+          <EditButton title="Editar Docente" onClick={() => handleEdit(row)} />
 
-          <DeleteButton onClick={() => handleDelete(row)} />
+          <DeleteButton
+            title="Eliminar Docente"
+            onClick={() => handleDelete(row)}
+          />
         </div>
       ),
     });
@@ -375,7 +378,6 @@ export function Teachers() {
           error={errorsCreate.phone}
         />
 
-        <h2 className="text-xl font-bold mb-8">¿Crear?</h2>
         <div className="flex justify-end gap-4 mt-10">
           <div className="flex justify-end gap-3">
             <NoButton
@@ -426,7 +428,6 @@ export function Teachers() {
           error={errorsEdit.phone}
         />
 
-        <h2 className="text-xl font-bold mb-8">¿Editar?</h2>
         <div className="flex justify-end gap-4 mt-10">
           <NoButton title="Cancelar" onClick={() => setOpenEditModal(false)} />
 

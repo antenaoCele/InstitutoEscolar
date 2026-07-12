@@ -492,15 +492,21 @@ export function Plans() {
 
               return (
                 <div className="flex gap-2">
-                  <ViewButton onClick={() => handleOpenHistory(row)} />
+                  <ViewButton
+                    title="Ver Historial"
+                    onClick={() => handleOpenHistory(row)}
+                  />
 
-                  <EditButton onClick={() => handleEditPlan(row)} />
+                  <EditButton
+                    title="Editar Plan"
+                    onClick={() => handleEditPlan(row)}
+                  />
 
                   <AssignTeacherButton
                     disabled={!hasSubjects}
                     title={
                       hasSubjects
-                        ? "Asignar docentes"
+                        ? "Asignar Docente"
                         : "Primero agregue una o más materias al plan"
                     }
                     onClick={() => handleManageTeachers(row)}
@@ -517,38 +523,7 @@ export function Plans() {
     <div className="flex justify-between items-center">
       <span>Planes</span>
 
-      {isAdmin() && (
-        <Button
-          title="Crear Plan"
-          size="sm"
-          onClick={openCreate}
-          className="
-            cursor-pointer
-            w-12
-            h-12
-            rounded
-            bg-[#0cc0df]
-            text-white
-            flex
-            items-center
-            justify-center
-            transition
-            transform
-            hover:scale-105
-          "
-        >
-          <img
-            src={CreateIcon}
-            alt="More"
-            className="
-              w-5
-              h-5
-              brightness-0
-              invert
-            "
-          />
-        </Button>
-      )}
+      {isAdmin() && <PlusButton title="Crear Plan" onClick={openCreate} />}
     </div>
   );
 
