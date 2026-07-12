@@ -286,7 +286,7 @@ export function Plans() {
         teacher_ids: selectedTeacherIds,
       });
 
-      alert("Docentes asignados correctamente.");
+      await fetchCurrentPlans();
 
       setOpenTeachersModal(false);
       setSelectedTeacherIds([]);
@@ -357,7 +357,6 @@ export function Plans() {
           await PlanSubjectService.delete(planSubjectRelation.id);
       }
 
-      alert("Plan actualizado con éxito");
       setOpenEditModal(false);
       await refreshAll();
       const planSubjectsRes = await PlanSubjectService.getAll();
@@ -424,15 +423,61 @@ export function Plans() {
 
   const columns = [
     {
-      header: "Plan",
+      header: "Planes",
       accessor: "name",
     },
     {
       header: "Materias",
-      render: (row) => row.subjects?.join(", ") || "-",
+      render: (row) => {
+        const subjects = row.subjects || [];
+
+        const containerClass =
+          subjects.length >= 3
+            ? "h-20 overflow-y-auto pr-2"
+            : "h-20 flex flex-col justify-center";
+
+        return (
+          <div className={containerClass}>
+            {subjects.length === 0 ? (
+              <span className="text-gray-400 italic">Sin materias</span>
+            ) : (
+              subjects.map((subject) => (
+                <div key={subject} className="py-1">
+                  {subject}
+                </div>
+              ))
+            )}
+          </div>
+        );
+      },
     },
     {
-      header: "Precio Actual",
+      header: "Docentes",
+      render: (row) => {
+        const teachers = row.teachers || [];
+
+        const containerClass =
+          teachers.length >= 3
+            ? "h-20 overflow-y-auto pr-2"
+            : "h-20 flex flex-col justify-center";
+
+        return (
+          <div className={containerClass}>
+            {teachers.length === 0 ? (
+              <span className="text-gray-400 italic">Sin docentes</span>
+            ) : (
+              teachers.map((teacher) => (
+                <div key={teacher} className="py-1">
+                  {teacher}
+                </div>
+              ))
+            )}
+          </div>
+        );
+      },
+    },
+    {
+      header: "Precios Actuales",
       accessor: "current_price",
     },
 
@@ -478,29 +523,29 @@ export function Plans() {
           size="sm"
           onClick={openCreate}
           className="
-              cursor-pointer
-              w-12
-              h-12
-              rounded
-              bg-[#0cc0df]
-              text-white
-              flex
-              items-center
-              justify-center
-              transition
-              transform
-              hover:scale-105
-            "
+            cursor-pointer
+            w-12
+            h-12
+            rounded
+            bg-[#0cc0df]
+            text-white
+            flex
+            items-center
+            justify-center
+            transition
+            transform
+            hover:scale-105
+          "
         >
           <img
             src={CreateIcon}
             alt="More"
             className="
-                w-5
-                h-5
-                brightness-0
-                invert
-              "
+              w-5
+              h-5
+              brightness-0
+              invert
+            "
           />
         </Button>
       )}
@@ -611,29 +656,29 @@ export function Plans() {
             size="icon"
             onClick={handleCreate}
             className="
-                        cursor-pointer
-                        w-12
-                        h-12
-                        rounded
-                        bg-[#0cc0df]
-                        text-white
-                        flex
-                        items-center
-                        justify-center
-                        transition
-                        transform
-                        hover:scale-105
-                      "
+              cursor-pointer
+              w-12
+              h-12
+              rounded
+              bg-[#0cc0df]
+              text-white
+              flex
+              items-center
+              justify-center
+              transition
+              transform
+              hover:scale-105
+            "
           >
             <img
               src={SaveIcon}
               alt="Guardar"
               className="
-                          w-5
-                          h-5
-                          brightness-0
-                          invert
-                        "
+                w-5
+                h-5
+                brightness-0
+                invert
+              "
             />
           </Button>
         </div>
@@ -806,24 +851,30 @@ export function Plans() {
           <strong> {selectedPlanTeachers?.name}</strong>
         </p>
         <div className="space-y-2 max-h-96 overflow-y-auto">
-          {teachers.map((teacher) => (
-            <label key={teacher.id} className="flex items-center gap-3">
-              <input
-                type="checkbox"
-                checked={selectedTeacherIds.includes(teacher.id)}
-                onChange={(e) => {
-                  if (e.target.checked) {
-                    setSelectedTeacherIds([...selectedTeacherIds, teacher.id]);
-                  } else {
-                    setSelectedTeacherIds(
-                      selectedTeacherIds.filter((id) => id !== teacher.id),
-                    );
-                  }
-                }}
-              />
-              {teacher.last_name}, {teacher.first_name}
-            </label>
-          ))}
+          {[...teachers]
+            .sort((a, b) =>
+              `${a.last_name} ${a.first_name}`.localeCompare(
+                `${b.last_name} ${b.first_name}`,
+              ),
+            )
+            .map((teacher) => (
+              <label key={teacher.id} className="flex items-center gap-3">
+                <input
+                  type="checkbox"
+                  checked={selectedTeacherIds.includes(teacher.id)}
+                  onChange={(e) => {
+                    if (e.target.checked) {
+                      setSelectedTeacherIds((prev) => [...prev, teacher.id]);
+                    } else {
+                      setSelectedTeacherIds((prev) =>
+                        prev.filter((id) => id !== teacher.id),
+                      );
+                    }
+                  }}
+                />
+                {teacher.last_name}, {teacher.first_name}
+              </label>
+            ))}
         </div>
         <div className="flex justify-end gap-4 mt-8">
           <NoButton
