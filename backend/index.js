@@ -21,7 +21,7 @@ import studentTutorsRouter from "./routes/student_tutors.routes.js";
 import subjectsRouter from "./routes/subjects.routes.js";
 import teachersRouter from "./routes/teachers.routes.js";
 import teacherLiquidationsRouter from "./routes/teacher_liquidations.routes.js";
-import teacherSubjectsRouter from "./routes/teacher_subjects.routes.js";
+import teacherPlansRouter from "./routes/teacher_plans.routes.js";
 import tutorsRouter from "./routes/tutors.routes.js";
 import userRoutes from "./routes/user.routes.js";
 import usersRouter from "./routes/users.routes.js";
@@ -56,7 +56,7 @@ app.use("/student_tutors", studentTutorsRouter);
 app.use("/subjects", subjectsRouter);
 app.use("/teachers", teachersRouter);
 app.use("/teacher_liquidations", teacherLiquidationsRouter);
-app.use("/teacher_subjects", teacherSubjectsRouter);
+app.use("/teacher_plans", teacherPlansRouter);
 app.use("/tutors", tutorsRouter);
 app.use("/users", usersRouter);
 
