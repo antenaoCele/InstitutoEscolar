@@ -37,12 +37,12 @@ export default function StudentPayments() {
 
   const [paymentDate, setPaymentDate] = useState(getLocalDateString());
 
-  // Inscripción: se pueden tildar varios alumnos (hermanos)
+  // Inscripción: se pueden tildar varios estudiantes (hermanos)
   const [enrollmentStudents, setEnrollmentStudents] = useState([]);
   const [enrollmentAmount, setEnrollmentAmount] = useState("");
   const [enrollmentDate, setEnrollmentDate] = useState(getLocalDateString());
 
-  // Edición de inscripción (de a un alumno por vez)
+  // Edición de inscripción (de a un estudiante por vez)
   const [enrollmentStudent, setEnrollmentStudent] = useState("");
   const [openEditEnrollmentModal, setOpenEditEnrollmentModal] = useState(false);
   const [editingEnrollmentId, setEditingEnrollmentId] = useState(null);
@@ -181,7 +181,7 @@ export default function StudentPayments() {
       const data = error.response?.data;
 
       const message = data?.requiresEnrollment
-        ? "El alumno debe realizar una nueva inscripción antes de registrar el pago."
+        ? "El estudiante debe realizar una nueva inscripción antes de registrar el pago."
         : data?.message || "Error al registrar el pago.";
 
       showFeedback(message, "error");
@@ -189,7 +189,7 @@ export default function StudentPayments() {
   };
 
   // ======================================================
-  // INSCRIPCIÓN: selección múltiple de alumnos (hermanos)
+  // INSCRIPCIÓN: selección múltiple de estudiantes (hermanos)
   // ======================================================
   const toggleEnrollmentStudent = (studentId) => {
     setEnrollmentStudents((prev) =>
@@ -306,7 +306,7 @@ export default function StudentPayments() {
       render: (row) => new Date(row.payment_date).toLocaleDateString("es-AR"),
     },
     {
-      header: "Alumno",
+      header: "Estudiante",
       render: (row) => `${row.last_name}, ${row.first_name}`,
     },
     {
@@ -329,7 +329,7 @@ export default function StudentPayments() {
       render: (row) => new Date(row.payment_date).toLocaleDateString("es-AR"),
     },
     {
-      header: "Alumno",
+      header: "Estudiante",
       render: (row) => `${row.last_name}, ${row.first_name}`,
     },
     {
@@ -359,7 +359,7 @@ export default function StudentPayments() {
   // Títulos de tabla con el botón correspondiente arriba de cada una
   const paymentsTableTitle = (
     <div className="flex justify-between items-center">
-      <span>Pagos de alumnos</span>
+      <span>Pagos de estudiantes</span>
       <Button onClick={() => setOpenCreateModal(true)}>Registrar cuota</Button>
     </div>
   );
@@ -407,11 +407,11 @@ export default function StudentPayments() {
         <h2 className="text-xl font-bold mb-6">Registrar pago</h2>
 
         <Select
-          label="Alumno"
+          label="Estudiante"
           value={selectedStudent}
           onChange={(e) => handleStudentChange(e.target.value)}
         >
-          <option value="">Seleccione un alumno</option>
+          <option value="">Seleccione un estudiante</option>
 
           {students.map((student) => (
             <option key={student.id} value={student.id}>
@@ -469,10 +469,10 @@ export default function StudentPayments() {
       >
         <h2 className="text-xl font-bold mb-6">Registrar inscripción</h2>
 
-        <Label>Alumnos (tildá uno o más si son hermanos)</Label>
+        <Label>Estudiantes (tilde uno o más si son hermanos)</Label>
         <div className="max-h-56 overflow-y-auto border border-gray-200 rounded-lg p-3 space-y-1 mb-4">
           {students.length === 0 && (
-            <p className="text-sm text-gray-500">No hay alumnos activos.</p>
+            <p className="text-sm text-gray-500">No hay estudiantes activos.</p>
           )}
 
           {students.map((s) => (
@@ -526,11 +526,11 @@ export default function StudentPayments() {
         <h2 className="text-xl font-bold mb-6">Editar inscripción</h2>
 
         <Select
-          label="Alumno"
+          label="Estudiante"
           value={enrollmentStudent}
           onChange={(e) => setEnrollmentStudent(e.target.value)}
         >
-          <option value="">Seleccione un alumno</option>
+          <option value="">Seleccione un estudiante</option>
 
           {students.map((student) => (
             <option key={student.id} value={student.id}>

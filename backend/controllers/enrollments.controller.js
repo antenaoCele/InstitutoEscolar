@@ -124,7 +124,7 @@ ORDER BY e.payment_date DESC
       if (await existingEnrollment(student_id, payment_date)) {
         return res.status(400).json({
           success: false,
-          message: "El alumno ya abonó la inscripción este año",
+          message: "El estudiante ya abonó la inscripción este año",
         });
       }
 
@@ -174,7 +174,7 @@ ORDER BY e.payment_date DESC
       if (await existingEnrollment(newStudentId, newPaymentDate, id)) {
         return res.status(400).json({
           success: false,
-          message: "El alumno ya tiene una inscripción registrada este mes",
+          message: "El estudiante ya tiene una inscripción registrada este mes",
         });
       }
 

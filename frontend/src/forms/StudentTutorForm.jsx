@@ -51,7 +51,7 @@ export default function StudentTutorForm({
   const validate = (data) => {
     const errors = {};
 
-    if (!data.student_id) errors.student_id = "Alumno requerido";
+    if (!data.student_id) errors.student_id = "Estudiante requerido";
     if (!data.tutorService) errors.tutor_id = "Tutor requerido";
 
     return errors;
@@ -88,7 +88,7 @@ export default function StudentTutorForm({
   return (
     <form onSubmit={(e) => handleSubmit(e, submitFn)}>
       <Select
-        label="Alumno"
+        label="Estudiante"
         name="student_id"
         value={formData.student_id}
         onChange={handleChange}

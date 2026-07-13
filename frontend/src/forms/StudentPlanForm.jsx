@@ -57,7 +57,7 @@ export default function StudentPlanForm({
   const validate = (data) => {
     const errors = {};
 
-    if (!data.student_id) errors.student_id = "Alumno requerido";
+    if (!data.student_id) errors.student_id = "Estudiante requerido";
     if (!data.plan_id) errors.plan_id = "Plan requerido";
     if (!data.teacher_id) errors.teacher_id = "Docente requerido";
     if (!data.start_date) errors.start_date = "Fecha de inicio requerida";
@@ -107,7 +107,7 @@ export default function StudentPlanForm({
       </h2>
 
       <Select
-        label="Alumno"
+        label="Estudiante"
         name="student_id"
         value={formData.student_id}
         onChange={handleChange}
@@ -165,7 +165,7 @@ export default function StudentPlanForm({
 
       <SubmitButton
         loading={loading}
-        text={isEdit ? "Actualizar Plan del Alumno" : "Asignar Plan"}
+        text={isEdit ? "Actualizar Plan del Estudiante" : "Asignar Plan"}
       />
 
       {error && <p className="text-red-500 mt-2">{error}</p>}

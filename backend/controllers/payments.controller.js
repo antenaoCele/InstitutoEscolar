@@ -126,7 +126,7 @@ export const paymentsController = {
     try {
       const { student_plan_id, payment_date, payment_method } = req.body;
 
-      // Obtener alumno asociado al plan
+      // Obtener estudiante asociado al plan
       const [studentRows] = await db.execute(
         `
       SELECT student_id
@@ -139,7 +139,7 @@ export const paymentsController = {
       if (studentRows.length === 0) {
         return res.status(404).json({
           success: false,
-          message: "Plan del alumno no encontrado",
+          message: "Plan del estudiante no encontrado",
         });
       }
 
@@ -152,7 +152,7 @@ export const paymentsController = {
           requiresEnrollment: true,
           student_id: studentId,
           message:
-            "El alumno debe realizar una nueva inscripción antes de registrar el pago.",
+            "El estudiante debe realizar una nueva inscripción antes de registrar el pago.",
         });
       }
 
@@ -170,7 +170,7 @@ export const paymentsController = {
       if (await existingPayment(student_plan_id, payment_date)) {
         return res.status(400).json({
           success: false,
-          message: "El alumno ya pagó este mes",
+          message: "El estudiante ya pagó este mes",
         });
       }
 
@@ -251,7 +251,7 @@ export const paymentsController = {
       if (await existingPayment(newStudentPlanId, newPaymentDate, id)) {
         return res.status(400).json({
           success: false,
-          message: "El alumno ya pagó este mes",
+          message: "El estudiante ya pagó este mes",
         });
       }
 

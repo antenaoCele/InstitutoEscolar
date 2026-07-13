@@ -176,7 +176,7 @@ export const validateStudentScheduleConflict = () => [
 
       if (rows.length) {
         throw new Error(
-          "El alumno ya está inscripto en otra clase en ese mismo horario.",
+          "El estudiante ya está inscripto en otra clase en ese mismo horario.",
         );
       }
     }
@@ -219,11 +219,11 @@ export const validateScheduleStudentRules = (
     const existsStudent = rows[0].existsStudent;
 
     if (existsStudent > 0) {
-      throw new Error("El alumno ya está inscripto en esta clase.");
+      throw new Error("El estudiante ya está inscripto en esta clase.");
     }
 
     if (total >= max) {
-      throw new Error(`La clase ya alcanzó el máximo de ${max} alumnos.`);
+      throw new Error(`La clase ya alcanzó el máximo de ${max} estudiantes.`);
     }
 
     return true;

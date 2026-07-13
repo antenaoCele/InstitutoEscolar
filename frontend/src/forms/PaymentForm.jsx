@@ -70,13 +70,13 @@ export default function PaymentForm({ initialData = {}, isEdit = false }) {
   return (
     <form onSubmit={(e) => handleSubmit(e, submitFn)}>
       <Select
-        label="Plan del alumno"
+        label="Plan del estudiante"
         name="student_plan_id"
         value={formData.student_plan_id}
         onChange={handleChange}
         options={studentPlans.map((sp) => ({
           value: sp.id,
-          label: `Alumno ${sp.student_id} - Profe ${sp.teacher_id}`,
+          label: `Estudiante ${sp.student_id} - Profe ${sp.teacher_id}`,
         }))}
         error={errors.student_plan_id}
         hint={errors.student_plan_id}

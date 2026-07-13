@@ -13,7 +13,7 @@ export default function EcommerceMetrics() {
   const [prevIncome, setPrevIncome] = useState(0);
 
   useEffect(() => {
-    // 🔹 alumnos del mes actual
+    // 🔹 estudiantes del mes actual
     fetch("http://localhost:3000/students")
       .then((res) => res.json())
       .then((data) => {
@@ -54,7 +54,7 @@ export default function EcommerceMetrics() {
         <div className="flex items-end justify-between mt-5">
           <div>
             <span className="text-sm text-gray-500 dark:text-gray-400">
-              Alumnos (mes actual)
+              Estudiantes (mes actual)
             </span>
 
             <h4 className="mt-2 font-bold text-gray-800 text-title-sm dark:text-white/90">
