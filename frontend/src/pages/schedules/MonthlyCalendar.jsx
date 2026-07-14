@@ -319,7 +319,19 @@ export default function MonthlyCalendar() {
   // RETURN
   // ======================================================
   return (
-    <div className="bg-white rounded-xl border border-gray-200 p-5">
+    <div
+      className="
+        bg-white
+        dark:bg-gray-900
+
+        border
+        border-gray-200
+        dark:border-gray-700
+
+        rounded-xl
+        p-5
+      "
+    >
       {/* Encabezado */}
 
       <div className="flex justify-center items-center gap-4 mb-6">
@@ -339,7 +351,15 @@ export default function MonthlyCalendar() {
           ◀
         </button>
 
-        <h2 className="text-2xl font-bold capitalize">
+        <h2
+          className="
+            text-2xl
+            font-bold
+            capitalize
+            text-gray-900
+            dark:text-white
+          "
+        >
           {monthsNames[month]} {year}
         </h2>
 
@@ -380,7 +400,22 @@ export default function MonthlyCalendar() {
                 "Sábado",
                 "Domingo",
               ].map((day) => (
-                <th key={day} className="border p-3 bg-gray-100">
+                <th
+                  key={day}
+                  className="
+                    border
+                    border-gray-300
+                    dark:border-gray-700
+
+                    bg-gray-100
+                    dark:bg-gray-800
+
+                    text-gray-700
+                    dark:text-gray-200
+
+                    p-3
+                  "
+                >
                   {day}
                 </th>
               ))}
@@ -401,7 +436,12 @@ export default function MonthlyCalendar() {
                           key={`blank-${weekIndex}-${dayIndex}`}
                           className="
                             border
+                            border-gray-300
+                            dark:border-gray-700
+
                             bg-gray-50
+                            dark:bg-gray-800
+
                             h-40
                           "
                         />
@@ -435,15 +475,31 @@ export default function MonthlyCalendar() {
                         key={`day-${weekIndex}-${day}`}
                         className="
                           border
+                          border-gray-300
+                          dark:border-gray-700
+
+                          bg-white
+                          dark:bg-gray-900
+
                           p-2
                           h-40
                           align-top
+
                           transition-colors
                           duration-150
+
                           hover:bg-cyan-50
+                          dark:hover:bg-gray-800
                         "
                       >
-                        <div className="font-bold text-gray-700 mb-1">
+                        <div
+                          className="
+                            font-bold
+                            mb-1
+                            text-gray-700
+                            dark:text-gray-200
+                            "
+                        >
                           {day}
                         </div>
 
@@ -460,7 +516,8 @@ export default function MonthlyCalendar() {
                                 className="
                                   text-xs
                                   font-semibold
-                                  text-red-800
+                                  text-red-700
+                                  dark:text-red-400
                                   break-words
                                   leading-tight
                                 "
@@ -477,17 +534,36 @@ export default function MonthlyCalendar() {
                                 mt-2
                                 p-1
                                 rounded
+
                                 bg-blue-100
+                                dark:bg-blue-900/25
+
                                 border
                                 border-blue-300
+                                dark:border-blue-700
                               "
                             >
-                              <div className="text-xs font-semibold text-blue-800">
+                              <div
+                                className="
+                                  text-xs
+                                  font-semibold
+
+                                  text-blue-800
+                                  dark:text-blue-200
+                                  "
+                              >
                                 {event.name}
                               </div>
 
                               {event.hour && (
-                                <div className="text-[10px] text-blue-600">
+                                <div
+                                  className="
+                                    text-[10px]
+
+                                    text-blue-600
+                                    dark:text-blue-300
+                                    "
+                                >
                                   {event.hour.slice(0, 5)}
                                 </div>
                               )}
@@ -520,20 +596,34 @@ export default function MonthlyCalendar() {
                                   mt-2
                                   p-1
                                   rounded
-                                  bg-pink-100
+
+                                  bg-[#8d5df4]/15
+                                  dark:bg-[#8d5df4]/20
+
                                   border
-                                  border-pink-300
+                                  border-[#8d5df4]
                                 "
                               >
                                 <div className="flex items-center gap-1 text-xs font-semibold text-pink-700">
-                                  <BirthdayIcon className="w-4 h-4 text-pink-700" />
+                                  <BirthdayIcon className="w-4 h-4 text-[#8d5df4]" />
 
-                                  <span>
+                                  <span
+                                    className="
+                                      text-xs
+                                      font-semibold
+                                      text-[#8d5df4]
+                                      "
+                                  >
                                     {student.last_name}, {student.first_name}
                                   </span>
                                 </div>
 
-                                <div className="text-[10px] text-pink-600">
+                                <div
+                                  className="
+text-[10px]
+text-[#8d5df4]
+"
+                                >
                                   {age} años
                                 </div>
                               </div>
