@@ -4,13 +4,16 @@ import { Modal } from "../../components/ui/Modal";
 import { isAdmin } from "../../utils/auth";
 import { studentService } from "../../services/student.service";
 import {
-  PencilIcon,
-  TrashBinIcon,
-  CloseLineIcon,
-  SaveIcon,
-  MoreIcon,
-  CreateIcon,
-} from "../../icons";
+  ViewButton,
+  EditButtonMonth,
+  DeleteButtonMonth,
+  PlusButton,
+  YesButton,
+  NoButton,
+  AddButton,
+  AssignTeacherButton,
+} from "../../components/ui/ActionButtons";
+import { BirthdayIcon } from "../../icons";
 
 export default function MonthlyCalendar() {
   // ======================================================
@@ -359,35 +362,7 @@ export default function MonthlyCalendar() {
 
       {isAdmin() && (
         <div className="flex justify-end mb-6">
-          <button
-            title="Crear Evento"
-            onClick={() => setOpenCreateModal(true)}
-            className="
-              cursor-pointer
-              w-12
-              h-12
-              rounded
-              bg-[#0cc0df]
-              text-white
-              flex
-              items-center
-              justify-center
-              transition
-              transform
-              hover:scale-105
-            "
-          >
-            <img
-              src={CreateIcon}
-              alt="More"
-              className="
-                w-5
-                h-5
-                brightness-0
-                invert
-              "
-            />
-          </button>
+          <PlusButton title="Crear Evento" onClick={openCreate} />
         </div>
       )}
 
@@ -459,14 +434,14 @@ export default function MonthlyCalendar() {
                       <td
                         key={`day-${weekIndex}-${day}`}
                         className="
-                            border
-                            p-2
-                            h-40
-                            align-top
-                            transition-colors
-                            duration-150
-                            hover:bg-cyan-50
-                          "
+                          border
+                          p-2
+                          h-40
+                          align-top
+                          transition-colors
+                          duration-150
+                          hover:bg-cyan-50
+                        "
                       >
                         <div className="font-bold text-gray-700 mb-1">
                           {day}
@@ -513,65 +488,57 @@ export default function MonthlyCalendar() {
 
                               {event.hour && (
                                 <div className="text-[10px] text-blue-600">
-                                  {event.hour}
+                                  {event.hour.slice(0, 5)}
                                 </div>
                               )}
 
                               {isAdmin() && (
                                 <div className="flex gap-1 mt-1">
-                                  <button
-                                    title="Editar"
+                                  <EditButtonMonth
+                                    title="Editar Evento"
                                     onClick={() => handleEdit(event)}
-                                    className="
-                                      cursor-pointer transition transform hover:scale-105
-                                      text-[10px]
-                                      px-2
-                                      py-1
-                                      rounded
-                                      bg-[#0cc0df]
-                                      text-white
-                                    "
-                                  >
-                                    <PencilIcon className="w-5 h-5" />
-                                  </button>
+                                  />
 
-                                  <button
-                                    title="Eliminar"
+                                  <DeleteButtonMonth
+                                    title="Eliminar Evento"
                                     onClick={() => handleDelete(event)}
-                                    className="
-                                      cursor-pointer transition transform hover:scale-105
-                                      text-[10px]
-                                      px-2
-                                      py-1
-                                      rounded
-                                      bg-red-500
-                                      text-white
-                                    "
-                                  >
-                                    <TrashBinIcon className="w-5 h-5" />
-                                  </button>
+                                  />
                                 </div>
                               )}
                             </div>
                           ))}
 
-                          {dayBirthdays.map((student) => (
-                            <div
-                              key={`birthday-${student.id}`}
-                              className="
-                              mt-2
-                              p-1
-                              rounded
-                              bg-pink-100
-                              border
-                              border-pink-300
-                            "
-                            >
-                              <div className="text-xs font-semibold text-pink-700">
-                                🎂 {student.first_name} {student.last_name}
+                          {dayBirthdays.map((student) => {
+                            const birth = new Date(student.birth_date);
+
+                            const age = year - birth.getFullYear();
+
+                            return (
+                              <div
+                                key={`birthday-${student.id}`}
+                                className="
+                                  mt-2
+                                  p-1
+                                  rounded
+                                  bg-pink-100
+                                  border
+                                  border-pink-300
+                                "
+                              >
+                                <div className="flex items-center gap-1 text-xs font-semibold text-pink-700">
+                                  <BirthdayIcon className="w-4 h-4 text-pink-700" />
+
+                                  <span>
+                                    {student.last_name}, {student.first_name}
+                                  </span>
+                                </div>
+
+                                <div className="text-[10px] text-pink-600">
+                                  {age} años
+                                </div>
                               </div>
-                            </div>
-                          ))}
+                            );
+                          })}
                         </div>
                       </td>
                     );
@@ -648,32 +615,14 @@ export default function MonthlyCalendar() {
         </div>
 
         <div className="flex justify-end gap-4 mt-10">
-          <button
-            onClick={() => setOpenCreateModal(false)}
-            className="
-              cursor-pointer transition transform hover:scale-105
-              px-4
-              py-2
-              border
-              rounded
-            "
-          >
-            Cancelar
-          </button>
+          <div className="flex justify-end gap-3">
+            <NoButton
+              title="Cancelar"
+              onClick={() => setOpenCreateModal(false)}
+            />
 
-          <button
-            onClick={handleCreate}
-            className="
-              cursor-pointer transition transform hover:scale-105
-              px-4
-              py-2
-              rounded
-              bg-[#0cc0df]
-              text-white
-            "
-          >
-            Crear
-          </button>
+            <YesButton title="Aceptar" onClick={handleCreate} />
+          </div>
         </div>
       </Modal>
 
@@ -749,45 +698,9 @@ export default function MonthlyCalendar() {
         </div>
 
         <div className="flex justify-end gap-4 mt-10">
-          {/* <button
-            onClick={() => {
-              setOpenEditModal(false);
-              resetForm();
-            }}
-            className="
-              cursor-pointer transition transform hover:scale-105
-              px-4
-              py-2
-              border
-              rounded
-            "
-          >
-            Cancelar
-          </button> */}
+          <NoButton title="Cancelar" onClick={() => setOpenEditModal(false)} />
 
-          <button
-            title="Guardar"
-            onClick={handleUpdate}
-            className="
-              cursor-pointer transition transform hover:scale-105
-              px-4
-              py-2
-              rounded
-              bg-[#0cc0df]
-              text-white
-            "
-          >
-            <img
-              src={SaveIcon}
-              alt="Guardar"
-              className="
-                w-5
-                h-5
-                brightness-0
-                invert
-              "
-            />
-          </button>
+          <YesButton title="Aceptar" onClick={handleUpdate} />
         </div>
       </Modal>
 
@@ -795,32 +708,12 @@ export default function MonthlyCalendar() {
         <h2 className="text-lg font-semibold mb-4">¿Eliminar evento?</h2>
 
         <div className="flex justify-end gap-2">
-          <button
+          <NoButton
+            title="Cancelar"
             onClick={() => setOpenDeleteModal(false)}
-            className="
-              cursor-pointer transition transform hover:scale-105
-              px-4
-              py-2
-              border
-              rounded
-            "
-          >
-            Cancelar
-          </button>
+          />
 
-          <button
-            onClick={confirmDelete}
-            className="
-              cursor-pointer transition transform hover:scale-105
-              px-4
-              py-2
-              rounded
-              bg-red-500
-              text-white
-            "
-          >
-            Eliminar
-          </button>
+          <YesButton title="Aceptar" onClick={confirmDelete} />
         </div>
       </Modal>
     </div>

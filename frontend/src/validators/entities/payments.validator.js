@@ -13,7 +13,7 @@ export const validatePaymentForm = ({
   const errors = {};
 
   if (isRequired(selectedStudent)) {
-    errors.student = "Seleccione un alumno.";
+    errors.student = "Seleccione un estudiante.";
   }
 
   if (isRequired(selectedStudentPlan)) {

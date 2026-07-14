@@ -198,7 +198,7 @@ export const studentsController = {
 
       res.status(500).json({
         success: false,
-        message: "Error al obtener alumnos",
+        message: "Error al obtener estudiantes",
       });
     }
   },
@@ -207,7 +207,7 @@ export const studentsController = {
     try {
       const studentId = Number(req.params.id);
 
-      // Información principal del alumno
+      // Información principal del estudiante
       const [[student]] = await db.execute(
         `
       SELECT
@@ -228,7 +228,7 @@ export const studentsController = {
       if (!student) {
         return res.status(404).json({
           success: false,
-          message: "Alumno no encontrado",
+          message: "Estudiante no encontrado",
         });
       }
 
@@ -289,7 +289,7 @@ export const studentsController = {
 
       res.status(500).json({
         success: false,
-        message: "Error al obtener la información del alumno",
+        message: "Error al obtener la información del estudiante",
       });
     }
   },
@@ -406,7 +406,7 @@ export const studentsController = {
       if (!rows.length) {
         return res.status(404).json({
           success: false,
-          message: "Alumno no encontrado",
+          message: "Estudiante no encontrado",
         });
       }
 
@@ -417,7 +417,7 @@ export const studentsController = {
     } catch (error) {
       res.status(500).json({
         success: false,
-        message: "Error al obtener alumno",
+        message: "Error al obtener estudiante",
       });
     }
   },
@@ -426,7 +426,7 @@ export const studentsController = {
     try {
       const { formClasses, ...studentData } = req.body;
 
-      // 1. Crear alumno
+      // 1. Crear estudiante
       const [studentResult] = await db.execute(
         `INSERT INTO students (first_name, last_name, dni, school, birth_date, level, grade) VALUES (?, ?, ?, ?, ?, ?, ?)`,
         [
@@ -458,13 +458,14 @@ export const studentsController = {
 
       res.status(201).json({
         success: true,
-        message: "Alumno y plan creados exitosamente",
+        message: "Estudiante y plan creados exitosamente",
       });
     } catch (error) {
       console.error(error);
-      res
-        .status(500)
-        .json({ success: false, message: "Error al crear alumno con plan" });
+      res.status(500).json({
+        success: false,
+        message: "Error al crear estudiante con plan",
+      });
     }
   },
 
@@ -501,7 +502,7 @@ export const studentsController = {
 
       res.status(500).json({
         success: false,
-        message: "Error al obtener alumnos activos",
+        message: "Error al obtener estudiantes activos",
       });
     }
   },

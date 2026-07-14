@@ -76,12 +76,12 @@ export const scheduleStudentsController = {
 
       res.json({
         success: true,
-        message: "Alumnos eliminados",
+        message: "Estudiantes eliminados",
       });
     } catch (error) {
       res.status(500).json({
         success: false,
-        message: "Error al eliminar alumnos",
+        message: "Error al eliminar estudiantes",
       });
     }
   },

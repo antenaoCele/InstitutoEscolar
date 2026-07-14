@@ -41,7 +41,7 @@ export default function ScheduleStudentForm({
     const errors = {};
 
     if (!data.schedule_id) errors.schedule_id = "Horario requerido";
-    if (!data.student_id) errors.student_id = "Alumno requerido";
+    if (!data.student_id) errors.student_id = "Estudiante requerido";
 
     return errors;
   };
@@ -86,7 +86,7 @@ export default function ScheduleStudentForm({
       />
 
       <Select
-        label="Alumno"
+        label="Estudiante"
         name="student_id"
         value={formData.student_id}
         onChange={handleChange}
@@ -100,7 +100,7 @@ export default function ScheduleStudentForm({
 
       <Button>
         loading={loading}
-        text={isEdit ? "Actualizar Asignación" : "Asignar Alumno"}
+        text={isEdit ? "Actualizar Asignación" : "Asignar Estudiante"}
       </Button>
 
       {error && <p className="text-red-500">{error}</p>}

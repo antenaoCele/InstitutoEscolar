@@ -26,11 +26,63 @@ export function ViewButton({ onClick, title = "" }) {
   );
 }
 
+export function ViewButtonWeek({ onClick, title = "" }) {
+  return (
+    <Button
+      title={title}
+      size="sm"
+      onClick={onClick}
+      className="
+        cursor-pointer
+        w-7
+        h-7
+        rounded
+        flex
+        items-center
+        justify-center
+        transition
+        hover:scale-105
+      "
+    >
+      <img src={ViewIcon} alt="Ver" className="w-3.5 h-3.5 invert" />
+    </Button>
+  );
+}
+
 export function EditButton({ onClick, title = "" }) {
   return (
     <Button title={title} size="sm" onClick={onClick} className={baseClass}>
       <PencilIcon className="w-5 h-5" />
     </Button>
+  );
+}
+
+export function EditButtonMonth({ onClick, title = "" }) {
+  return (
+    <button
+      title={title}
+      onClick={onClick}
+      className="
+        w-8
+        h-8
+        rounded
+        bg-[#0cc0df]
+        hover:bg-[#0aa3bf]
+        flex
+        items-center
+        justify-center
+        transition
+        hover:scale-105
+      "
+    >
+      <PencilIcon
+        style={{
+          width: 16,
+          height: 16,
+          color: "white",
+        }}
+      />
+    </button>
   );
 }
 
@@ -45,6 +97,37 @@ export function DeleteButton({ onClick, title = "" }) {
     >
       <TrashBinIcon className="w-5 h-5 text-black" />
     </Button>
+  );
+}
+
+export function DeleteButtonMonth({ onClick, title = "" }) {
+  return (
+    <button
+      title={title}
+      onClick={onClick}
+      className="
+        w-8
+        h-8
+        rounded
+        border
+        border-gray-300
+        bg-white
+        hover:bg-gray-100
+        flex
+        items-center
+        justify-center
+        transition
+        hover:scale-105
+      "
+    >
+      <TrashBinIcon
+        style={{
+          width: 16,
+          height: 16,
+          color: "#111827",
+        }}
+      />
+    </button>
   );
 }
 

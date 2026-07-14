@@ -45,14 +45,14 @@ const navItems = [
         <GroupIcon className="w-5 h-5" />
       </SidebarIcon>
     ),
-    name: "Alumnos",
+    name: "Estudiantes",
     subItems: [
       {
         name: "Estudiantes",
         path: "/students",
       },
       {
-        name: "Pagos de alumnos",
+        name: "Pagos de estudiantes",
         path: "/students/payments",
       },
     ],

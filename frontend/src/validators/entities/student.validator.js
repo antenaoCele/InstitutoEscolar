@@ -10,7 +10,7 @@ import {
 } from "../rules/formatRules";
 
 /**
- * Valida el formulario de alumno (usado tanto en crear como en editar).
+ * Valida el formulario de estudiante (usado tanto en crear como en editar).
  * Devuelve un objeto { campo: mensaje }. Vacío = sin errores.
  */
 export const validateStudentForm = ({

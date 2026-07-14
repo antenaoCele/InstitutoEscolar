@@ -119,7 +119,7 @@ export function Students() {
       const { data } = await studentService.getAll(params);
       const rawData = data?.data || [];
 
-      // Agrupar planes por alumno para visualización múltiple
+      // Agrupar planes por estudiante para visualización múltiple
       const studentMap = new Map();
       rawData.forEach((row) => {
         if (!studentMap.has(row.id)) {
@@ -235,7 +235,7 @@ export function Students() {
         setErrorsCreate(mapErrors(backendErrors));
       } else {
         showFeedback(
-          error.response?.data?.message || "Error al crear el alumno.",
+          error.response?.data?.message || "Error al crear el estudiante.",
         );
       }
     }
@@ -252,7 +252,7 @@ export function Students() {
       console.error(error);
       showFeedback(
         error.response?.data?.message ||
-          "Error al obtener la información del alumno.",
+          "Error al obtener la información del estudiante.",
       );
     }
   };
@@ -357,7 +357,7 @@ export function Students() {
         setErrorsEdit(mapErrors(backendErrors));
       } else {
         showFeedback(
-          error.response?.data?.message || "Error al editar el alumno.",
+          error.response?.data?.message || "Error al editar el estudiante.",
         );
       }
     }
@@ -370,7 +370,7 @@ export function Students() {
 
   const confirmDelete = async () => {
     try {
-      // Baja lógica de todos los planes activos vinculados al alumno
+      // Baja lógica de todos los planes activos vinculados al estudiante
       for (const p of selectedStudent.activePlans || []) {
         await studentPlanService.delete(p.student_plan_id);
       }
@@ -466,10 +466,10 @@ export function Students() {
     .sort(sortByPersonName);
 
   let columns = [
-    { header: "Apellido", accessor: "last_name" },
-    { header: "Nombre", accessor: "first_name" },
+    { header: "Apellidos", accessor: "last_name" },
+    { header: "Nombres", accessor: "first_name" },
     {
-      header: "Estado",
+      header: "Estados",
       render: (row) => {
         const active = row.activePlans?.length > 0;
 
@@ -487,7 +487,7 @@ export function Students() {
   ];
 
   columns.push({
-    header: "Plan y Docente",
+    header: "Planes y Docentes",
     render: (row) => (
       <div
         className="
@@ -517,18 +517,21 @@ export function Students() {
     ),
   });
 
-  // Botón Activar solo en "Total de Alumnos" para alumnos inactivos
+  // Botón Activar solo en "Total de Estudiantes" para estudiantes inactivos
   if (isAdmin()) {
     columns.push({
       header: "Acciones",
       render: (row) => (
         <div className="flex gap-2">
-          <ViewButton title="Ver Alumno" onClick={() => handleView(row)} />
+          <ViewButton title="Ver Estudiante" onClick={() => handleView(row)} />
 
-          <EditButton title="Editar Alumno" onClick={() => handleEdit(row)} />
+          <EditButton
+            title="Editar Estudiante"
+            onClick={() => handleEdit(row)}
+          />
 
           <DeleteButton
-            title="Eliminar Alumno"
+            title="Eliminar Estudiante"
             onClick={() => handleDelete(row)}
           />
         </div>
@@ -540,9 +543,9 @@ export function Students() {
 
   const tableTitle = (
     <div className="flex justify-between items-center">
-      <span>Alumnos</span>
+      <span>Estudiantes</span>
       {showCreateButtons && (
-        <PlusButton title="Crear Alumno" onClick={openCreate} />
+        <PlusButton title="Crear Estudiante" onClick={openCreate} />
       )}
     </div>
   );
@@ -630,7 +633,7 @@ export function Students() {
           onChange={(e) => setSelectedStatus(e.target.value)}
           className="p-2 border border-gray-300 rounded min-w-56"
         >
-          <option value="">Todos los alumnos</option>
+          <option value="">Todos los estudiantes</option>
           <option value="active">Activos</option>
           <option value="inactive">Inactivos</option>
         </Select>
@@ -692,7 +695,7 @@ export function Students() {
       {showCreateButtons && (
         <div className="mt-8">
           <Button onClick={openCreate} className={buttonClass}>
-            Crear Alumno
+            Crear Estudiante
           </Button>
         </div>
       )}
@@ -705,7 +708,7 @@ export function Students() {
           setSelectedStudent(null);
         }}
       >
-        <h2 className="text-xl font-bold mb-8">Crear Alumno</h2>
+        <h2 className="text-xl font-bold mb-8">Crear Estudiante</h2>
 
         <Input
           label="Nombre"
@@ -792,7 +795,7 @@ export function Students() {
           setSelectedStudent(null);
         }}
       >
-        <h2 className="text-xl font-bold mb-8">Editar Alumno</h2>
+        <h2 className="text-xl font-bold mb-8">Editar Estudiante</h2>
 
         <Input
           label="Nombre"
@@ -867,12 +870,12 @@ export function Students() {
       </Modal>
 
       <Modal isOpen={openViewModal} onClose={() => setOpenViewModal(false)}>
-        <h2 className="text-xl font-bold mb-8">Datos del Alumno</h2>
+        <h2 className="text-xl font-bold mb-8">Datos del Estudiante</h2>
 
         <div className="rounded-lg border border-gray-200 p-4">
           <div className="grid grid-cols-3 gap-4">
             <div>
-              <h4 className="font-semibold">Alumno</h4>
+              <h4 className="font-semibold">Estudiante</h4>
               <p className="text-gray-500">
                 {" "}
                 {student?.last_name}, {student?.first_name}
@@ -942,7 +945,7 @@ export function Students() {
           </div>
         ) : (
           <p className="text-gray-500">
-            Este alumno no posee tutores registrados.
+            Este estudiante no posee tutores registrados.
           </p>
         )}
 
@@ -982,12 +985,14 @@ export function Students() {
             ))}
           </div>
         ) : (
-          <p className="text-gray-500">El alumno no posee planes activos.</p>
+          <p className="text-gray-500">
+            El estudiante no posee planes activos.
+          </p>
         )}
       </Modal>
 
       <Modal isOpen={openDeleteModal} onClose={() => setOpenDeleteModal(false)}>
-        <h2 className="text-lg font-semibold mb-4">¿Eliminar alumno?</h2>
+        <h2 className="text-lg font-semibold mb-4">¿Eliminar estudiante?</h2>
 
         <div className="flex justify-end gap-2">
           <NoButton

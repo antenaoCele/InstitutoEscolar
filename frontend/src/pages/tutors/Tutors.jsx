@@ -320,11 +320,11 @@ export function Tutors() {
   };
 
   let columns = [
-    { header: "Apellido", accessor: "last_name" },
-    { header: "Nombre", accessor: "first_name" },
-    { header: "Teléfono", accessor: "phone" },
+    { header: "Apellidos", accessor: "last_name" },
+    { header: "Nombres", accessor: "first_name" },
+    { header: "Teléfonos", accessor: "phone" },
     {
-      header: "Alumnos",
+      header: "Estudiantes",
       render: (row) => {
         const hasScroll = (row.student_names?.length || 0) > 3;
 
@@ -344,7 +344,7 @@ export function Tutors() {
                   <span key={index}>{name}</span>
                 ))
               ) : (
-                <span>Sin alumnos</span>
+                <span>Sin estudiantes</span>
               )}
             </div>
           </div>
@@ -535,7 +535,7 @@ export function Tutors() {
         </div>
 
         <div className="flex flex-col mb-6">
-          <Label className="font-semibold mb-2">Alumno</Label>
+          <Label className="font-semibold mb-2">Estudiante</Label>
 
           {students.map((student) => (
             <Label key={student.id} className="flex items-center gap-2">
@@ -670,7 +670,7 @@ export function Tutors() {
         </div>
 
         <div className="flex flex-col mb-6">
-          <Label className="font-semibold mb-2">Alumno</Label>
+          <Label className="font-semibold mb-2">Estudiante</Label>
 
           <div className="border border-gray-300 rounded p-3 max-h-40 overflow-y-auto">
             {students.map((student) => (

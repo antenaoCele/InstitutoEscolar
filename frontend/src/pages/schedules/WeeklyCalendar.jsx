@@ -236,7 +236,7 @@ export default function WeeklyCalendar() {
     setSelectedTime("");
     setClassroom("");
 
-    // Alumno
+    // Estudiante
     setSelectedStudentId("");
     setSelectedStudents([]);
     setSelectedStudentPlans([]);
@@ -324,10 +324,12 @@ export default function WeeklyCalendar() {
             formatted.start_time = e.msg;
           } else if (
             e.msg ===
-            "El alumno ya está inscripto en otra clase en ese mismo horario."
+            "El estudiante ya está inscripto en otra clase en ese mismo horario."
           ) {
             formatted.studentConflict = e.msg;
-          } else if (e.msg === "La clase ya alcanzó el máximo de 5 alumnos.") {
+          } else if (
+            e.msg === "La clase ya alcanzó el máximo de 5 estudiantes."
+          ) {
             formatted.general = e.msg;
           } else {
             formatted[e.path] = e.msg;
@@ -396,7 +398,7 @@ export default function WeeklyCalendar() {
       setErrorsEdit((prev) => ({
         ...prev,
         plans:
-          "No es posible guardar mientras existan alumnos incompatibles con el docente seleccionado.",
+          "No es posible guardar mientras existan estudiantes incompatibles con el docente seleccionado.",
       }));
 
       return;
@@ -464,10 +466,12 @@ export default function WeeklyCalendar() {
             formatted.start_time = e.msg;
           } else if (
             e.msg ===
-            "El alumno ya está inscripto en otra clase en ese mismo horario."
+            "El estudiante ya está inscripto en otra clase en ese mismo horario."
           ) {
             formatted.studentConflict = e.msg;
-          } else if (e.msg === "La clase ya alcanzó el máximo de 5 alumnos.") {
+          } else if (
+            e.msg === "La clase ya alcanzó el máximo de 5 estudiantes."
+          ) {
             formatted.general = e.msg;
           } else {
             formatted[e.path] = e.msg;
@@ -567,7 +571,7 @@ export default function WeeklyCalendar() {
       }));
     }
 
-    // Agregar alumno
+    // Agregar estudiante
     setSelectedStudents((prev) => [...prev, student]);
 
     const alreadyExists = selectedStudentPlans.some(
@@ -734,7 +738,7 @@ export default function WeeklyCalendar() {
           onChange={(e) => setSelectedStudent(e.target.value)}
           className="p-2 border border-gray-300 rounded w-72"
         >
-          <option value="">Todos los alumnos</option>
+          <option value="">Todos los estudiantes</option>
 
           {students.map((student) => (
             <option key={student.id} value={student.id}>
@@ -917,7 +921,7 @@ export default function WeeklyCalendar() {
                               <div className="text-xs mb-1">
                                 <span className="font-semibold">
                                   <br />
-                                  Alumnos:
+                                  Estudiantes:
                                 </span>
                               </div>
 
@@ -1168,10 +1172,10 @@ export default function WeeklyCalendar() {
           )}
         </div>
 
-        {/* Alumno */}
+        {/* Estudiante */}
 
         <div className="flex flex-col mb-2">
-          <label className="font-semibold mb-2">Alumno</label>
+          <label className="font-semibold mb-2">Estudiante</label>
 
           <div className="flex gap-2">
             <select
@@ -1189,7 +1193,7 @@ export default function WeeklyCalendar() {
             >
               <option value="">
                 {teacherId
-                  ? "Seleccionar alumno"
+                  ? "Seleccionar estudiante"
                   : "Seleccione primero un docente"}
               </option>
 
@@ -1599,10 +1603,10 @@ export default function WeeklyCalendar() {
           )}
         </div>
 
-        {/* Alumno */}
+        {/* Estudiante */}
 
         <div className="flex flex-col mb-2">
-          <label className="font-semibold mb-2">Alumno</label>
+          <label className="font-semibold mb-2">Estudiante</label>
 
           <div className="flex gap-2">
             <select
@@ -1620,7 +1624,7 @@ export default function WeeklyCalendar() {
             >
               <option value="">
                 {teacherId
-                  ? "Seleccionar alumno"
+                  ? "Seleccionar estudiante"
                   : "Seleccione primero un docente"}
               </option>
 
@@ -1936,9 +1940,9 @@ export default function WeeklyCalendar() {
               )}
             </div>
 
-            {/* Alumnos */}
+            {/* Estudiantes */}
             <div className="space-y-3 mb-8">
-              <h3 className="font-bold text-lg">Alumnos</h3>
+              <h3 className="font-bold text-lg">Estudiantes</h3>
 
               {selectedScheduleInfo.students.length === 0 ? (
                 <div
@@ -1950,7 +1954,7 @@ export default function WeeklyCalendar() {
                     text-gray-500
                   "
                 >
-                  No hay alumnos asignados.
+                  No hay estudiantes asignados.
                 </div>
               ) : (
                 selectedScheduleInfo.students.map((student) => (

@@ -379,11 +379,14 @@ export const studentPlansController = {
         ORDER BY id DESC LIMIT 1`,
         [student_id],
       );
-      res.json({ success: true, message: "Alumno reactivado correctamente" });
+      res.json({
+        success: true,
+        message: "Estudiante reactivado correctamente",
+      });
     } catch (error) {
       res
         .status(500)
-        .json({ success: false, message: "Error al reactivar al alumno" });
+        .json({ success: false, message: "Error al reactivar al estudiante" });
     }
   },
 };

@@ -6,7 +6,7 @@ import {
 
 /**
  * Valida el formulario de registrar inscripción (permite varios
- * alumnos a la vez, para hermanos).
+ * estudiantes a la vez, para hermanos).
  * Devuelve un objeto { campo: mensaje }. Vacío = sin errores.
  */
 export const validateEnrollmentForm = ({
@@ -17,7 +17,7 @@ export const validateEnrollmentForm = ({
   const errors = {};
 
   if (isEmptyArray(enrollmentStudents)) {
-    errors.students = "Seleccione al menos un alumno.";
+    errors.students = "Seleccione al menos un estudiante.";
   }
 
   if (!isPositiveNumber(enrollmentAmount)) {
@@ -32,7 +32,7 @@ export const validateEnrollmentForm = ({
 };
 
 /**
- * Valida el formulario de editar inscripción (un solo alumno).
+ * Valida el formulario de editar inscripción (un solo estudiante).
  * Devuelve un objeto { campo: mensaje }. Vacío = sin errores.
  */
 export const validateEditEnrollmentForm = ({
@@ -43,7 +43,7 @@ export const validateEditEnrollmentForm = ({
   const errors = {};
 
   if (isRequired(enrollmentStudent)) {
-    errors.student = "Seleccione un alumno.";
+    errors.student = "Seleccione un estudiante.";
   }
 
   if (!isPositiveNumber(enrollmentAmount)) {

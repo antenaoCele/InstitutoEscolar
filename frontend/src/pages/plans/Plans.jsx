@@ -626,36 +626,14 @@ export function Plans() {
         </div>
 
         <div className="flex justify-end gap-4 mt-10">
-          <Button
-            title="Guardar"
-            size="icon"
-            onClick={handleCreate}
-            className="
-              cursor-pointer
-              w-12
-              h-12
-              rounded
-              bg-[#0cc0df]
-              text-white
-              flex
-              items-center
-              justify-center
-              transition
-              transform
-              hover:scale-105
-            "
-          >
-            <img
-              src={SaveIcon}
-              alt="Guardar"
-              className="
-                w-5
-                h-5
-                brightness-0
-                invert
-              "
+          <div className="flex justify-end gap-3">
+            <NoButton
+              title="Cancelar"
+              onClick={() => setOpenCreateModal(false)}
             />
-          </Button>
+
+            <YesButton title="Aceptar" onClick={handleCreate} />
+          </div>
         </div>
       </Modal>
 
@@ -699,16 +677,6 @@ export function Plans() {
             </table>
           </div>
         )}
-
-        <div className="flex justify-end mt-8">
-          <Button
-            variant="outline"
-            onClick={() => setOpenHistoryModal(false)}
-            className={buttonClass}
-          >
-            Cerrar
-          </Button>
-        </div>
       </Modal>
 
       {/* ================== MODAL: EDITAR PLAN (genera un nuevo precio vigente) ================== */}
@@ -782,36 +750,9 @@ export function Plans() {
         </div>
 
         <div className="flex justify-end gap-4 mt-10">
-          <Button
-            className="
-              cursor-pointer
-              w-12
-              h-12
-              rounded
-              bg-[#0cc0df]
-              text-white
-              flex
-              items-center
-              justify-center
-              transition
-              transform
-              hover:scale-105
-            "
-            title="Guardar"
-            size="icon"
-            onClick={handleUpdate}
-          >
-            <img
-              src={SaveIcon}
-              alt="Guardar"
-              className="
-                w-5
-                h-5
-                brightness-0
-                invert
-              "
-            />
-          </Button>
+          <NoButton title="Cancelar" onClick={() => setOpenEditModal(false)} />
+
+          <YesButton title="Aceptar" onClick={handleUpdate} />
         </div>
       </Modal>
 

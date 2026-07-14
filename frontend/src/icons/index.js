@@ -52,6 +52,7 @@ import { ReactComponent as ChatIcon } from "./chat.svg?react";
 import { ReactComponent as MoreDotIcon } from "./moredot.svg?react";
 import { ReactComponent as AlertHexaIcon } from "./alert-hexa.svg?react";
 import { ReactComponent as ErrorHexaIcon } from "./info-hexa.svg?react";
+import { ReactComponent as BirthdayIcon } from "./birthday.svg?react";
 import SaveIcon from "./icons8-guardar-32.png";
 import MoreIcon from "./icons8-añadir-48-dos.png";
 import CreateIcon from "./icons8-crear-48.png";
@@ -67,8 +68,11 @@ import TutorIcon from "./icons8-tutor-50.png";
 import TeachersIcon from "./icons8-profesor-49.png";
 import SubjectsIcon from "./icons8-libro-50.png";
 import AssignTeacher from "./icons8-agregar-usuario-32.png";
+import BirthdaysIcon from "./icons8-cumpleaños-48.png";
 
 export {
+  BirthdayIcon,
+  BirthdaysIcon,
   AssignTeacher,
   TutorIcon,
   TutorsIcon,

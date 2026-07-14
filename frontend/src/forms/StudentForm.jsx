@@ -79,7 +79,7 @@ export default function StudentForm({
   return (
     <form onSubmit={(e) => handleSubmit(e, submitFn)}>
       <h2 className="text-lg font-semibold mb-4">
-        {isEdit ? "Editar Alumno" : "Nuevo Alumno"}
+        {isEdit ? "Editar Estudiante" : "Nuevo Estudiante"}
       </h2>
 
       <Input
@@ -156,7 +156,7 @@ export default function StudentForm({
 
       <SubmitButton
         loading={loading}
-        text={isEdit ? "Actualizar Alumno" : "Crear Alumno"}
+        text={isEdit ? "Actualizar Estudiante" : "Crear Estudiante"}
       />
 
       {error && <p className="text-red-500">{error}</p>}

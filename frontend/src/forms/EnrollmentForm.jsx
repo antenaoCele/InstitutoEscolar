@@ -30,7 +30,7 @@ export default function EnrollmentForm({ initialData = {}, isEdit = false }) {
   const validate = (data) => {
     const errors = {};
 
-    if (!data.student_id) errors.student_id = "Alumno requerido";
+    if (!data.student_id) errors.student_id = "Estudiante requerido";
     if (!data.amount) errors.amount = "Monto requerido";
     if (!data.payment_date) errors.payment_date = "Fecha requerida";
 
@@ -65,7 +65,7 @@ export default function EnrollmentForm({ initialData = {}, isEdit = false }) {
   return (
     <form onSubmit={(e) => handleSubmit(e, submitFn)}>
       <Select
-        label="Alumno"
+        label="Estudiante"
         name="student_id"
         value={formData.student_id}
         onChange={handleChange}

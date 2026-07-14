@@ -90,7 +90,7 @@ export const teachersController = {
 
       res.status(500).json({
         success: false,
-        message: "Error al obtener alumnos disponibles",
+        message: "Error al obtener estudiantes disponibles",
       });
     }
   },
