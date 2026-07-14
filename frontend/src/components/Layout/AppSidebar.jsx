@@ -102,20 +102,7 @@ const navItems = [
       </SidebarIcon>
     ),
     name: "Usuarios",
-    subItems: [
-      {
-        name: "Administradores",
-        path: "/users?role=admin",
-      },
-      {
-        name: "Docentes",
-        path: "/users?role=docente",
-      },
-      {
-        name: "Todos los usuarios",
-        path: "/users?role=all",
-      },
-    ],
+    path: "/users",
   },
 ];
 

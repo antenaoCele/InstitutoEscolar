@@ -12,14 +12,14 @@ export const validateTeacher = ({ first_name, last_name, dni, phone }) => {
   if (isRequired(first_name)) {
     errors.first_name = "El nombre es obligatorio.";
   } else if (!isValidPersonName(first_name)) {
-    errors.first_name = "El nombre debe tener entre 3 y 45 letras.";
+    errors.first_name = "Ingrese un nombre válido.";
   }
 
   // Apellido
   if (isRequired(last_name)) {
     errors.last_name = "El apellido es obligatorio.";
   } else if (!isValidPersonName(last_name)) {
-    errors.last_name = "El apellido debe tener entre 3 y 45 letras.";
+    errors.last_name = "Ingrese un apellido válido.";
   }
 
   // DNI

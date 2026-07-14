@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import { useLocation } from "react-router-dom";
 
 import BasicTable from "../../components/tables/BasicTables/BasicTablesOne";
 import Button from "../../components/ui/Button";
@@ -10,6 +9,8 @@ import { Modal } from "../../components/ui/Modal";
 
 import { userService } from "../../services/user.service";
 import { isAdmin } from "../../utils/auth";
+import { mapErrors } from "../../validators/helpers/errorHelpers";
+import { validateUsersForm } from "../../validators/entities/users.validator";
 
 import {
   PencilIcon,
@@ -30,6 +31,7 @@ export function Users() {
   // FILTROS
   // ======================================================
   const [search, setSearch] = useState("");
+  const [selectedRole, setSelectedRole] = useState("");
 
   // ======================================================
   // MODALES
@@ -53,13 +55,6 @@ export function Users() {
   const [role, setRole] = useState("DOCENTE");
 
   // ======================================================
-  // ESTADO DEL COMPONENTE
-  // ======================================================
-  const location = useLocation();
-  const params = new URLSearchParams(location.search);
-  const roleFilter = params.get("role") || "all";
-
-  // ======================================================
   // ERRORES
   // ======================================================
   const [errors, setErrors] = useState({});
@@ -80,9 +75,13 @@ export function Users() {
   // ======================================================
   const fetchUsers = async () => {
     try {
-      const { data } = await userService.getAll({
-        role: roleFilter,
-      });
+      const params = {};
+
+      if (selectedRole) {
+        params.role = selectedRole;
+      }
+
+      const { data } = await userService.getAll(params);
 
       setUsers(data?.data || []);
     } catch (error) {
@@ -105,17 +104,6 @@ export function Users() {
   };
 
   // ======================================================
-  // FUNCIONES AUXILIARES
-  // ======================================================
-  const mapErrors = (errors) => {
-    const formatted = {};
-    errors.forEach((e) => {
-      formatted[e.path] = e.msg;
-    });
-    return formatted;
-  };
-
-  // ======================================================
   // HANDLES CRUD
   // ======================================================
   const openCreate = () => {
@@ -124,7 +112,21 @@ export function Users() {
   };
 
   const handleCreate = async () => {
+    const formErrors = validateUsersForm({
+      first_name: firstName,
+      last_name: lastName,
+      username,
+      password,
+      role,
+    });
+
+    if (Object.keys(formErrors).length > 0) {
+      setErrors(formErrors);
+      return;
+    }
+
     setErrors({});
+
     try {
       await userService.create({
         first_name: firstName,
@@ -161,6 +163,23 @@ export function Users() {
 
   const handleUpdate = async () => {
     if (!selectedUser) return;
+
+    const formErrors = validateUsersForm(
+      {
+        first_name: firstName,
+        last_name: lastName,
+        username,
+        password,
+        role,
+      },
+      true,
+    );
+
+    if (Object.keys(formErrors).length > 0) {
+      setErrors(formErrors);
+      return;
+    }
+
     setErrors({});
 
     try {
@@ -213,12 +232,12 @@ export function Users() {
   // ======================================================
   useEffect(() => {
     fetchUsers();
-  }, [location.search]);
+  }, [selectedRole]);
 
   // ======================================================
   // DATOS DERIVADOS
   // ======================================================
-  const showActions = isAdmin() && roleFilter === "all";
+  const showActions = isAdmin();
 
   const filteredUsers = users.filter((u) => {
     const text = search.toLowerCase();
@@ -328,6 +347,16 @@ export function Users() {
           onChange={(e) => setSearch(e.target.value)}
           className="p-2 border border-gray-300 rounded w-80"
         />
+
+        <Select
+          value={selectedRole}
+          onChange={(e) => setSelectedRole(e.target.value)}
+          className="p-2 border border-gray-300 rounded min-w-56"
+        >
+          <option value="">Todos los roles</option>
+          <option value="ADMIN">Administradores</option>
+          <option value="DOCENTE">Docentes</option>
+        </Select>
       </div>
 
       <BasicTable title={tableTitle} columns={columns} data={filteredUsers} />
@@ -411,14 +440,6 @@ export function Users() {
         </div>
 
         <div className="flex justify-end gap-4 mt-10">
-          {/* <Button
-            variant="outline"
-            onClick={() => setOpenCreateModal(false)}
-            className={buttonClass}
-          >
-            Cancelar
-          </Button> */}
-
           <Button
             size="icon"
             title="Guardar"
@@ -519,14 +540,6 @@ export function Users() {
         </div>
 
         <div className="flex justify-end gap-4 mt-10">
-          {/* <Button
-            variant="outline"
-            onClick={() => setOpenEditModal(false)}
-            className={buttonClass}
-          >
-            Cancelar
-          </Button> */}
-
           <Button
             title="Guardar"
             size="icon"

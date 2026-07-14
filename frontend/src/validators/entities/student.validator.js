@@ -1,6 +1,7 @@
 import {
   isRequired,
   isValidDNI,
+  isNumericDNI,
   isValidPersonName,
   isValidName,
   isValidLevel,
@@ -37,6 +38,8 @@ export const validateStudentForm = ({
 
   if (isRequired(dni)) {
     errors.dni = "Este campo no puede estar vacío.";
+  } else if (!isNumericDNI(dni)) {
+    errors.dni = "Este campo no puede contener un DNI no válido.";
   } else if (!isValidDNI(dni)) {
     errors.dni = "Ingrese un DNI válido.";
   }
@@ -44,7 +47,7 @@ export const validateStudentForm = ({
   if (isRequired(school)) {
     errors.school = "Este campo no puede estar vacío.";
   } else if (!isValidName(school)) {
-    errors.school = "Ingrese un nombre de institución válido.";
+    errors.school = "Este campo no puede contener caracteres no válidos.";
   }
 
   if (isRequired(birthDate)) {

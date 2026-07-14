@@ -11,7 +11,17 @@ export const isEmptyArray = (value) =>
   !Array.isArray(value) || value.length === 0;
 
 /* =========================================================
+DNI - solo dígitos (sin validar largo)
+Usado como primer chequeo, antes de isValidDNI, para poder
+distinguir "tiene caracteres inválidos" de "largo incorrecto",
+igual que hace el backend con notEmpty -> isNumeric -> isLength.
+========================================================= */
+export const isNumericDNI = (value) =>
+  /^\d+$/.test(value?.toString().replace(/\D/g, "") || "");
+
+/* =========================================================
 DNI
+Regla espejo de validateDNI (backend): numérico, 7-8 dígitos.
 ========================================================= */
 export const isValidDNI = (value) => {
   const clean = value?.toString().replace(/\D/g, "") || "";
@@ -20,12 +30,14 @@ export const isValidDNI = (value) => {
 
 /* =========================================================
 NOMBRE DE PERSONA (solo letras y espacios)
+Regla espejo de validatePersonName (backend): 3-45 caracteres.
 ========================================================= */
 export const isValidPersonName = (value) =>
   /^[a-zA-ZñÑáéíóúÁÉÍÓÚ\s]{3,45}$/.test(value?.toString().trim() || "");
 
 /* =========================================================
 NOMBRE GENÉRICO (colegio, institución, etc.)
+Regla espejo de validateName (backend): 3-45 caracteres.
 ========================================================= */
 export const isValidName = (value) => {
   const text = value?.toString().trim() || "";
@@ -35,6 +47,7 @@ export const isValidName = (value) => {
 
   return validChars.test(text) && hasLettersOrNumbers.test(text);
 };
+
 /* =========================================================
 MONTO / DINERO (positivo)
 ========================================================= */
@@ -43,11 +56,14 @@ export const isPositiveNumber = (value) =>
 
 /* =========================================================
 TELÉFONO
+Regla espejo de validatePhone (backend): notEmpty, max 20
+caracteres, charset [0-9+- ]. Sin mínimo de largo (el backend
+tampoco lo exige).
 ========================================================= */
 export const isValidPhone = (value) => {
   const phone = value?.toString().trim() || "";
 
-  return /^[0-9+\- ]{6,20}$/.test(phone);
+  return phone.length > 0 && phone.length <= 20 && /^[0-9+\- ]+$/.test(phone);
 };
 
 /* =========================================================
@@ -71,12 +87,45 @@ export const isValidGrade = (value) => {
 };
 
 /* =========================================================
+USERNAME
+Regla espejo de validateUsername (backend): alfanumérico, 3-45.
+========================================================= */
+export const isValidUsername = (value) =>
+  /^[a-zA-Z0-9]{3,45}$/.test(value?.toString().trim() || "");
+
+/* =========================================================
+PASSWORD
+Regla espejo de validatePassword (backend, isStrongPassword):
+mín. 8 caracteres, 1 minúscula, 1 mayúscula, 1 número, 1 símbolo.
+========================================================= */
+export const isValidPassword = (value) => {
+  const text = value?.toString() || "";
+
+  return (
+    text.length >= 8 &&
+    /[a-z]/.test(text) &&
+    /[A-Z]/.test(text) &&
+    /[0-9]/.test(text) &&
+    /[^a-zA-Z0-9]/.test(text)
+  );
+};
+
+/* =========================================================
+ROL
+Regla espejo de validateRole (backend): ADMIN o DOCENTE.
+========================================================= */
+export const isValidRole = (value) => ["ADMIN", "DOCENTE"].includes(value);
+
+/* =========================================================
 FECHA
 ========================================================= */
 export const isValidDateFormat = (value) => !isNaN(Date.parse(value));
 
 /* =========================================================
 FECHA DE NACIMIENTO
+Base: validateDate (backend) exige ISO válida y no futura.
+El tope de 120 años es una regla propia del front (UX),
+sin equivalente explícito en el backend.
 ========================================================= */
 export const isValidBirthDate = (value) => {
   if (!value || isNaN(Date.parse(value))) return false;
@@ -84,11 +133,9 @@ export const isValidBirthDate = (value) => {
   const birth = new Date(value);
   const today = new Date();
 
-  // No puede ser una fecha futura
   if (birth > today) return false;
 
   const age = today.getFullYear() - birth.getFullYear();
 
-  // Máximo 120 años
   return age >= 0 && age <= 120;
 };

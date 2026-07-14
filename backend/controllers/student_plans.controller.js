@@ -1,6 +1,7 @@
 import { db } from "../db.js";
 import { createCrudController } from "../utils/crudFactory.js";
 import { calculateAccountStatus } from "../utils/accountStatus.js";
+import { isTeacherCompatibleWithPlan } from "../utils/student_plans.utils.js";
 
 const baseController = createCrudController("student_plans");
 
@@ -184,24 +185,7 @@ export const studentPlansController = {
     try {
       const { teacher_id, plan_id } = req.body;
 
-      const [compatible] = await db.execute(
-        `
-        SELECT 1
-        FROM teacher_subjects ts
-
-        JOIN plan_subjects ps
-        ON ps.subject_id = ts.subject_id
-
-        WHERE
-          ts.teacher_id = ?
-        AND ps.plan_id = ?
-
-        LIMIT 1
-        `,
-        [teacher_id, plan_id],
-      );
-
-      if (!compatible.length) {
+      if (!(await isTeacherCompatibleWithPlan(teacher_id, plan_id))) {
         return res.status(400).json({
           success: false,
           message: "El docente seleccionado no puede dictar ese plan.",
@@ -256,7 +240,8 @@ export const studentPlansController = {
 
       return res.status(500).json({
         success: false,
-        error,
+        message:
+          error.sqlMessage || error.message || "Error al crear el registro",
       });
     }
   },
@@ -295,24 +280,7 @@ export const studentPlansController = {
       const teacher_id = req.body.teacher_id ?? current.teacher_id;
       const plan_id = req.body.plan_id ?? current.plan_id;
 
-      const [compatible] = await db.execute(
-        `
-        SELECT 1
-        FROM teacher_subjects ts
-
-        JOIN plan_subjects ps
-        ON ps.subject_id = ts.subject_id
-
-        WHERE
-          ts.teacher_id = ?
-        AND ps.plan_id = ?
-
-        LIMIT 1
-        `,
-        [teacher_id, plan_id],
-      );
-
-      if (!compatible.length) {
+      if (!(await isTeacherCompatibleWithPlan(teacher_id, plan_id))) {
         return res.status(400).json({
           success: false,
           message: "El docente seleccionado no puede dictar ese plan.",
@@ -374,7 +342,10 @@ export const studentPlansController = {
 
       res.status(500).json({
         success: false,
-        message: "Error al actualizar el registro",
+        message:
+          error.sqlMessage ||
+          error.message ||
+          "Error al actualizar el registro",
       });
     }
   },

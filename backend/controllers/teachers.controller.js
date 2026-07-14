@@ -24,12 +24,12 @@ export const teachersController = {
 
       if (plan_id) {
         query += `
-          INNER JOIN student_plans sp
-            ON sp.teacher_id = t.id
+          INNER JOIN teacher_plans tp
+            ON tp.teacher_id = t.id
         `;
 
         query += `
-          WHERE sp.plan_id = ?
+          WHERE tp.plan_id = ?
         `;
 
         params.push(plan_id);
@@ -106,13 +106,10 @@ export const teachersController = {
         p.name
       FROM plans p
 
-      JOIN plan_subjects ps
-        ON ps.plan_id = p.id
+      JOIN teacher_plans tp
+        ON tp.plan_id = p.id
 
-      JOIN teacher_subjects ts
-        ON ts.subject_id = ps.subject_id
-
-      WHERE ts.teacher_id = ?
+      WHERE tp.teacher_id = ?
 
       ORDER BY p.name
       `,
