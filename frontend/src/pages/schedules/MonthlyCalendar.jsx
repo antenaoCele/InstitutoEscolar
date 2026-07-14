@@ -13,6 +13,7 @@ import {
   AddButton,
   AssignTeacherButton,
 } from "../../components/ui/ActionButtons";
+import { BirthdayIcon } from "../../icons";
 
 export default function MonthlyCalendar() {
   // ======================================================
@@ -433,14 +434,14 @@ export default function MonthlyCalendar() {
                       <td
                         key={`day-${weekIndex}-${day}`}
                         className="
-                            border
-                            p-2
-                            h-40
-                            align-top
-                            transition-colors
-                            duration-150
-                            hover:bg-cyan-50
-                          "
+                          border
+                          p-2
+                          h-40
+                          align-top
+                          transition-colors
+                          duration-150
+                          hover:bg-cyan-50
+                        "
                       >
                         <div className="font-bold text-gray-700 mb-1">
                           {day}
@@ -487,7 +488,7 @@ export default function MonthlyCalendar() {
 
                               {event.hour && (
                                 <div className="text-[10px] text-blue-600">
-                                  {event.hour}
+                                  {event.hour.slice(0, 5)}
                                 </div>
                               )}
 
@@ -507,23 +508,37 @@ export default function MonthlyCalendar() {
                             </div>
                           ))}
 
-                          {dayBirthdays.map((student) => (
-                            <div
-                              key={`birthday-${student.id}`}
-                              className="
-                              mt-2
-                              p-1
-                              rounded
-                              bg-pink-100
-                              border
-                              border-pink-300
-                            "
-                            >
-                              <div className="text-xs font-semibold text-pink-700">
-                                🎂 {student.first_name} {student.last_name}
+                          {dayBirthdays.map((student) => {
+                            const birth = new Date(student.birth_date);
+
+                            const age = year - birth.getFullYear();
+
+                            return (
+                              <div
+                                key={`birthday-${student.id}`}
+                                className="
+                                  mt-2
+                                  p-1
+                                  rounded
+                                  bg-pink-100
+                                  border
+                                  border-pink-300
+                                "
+                              >
+                                <div className="flex items-center gap-1 text-xs font-semibold text-pink-700">
+                                  <BirthdayIcon className="w-4 h-4 text-pink-700" />
+
+                                  <span>
+                                    {student.last_name}, {student.first_name}
+                                  </span>
+                                </div>
+
+                                <div className="text-[10px] text-pink-600">
+                                  {age} años
+                                </div>
                               </div>
-                            </div>
-                          ))}
+                            );
+                          })}
                         </div>
                       </td>
                     );
