@@ -139,3 +139,11 @@ export const isValidBirthDate = (value) => {
 
   return age >= 0 && age <= 120;
 };
+
+/* =========================================================
+CONFIRMACIÓN DE CONTRASEÑA
+Regla propia del front (UX): sin equivalente en el backend,
+ya que el backend solo recibe newPassword, no la confirmación.
+========================================================= */
+export const doPasswordsMatch = (password, confirmPassword) =>
+  password === confirmPassword;
