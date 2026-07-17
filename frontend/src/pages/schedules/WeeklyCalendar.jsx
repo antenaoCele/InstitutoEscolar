@@ -2,19 +2,19 @@ import { useEffect, useState } from "react";
 import { teacherService } from "../../services/teacher.service";
 import { ScheduleService } from "../../services/schedule.service";
 import Button from "../../components/ui/Button";
+import Select from "../../components/form/Select";
 import { ScheduleStudentService } from "../../services/scheduleStudent.service";
 import { studentService } from "../../services/student.service";
 import { Modal } from "../../components/ui/Modal";
 import { isAdmin } from "../../utils/auth";
 import {
-  PencilIcon,
-  TrashBinIcon,
-  CloseLineIcon,
-  SaveIcon,
-  MoreIcon,
-  CreateIcon,
-  MoreInfoIcon,
-} from "../../icons";
+  ViewButtonWeek,
+  EditButton,
+  DeleteButton,
+  PlusButton,
+  YesButton,
+  NoButton,
+} from "../../components/ui/ActionButtons";
 
 export default function WeeklyCalendar() {
   // ======================================================
@@ -79,8 +79,6 @@ export default function WeeklyCalendar() {
   // ======================================================
   // CONSTANTES
   // ======================================================
-  const buttonClass = "cursor-pointer transition transform hover:scale-105";
-
   const days = [
     { name: "Lunes", value: 1 },
     { name: "Martes", value: 2 },
@@ -379,7 +377,8 @@ export default function WeeklyCalendar() {
           studentId: student.student_id,
           studentName: `${student.last_name}, ${student.first_name}`,
           plans: response.data.data,
-          selectedPlans: response.data.data,
+          selectedPlans:
+            response.data.data.length === 1 ? [response.data.data[0]] : [],
         };
       }),
     );
@@ -637,6 +636,28 @@ export default function WeeklyCalendar() {
     );
   };
 
+  const handleTeacherChange = async (e) => {
+    const teacher = e.target.value;
+
+    setTeacherId(teacher);
+
+    // limpiar datos dependientes
+    setSelectedPlan("");
+    setSelectedStudentId("");
+    setSelectedStudents([]);
+    setSelectedStudentPlans([]);
+    setIncompatibleStudents([]);
+
+    if (!teacher) {
+      setAvailablePlans([]);
+      setAvailableStudents([]);
+      return;
+    }
+
+    await fetchAvailablePlans(teacher);
+    await fetchAvailableStudents(teacher, "");
+  };
+
   // ======================================================
   // USEEFFECTS
   // ======================================================
@@ -680,7 +701,8 @@ export default function WeeklyCalendar() {
           studentId: student.id,
           studentName: `${student.last_name}, ${student.first_name}`,
           plans: response.data.data,
-          selectedPlans: response.data.data,
+          selectedPlans:
+            response.data.data.length === 1 ? [response.data.data[0]] : [],
         });
       }
 
@@ -719,10 +741,10 @@ export default function WeeklyCalendar() {
     <>
       {/* Encabezado */}
       <div className="flex justify-between mb-6">
-        <select
+        <Select
           value={selectedTeacher}
           onChange={(e) => setSelectedTeacher(e.target.value)}
-          className="p-2 border border-gray-300 rounded w-72"
+          className="w-72"
         >
           <option value="">Todos los docentes</option>
 
@@ -731,12 +753,12 @@ export default function WeeklyCalendar() {
               {teacher.last_name}, {teacher.first_name}
             </option>
           ))}
-        </select>
+        </Select>
 
-        <select
+        <Select
           value={selectedStudent}
           onChange={(e) => setSelectedStudent(e.target.value)}
-          className="p-2 border border-gray-300 rounded w-72"
+          className="w-72"
         >
           <option value="">Todos los estudiantes</option>
 
@@ -745,51 +767,21 @@ export default function WeeklyCalendar() {
               {student.last_name}, {student.first_name}
             </option>
           ))}
-        </select>
+        </Select>
 
-        <select
+        <Select
           value={selectedClassroom}
           onChange={(e) => setSelectedClassroom(e.target.value)}
-          className="p-2 border border-gray-300 rounded w-72"
+          className="w-72"
         >
           <option value="">Todas las aulas</option>
 
           <option value="A">🟦 Aula A</option>
 
-          <option value="B">🟥 Aula B</option>
-        </select>
+          <option value="B">🟪 Aula B</option>
+        </Select>
 
-        {isAdmin() && (
-          <button
-            title="Crear Horario"
-            onClick={openCreate}
-            className="
-              cursor-pointer
-              w-12
-              h-12
-              rounded
-              bg-[#0cc0df]
-              text-white
-              flex
-              items-center
-              justify-center
-              transition
-              transform
-              hover:scale-105
-            "
-          >
-            <img
-              src={CreateIcon}
-              alt="More"
-              className="
-                w-5
-                h-5
-                brightness-0
-                invert
-              "
-            />
-          </button>
-        )}
+        {isAdmin() && <PlusButton title="Crear Horario" onClick={openCreate} />}
       </div>
 
       {/* Tabla */}
@@ -803,11 +795,25 @@ export default function WeeklyCalendar() {
           className="
             w-full
             table-fixed
+
             border
             border-gray-300
-          "
+            dark:border-gray-700
+        "
         >
-          <thead className="sticky top-0 z-20 bg-gray-100">
+          <thead
+            className="
+              sticky
+              top-0
+              z-20
+
+              bg-gray-100
+              dark:bg-gray-800
+
+              text-gray-800
+              dark:text-white
+            "
+          >
             <tr>
               <th
                 className="
@@ -815,9 +821,18 @@ export default function WeeklyCalendar() {
                   top-0
                   left-0
                   z-30
-                  bg-gray-100
-                  border
+
                   p-2
+
+                  border
+                  border-gray-300
+                  dark:border-gray-700
+
+                  bg-gray-100
+                  dark:bg-gray-800
+
+                  text-gray-800
+                  dark:text-white
                 "
               >
                 Horario
@@ -827,10 +842,20 @@ export default function WeeklyCalendar() {
                 <th
                   key={day.value}
                   className="
-                    border
                     p-2
+
+                    border
+                    border-gray-300
+                    dark:border-gray-700
+
                     bg-gray-100
-                  "
+                    dark:bg-gray-800
+
+                    text-gray-800
+                    dark:text-white
+
+                    font-semibold
+                "
                 >
                   {day.name}
                 </th>
@@ -845,12 +870,23 @@ export default function WeeklyCalendar() {
                     sticky
                     left-0
                     z-10
-                    bg-white
-                    border
-                    p-2
-                    font-semibold
+
                     w-[130px]
-                  "
+
+                    p-2
+
+                    border
+                    border-gray-300
+                    dark:border-gray-700
+
+                    bg-white
+                    dark:bg-gray-800
+
+                    text-gray-800
+                    dark:text-white
+
+                    font-semibold
+                "
                 >
                   {slot}
                 </td>
@@ -869,10 +905,19 @@ export default function WeeklyCalendar() {
                       key={`${day.value}-${slot}`}
                       className="
                         border
+                        border-gray-300
+                        dark:border-gray-700
+
                         p-2
                         align-top
+
                         w-[180px]
-                      "
+
+                        transition-colors
+
+                        hover:bg-cyan-50
+                        dark:hover:bg-gray-800
+                    "
                     >
                       <div
                         className="
@@ -886,6 +931,11 @@ export default function WeeklyCalendar() {
                             (ss) => ss.schedule_id === schedule.id,
                           );
 
+                          const textColor =
+                            schedule.classroom === "A"
+                              ? "text-cyan-500"
+                              : "text-[#8d5df4]";
+
                           return (
                             <div
                               key={schedule.id}
@@ -893,64 +943,69 @@ export default function WeeklyCalendar() {
                                 schedule.classroom === "A"
                                   ? `
                                     p-2
-                                    rounded
+                                    rounded-lg
                                     border
-                                    bg-blue-200
-                                    border-blue-800
-                                    text-blue-800
-                                  `
+
+                                    bg-cyan-500/20
+                                    dark:bg-cyan-500/15
+
+                                    border-cyan-500
+                                    dark:border-cyan-500
+
+                                    text-cyan-900
+                                    dark:text-cyan-100
+
+                                    shadow-sm
+                                    hover:shadow-md
+                                    transition-all
+                                    duration-200                                  `
                                   : `
                                     p-2
-                                    rounded
+
+                                    rounded-lg
+
                                     border
-                                    bg-red-200
-                                    border-red-800
-                                    text-red-800
+
+                                    bg-[#8d5df4]/15
+                                    dark:bg-[#8d5df4]/25
+
+                                    border-[#8d5df4]
+
+                                    text-[#6b3ee8]
+                                    dark:text-[#d8c6ff]
                                   `
                               }
                             >
-                              <div className="text-xs mb-1">
-                                <span className="font-semibold">
-                                  Docente:
-                                </span>{" "}
-                              </div>
-                              <div className="text-xs ml-2">
-                                {schedule.last_name}, {schedule.first_name}.
+                              <div
+                                className={`font-semibold text-sm mb-1 ${textColor}`}
+                              >
+                                Docente:
                               </div>
 
-                              <div className="text-xs mb-1">
-                                <span className="font-semibold">
-                                  <br />
-                                  Estudiantes:
-                                </span>
+                              <div className={`ml-2 text-sm mb-3 ${textColor}`}>
+                                • {schedule.last_name}, {schedule.first_name}.
+                              </div>
+
+                              <div
+                                className={`font-semibold text-sm mb-1 ${textColor}`}
+                              >
+                                Estudiantes:
                               </div>
 
                               {students.map((student) => (
                                 <div
                                   key={student.student_id}
-                                  className="text-xs ml-2"
+                                  className={`ml-2 text-sm ${textColor}`}
                                 >
-                                  {student.last_name}, {student.first_name}.
+                                  • {student.last_name}, {student.first_name}.
                                 </div>
                               ))}
 
-                              <div className="flex gap-1 mt-1">
-                                <button
-                                  title="Más Info"
+                              <div className="flex justify-end mt-4">
+                                <ViewButtonWeek
+                                  title="Más información"
                                   onClick={() => handleInfo(schedule)}
-                                  className="cursor-pointer ml-auto text-[10px] px-2 py-1 rounded bg-[#0cc0df] text-white"
-                                >
-                                  <img
-                                    src={MoreInfoIcon}
-                                    alt="Info"
-                                    className="
-                                      w-5
-                                      h-5
-                                      brightness-0
-                                      invert
-                                    "
-                                  />
-                                </button>
+                                />
                               </div>
                             </div>
                           );
@@ -993,31 +1048,10 @@ export default function WeeklyCalendar() {
         <h2 className="text-xl font-bold mb-8">Crear Horario</h2>
 
         {/* Docente */}
-
         <div className="flex flex-col mb-4">
           <label className="font-semibold mb-2">Docente</label>
 
-          <select
-            value={teacherId}
-            onChange={async (e) => {
-              const id = e.target.value;
-
-              setTeacherId(id);
-
-              setSelectedPlan("");
-
-              setAvailableStudents([]);
-
-              await fetchAvailablePlans(id);
-            }}
-            className="
-              border
-              border-gray-300
-              rounded
-              px-3
-              py-2
-            "
-          >
+          <Select value={teacherId} onChange={handleTeacherChange}>
             <option value="">Seleccionar docente</option>
 
             {teachers.map((teacher) => (
@@ -1025,7 +1059,7 @@ export default function WeeklyCalendar() {
                 {teacher.last_name}, {teacher.first_name}
               </option>
             ))}
-          </select>
+          </Select>
 
           {errorsCreate.teacher_id && (
             <p className="text-red-500 text-sm mt-1">
@@ -1035,11 +1069,10 @@ export default function WeeklyCalendar() {
         </div>
 
         {/* Plan */}
-
         <div className="flex flex-col mb-4">
           <label className="font-semibold mb-2">Plan</label>
 
-          <select
+          <Select
             disabled={!teacherId}
             value={selectedPlan}
             onChange={async (e) => {
@@ -1049,18 +1082,6 @@ export default function WeeklyCalendar() {
 
               await fetchAvailableStudents(teacherId, plan);
             }}
-            className={`
-              border
-              border-gray-300
-              rounded
-              px-3
-              py-2
-              ${
-                !teacherId
-                  ? "bg-gray-100 text-gray-400 cursor-not-allowed"
-                  : "bg-white"
-              }
-            `}
           >
             <option value="">
               {teacherId ? "Seleccionar plan" : "Seleccione primero un docente"}
@@ -1071,7 +1092,7 @@ export default function WeeklyCalendar() {
                 {plan.name}
               </option>
             ))}
-          </select>
+          </Select>
 
           {errorsCreate.plan_id && (
             <p className="text-red-500 text-sm mt-1">{errorsCreate.plan_id}</p>
@@ -1079,20 +1100,12 @@ export default function WeeklyCalendar() {
         </div>
 
         {/* Día */}
-
         <div className="flex flex-col mb-4">
           <label className="font-semibold mb-2">Día</label>
 
-          <select
+          <Select
             value={selectedDay}
             onChange={(e) => setSelectedDay(e.target.value)}
-            className="
-              border
-              border-gray-300
-              rounded
-              px-3
-              py-2
-            "
           >
             <option value="">Seleccionar día</option>
 
@@ -1101,7 +1114,7 @@ export default function WeeklyCalendar() {
                 {day.name}
               </option>
             ))}
-          </select>
+          </Select>
 
           {errorsCreate.day && (
             <p className="text-red-500 text-sm mt-1">{errorsCreate.day}</p>
@@ -1109,20 +1122,12 @@ export default function WeeklyCalendar() {
         </div>
 
         {/* Horario */}
-
         <div className="flex flex-col mb-4">
           <label className="font-semibold mb-2">Horario</label>
 
-          <select
+          <Select
             value={selectedTime}
             onChange={(e) => setSelectedTime(e.target.value)}
-            className="
-              border
-              border-gray-300
-              rounded
-              px-3
-              py-2
-            "
           >
             <option value="">Seleccionar horario</option>
 
@@ -1131,7 +1136,7 @@ export default function WeeklyCalendar() {
                 {slot}
               </option>
             ))}
-          </select>
+          </Select>
 
           {errorsCreate.start_time && (
             <p className="text-red-500 text-sm mt-1">
@@ -1141,20 +1146,12 @@ export default function WeeklyCalendar() {
         </div>
 
         {/* Aula */}
-
         <div className="flex flex-col mb-4">
           <label className="font-semibold mb-2">Aula</label>
 
-          <select
+          <Select
             value={classroom}
             onChange={(e) => setClassroom(e.target.value)}
-            className="
-              border
-              border-gray-300
-              rounded
-              px-3
-              py-2
-            "
           >
             <option value="">Seleccionar aula</option>
 
@@ -1163,7 +1160,7 @@ export default function WeeklyCalendar() {
                 {room.name}
               </option>
             ))}
-          </select>
+          </Select>
 
           {errorsCreate.classroom && (
             <p className="text-red-500 text-sm mt-1">
@@ -1173,23 +1170,15 @@ export default function WeeklyCalendar() {
         </div>
 
         {/* Estudiante */}
-
         <div className="flex flex-col mb-2">
           <label className="font-semibold mb-2">Estudiante</label>
 
           <div className="flex gap-2">
-            <select
+            <Select
               disabled={!teacherId}
               value={selectedStudentId}
               onChange={(e) => setSelectedStudentId(e.target.value)}
-              className={`
-                flex-1
-                border
-                rounded
-                px-3
-                py-2
-                ${!teacherId ? "bg-gray-100 text-gray-400 cursor-not-allowed" : "bg-white"}
-              `}
+              className="flex-1"
             >
               <option value="">
                 {teacherId
@@ -1207,38 +1196,12 @@ export default function WeeklyCalendar() {
                     {student.last_name}, {student.first_name}
                   </option>
                 ))}
-            </select>
+            </Select>
 
-            <button
-              title="Agregar"
-              type="button"
+            <PlusButton
+              title="Agregar estudiante"
               onClick={() => handleAddStudent(false)}
-              className="
-              cursor-pointer
-              w-12
-              h-12
-              rounded
-              bg-[#0cc0df]
-              text-white
-              flex
-              items-center
-              justify-center
-              transition
-              transform
-              hover:scale-105
-            "
-            >
-              <img
-                src={MoreIcon}
-                alt="More"
-                className="
-                w-5
-                h-5
-                brightness-0
-                invert
-              "
-              />
-            </button>
+            />
           </div>
 
           {errorsCreate.students && (
@@ -1247,7 +1210,6 @@ export default function WeeklyCalendar() {
         </div>
 
         {/* Lista */}
-
         <div className="space-y-2 mt-4">
           {selectedStudents.map((student) => (
             <div
@@ -1296,6 +1258,11 @@ export default function WeeklyCalendar() {
                   p-4
                   mb-2
                   bg-gray-50
+                  dark:bg-gray-800
+
+                  border
+                  border-gray-200
+                  dark:border-gray-700
                 "
               >
                 <div className="flex justify-between items-center">
@@ -1329,29 +1296,30 @@ export default function WeeklyCalendar() {
                   ))}
                 </div>
                 {student.selectedPlans.length > 0 && (
-                  <>
-                    <div className="mt-4 font-semibold">Materias</div>
+                  <div className="mt-4">
+                    <p className="font-semibold mb-2">Materias</p>
 
-                    <div
+                    <ul
                       className="
-                      border
-                      rounded
-                      p-3
-                      mt-2
-                      space-y-1
-                    "
+                        ml-5
+                        list-disc
+                        text-sm
+                        text-gray-600
+                        dark:text-gray-300
+                        space-y-1
+                      "
                     >
                       {[
                         ...new Set(
                           student.selectedPlans.flatMap(
-                            (plan) => plan.subjects,
+                            (plan) => plan.subjects ?? [],
                           ),
                         ),
                       ].map((subject) => (
-                        <div key={subject}>• {subject}</div>
+                        <li key={subject}>{subject}</li>
                       ))}
-                    </div>
-                  </>
+                    </ul>
+                  </div>
                 )}
               </div>
               {errorsCreate.studentConflict && (
@@ -1370,51 +1338,14 @@ export default function WeeklyCalendar() {
         </div>
 
         <div className="flex justify-end gap-4 mt-10">
-          {/* <button
-            onClick={() => {
-              setOpenCreateModal(false);
-              resetForm();
-            }}
-            className="
-              cursor-pointer transition transform hover:scale-105
-              px-4
-              py-2
-              border
-              rounded
-            "
-          >
-            Cancelar
-          </button> */}
-
-          <button
-            title="Guardar"
-            onClick={handleCreate}
-            className="
-              cursor-pointer
-              w-12
-              h-12
-              rounded
-              bg-[#0cc0df]
-              text-white
-              flex
-              items-center
-              justify-center
-              transition
-              transform
-              hover:scale-105
-            "
-          >
-            <img
-              src={SaveIcon}
-              alt="Guardar"
-              className="
-                w-5
-                h-5
-                brightness-0
-                invert
-              "
+          <div className="flex justify-end gap-3">
+            <NoButton
+              title="Cancelar"
+              onClick={() => setOpenCreateModal(false)}
             />
-          </button>
+
+            <YesButton title="Aceptar" onClick={handleCreate} />
+          </div>
         </div>
       </Modal>
 
@@ -1430,31 +1361,10 @@ export default function WeeklyCalendar() {
         <h2 className="text-xl font-bold mb-8">Editar Horario</h2>
 
         {/* Docente */}
-
         <div className="flex flex-col mb-4">
           <label className="font-semibold mb-2">Docente</label>
 
-          <select
-            value={teacherId}
-            onChange={async (e) => {
-              const id = e.target.value;
-
-              setTeacherId(id);
-
-              setSelectedPlan("");
-
-              setAvailableStudents([]);
-
-              await fetchAvailablePlans(id);
-            }}
-            className="
-              border
-              border-gray-300
-              rounded
-              px-3
-              py-2
-            "
-          >
+          <Select value={teacherId} onChange={handleTeacherChange}>
             <option value="">Seleccionar docente</option>
 
             {teachers.map((teacher) => (
@@ -1462,7 +1372,7 @@ export default function WeeklyCalendar() {
                 {teacher.last_name}, {teacher.first_name}
               </option>
             ))}
-          </select>
+          </Select>
 
           {errorsEdit.teacher_id && (
             <p className="mt-1 text-sm text-red-500">{errorsEdit.teacher_id}</p>
@@ -1470,11 +1380,10 @@ export default function WeeklyCalendar() {
         </div>
 
         {/* Plan */}
-
         <div className="flex flex-col mb-4">
           <label className="font-semibold mb-2">Plan</label>
 
-          <select
+          <Select
             disabled={!teacherId}
             value={selectedPlan}
             onChange={async (e) => {
@@ -1484,18 +1393,6 @@ export default function WeeklyCalendar() {
 
               await fetchAvailableStudents(teacherId, plan);
             }}
-            className={`
-              border
-              border-gray-300
-              rounded
-              px-3
-              py-2
-              ${
-                !teacherId
-                  ? "bg-gray-100 text-gray-400 cursor-not-allowed"
-                  : "bg-white"
-              }
-            `}
           >
             <option value="">
               {teacherId ? "Seleccionar plan" : "Seleccione primero un docente"}
@@ -1506,7 +1403,7 @@ export default function WeeklyCalendar() {
                 {plan.name}
               </option>
             ))}
-          </select>
+          </Select>
 
           {errorsEdit.plan_id && (
             <p className="text-red-500 text-sm mt-1">{errorsEdit.plan_id}</p>
@@ -1514,20 +1411,12 @@ export default function WeeklyCalendar() {
         </div>
 
         {/* Día */}
-
         <div className="flex flex-col mb-4">
           <label className="font-semibold mb-2">Día</label>
 
-          <select
+          <Select
             value={selectedDay}
             onChange={(e) => setSelectedDay(e.target.value)}
-            className="
-              border
-              border-gray-300
-              rounded
-              px-3
-              py-2
-            "
           >
             <option value="">Seleccionar día</option>
 
@@ -1536,7 +1425,7 @@ export default function WeeklyCalendar() {
                 {day.name}
               </option>
             ))}
-          </select>
+          </Select>
 
           {errorsEdit.day && (
             <p className="mt-1 text-sm text-red-500">{errorsEdit.day}</p>
@@ -1544,20 +1433,12 @@ export default function WeeklyCalendar() {
         </div>
 
         {/* Horario */}
-
         <div className="flex flex-col mb-4">
           <label className="font-semibold mb-2">Horario</label>
 
-          <select
+          <Select
             value={selectedTime}
             onChange={(e) => setSelectedTime(e.target.value)}
-            className="
-              border
-              border-gray-300
-              rounded
-              px-3
-              py-2
-            "
           >
             <option value="">Seleccionar horario</option>
 
@@ -1566,7 +1447,7 @@ export default function WeeklyCalendar() {
                 {slot}
               </option>
             ))}
-          </select>
+          </Select>
 
           {errorsEdit.start_time && (
             <p className="mt-1 text-sm text-red-500">{errorsEdit.start_time}</p>
@@ -1574,20 +1455,12 @@ export default function WeeklyCalendar() {
         </div>
 
         {/* Aula */}
-
         <div className="flex flex-col mb-4">
           <label className="font-semibold mb-2">Aula</label>
 
-          <select
+          <Select
             value={classroom}
             onChange={(e) => setClassroom(e.target.value)}
-            className="
-              border
-              border-gray-300
-              rounded
-              px-3
-              py-2
-            "
           >
             <option value="">Seleccionar aula</option>
 
@@ -1596,7 +1469,7 @@ export default function WeeklyCalendar() {
                 {room.name}
               </option>
             ))}
-          </select>
+          </Select>
 
           {errorsEdit.classroom && (
             <p className="mt-1 text-sm text-red-500">{errorsEdit.classroom}</p>
@@ -1604,23 +1477,15 @@ export default function WeeklyCalendar() {
         </div>
 
         {/* Estudiante */}
-
         <div className="flex flex-col mb-2">
           <label className="font-semibold mb-2">Estudiante</label>
 
           <div className="flex gap-2">
-            <select
+            <Select
               disabled={!teacherId}
               value={selectedStudentId}
               onChange={(e) => setSelectedStudentId(e.target.value)}
-              className={`
-                flex-1
-                border
-                rounded
-                px-3
-                py-2
-                ${!teacherId ? "bg-gray-100 text-gray-400 cursor-not-allowed" : "bg-white"}
-              `}
+              className="flex-1"
             >
               <option value="">
                 {teacherId
@@ -1638,38 +1503,12 @@ export default function WeeklyCalendar() {
                     {student.last_name}, {student.first_name}
                   </option>
                 ))}
-            </select>
+            </Select>
 
-            <button
-              title="Agregar"
-              type="button"
+            <PlusButton
+              title="Agregar estudiante"
               onClick={() => handleAddStudent(true)}
-              className="
-              cursor-pointer
-              w-12
-              h-12
-              rounded
-              bg-[#0cc0df]
-              text-white
-              flex
-              items-center
-              justify-center
-              transition
-              transform
-              hover:scale-105
-            "
-            >
-              <img
-                src={MoreIcon}
-                alt="More"
-                className="
-                w-5
-                h-5
-                brightness-0
-                invert
-              "
-              />
-            </button>
+            />
           </div>
 
           {errorsEdit.students && (
@@ -1678,7 +1517,6 @@ export default function WeeklyCalendar() {
         </div>
 
         {/* Lista */}
-
         <div className="space-y-2 mt-4">
           {selectedStudents.map((student) => (
             <div
@@ -1724,6 +1562,11 @@ export default function WeeklyCalendar() {
                   p-4
                   mb-2
                   bg-gray-50
+                  dark:bg-gray-800
+
+                  border
+                  border-gray-200
+                  dark:border-gray-700                
                 "
               >
                 <div className="flex justify-between items-center">
@@ -1758,29 +1601,30 @@ export default function WeeklyCalendar() {
                   ))}
                 </div>
                 {student.selectedPlans.length > 0 && (
-                  <>
-                    <div className="mt-4 font-semibold">Materias</div>
+                  <div className="mt-4">
+                    <p className="font-semibold mb-2">Materias</p>
 
-                    <div
+                    <ul
                       className="
-                      border
-                      rounded
-                      p-3
-                      mt-2
-                      space-y-1
-                    "
+                        ml-5
+                        list-disc
+                        text-sm
+                        text-gray-600
+                        dark:text-gray-300
+                        space-y-1
+                      "
                     >
                       {[
                         ...new Set(
                           student.selectedPlans.flatMap(
-                            (plan) => plan.subjects,
+                            (plan) => plan.subjects ?? [],
                           ),
                         ),
                       ].map((subject) => (
-                        <div key={subject}>• {subject}</div>
+                        <li key={subject}>{subject}</li>
                       ))}
-                    </div>
-                  </>
+                    </ul>
+                  </div>
                 )}
               </div>
               {errorsEdit.studentConflict && (
@@ -1799,52 +1643,9 @@ export default function WeeklyCalendar() {
         </div>
 
         <div className="flex justify-end gap-4 mt-10">
-          {/* <button
-            onClick={() => {
-              setOpenEditModal(false);
-              setSelectedSchedule(null);
-              resetForm();
-            }}
-            className="
-              cursor-pointer transition transform hover:scale-105
-              px-4
-              py-2
-              border
-              rounded
-            "
-          >
-            Cancelar
-          </button> */}
+          <NoButton title="Cancelar" onClick={() => setOpenEditModal(false)} />
 
-          <button
-            title="Guardar"
-            onClick={handleUpdate}
-            className="
-              cursor-pointer
-              w-12
-              h-12
-              rounded
-              bg-[#0cc0df]
-              text-white
-              flex
-              items-center
-              justify-center
-              transition
-              transform
-              hover:scale-105
-            "
-          >
-            <img
-              src={SaveIcon}
-              alt="Save"
-              className="
-                w-5
-                h-5
-                brightness-0
-                invert
-              "
-            />
-          </button>
+          <YesButton title="Aceptar" onClick={handleUpdate} />
         </div>
       </Modal>
 
@@ -1852,17 +1653,12 @@ export default function WeeklyCalendar() {
         <h2 className="text-lg font-semibold mb-4">¿Eliminar Horario?</h2>
 
         <div className="flex justify-end gap-2">
-          <Button
-            variant="outline"
+          <NoButton
+            title="Cancelar"
             onClick={() => setOpenDeleteModal(false)}
-            className={buttonClass}
-          >
-            No
-          </Button>
+          />
 
-          <Button onClick={confirmDelete} className={buttonClass}>
-            Sí
-          </Button>
+          <YesButton title="Aceptar" onClick={confirmDelete} />
         </div>
       </Modal>
 
@@ -1887,13 +1683,30 @@ export default function WeeklyCalendar() {
                   rounded-lg
                   p-4
                   bg-gray-50
+                  dark:bg-gray-800
+
+                  border
+                  border-gray-200
+                  dark:border-gray-700
                 "
               >
-                <div className="font-semibold text-black">
+                <div
+                  className="
+                    font-semibold 
+                    text-gray-900
+                    dark:text-white
+                  "
+                >
                   {selectedScheduleInfo.teacher}
                 </div>
 
-                <div className="mt-2 text-sm text-gray-600">
+                <div
+                  className="
+                    mt-2 text-sm 
+                    text-gray-600
+                    dark:text-gray-300
+                  "
+                >
                   Aula: {selectedScheduleInfo.classroom}
                 </div>
               </div>
@@ -1910,6 +1723,11 @@ export default function WeeklyCalendar() {
                     rounded-lg
                     p-4
                     bg-gray-50
+                    dark:bg-gray-800
+
+                    border
+                    border-gray-200
+                    dark:border-gray-700
                     text-gray-500
                   "
                 >
@@ -1924,9 +1742,21 @@ export default function WeeklyCalendar() {
                       rounded-lg
                       p-4
                       bg-gray-50
+                      dark:bg-gray-800
+                      border
+                      border-gray-200
+                      dark:border-gray-700
                     "
                   >
-                    <div className="font-semibold text-black">{plan.name}</div>
+                    <div
+                      className="
+                        font-semibold 
+                        text-gray-900
+                        dark:text-white
+                      "
+                    >
+                      {plan.name}
+                    </div>
 
                     <div className="mt-2 text-sm">Materias:</div>
 
@@ -1951,6 +1781,11 @@ export default function WeeklyCalendar() {
                     rounded-lg
                     p-4
                     bg-gray-50
+                    dark:bg-gray-800
+
+                    border
+                    border-gray-200
+                    dark:border-gray-700
                     text-gray-500
                   "
                 >
@@ -1965,11 +1800,22 @@ export default function WeeklyCalendar() {
                       rounded-lg
                       p-4
                       bg-gray-50
+                      dark:bg-gray-800
+
+                      border
+                      border-gray-200
+                      dark:border-gray-700
                     "
                   >
                     <div className="font-semibold">{student.name}</div>
 
-                    <div className="mt-2 text-sm text-gray-600">
+                    <div
+                      className="
+                        mt-2 text-sm 
+                        text-gray-600
+                        dark:text-gray-300
+                      "
+                    >
                       Plan: {student.plan}
                     </div>
 
@@ -1987,30 +1833,10 @@ export default function WeeklyCalendar() {
 
             {/* Botones */}
             <div className="flex justify-end gap-3 mt-8">
-              {/* <button
-                title="Cerrar"
-                onClick={() => {
-                  setOpenInfoModal(false);
-                  setSelectedScheduleInfo(null);
-                }}
-                className="
-                  cursor-pointer
-                  w-12
-                  h-12
-                  border
-                  rounded
-                  flex
-                  items-center
-                  justify-center
-                "
-              >
-                <CloseLineIcon className="w-5 h-5" />
-              </button> */}
-
               {isAdmin() && (
                 <>
-                  <button
-                    title="Editar"
+                  <EditButton
+                    title="Editar Horario"
                     onClick={() => {
                       setOpenInfoModal(false);
 
@@ -2018,44 +1844,17 @@ export default function WeeklyCalendar() {
                         handleEdit(selectedSchedule);
                       }
                     }}
-                    className="
-                      cursor-pointer
-                      w-12
-                      h-12
-                      rounded
-                      bg-[#0cc0df]
-                      text-white
-                      flex
-                      items-center
-                      justify-center
-                    "
-                  >
-                    <PencilIcon className="w-5 h-5" />
-                  </button>
+                  />
 
-                  <button
-                    title="Eliminar"
+                  <DeleteButton
+                    title="Eliminar Horario"
                     onClick={() => {
                       setOpenInfoModal(false);
-
                       if (selectedSchedule) {
                         handleDelete(selectedSchedule);
                       }
                     }}
-                    className="
-                      cursor-pointer
-                      w-12
-                      h-12
-                      rounded
-                      bg-red-500
-                      text-white
-                      flex
-                      items-center
-                      justify-center
-                    "
-                  >
-                    <TrashBinIcon className="w-5 h-5" />
-                  </button>
+                  />
                 </>
               )}
             </div>
