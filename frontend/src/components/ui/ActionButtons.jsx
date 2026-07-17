@@ -34,17 +34,23 @@ export function ViewButtonWeek({ onClick, title = "" }) {
       onClick={onClick}
       className="
         cursor-pointer
-        w-7
-        h-7
-        rounded
+        w-10
+        h-10
+        rounded-lg
+
         flex
         items-center
         justify-center
-        transition
+
+        bg-cyan-500
+        hover:bg-cyan-600
+
+        transition-all
+        duration-200
         hover:scale-105
       "
     >
-      <img src={ViewIcon} alt="Ver" className="w-3.5 h-3.5 invert" />
+      <img src={ViewIcon} alt="Ver" className="w-5 h-5 object-contain invert" />
     </Button>
   );
 }
