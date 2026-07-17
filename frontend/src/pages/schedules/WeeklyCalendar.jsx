@@ -946,14 +946,15 @@ export default function WeeklyCalendar() {
                                     rounded-lg
                                     border
 
-                                    bg-cyan-500/20
-                                    dark:bg-cyan-500/15
+                                    bg-cyan-100
+dark:bg-cyan-900/25
 
-                                    border-cyan-500
-                                    dark:border-cyan-500
+border
+border-cyan-300
+dark:border-cyan-700
 
-                                    text-cyan-900
-                                    dark:text-cyan-100
+                                    text-cyan-800
+dark:text-cyan-200
 
                                     shadow-sm
                                     hover:shadow-md
@@ -966,28 +967,29 @@ export default function WeeklyCalendar() {
 
                                     border
 
-                                    bg-[#8d5df4]/15
-                                    dark:bg-[#8d5df4]/25
+                                    bg-violet-100
+dark:bg-violet-900/25
 
-                                    border-[#8d5df4]
+border-violet-300
+dark:border-violet-700
 
-                                    text-[#6b3ee8]
-                                    dark:text-[#d8c6ff]
+text-violet-800
+dark:text-violet-200
                                   `
                               }
                             >
                               <div
-                                className={`font-semibold text-sm mb-1 ${textColor}`}
+                                className={`text-xs font-semibold ${textColor}`}
                               >
                                 Docente:
                               </div>
 
-                              <div className={`ml-2 text-sm mb-3 ${textColor}`}>
-                                • {schedule.last_name}, {schedule.first_name}.
+                              <div className={`text-xs ml-2 ${textColor} mb-3`}>
+                                • {schedule.last_name}, {schedule.first_name}
                               </div>
 
                               <div
-                                className={`font-semibold text-sm mb-1 ${textColor}`}
+                                className={`text-xs font-semibold ${textColor}`}
                               >
                                 Estudiantes:
                               </div>
@@ -1001,7 +1003,7 @@ export default function WeeklyCalendar() {
                                 </div>
                               ))}
 
-                              <div className="flex justify-end mt-4">
+                              <div className="flex justify-end mt-2">
                                 <ViewButtonWeek
                                   title="Más información"
                                   onClick={() => handleInfo(schedule)}
