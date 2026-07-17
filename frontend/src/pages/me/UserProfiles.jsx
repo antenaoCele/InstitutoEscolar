@@ -1,13 +1,15 @@
 import { useEffect, useState } from "react";
 import { profileService } from "../../services/profile.service";
-import Button from "../../components/ui/Button";
 import { UserIcon } from "../../icons";
-import { YesButton } from "../../components/ui/ActionButtons";
 import {
   validateUserForm,
   validateChangePasswordForm,
 } from "../../validators/entities/user.validator";
 import { mapErrors, hasErrors } from "../../validators/helpers/errorHelpers";
+import Button from "../../components/ui/Button";
+import Label from "../../components/form/Label";
+import Input from "../../components/form/Input";
+import { YesButton, NoButton } from "../../components/ui/ActionButtons";
 
 export default function UserProfiles() {
   const [formData, setFormData] = useState({
@@ -32,6 +34,19 @@ export default function UserProfiles() {
     type: "",
     message: "",
   });
+
+  // Mismo estilo de input que se usa en Plans
+  const inputClass = (error) =>
+    `w-full p-2 border rounded mb-1 
+    border-gray-300
+    focus:outline-none focus:ring-1 focus:ring-[#0cc0df] focus:border-[#0cc0df]
+    ${error ? "border-red-500 focus:ring-red-500 focus:border-red-500" : ""}`;
+
+  const fieldLabels = {
+    first_name: "Nombre",
+    last_name: "Apellido",
+    username: "Usuario",
+  };
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -157,7 +172,7 @@ export default function UserProfiles() {
 
   return (
     <div className="max-w-4xl mx-auto p-4 md:p-6">
-      <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-gray-900">
+      <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-black">
         <div className="flex items-center gap-4 mb-8">
           <div className="flex h-16 w-16 items-center justify-center rounded-full bg-gray-100 text-gray-500 dark:bg-gray-800 dark:text-gray-400">
             <UserIcon className="h-8 w-8" />
@@ -187,64 +202,46 @@ export default function UserProfiles() {
         <form onSubmit={handleSubmit} className="space-y-6" noValidate>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {["first_name", "last_name", "username"].map((field) => (
-              <div key={field}>
-                <label className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300 capitalize">
-                  {field.replace("_", " ")}
-                </label>
-                <input
+              <div key={field} className="flex flex-col">
+                <Label className="font-semibold mb-2">
+                  {fieldLabels[field]}
+                </Label>
+                <Input
                   type="text"
                   name={field}
                   value={formData[field] || ""}
                   onChange={handleChange}
-                  className={`w-full rounded-lg border bg-transparent px-4 py-2 text-sm outline-none transition dark:text-white ${
-                    errors[field]
-                      ? "border-red-400 focus:border-red-500"
-                      : "border-gray-200 focus:border-primary-500 dark:border-gray-700 dark:focus:border-primary-500"
-                  }`}
+                  className={inputClass(errors[field])}
                 />
                 {errors[field] && (
-                  <p className="mt-1 text-xs text-red-600 dark:text-red-400">
-                    {errors[field]}
-                  </p>
+                  <p className="text-red-500 text-sm mt-1">{errors[field]}</p>
                 )}
               </div>
             ))}
+
+            <div className="flex flex-col">
+              <Label className="font-semibold mb-2">Contraseña</Label>
+              <Button
+                type="button"
+                variant="outline"
+                className="cursor-pointer transition transform hover:scale-105 w-full"
+                onClick={() => {
+                  setShowPasswordFields((prev) => !prev);
+                  setPasswordStatus({ type: "", message: "" });
+                  setPasswordErrors({});
+                }}
+              >
+                {showPasswordFields ? "Cancelar" : "Cambiar contraseña"}
+              </Button>
+            </div>
           </div>
 
-          <div className="flex justify-end gap-3 pt-4 border-t dark:border-gray-800">
-            <div className="flex justify-end gap-3 pt-4 border-t dark:border-gray-800">
-              <button
-                type="button"
-                onClick={handleSubmit}
-                className="cursor-pointer transition transform hover:scale-105 flex items-center justify-center w-12 h-12 rounded-full bg-green-500 text-white hover:bg-green-600"
-                title="Guardar"
-              >
-                ✓
-              </button>
-            </div>
+          <div className="flex justify-end gap-3 pt-2">
+            <YesButton title="Guardar" onClick={handleSubmit} />
           </div>
         </form>
 
-        <div className="mt-8 pt-6 border-t dark:border-gray-800">
-          <div className="flex items-center justify-between">
-            <h3 className="text-md font-semibold text-gray-800 dark:text-white">
-              Contraseña
-            </h3>
-            <Button
-              type="button"
-              size="sm"
-              variant="outline"
-              className="cursor-pointer transition transform hover:scale-105"
-              onClick={() => {
-                setShowPasswordFields((prev) => !prev);
-                setPasswordStatus({ type: "", message: "" });
-                setPasswordErrors({});
-              }}
-            >
-              {showPasswordFields ? "Cancelar" : "Cambiar contraseña"}
-            </Button>
-          </div>
-
+        <div className="mt-6">
           {showPasswordFields && (
             <form
               onSubmit={handlePasswordSubmit}
@@ -272,23 +269,17 @@ export default function UserProfiles() {
                     label: "Confirmar nueva contraseña",
                   },
                 ].map(({ name, label }) => (
-                  <div key={name}>
-                    <label className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
-                      {label}
-                    </label>
-                    <input
+                  <div key={name} className="flex flex-col">
+                    <Label className="font-semibold mb-2">{label}</Label>
+                    <Input
                       type="password"
                       name={name}
                       value={passwordData[name]}
                       onChange={handlePasswordChange}
-                      className={`w-full rounded-lg border bg-transparent px-4 py-2 text-sm outline-none transition dark:text-white ${
-                        passwordErrors[name]
-                          ? "border-red-400 focus:border-red-500"
-                          : "border-gray-200 focus:border-primary-500 dark:border-gray-700 dark:focus:border-primary-500"
-                      }`}
+                      className={inputClass(passwordErrors[name])}
                     />
                     {passwordErrors[name] && (
-                      <p className="mt-1 text-xs text-red-600 dark:text-red-400">
+                      <p className="text-red-500 text-sm mt-1">
                         {passwordErrors[name]}
                       </p>
                     )}
@@ -297,16 +288,14 @@ export default function UserProfiles() {
               </div>
 
               <div className="flex justify-end gap-3">
-                <div className="flex justify-end gap-3">
-                  <button
-                    type="button"
-                    onClick={handlePasswordSubmit}
-                    className="cursor-pointer transition transform hover:scale-105 flex items-center justify-center w-12 h-12 rounded-full bg-green-500 text-white hover:bg-green-600"
-                    title="Guardar contraseña"
-                  >
-                    ✓
-                  </button>
-                </div>
+                <NoButton
+                  title="Cancelar"
+                  onClick={() => setShowPasswordFields(false)}
+                />
+                <YesButton
+                  title="Guardar contraseña"
+                  onClick={handlePasswordSubmit}
+                />
               </div>
             </form>
           )}
