@@ -20,71 +20,71 @@ export const studentsController = {
       const yearMonth = today.toISOString().slice(0, 7);
 
       let query = `
-    SELECT
-      s.id AS student_id,
-      s.first_name,
-      s.last_name,
-      s.dni,
-      s.school,
-      s.birth_date,
-      s.level,
-      s.grade,
+      SELECT
+        s.id AS student_id,
+        s.first_name,
+        s.last_name,
+        s.dni,
+        s.school,
+        s.birth_date,
+        s.level,
+        s.grade,
 
-      sp.id AS student_plan_id,
-      sp.teacher_id,
-      sp.plan_id,
-      sp.start_date,
-      sp.end_date,
+        sp.id AS student_plan_id,
+        sp.teacher_id,
+        sp.plan_id,
+        sp.start_date,
+        sp.end_date,
 
-      tea.first_name AS teacher_first_name,
-      tea.last_name AS teacher_last_name,
-      pl.name AS plan_name,
+        tea.first_name AS teacher_first_name,
+        tea.last_name AS teacher_last_name,
+        pl.name AS plan_name,
 
-      pp.price,
+        pp.price,
 
-      IFNULL(SUM(pay.amount), 0) AS total_paid,
+        IFNULL(SUM(pay.amount), 0) AS total_paid,
 
-      t.id AS tutor_id,
-      t.first_name AS tutor_first_name,
-      t.last_name AS tutor_last_name,
-      t.dni AS tutor_dni,
-      t.phone AS tutor_phone
+        t.id AS tutor_id,
+        t.first_name AS tutor_first_name,
+        t.last_name AS tutor_last_name,
+        t.dni AS tutor_dni,
+        t.phone AS tutor_phone
 
-    FROM students s
+      FROM students s
 
-    LEFT JOIN student_tutors st
-      ON st.student_id = s.id
+      LEFT JOIN student_tutors st
+        ON st.student_id = s.id
 
-    LEFT JOIN tutors t
-      ON t.id = st.tutor_id
+      LEFT JOIN tutors t
+        ON t.id = st.tutor_id
 
-    LEFT JOIN student_plans sp
-      ON sp.student_id = s.id
-      AND sp.start_date <= CURDATE()
-      AND (
-        sp.end_date IS NULL
-        OR sp.end_date > CURDATE()
-      )
+      LEFT JOIN student_plans sp
+        ON sp.student_id = s.id
+        AND sp.start_date <= CURDATE()
+        AND (
+          sp.end_date IS NULL
+          OR sp.end_date > CURDATE()
+        )
 
-    LEFT JOIN teachers tea
-      ON tea.id = sp.teacher_id
+      LEFT JOIN teachers tea
+        ON tea.id = sp.teacher_id
 
-    LEFT JOIN plans pl
-      ON pl.id = sp.plan_id
+      LEFT JOIN plans pl
+        ON pl.id = sp.plan_id
 
-    LEFT JOIN plan_prices pp
-      ON pp.plan_id = sp.plan_id
-      AND pp.start_date <= CURDATE()
-      AND (
-        pp.end_date IS NULL
-        OR pp.end_date >= CURDATE()
-      )
+      LEFT JOIN plan_prices pp
+        ON pp.plan_id = sp.plan_id
+        AND pp.start_date <= CURDATE()
+        AND (
+          pp.end_date IS NULL
+          OR pp.end_date >= CURDATE()
+        )
 
-    LEFT JOIN payments pay
-      ON pay.student_plan_id = sp.id
-      AND DATE_FORMAT(pay.payment_date, '%Y-%m') = ?
+      LEFT JOIN payments pay
+        ON pay.student_plan_id = sp.id
+        AND DATE_FORMAT(pay.payment_date, '%Y-%m') = ?
 
-    WHERE 1=1
+      WHERE 1=1
     `;
 
       const params = [yearMonth];
@@ -304,42 +304,39 @@ export const studentsController = {
 
       const [rows] = await db.execute(
         `
-      SELECT
-        p.id,
-        p.name,
-        sub.name AS subject_name
-      FROM student_plans sp
+  SELECT
+      p.id,
+      p.name,
+      s.name AS subject_name
 
-      JOIN plans p
-        ON p.id = sp.plan_id
+  FROM student_plans sp
 
-      JOIN plan_subjects ps
-        ON ps.plan_id = p.id
+  JOIN teacher_plans tp
+      ON tp.plan_id = sp.plan_id
 
-      JOIN subjects sub
-        ON sub.id = ps.subject_id
+  JOIN plans p
+      ON p.id = sp.plan_id
 
-      JOIN teacher_subjects ts
-        ON ts.subject_id = sub.id
+  JOIN plan_subjects ps
+      ON ps.plan_id = p.id
 
-      WHERE sp.student_id = ?
+  JOIN subjects s
+      ON s.id = ps.subject_id
+
+  WHERE
+      sp.student_id = ?
+      AND tp.teacher_id = ?
       AND (
-        sp.end_date IS NULL
-        OR sp.end_date >= CURDATE()
+          sp.end_date IS NULL
+          OR sp.end_date >= CURDATE()
       )
-      AND ts.teacher_id = ?
 
-      ORDER BY
-        p.name,
-        sub.name
-      `,
+  ORDER BY
+      p.name,
+      s.name
+  `,
         [studentId, teacherId],
       );
-
-      console.log("studentId:", studentId);
-      console.log("teacherId:", teacherId);
-
-      console.log(rows);
 
       const plans = [];
 
@@ -356,7 +353,7 @@ export const studentsController = {
           plans.push(plan);
         }
 
-        if (row.subject_name && !plan.subjects.includes(row.subject_name)) {
+        if (!plan.subjects.includes(row.subject_name)) {
           plan.subjects.push(row.subject_name);
         }
       });
