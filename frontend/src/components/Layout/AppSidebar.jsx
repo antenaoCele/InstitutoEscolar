@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { useTheme } from "../../context/ThemeContext";
 import { useSidebar } from "../../context/SidebarContext";
+import { useAuth } from "../../context/Auth";
 
 import {
   CalenderIcon,
@@ -107,7 +108,7 @@ const navItems = [
 ];
 
 const AppSidebar = () => {
-  const currentUser = JSON.parse(localStorage.getItem("user") || "{}");
+  const { user: currentUser } = useAuth();
 
   const isCurrentUserAdmin = currentUser?.role?.toLowerCase() === "admin";
 

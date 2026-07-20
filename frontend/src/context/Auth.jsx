@@ -1,5 +1,4 @@
-import { createContext, useContext, useState } from "react";
-import { useEffect } from "react";
+import { createContext, useContext, useState, useEffect } from "react";
 
 const AuthContext = createContext(null);
 
@@ -10,6 +9,11 @@ export const useAuth = () => {
 export const AuthProvider = ({ children }) => {
   const [token, setToken] = useState(() => {
     return localStorage.getItem("token");
+  });
+
+  const [user, setUser] = useState(() => {
+    const storedUser = localStorage.getItem("user");
+    return storedUser ? JSON.parse(storedUser) : null;
   });
 
   const [error, setError] = useState(null);
@@ -51,15 +55,14 @@ export const AuthProvider = ({ children }) => {
       }
 
       // =========================
-      // 🔥 GUARDAR TOKEN + USER
+      // GUARDAR TOKEN + USER
       // =========================
       setToken(session.token);
       localStorage.setItem("token", session.token);
 
       if (session.user) {
+        setUser(session.user);
         localStorage.setItem("user", JSON.stringify(session.user));
-      } else {
-        console.warn("⚠️ El backend no envía el user");
       }
 
       return { success: true };
@@ -74,8 +77,10 @@ export const AuthProvider = ({ children }) => {
   // =========================
   const logout = () => {
     localStorage.removeItem("token");
-    localStorage.removeItem("user"); // 🔥 importante
+    localStorage.removeItem("user");
+
     setToken(null);
+    setUser(null);
     setError(null);
   };
 
@@ -104,7 +109,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   // =========================
-  // SESION EXPIRADA
+  // SESIÓN EXPIRADA
   // =========================
   useEffect(() => {
     const handleSessionExpired = () => {
@@ -122,6 +127,7 @@ export const AuthProvider = ({ children }) => {
     <AuthContext.Provider
       value={{
         token,
+        user,
         error,
         login,
         logout,

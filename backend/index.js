@@ -25,6 +25,7 @@ import teacherPlansRouter from "./routes/teacher_plans.routes.js";
 import tutorsRouter from "./routes/tutors.routes.js";
 import userRoutes from "./routes/user.routes.js";
 import usersRouter from "./routes/users.routes.js";
+import dashboardRoutes from "./routes/dashboard.routes.js";
 
 const app = express();
 const port = 3000;
@@ -59,6 +60,7 @@ app.use("/teacher_liquidations", teacherLiquidationsRouter);
 app.use("/teacher_plans", teacherPlansRouter);
 app.use("/tutors", tutorsRouter);
 app.use("/users", usersRouter);
+app.use("/dashboard", dashboardRoutes);
 
 app.listen(port, () => {
   console.log(`Servidor corriendo en puerto ${port}`);
