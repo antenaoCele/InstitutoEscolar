@@ -169,19 +169,19 @@ export function Tutors() {
       const newErrors = {};
 
       if (!firstName.trim()) {
-        newErrors.first_name = "Este campo no puede estar vacío.";
+        newErrors.first_name = "Campo obligatorio.";
       }
 
       if (!lastName.trim()) {
-        newErrors.last_name = "Este campo no puede estar vacío.";
+        newErrors.last_name = "Campo obligatorio.";
       }
 
       if (!dni.trim()) {
-        newErrors.dni = "Este campo no puede estar vacío.";
+        newErrors.dni = "Campo obligatorio.";
       }
 
       if (!phone.trim()) {
-        newErrors.phone = "Este campo no puede estar vacío.";
+        newErrors.phone = "Campo obligatorio.";
       }
 
       if (Object.keys(newErrors).length > 0) {
@@ -242,19 +242,19 @@ export function Tutors() {
       const newErrors = {};
 
       if (!firstName.trim()) {
-        newErrors.first_name = "Este campo no puede estar vacío.";
+        newErrors.first_name = "Campo obligatorio.";
       }
 
       if (!lastName.trim()) {
-        newErrors.last_name = "Este campo no puede estar vacío.";
+        newErrors.last_name = "Campo obligatorio.";
       }
 
       if (!dni.trim()) {
-        newErrors.dni = "Este campo no puede estar vacío.";
+        newErrors.dni = "Campo obligatorio.";
       }
 
       if (!phone.trim()) {
-        newErrors.phone = "Este campo no puede estar vacío.";
+        newErrors.phone = "Campo obligatorio.";
       }
 
       if (Object.keys(newErrors).length > 0) {

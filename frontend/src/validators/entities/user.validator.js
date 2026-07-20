@@ -10,19 +10,19 @@ export const validateUserForm = ({ first_name, last_name, username }) => {
   const errors = {};
 
   if (isRequired(first_name)) {
-    errors.first_name = "Este campo no puede estar vacío.";
+    errors.first_name = "Campo obligatorio.";
   } else if (!isValidPersonName(first_name)) {
     errors.first_name = "Nombre inválido.";
   }
 
   if (isRequired(last_name)) {
-    errors.last_name = "Este campo no puede estar vacío.";
+    errors.last_name = "Campo obligatorio.";
   } else if (!isValidPersonName(last_name)) {
     errors.last_name = "Apellido inválido.";
   }
 
   if (isRequired(username)) {
-    errors.username = "Este campo no puede estar vacío.";
+    errors.username = "Campo obligatorio.";
   } else if (!isValidUsername(username)) {
     errors.username = "El usuario debe ser alfanumérico (3-45 caracteres).";
   }
@@ -42,7 +42,7 @@ export const validateChangePasswordForm = ({
   }
 
   if (isRequired(newPassword)) {
-    errors.newPassword = "Este campo no puede estar vacío.";
+    errors.newPassword = "Campo obligatorio.";
   } else if (!isValidPassword(newPassword)) {
     errors.newPassword =
       "Debe tener al menos 8 caracteres, una mayúscula, una minúscula, un número y un símbolo.";

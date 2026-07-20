@@ -136,10 +136,10 @@ export const validateDNI = (field, optional = false) => [
   baseField(field, optional)
     .trim()
     .notEmpty()
-    .withMessage("Este campo no puede estar vacío.")
+    .withMessage("Campo obligatorio.")
     .bail()
     .isNumeric()
-    .withMessage("Este campo no puede contener un DNI no válido.")
+    .withMessage("Ingrese un DNI válido.")
     .customSanitizer((v) =>
       v === undefined || v === null || v === ""
         ? undefined
@@ -228,9 +228,7 @@ export const validateStudentInfo = (
 ) => {
   const levelValidator = optional
     ? body(fieldLevel).optional({ values: "falsy" })
-    : body(fieldLevel)
-        .notEmpty()
-        .withMessage("Este campo no puede estar vacío.");
+    : body(fieldLevel).notEmpty().withMessage("Campo obligatorio.");
 
   return [
     /* ================ LEVEL ================ */
@@ -298,7 +296,7 @@ export const validateName = (field, optional = false) => [
   baseField(field, optional)
     .trim()
     .notEmpty()
-    .withMessage("Este campo no puede estar vacío.")
+    .withMessage("Campo obligatorio.")
     .bail()
     .matches(/^[a-zA-Z0-9ñÑáéíóúÁÉÍÓÚ\s°º().,+\-/#]+$/)
     .withMessage("Este campo no puede contener caracteres no válidos.")
@@ -344,7 +342,7 @@ export const validatePersonName = (field, optional = false) => [
   baseField(field, optional)
     .trim()
     .notEmpty()
-    .withMessage("Este campo no puede estar vacío.")
+    .withMessage("Campo obligatorio.")
     .bail()
     .matches(/^[a-zA-ZñÑáéíóúÁÉÍÓÚ\s]+$/)
     .withMessage("Este campo no puede contener caracteres no válidos.")
@@ -362,7 +360,7 @@ PHONE
 export const validatePhone = (field, optional = false) => [
   baseField(field, optional)
     .notEmpty()
-    .withMessage("Este campo no puede estar vacío.")
+    .withMessage("Campo obligatorio.")
     .bail()
     .trim()
     .isLength({ max: 20 })

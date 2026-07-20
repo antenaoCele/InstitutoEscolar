@@ -25,19 +25,19 @@ export const validateStudentForm = ({
   const errors = {};
 
   if (isRequired(firstName)) {
-    errors.first_name = "Este campo no puede estar vacío.";
+    errors.first_name = "Campo obligatorio.";
   } else if (!isValidPersonName(firstName)) {
     errors.first_name = "Nombre inválido.";
   }
 
   if (isRequired(lastName)) {
-    errors.last_name = "Este campo no puede estar vacío.";
+    errors.last_name = "Campo obligatorio.";
   } else if (!isValidPersonName(lastName)) {
     errors.last_name = "Apellido inválido.";
   }
 
   if (isRequired(dni)) {
-    errors.dni = "Este campo no puede estar vacío.";
+    errors.dni = "Campo obligatorio.";
   } else if (!isNumericDNI(dni)) {
     errors.dni = "Este campo no puede contener un DNI no válido.";
   } else if (!isValidDNI(dni)) {
@@ -45,13 +45,13 @@ export const validateStudentForm = ({
   }
 
   if (isRequired(school)) {
-    errors.school = "Este campo no puede estar vacío.";
+    errors.school = "Campo obligatorio.";
   } else if (!isValidName(school)) {
     errors.school = "Este campo no puede contener caracteres no válidos.";
   }
 
   if (isRequired(birthDate)) {
-    errors.birth_date = "La fecha de nacimiento es obligatoria.";
+    errors.birth_date = "Campo obligatorio.";
   } else if (!isValidBirthDate(birthDate)) {
     errors.birth_date = "Ingrese una fecha de nacimiento válida.";
   }

@@ -417,7 +417,7 @@ export function Teachers() {
         <Input
           label="DNI"
           value={dni}
-          onChange={(e) => setDni(e.Teacher.value || e.target.value)} // Nota: corregido un typo menor aquí que podría fallar
+          onChange={(e) => setDni(e.target.value)} // Nota: corregido un typo menor aquí que podría fallar
           error={errorsEdit.dni}
         />
 

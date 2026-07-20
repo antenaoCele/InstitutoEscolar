@@ -157,13 +157,13 @@ export default function MonthlyCalendar() {
       const newErrors = {};
 
       if (!eventName.trim()) {
-        newErrors.name = "Este campo no puede estar vacío.";
+        newErrors.name = "Campo obligatorio.";
       }
       if (!eventDate) {
-        newErrors.date = "Ingrese una fecha válida.";
+        newErrors.date = "Campo obligatorio.";
       }
       if (!eventTime) {
-        newErrors.hour = "Ingrese una hora válida.";
+        newErrors.hour = "Campo obligatorio.";
       }
       if (Object.keys(newErrors).length > 0) {
         setErrorsCreate(newErrors);
@@ -214,13 +214,13 @@ export default function MonthlyCalendar() {
       const newErrors = {};
 
       if (!eventName.trim()) {
-        newErrors.name = "Este campo no puede estar vacío.";
+        newErrors.name = "Campo obligatorio.";
       }
       if (!eventDate) {
-        newErrors.date = "Ingrese una fecha válida.";
+        newErrors.date = "Campo obligatorio.";
       }
       if (!eventTime) {
-        newErrors.hour = "Ingrese una hora válida.";
+        newErrors.hour = "Campo obligatorio.";
       }
       if (Object.keys(newErrors).length > 0) {
         setErrorsEdit(newErrors);
@@ -271,8 +271,6 @@ export default function MonthlyCalendar() {
       console.log(error.response?.data);
 
       console.error(error);
-
-      alert(error.response?.data?.message || "Error al eliminar");
     }
   };
 
