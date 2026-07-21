@@ -228,6 +228,7 @@ export function Students() {
       setOpenCreateModal(false);
       fetchStudents();
       resetForm();
+      showFeedback("Estudiante creado correctamente.", "success");
     } catch (error) {
       console.error("Error al crear:", error.response?.data || error.message);
       const backendErrors = error.response?.data?.errors;
@@ -236,6 +237,7 @@ export function Students() {
       } else {
         showFeedback(
           error.response?.data?.message || "Error al crear el estudiante.",
+          "error",
         );
       }
     }
@@ -350,6 +352,7 @@ export function Students() {
       setOpenEditModal(false);
       fetchStudents();
       setRemovedClasses([]);
+      showFeedback("Estudiante actualizado correctamente.", "success");
     } catch (error) {
       console.error(error.response?.data || error.message);
       const backendErrors = error.response?.data?.errors;
@@ -358,6 +361,7 @@ export function Students() {
       } else {
         showFeedback(
           error.response?.data?.message || "Error al editar el estudiante.",
+          "error",
         );
       }
     }
@@ -377,10 +381,14 @@ export function Students() {
 
       setOpenDeleteModal(false);
       fetchStudents();
+      showFeedback("Estudiante dado de baja.", "success");
     } catch (error) {
       console.error(error.response?.data || error.message);
       setOpenDeleteModal(false);
-      showFeedback(error.response?.data?.message || "Error al eliminar");
+      showFeedback(
+        error.response?.data?.message || "Error al dar de baja.",
+        "error",
+      );
     }
   };
 

@@ -6,6 +6,7 @@ import Input from "../../components/form/Input";
 import Select from "../../components/form/Select";
 import SubmitButton from "../../components/form/SubmitButton";
 import { Modal } from "../../components/ui/Modal";
+import ComponentCard from "../../components/common/ComponentCard";
 import { PaymentService } from "../../services/payment.service";
 import { studentService } from "../../services/student.service";
 import { EnrollmentService } from "../../services/enrollment.service";
@@ -15,18 +16,44 @@ import {
   validateEnrollmentForm,
   validateEditEnrollmentForm,
 } from "../../validators/entities/enrollments.validator";
+import { EditButton, DeleteButton } from "../../components/ui/ActionButtons";
 
 export default function StudentPayments() {
+  // ======================================================
+  // DATOS
+  // ======================================================
   const [payments, setPayments] = useState([]);
-  const [openCreateModal, setOpenCreateModal] = useState(false);
-  const [openCreateEnrollmentModal, setOpenCreateEnrollmentModal] =
-    useState(false);
   const [students, setStudents] = useState([]);
   const [studentPlans, setStudentPlans] = useState([]);
   const [enrollments, setEnrollments] = useState([]);
+
+  // ======================================================
+  // MODALES
+  // ======================================================
+  const [openCreateModal, setOpenCreateModal] = useState(false);
+  const [openEditPaymentModal, setOpenEditPaymentModal] = useState(false);
+  const [openCreateEnrollmentModal, setOpenCreateEnrollmentModal] =
+    useState(false);
+  const [openEditEnrollmentModal, setOpenEditEnrollmentModal] = useState(false);
+
+  // ======================================================
+  // MODAL DE FEEDBACK (hook compartido)
+  // Se usa SOLO para: éxito de una operación, o errores que no
+  // corresponden a un campo puntual (fallas de red, reglas de
+  // negocio del backend, etc). Las validaciones de formulario
+  // NO usan este modal, se muestran debajo de cada campo.
+  // ======================================================
+  const { feedbackModal, showFeedback, closeFeedback } = useFeedbackModal();
+
+  // ======================================================
+  // FORMULARIO: REGISTRAR PAGO
+  // ======================================================
   const [selectedStudent, setSelectedStudent] = useState("");
   const [selectedStudentPlan, setSelectedStudentPlan] = useState("");
   const [paymentMethod, setPaymentMethod] = useState("");
+  const [errorsPayment, setErrorsPayment] = useState({});
+  const [editingPaymentId, setEditingPaymentId] = useState(null);
+  const [errorsEditPayment, setErrorsEditPayment] = useState({});
 
   // Fecha local (evita el corrimiento de día por UTC-3 de toISOString)
   const getLocalDateString = () => {
@@ -37,21 +64,25 @@ export default function StudentPayments() {
 
   const [paymentDate, setPaymentDate] = useState(getLocalDateString());
 
-  // Inscripción: se pueden tildar varios estudiantes (hermanos)
+  // ======================================================
+  // FORMULARIO: REGISTRAR INSCRIPCIÓN
+  // Se pueden tildar varios estudiantes (hermanos)
+  // ======================================================
   const [enrollmentStudents, setEnrollmentStudents] = useState([]);
   const [enrollmentAmount, setEnrollmentAmount] = useState("");
   const [enrollmentDate, setEnrollmentDate] = useState(getLocalDateString());
+  const [errorsEnrollment, setErrorsEnrollment] = useState({});
 
-  // Edición de inscripción (de a un estudiante por vez)
+  // ======================================================
+  // FORMULARIO: EDITAR INSCRIPCIÓN (de a un estudiante por vez)
+  // ======================================================
   const [enrollmentStudent, setEnrollmentStudent] = useState("");
-  const [openEditEnrollmentModal, setOpenEditEnrollmentModal] = useState(false);
   const [editingEnrollmentId, setEditingEnrollmentId] = useState(null);
+  const [errorsEditEnrollment, setErrorsEditEnrollment] = useState({});
 
   // ======================================================
-  // MODAL DE FEEDBACK (hook compartido, reemplaza los alert())
+  // FILTRO DE MES / AÑO
   // ======================================================
-  const { feedbackModal, showFeedback, closeFeedback } = useFeedbackModal();
-
   const [month, setMonth] = useState(new Date().getMonth() + 1);
   const [year, setYear] = useState(new Date().getFullYear());
   const monthNames = [
@@ -69,6 +100,9 @@ export default function StudentPayments() {
     "Diciembre",
   ];
 
+  // ======================================================
+  // FETCH DATOS
+  // ======================================================
   const fetchStudents = async () => {
     try {
       const { data } = await studentService.getActiveStudents();
@@ -106,6 +140,9 @@ export default function StudentPayments() {
     fetchStudents();
   }, [month, year]);
 
+  // ======================================================
+  // NAVEGACIÓN DE MES
+  // ======================================================
   const previousMonth = () => {
     if (month === 1) {
       setMonth(12);
@@ -124,6 +161,9 @@ export default function StudentPayments() {
     }
   };
 
+  // ======================================================
+  // TOTALES
+  // ======================================================
   const totalPayments = payments.reduce(
     (acc, payment) => acc + Number(payment.amount),
     0,
@@ -136,6 +176,45 @@ export default function StudentPayments() {
 
   const totalCollected = totalPayments + totalEnrollments;
 
+  // ======================================================
+  // RESETEOS DE FORMULARIO
+  // ======================================================
+  const resetPaymentForm = () => {
+    setSelectedStudent("");
+    setSelectedStudentPlan("");
+    setPaymentMethod("");
+    setPaymentDate(getLocalDateString());
+    setErrorsPayment({});
+  };
+
+  const resetEditPaymentForm = () => {
+    setSelectedStudent("");
+    setSelectedStudentPlan("");
+    setStudentPlans([]);
+    setPaymentMethod("");
+    setPaymentDate(getLocalDateString());
+    setEditingPaymentId(null);
+    setErrorsEditPayment({});
+  };
+
+  const resetEnrollmentForm = () => {
+    setEnrollmentStudents([]);
+    setEnrollmentAmount("");
+    setEnrollmentDate(getLocalDateString());
+    setErrorsEnrollment({});
+  };
+
+  const resetEditEnrollmentForm = () => {
+    setEnrollmentStudent("");
+    setEnrollmentAmount("");
+    setEnrollmentDate(getLocalDateString());
+    setEditingEnrollmentId(null);
+    setErrorsEditEnrollment({});
+  };
+
+  // ======================================================
+  // HANDLES: PAGO
+  // ======================================================
   const handleStudentChange = async (studentId) => {
     setSelectedStudent(studentId);
     setSelectedStudentPlan("");
@@ -158,11 +237,13 @@ export default function StudentPayments() {
     });
 
     if (Object.keys(errors).length > 0) {
-      showFeedback(Object.values(errors)[0], "error");
+      setErrorsPayment(errors);
       return;
     }
 
     try {
+      setErrorsPayment({});
+
       await PaymentService.create({
         student_plan_id: selectedStudentPlan,
         payment_date: paymentDate,
@@ -172,14 +253,13 @@ export default function StudentPayments() {
       await fetchPayments();
 
       setOpenCreateModal(false);
-      setSelectedStudent("");
-      setSelectedStudentPlan("");
-      setPaymentMethod("");
+      resetPaymentForm();
 
       showFeedback("Pago registrado correctamente.", "success");
     } catch (error) {
       const data = error.response?.data;
 
+      // Error de negocio/backend (no es de un campo puntual) -> modal
       const message = data?.requiresEnrollment
         ? "El estudiante debe realizar una nueva inscripción antes de registrar el pago."
         : data?.message || "Error al registrar el pago.";
@@ -189,7 +269,87 @@ export default function StudentPayments() {
   };
 
   // ======================================================
-  // INSCRIPCIÓN: selección múltiple de estudiantes (hermanos)
+  // HANDLES: PAGO (editar)
+  // ======================================================
+  const handleEditPayment = async (payment) => {
+    setEditingPaymentId(payment.id);
+    setSelectedStudent(payment.student_id);
+    setPaymentDate(payment.payment_date.split("T")[0]);
+    setPaymentMethod(payment.payment_method);
+    setErrorsEditPayment({});
+
+    try {
+      const { data } = await PaymentService.getStudentPlans(payment.student_id);
+
+      setStudentPlans(data.data || []);
+      setSelectedStudentPlan(payment.student_plan_id);
+    } catch (error) {
+      console.error(error);
+    }
+
+    setOpenEditPaymentModal(true);
+  };
+
+  const handleUpdatePayment = async () => {
+    const errors = validatePaymentForm({
+      selectedStudent,
+      selectedStudentPlan,
+      paymentDate,
+      paymentMethod,
+    });
+
+    if (Object.keys(errors).length > 0) {
+      setErrorsEditPayment(errors);
+      return;
+    }
+
+    try {
+      setErrorsEditPayment({});
+
+      await PaymentService.update(editingPaymentId, {
+        student_plan_id: selectedStudentPlan,
+        payment_date: paymentDate,
+        payment_method: paymentMethod,
+      });
+
+      await fetchPayments();
+
+      setOpenEditPaymentModal(false);
+      resetEditPaymentForm();
+
+      showFeedback("Pago actualizado correctamente.", "success");
+    } catch (error) {
+      showFeedback(
+        error.response?.data?.message || "Error al editar el pago.",
+        "error",
+      );
+    }
+  };
+
+  // ======================================================
+  // HANDLES: PAGO (eliminar)
+  // ======================================================
+  const handleDeletePayment = async (id) => {
+    const confirmed = window.confirm("¿Desea eliminar este pago?");
+
+    if (!confirmed) return;
+
+    try {
+      await PaymentService.delete(id);
+
+      await fetchPayments();
+
+      showFeedback("Pago eliminado correctamente.", "success");
+    } catch (error) {
+      showFeedback(
+        error.response?.data?.message || "Error al eliminar el pago.",
+        "error",
+      );
+    }
+  };
+
+  // ======================================================
+  // HANDLES: INSCRIPCIÓN (crear)
   // ======================================================
   const toggleEnrollmentStudent = (studentId) => {
     setEnrollmentStudents((prev) =>
@@ -207,11 +367,13 @@ export default function StudentPayments() {
     });
 
     if (Object.keys(errors).length > 0) {
-      showFeedback(Object.values(errors)[0], "error");
+      setErrorsEnrollment(errors);
       return;
     }
 
     try {
+      setErrorsEnrollment({});
+
       await Promise.all(
         enrollmentStudents.map((studentId) =>
           EnrollmentService.create({
@@ -225,8 +387,7 @@ export default function StudentPayments() {
       await fetchEnrollments();
 
       setOpenCreateEnrollmentModal(false);
-      setEnrollmentStudents([]);
-      setEnrollmentAmount("");
+      resetEnrollmentForm();
 
       showFeedback("Inscripción/es registrada/s correctamente.", "success");
     } catch (error) {
@@ -237,14 +398,15 @@ export default function StudentPayments() {
     }
   };
 
+  // ======================================================
+  // HANDLES: INSCRIPCIÓN (editar)
+  // ======================================================
   const handleEditEnrollment = (enrollment) => {
     setEditingEnrollmentId(enrollment.id);
-
     setEnrollmentStudent(enrollment.student_id);
-
     setEnrollmentAmount(enrollment.amount);
-
     setEnrollmentDate(enrollment.payment_date.split("T")[0]);
+    setErrorsEditEnrollment({});
 
     setOpenEditEnrollmentModal(true);
   };
@@ -257,11 +419,13 @@ export default function StudentPayments() {
     });
 
     if (Object.keys(errors).length > 0) {
-      showFeedback(Object.values(errors)[0], "error");
+      setErrorsEditEnrollment(errors);
       return;
     }
 
     try {
+      setErrorsEditEnrollment({});
+
       await EnrollmentService.update(editingEnrollmentId, {
         student_id: enrollmentStudent,
         amount: enrollmentAmount,
@@ -271,6 +435,7 @@ export default function StudentPayments() {
       await fetchEnrollments();
 
       setOpenEditEnrollmentModal(false);
+      resetEditEnrollmentForm();
 
       showFeedback("Inscripción actualizada.", "success");
     } catch (error) {
@@ -281,6 +446,9 @@ export default function StudentPayments() {
     }
   };
 
+  // ======================================================
+  // HANDLES: INSCRIPCIÓN (eliminar)
+  // ======================================================
   const handleDeleteEnrollment = async (id) => {
     const confirmed = window.confirm("¿Desea eliminar esta inscripción?");
 
@@ -300,6 +468,9 @@ export default function StudentPayments() {
     }
   };
 
+  // ======================================================
+  // COLUMNAS DE TABLAS
+  // ======================================================
   const columns = [
     {
       header: "Fecha",
@@ -321,6 +492,22 @@ export default function StudentPayments() {
       header: "Método",
       accessor: "payment_method",
     },
+    {
+      header: "Acciones",
+      render: (row) => (
+        <div className="flex gap-2">
+          <EditButton
+            title="Editar Pago"
+            onClick={() => handleEditPayment(row)}
+          />
+
+          <DeleteButton
+            title="Eliminar Pago"
+            onClick={() => handleDeletePayment(row.id)}
+          />
+        </div>
+      ),
+    },
   ];
 
   const enrollmentColumns = [
@@ -340,17 +527,15 @@ export default function StudentPayments() {
       header: "Acciones",
       render: (row) => (
         <div className="flex gap-2">
-          <Button size="sm" onClick={() => handleEditEnrollment(row)}>
-            Editar
-          </Button>
+          <EditButton
+            title="Editar Inscripción"
+            onClick={() => handleEditEnrollment(row)}
+          />
 
-          <Button
-            size="sm"
-            variant="outline"
+          <DeleteButton
+            title="Eliminar Inscripción"
             onClick={() => handleDeleteEnrollment(row.id)}
-          >
-            Eliminar
-          </Button>
+          />
         </div>
       ),
     },
@@ -373,8 +558,12 @@ export default function StudentPayments() {
     </div>
   );
 
+  // ======================================================
+  // RETURN
+  // ======================================================
   return (
     <>
+      {/* ---------- Navegación de mes ---------- */}
       <div className="flex justify-center items-center gap-4 mb-6">
         <Button onClick={previousMonth}>◀</Button>
 
@@ -385,31 +574,54 @@ export default function StudentPayments() {
         <Button onClick={nextMonth}>▶</Button>
       </div>
 
-      <div className="flex gap-6 mb-6">
-        <div className="p-4 rounded border">
-          <p className="text-sm text-gray-500">Pagos registrados</p>
+      {/* ---------- Totales ---------- */}
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
+        <ComponentCard title="Pagos registrados">
+          <p className="text-2xl font-bold">{payments.length}</p>
+        </ComponentCard>
 
+        <ComponentCard title="Inscripciones registradas">
+          <p className="text-2xl font-bold">{enrollments.length}</p>
+        </ComponentCard>
+
+        <ComponentCard title="Total de pagos">
           <p className="text-2xl font-bold">
-            {payments.length + enrollments.length}
+            ${totalPayments.toLocaleString("es-AR")}
           </p>
-        </div>
+        </ComponentCard>
 
-        <div className="p-4 rounded border">
-          <p className="text-sm text-gray-500">Total recaudado</p>
+        <ComponentCard title="Total de inscripciones">
+          <p className="text-2xl font-bold">
+            ${totalEnrollments.toLocaleString("es-AR")}
+          </p>
+        </ComponentCard>
 
+        <ComponentCard title="Total recaudado">
           <p className="text-2xl font-bold">
             ${totalCollected.toLocaleString("es-AR")}
           </p>
-        </div>
+        </ComponentCard>
       </div>
 
-      <Modal isOpen={openCreateModal} onClose={() => setOpenCreateModal(false)}>
+      {/* ======================================================
+          MODAL: REGISTRAR PAGO
+          Los errores de validación se muestran debajo de cada campo
+          via la prop "error" (no en el modal de feedback).
+      ====================================================== */}
+      <Modal
+        isOpen={openCreateModal}
+        onClose={() => {
+          setOpenCreateModal(false);
+          resetPaymentForm();
+        }}
+      >
         <h2 className="text-xl font-bold mb-6">Registrar pago</h2>
 
         <Select
           label="Estudiante"
           value={selectedStudent}
           onChange={(e) => handleStudentChange(e.target.value)}
+          error={errorsPayment.student}
         >
           <option value="">Seleccione un estudiante</option>
 
@@ -424,6 +636,7 @@ export default function StudentPayments() {
           label="Plan"
           value={selectedStudentPlan}
           onChange={(e) => setSelectedStudentPlan(e.target.value)}
+          error={errorsPayment.plan}
         >
           <option value="">Seleccione un plan</option>
 
@@ -439,38 +652,131 @@ export default function StudentPayments() {
           label="Fecha de pago"
           value={paymentDate}
           onChange={(e) => setPaymentDate(e.target.value)}
+          error={errorsPayment.date}
         />
 
         <Select
           label="Método de pago"
           value={paymentMethod}
           onChange={(e) => setPaymentMethod(e.target.value)}
+          error={errorsPayment.method}
         >
           <option value="">Seleccione un método</option>
 
           <option value="efectivo">Efectivo</option>
-
           <option value="transferencia">Transferencia</option>
           <option value="qr"> Código QR</option>
           <option value="otro">Otro</option>
         </Select>
 
         <div className="flex justify-end gap-3 mt-6">
+          <Button
+            variant="outline"
+            onClick={() => {
+              setOpenCreateModal(false);
+              resetPaymentForm();
+            }}
+          >
+            Cancelar
+          </Button>
+
           <Button onClick={handleCreatePayment}>Registrar</Button>
         </div>
       </Modal>
 
+      {/* ======================================================
+          MODAL: EDITAR PAGO
+      ====================================================== */}
+      <Modal
+        isOpen={openEditPaymentModal}
+        onClose={() => {
+          setOpenEditPaymentModal(false);
+          resetEditPaymentForm();
+        }}
+      >
+        <h2 className="text-xl font-bold mb-6">Editar pago</h2>
+
+        <Select
+          label="Estudiante"
+          value={selectedStudent}
+          onChange={(e) => handleStudentChange(e.target.value)}
+          error={errorsEditPayment.student}
+        >
+          <option value="">Seleccione un estudiante</option>
+
+          {students.map((student) => (
+            <option key={student.id} value={student.id}>
+              {student.last_name}, {student.first_name}
+            </option>
+          ))}
+        </Select>
+
+        <Select
+          label="Plan"
+          value={selectedStudentPlan}
+          onChange={(e) => setSelectedStudentPlan(e.target.value)}
+          error={errorsEditPayment.plan}
+        >
+          <option value="">Seleccione un plan</option>
+
+          {studentPlans.map((plan) => (
+            <option key={plan.student_plan_id} value={plan.student_plan_id}>
+              {plan.plan_name}
+            </option>
+          ))}
+        </Select>
+
+        <Input
+          type="date"
+          label="Fecha de pago"
+          value={paymentDate}
+          onChange={(e) => setPaymentDate(e.target.value)}
+          error={errorsEditPayment.date}
+        />
+
+        <Select
+          label="Método de pago"
+          value={paymentMethod}
+          onChange={(e) => setPaymentMethod(e.target.value)}
+          error={errorsEditPayment.method}
+        >
+          <option value="">Seleccione un método</option>
+
+          <option value="efectivo">Efectivo</option>
+          <option value="transferencia">Transferencia</option>
+          <option value="qr"> Código QR</option>
+          <option value="otro">Otro</option>
+        </Select>
+
+        <div className="flex justify-end gap-3 mt-6">
+          <Button
+            variant="outline"
+            onClick={() => {
+              setOpenEditPaymentModal(false);
+              resetEditPaymentForm();
+            }}
+          >
+            Cancelar
+          </Button>
+
+          <Button onClick={handleUpdatePayment}>Guardar</Button>
+        </div>
+      </Modal>
+
+      {/* ======================================================
+          MODAL: REGISTRAR INSCRIPCIÓN
+      ====================================================== */}
       <Modal
         isOpen={openCreateEnrollmentModal}
         onClose={() => {
           setOpenCreateEnrollmentModal(false);
-          setEnrollmentStudents([]);
+          resetEnrollmentForm();
         }}
       >
         <h2 className="text-xl font-bold mb-6">Registrar inscripción</h2>
 
         <Label>Estudiantes (tilde uno o más si son hermanos)</Label>
-        <div className="max-h-56 overflow-y-auto border border-gray-200 rounded-lg p-3 space-y-1 mb-4">
+        <div className="max-h-56 overflow-y-auto border border-gray-200 rounded-lg p-3 space-y-1 mb-1">
           {students.length === 0 && (
             <p className="text-sm text-gray-500">No hay estudiantes activos.</p>
           )}
@@ -490,11 +796,18 @@ export default function StudentPayments() {
           ))}
         </div>
 
+        {errorsEnrollment.students && (
+          <p className="text-red-500 text-sm mb-3">
+            {errorsEnrollment.students}
+          </p>
+        )}
+
         <Input
           type="number"
           label="Monto"
           value={enrollmentAmount}
           onChange={(e) => setEnrollmentAmount(e.target.value)}
+          error={errorsEnrollment.amount}
         />
 
         <Input
@@ -502,6 +815,7 @@ export default function StudentPayments() {
           label="Fecha de pago"
           value={enrollmentDate}
           onChange={(e) => setEnrollmentDate(e.target.value)}
+          error={errorsEnrollment.date}
         />
 
         <div className="flex justify-end gap-3 mt-6">
@@ -509,7 +823,7 @@ export default function StudentPayments() {
             variant="outline"
             onClick={() => {
               setOpenCreateEnrollmentModal(false);
-              setEnrollmentStudents([]);
+              resetEnrollmentForm();
             }}
           >
             Cancelar
@@ -519,9 +833,15 @@ export default function StudentPayments() {
         </div>
       </Modal>
 
+      {/* ======================================================
+          MODAL: EDITAR INSCRIPCIÓN
+      ====================================================== */}
       <Modal
         isOpen={openEditEnrollmentModal}
-        onClose={() => setOpenEditEnrollmentModal(false)}
+        onClose={() => {
+          setOpenEditEnrollmentModal(false);
+          resetEditEnrollmentForm();
+        }}
       >
         <h2 className="text-xl font-bold mb-6">Editar inscripción</h2>
 
@@ -529,6 +849,7 @@ export default function StudentPayments() {
           label="Estudiante"
           value={enrollmentStudent}
           onChange={(e) => setEnrollmentStudent(e.target.value)}
+          error={errorsEditEnrollment.student}
         >
           <option value="">Seleccione un estudiante</option>
 
@@ -544,6 +865,7 @@ export default function StudentPayments() {
           label="Monto"
           value={enrollmentAmount}
           onChange={(e) => setEnrollmentAmount(e.target.value)}
+          error={errorsEditEnrollment.amount}
         />
 
         <Input
@@ -551,12 +873,16 @@ export default function StudentPayments() {
           label="Fecha"
           value={enrollmentDate}
           onChange={(e) => setEnrollmentDate(e.target.value)}
+          error={errorsEditEnrollment.date}
         />
 
         <div className="flex justify-end gap-3 mt-6">
           <Button
             variant="outline"
-            onClick={() => setOpenEditEnrollmentModal(false)}
+            onClick={() => {
+              setOpenEditEnrollmentModal(false);
+              resetEditEnrollmentForm();
+            }}
           >
             Cancelar
           </Button>
@@ -565,7 +891,12 @@ export default function StudentPayments() {
         </div>
       </Modal>
 
-      {/* Modal de feedback (éxito/error) — viene del hook useFeedbackModal */}
+      {/* ======================================================
+          MODAL DE FEEDBACK (éxito/error general)
+          Viene del hook useFeedbackModal. Se dispara al crear,
+          editar o eliminar con éxito, y en errores de backend
+          que no corresponden a un campo puntual del formulario.
+      ====================================================== */}
       <Modal isOpen={feedbackModal.open} onClose={closeFeedback}>
         <h2
           className={`text-lg font-semibold mb-4 ${
@@ -582,6 +913,7 @@ export default function StudentPayments() {
         </div>
       </Modal>
 
+      {/* ---------- Tablas ---------- */}
       <BasicTable
         title={paymentsTableTitle}
         columns={columns}
