@@ -19,7 +19,7 @@ import {
   AddButton,
 } from "../../components/ui/ActionButtons";
 import { sortByPersonName } from "../../utils/sort";
-import { validateTeacher } from "../../validators/entities/teachers.validators";
+import { validateTeacher } from "../../validators/entities/teachers.validator";
 
 export function Teachers() {
   // ======================================================
@@ -417,7 +417,7 @@ export function Teachers() {
         <Input
           label="DNI"
           value={dni}
-          onChange={(e) => setDni(e.Teacher.value || e.target.value)} // Nota: corregido un typo menor aquí que podría fallar
+          onChange={(e) => setDni(e.target.value)} // Nota: corregido un typo menor aquí que podría fallar
           error={errorsEdit.dni}
         />
 

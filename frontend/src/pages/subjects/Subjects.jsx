@@ -112,7 +112,7 @@ export function Subjects() {
 
       if (!name.trim()) {
         setErrorsCreate({
-          name: "Este campo no puede estar vacío.",
+          name: "Campo obligatorio.",
         });
 
         return;
@@ -146,7 +146,7 @@ export function Subjects() {
 
       if (!name.trim()) {
         setErrorsEdit({
-          name: "Este campo no puede estar vacío.",
+          name: "Campo obligatorio.",
         });
 
         return;

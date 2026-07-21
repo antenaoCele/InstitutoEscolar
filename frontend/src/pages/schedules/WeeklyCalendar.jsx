@@ -307,8 +307,6 @@ export default function WeeklyCalendar() {
     } catch (error) {
       console.error(error);
 
-      alert(JSON.stringify(error.response?.data, null, 2));
-
       const backendErrors = error.response?.data?.errors;
 
       if (backendErrors?.length) {
@@ -449,8 +447,6 @@ export default function WeeklyCalendar() {
       fetchScheduleStudents();
     } catch (error) {
       console.error(error);
-
-      alert(JSON.stringify(error.response?.data, null, 2));
 
       const backendErrors = error.response?.data?.errors;
 

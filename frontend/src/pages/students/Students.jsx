@@ -43,8 +43,6 @@ export function Students() {
   const [searchSchool, setSearchSchool] = useState("");
   const [selectedPaymentStatus, setSelectedPaymentStatus] = useState("");
 
-  //hacer un componente de filtros
-
   // ======================================================
   // MODALES
   // ======================================================
@@ -79,7 +77,6 @@ export function Students() {
   // Cada fila: { plan_id, teacher_id, availableTeachers, student_plan_id?, start_date? }
   // ======================================================
   const [formClasses, setFormClasses] = useState([]);
-
   const [removedClasses, setRemovedClasses] = useState([]);
 
   // ======================================================
@@ -439,9 +436,6 @@ export function Students() {
     }
   };
 
-  // ======================================================
-  // USEEFFECTS
-  // ======================================================
   useEffect(() => {
     fetchStudents();
   }, [selectedTeacher, selectedPlan, selectedStatus, selectedPaymentStatus]);

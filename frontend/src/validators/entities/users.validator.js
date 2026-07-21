@@ -25,14 +25,14 @@ export const validateUsersForm = (
 
   // Nombre
   if (isRequired(first_name)) {
-    errors.first_name = "El nombre es obligatorio.";
+    errors.first_name = "Campo obligatorio.";
   } else if (!isValidPersonName(first_name)) {
     errors.first_name = "Nombre inválido.";
   }
 
   // Apellido
   if (isRequired(last_name)) {
-    errors.last_name = "El apellido es obligatorio.";
+    errors.last_name = "Campo obligatorio.";
   } else if (!isValidPersonName(last_name)) {
     errors.last_name = "Apellido inválido.";
   }
