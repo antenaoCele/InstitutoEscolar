@@ -439,6 +439,8 @@ export function Students() {
   // ======================================================
   // DATOS DERIVADOS
   // ======================================================
+  const buttonClass = "cursor-pointer transition transform hover:scale-105";
+
   const filteredStudents = [...students]
     .filter((s) => {
       const textName = searchFirstLastName.toLowerCase();
@@ -546,9 +548,6 @@ export function Students() {
 
   const student = selectedStudent?.student;
 
-  // ======================================================
-  // BLOQUE REUTILIZABLE: checkboxes de planes (Crear/Editar)
-  // ======================================================
   const renderPlanCheckboxes = () => (
     <div className="mt-6 border-t pt-4">
       <h2 className="text-xl font-bold mb-4">Asignar Clases</h2>

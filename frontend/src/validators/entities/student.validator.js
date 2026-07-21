@@ -57,13 +57,13 @@ export const validateStudentForm = ({
   }
 
   if (isRequired(level)) {
-    errors.level = "Seleccione una opción válida.";
+    errors.level = "Seleccione una opción.";
   } else if (!isValidLevel(level)) {
     errors.level = "Selección inválida.";
   }
 
   if (isRequired(grade)) {
-    errors.grade = "Seleccione una opción válida.";
+    errors.grade = "Seleccione una opción.";
   } else if (!isValidGrade(grade)) {
     errors.grade = "Selección inválida.";
   }
