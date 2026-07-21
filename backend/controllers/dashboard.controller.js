@@ -14,10 +14,10 @@ export const dashboardController = {
         [studentsByLevel],
         [studentsByPlan],
         [studentsPerTeacher],
-        [paidStudents],
+        [paidPlans],
         [moneyReceived],
-        [expectedMoney],
-        [debtStudents],
+        [moneyPending],
+        [pendingPlans],
       ] = await Promise.all([
         // =====================================
         // ALUMNOS ACTIVOS
@@ -107,16 +107,14 @@ export const dashboardController = {
         `),
 
         // =====================================
-        // ALUMNOS QUE PAGARON ESTE MES
+        // PLANES PAGADOS ESTE MES
         // =====================================
         db.execute(`
-          SELECT COUNT(DISTINCT sp.student_id) AS total
-          FROM payments p
-          INNER JOIN student_plans sp
-            ON sp.id = p.student_plan_id
+          SELECT COUNT(DISTINCT student_plan_id) AS total
+          FROM payments
           WHERE
-            MONTH(p.payment_date) = MONTH(CURDATE())
-            AND YEAR(p.payment_date) = YEAR(CURDATE())
+            MONTH(payment_date)=MONTH(CURDATE())
+            AND YEAR(payment_date)=YEAR(CURDATE())
         `),
 
         // =====================================
@@ -127,12 +125,12 @@ export const dashboardController = {
             COALESCE(SUM(amount),0) AS total
           FROM payments
           WHERE
-            MONTH(payment_date) = MONTH(CURDATE())
-            AND YEAR(payment_date) = YEAR(CURDATE())
+            MONTH(payment_date)=MONTH(CURDATE())
+            AND YEAR(payment_date)=YEAR(CURDATE())
         `),
 
         // =====================================
-        // DINERO ESPERADO
+        // DINERO PENDIENTE
         // =====================================
         db.execute(`
           SELECT
@@ -140,41 +138,38 @@ export const dashboardController = {
           FROM student_plans sp
           INNER JOIN plan_prices pp
             ON pp.plan_id = sp.plan_id
+            AND pp.end_date IS NULL
           WHERE
             sp.end_date IS NULL
-            AND pp.end_date IS NULL
+            AND sp.id NOT IN (
+              SELECT DISTINCT student_plan_id
+              FROM payments
+              WHERE
+                MONTH(payment_date)=MONTH(CURDATE())
+                AND YEAR(payment_date)=YEAR(CURDATE())
+            )
         `),
 
         // =====================================
-        // ALUMNOS QUE TODAVÍA NO PAGARON
+        // PLANES PENDIENTES
         // =====================================
         db.execute(`
-          SELECT COUNT(DISTINCT sp.student_id) AS total
+          SELECT COUNT(*) AS total
           FROM student_plans sp
           WHERE
             sp.end_date IS NULL
-            AND sp.student_id NOT IN (
-              SELECT DISTINCT sp2.student_id
-              FROM payments p
-              INNER JOIN student_plans sp2
-                ON sp2.id = p.student_plan_id
+            AND sp.id NOT IN (
+              SELECT DISTINCT student_plan_id
+              FROM payments
               WHERE
-                MONTH(p.payment_date) = MONTH(CURDATE())
-                AND YEAR(p.payment_date) = YEAR(CURDATE())
+                MONTH(payment_date)=MONTH(CURDATE())
+                AND YEAR(payment_date)=YEAR(CURDATE())
             )
         `),
       ]);
 
-      const active = Number(activeStudents[0].total);
-      const paid = Number(paidStudents[0].total);
-      const debtors = Number(debtStudents[0].total);
-
-      const received = Number(moneyReceived[0].total);
-      const expected = Number(expectedMoney[0].total);
-      const pending = Math.max(expected - received, 0);
-
       const cards = {
-        students: active,
+        students: Number(activeStudents[0].total),
         teachers: Number(teachers[0].total),
         plans: Number(plans[0].total),
         subjects: Number(subjects[0].total),
@@ -182,10 +177,10 @@ export const dashboardController = {
       };
 
       if (isAdmin) {
-        cards.studentsPaid = paid;
-        cards.studentsDebt = debtors;
-        cards.moneyReceived = received;
-        cards.moneyPending = pending;
+        cards.paidPlans = Number(paidPlans[0].total);
+        cards.pendingPlans = Number(pendingPlans[0].total);
+        cards.moneyReceived = Number(moneyReceived[0].total);
+        cards.moneyPending = Number(moneyPending[0].total);
       }
 
       res.json({
