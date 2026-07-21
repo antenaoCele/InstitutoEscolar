@@ -7,6 +7,7 @@ import Button from "../../components/ui/Button";
 import Label from "../../components/form/Label";
 import Input from "../../components/form/Input";
 import Select from "../../components/form/Select";
+import Checkbox from "../../components/form/Checkbox";
 import { Modal } from "../../components/ui/Modal";
 import { isAdmin } from "../../utils/auth";
 import {
@@ -20,6 +21,7 @@ import {
 import { sortByProperty, sortByPersonName } from "../../utils/sort";
 import { mapErrors } from "../../validators/helpers/errorHelpers";
 import { validateTutorForm } from "../../validators/entities/tutors.validator";
+import { useFeedbackModal } from "../../hooks/useFeedbackModal";
 
 export function Tutors() {
   // ======================================================
@@ -41,6 +43,7 @@ export function Tutors() {
   const [openCreateModal, setOpenCreateModal] = useState(false);
   const [openEditModal, setOpenEditModal] = useState(false);
   const [openDeleteModal, setOpenDeleteModal] = useState(false);
+  const { feedbackModal, showFeedback, closeFeedback } = useFeedbackModal();
 
   // ======================================================
   // TUTOR SELECCIONADO
@@ -116,7 +119,6 @@ export function Tutors() {
 
       setTutors(filtered);
     } catch (error) {
-      console.error(error);
       setTutors([]);
     }
   };
@@ -160,37 +162,26 @@ export function Tutors() {
   };
 
   const handleCreate = async () => {
+    const errors = validateTutorForm({
+      firstName,
+      lastName,
+      dni,
+      phone,
+    });
+
+    if (Object.keys(errors).length > 0) {
+      setErrorsCreate(errors);
+      return;
+    }
+
     try {
       setErrorsCreate({});
-
-      const newErrors = {};
-
-      if (!firstName.trim()) {
-        newErrors.first_name = "Campo obligatorio.";
-      }
-
-      if (!lastName.trim()) {
-        newErrors.last_name = "Campo obligatorio.";
-      }
-
-      if (!dni.trim()) {
-        newErrors.dni = "Campo obligatorio.";
-      }
-
-      if (!phone.trim()) {
-        newErrors.phone = "Campo obligatorio.";
-      }
-
-      if (Object.keys(newErrors).length > 0) {
-        setErrorsCreate(newErrors);
-        return;
-      }
 
       const tutorRes = await tutorService.create({
         first_name: firstName,
         last_name: lastName,
-        dni: dni,
-        phone: phone,
+        dni,
+        phone,
       });
 
       if (selectedStudentIds.length > 0) {
@@ -205,15 +196,22 @@ export function Tutors() {
       }
 
       setOpenCreateModal(false);
-
+      fetchTutors();
       resetForm();
 
-      fetchTutors();
+      showFeedback("Tutor creado correctamente.", "success");
     } catch (error) {
+      console.error("Error al crear:", error.response?.data || error.message);
+
       const backendErrors = error.response?.data?.errors;
 
       if (backendErrors) {
         setErrorsCreate(mapErrors(backendErrors));
+      } else {
+        showFeedback(
+          error.response?.data?.message || "Error al crear el tutor.",
+          "error",
+        );
       }
     }
   };
@@ -233,37 +231,26 @@ export function Tutors() {
   };
 
   const handleUpdate = async () => {
+    const errors = validateTutorForm({
+      firstName,
+      lastName,
+      dni,
+      phone,
+    });
+
+    if (Object.keys(errors).length > 0) {
+      setErrorsEdit(errors);
+      return;
+    }
+
     try {
       setErrorsEdit({});
-
-      const newErrors = {};
-
-      if (!firstName.trim()) {
-        newErrors.first_name = "Campo obligatorio.";
-      }
-
-      if (!lastName.trim()) {
-        newErrors.last_name = "Campo obligatorio.";
-      }
-
-      if (!dni.trim()) {
-        newErrors.dni = "Campo obligatorio.";
-      }
-
-      if (!phone.trim()) {
-        newErrors.phone = "Campo obligatorio.";
-      }
-
-      if (Object.keys(newErrors).length > 0) {
-        setErrorsEdit(newErrors);
-        return;
-      }
 
       await tutorService.update(selectedTutor.id, {
         first_name: firstName,
         last_name: lastName,
-        dni: dni,
-        phone: phone,
+        dni,
+        phone,
       });
 
       const currentRelations = selectedTutor.student_relations || [];
@@ -284,15 +271,22 @@ export function Tutors() {
       );
 
       setOpenEditModal(false);
-
+      fetchTutors();
       resetForm();
 
-      fetchTutors();
+      showFeedback("Tutor actualizado correctamente.", "success");
     } catch (error) {
+      console.error(error.response?.data || error.message);
+
       const backendErrors = error.response?.data?.errors;
 
       if (backendErrors) {
         setErrorsEdit(mapErrors(backendErrors));
+      } else {
+        showFeedback(
+          error.response?.data?.message || "Error al editar el tutor.",
+          "error",
+        );
       }
     }
   };
@@ -307,12 +301,26 @@ export function Tutors() {
       await tutorService.delete(selectedTutor.id);
 
       setOpenDeleteModal(false);
-
       fetchTutors();
-    } catch (error) {
-      console.error(error);
 
-      alert(error.response?.data?.message || "Error al eliminar");
+      showFeedback("Tutor eliminado correctamente.", "success");
+    } catch (error) {
+      console.error(error.response?.data || error.message);
+
+      setOpenDeleteModal(false);
+
+      showFeedback(
+        error.response?.data?.message || "Error al eliminar el tutor.",
+        "error",
+      );
+    }
+  };
+
+  const handleStudentCheckbox = (studentId, checked) => {
+    if (checked) {
+      setSelectedStudentIds((prev) => [...prev, studentId]);
+    } else {
+      setSelectedStudentIds((prev) => prev.filter((id) => id !== studentId));
     }
   };
 
@@ -354,7 +362,7 @@ export function Tutors() {
       <span>Tutores</span>
 
       {showCreateButtons && (
-        <PlusButton title="Crear Materia" onClick={openCreate} />
+        <PlusButton title="Crear Tutor" onClick={openCreate} />
       )}
     </div>
   );
@@ -393,7 +401,9 @@ export function Tutors() {
                   <span key={index}>{name}</span>
                 ))
               ) : (
-                <span>Sin estudiantes</span>
+                <div className="text-sm italic text-gray-500">
+                  Sin estudiantes
+                </div>
               )}
             </div>
           </div>
@@ -421,6 +431,23 @@ export function Tutors() {
       ),
     });
   }
+
+  const renderStudentCheckboxes = (errors) => (
+    <>
+      <Label>Estudiantes</Label>
+      {students.map((student) => (
+        <Checkbox
+          key={student.id}
+          label={`${student.last_name}, ${student.first_name}`}
+          checked={selectedStudentIds.includes(student.id)}
+          onChange={(checked) => handleStudentCheckbox(student.id, checked)}
+        />
+      ))}
+      {errors.student_id && (
+        <p className="text-red-500 text-sm mt-1">{errors.student_id}</p>
+      )}
+    </>
+  );
 
   // ======================================================
   // RETURN
@@ -476,91 +503,35 @@ export function Tutors() {
       >
         <h2 className="text-xl font-bold mb-8">Crear Tutor</h2>
 
-        <div className="flex flex-col mb-6">
-          <Label className="font-semibold mb-2">Nombre</Label>
+        <Label>Nombre</Label>
+        <Input
+          value={firstName}
+          onChange={(e) => setFirstName(e.target.value)}
+          error={errorsCreate.first_name}
+        />
 
-          <Input
-            className={inputClass(errorsCreate.first_name)}
-            value={firstName}
-            onChange={(e) => setFirstName(e.target.value)}
-          />
+        <Label>Apellido</Label>
+        <Input
+          value={lastName}
+          onChange={(e) => setLastName(e.target.value)}
+          error={errorsCreate.last_name}
+        />
 
-          {errorsCreate.first_name && (
-            <p className="text-red-500 text-sm mt-1">
-              {errorsCreate.first_name}
-            </p>
-          )}
-        </div>
+        <Label>DNI</Label>
+        <Input
+          value={dni}
+          onChange={(e) => setDni(e.target.value)}
+          error={errorsCreate.dni}
+        />
 
-        <div className="flex flex-col mb-6">
-          <Label className="font-semibold mb-2">Apellido</Label>
+        <Label>Teléfono</Label>
+        <Input
+          value={phone}
+          onChange={(e) => setPhone(e.target.value)}
+          error={errorsCreate.phone}
+        />
 
-          <Input
-            className={inputClass(errorsCreate.last_name)}
-            value={lastName}
-            onChange={(e) => setLastName(e.target.value)}
-          />
-          {errorsCreate.last_name && (
-            <p className="text-red-500 text-sm mt-1">
-              {errorsCreate.last_name}
-            </p>
-          )}
-        </div>
-
-        <div className="flex flex-col mb-6">
-          <Label className="font-semibold mb-2">DNI</Label>
-
-          <Input
-            className={inputClass(errorsCreate.dni)}
-            value={dni}
-            onChange={(e) => setDni(e.target.value)}
-          />
-          {errorsCreate.dni && (
-            <p className="text-red-500 text-sm mt-1">{errorsCreate.dni}</p>
-          )}
-        </div>
-
-        <div className="flex flex-col mb-6">
-          <Label className="font-semibold mb-2">Teléfono</Label>
-
-          <Input
-            className={inputClass(errorsCreate.phone)}
-            value={phone}
-            onChange={(e) => setPhone(e.target.value)}
-          />
-          {errorsCreate.phone && (
-            <p className="text-red-500 text-sm mt-1">{errorsCreate.phone}</p>
-          )}
-        </div>
-
-        <div className="flex flex-col mb-6">
-          <Label className="font-semibold mb-2">Estudiante</Label>
-
-          {students.map((student) => (
-            <Label key={student.id} className="flex items-center gap-2">
-              <Input
-                type="checkbox"
-                checked={selectedStudentIds.includes(student.id)}
-                onChange={(e) => {
-                  if (e.target.checked) {
-                    setSelectedStudentIds([...selectedStudentIds, student.id]);
-                  } else {
-                    setSelectedStudentIds(
-                      selectedStudentIds.filter((id) => id !== student.id),
-                    );
-                  }
-                }}
-              />
-              {student.last_name}, {student.first_name}
-            </Label>
-          ))}
-
-          {errorsCreate.student_id && (
-            <p className="text-red-500 text-sm mt-1">
-              {errorsCreate.student_id}
-            </p>
-          )}
-        </div>
+        {renderStudentCheckboxes(errorsCreate)}
 
         <div className="flex justify-end gap-4 mt-10">
           <div className="flex justify-end gap-3">
@@ -583,89 +554,35 @@ export function Tutors() {
       >
         <h2 className="text-xl font-bold mb-8">Editar Tutor</h2>
 
-        <div className="flex flex-col mb-6">
-          <Label className="font-semibold mb-2">Nombre</Label>
+        <Label>Nombre</Label>
+        <Input
+          value={firstName}
+          onChange={(e) => setFirstName(e.target.value)}
+          error={errorsEdit.first_name}
+        />
 
-          <Input
-            className={inputClass(errorsEdit.first_name)}
-            value={firstName}
-            onChange={(e) => setFirstName(e.target.value)}
-          />
-          {errorsEdit.first_name && (
-            <p className="text-red-500 text-sm mt-1">{errorsEdit.first_name}</p>
-          )}
-        </div>
+        <Label>Apellido</Label>
+        <Input
+          value={lastName}
+          onChange={(e) => setLastName(e.target.value)}
+          error={errorsEdit.last_name}
+        />
 
-        <div className="flex flex-col mb-6">
-          <Label className="font-semibold mb-2">Apellido</Label>
+        <Label>DNI</Label>
+        <Input
+          value={dni}
+          onChange={(e) => setDni(e.target.value)}
+          error={errorsEdit.dni}
+        />
 
-          <Input
-            className={inputClass(errorsEdit.last_name)}
-            value={lastName}
-            onChange={(e) => setLastName(e.target.value)}
-          />
-          {errorsEdit.last_name && (
-            <p className="text-red-500 text-sm mt-1">{errorsEdit.last_name}</p>
-          )}
-        </div>
+        <Label>Teléfono</Label>
+        <Input
+          value={phone}
+          onChange={(e) => setPhone(e.target.value)}
+          error={errorsEdit.phone}
+        />
 
-        <div className="flex flex-col mb-6">
-          <Label className="font-semibold mb-2">DNI</Label>
-
-          <Input
-            className={inputClass(errorsEdit.dni)}
-            value={dni}
-            onChange={(e) => setDni(e.target.value)}
-          />
-          {errorsEdit.dni && (
-            <p className="text-red-500 text-sm mt-1">{errorsEdit.dni}</p>
-          )}
-        </div>
-
-        <div className="flex flex-col mb-6">
-          <Label className="font-semibold mb-2">Teléfono</Label>
-
-          <Input
-            className={inputClass(errorsEdit.phone)}
-            value={phone}
-            onChange={(e) => setPhone(e.target.value)}
-          />
-          {errorsEdit.phone && (
-            <p className="text-red-500 text-sm mt-1">{errorsEdit.phone}</p>
-          )}
-        </div>
-
-        <div className="flex flex-col mb-6">
-          <Label className="font-semibold mb-2">Estudiante</Label>
-
-          <div className="border border-gray-300 rounded p-3 max-h-40 overflow-y-auto">
-            {students.map((student) => (
-              <label key={student.id} className="flex items-center gap-2 mb-2">
-                <input
-                  type="checkbox"
-                  checked={selectedStudentIds.includes(student.id)}
-                  onChange={(e) => {
-                    if (e.target.checked) {
-                      setSelectedStudentIds([
-                        ...selectedStudentIds,
-                        student.id,
-                      ]);
-                    } else {
-                      setSelectedStudentIds(
-                        selectedStudentIds.filter((id) => id !== student.id),
-                      );
-                    }
-                  }}
-                />
-                {student.last_name}, {student.first_name}
-              </label>
-            ))}
-          </div>
-
-          {errorsEdit.student_id && (
-            <p className="text-red-500 text-sm mt-1">{errorsEdit.student_id}</p>
-          )}
-        </div>
+        {renderStudentCheckboxes(errorsEdit)}
 
         <div className="flex justify-end gap-4 mt-10">
           <NoButton title="Cancelar" onClick={() => setOpenEditModal(false)} />
@@ -685,6 +602,18 @@ export function Tutors() {
 
           <YesButton title="Aceptar" onClick={confirmDelete} />
         </div>
+      </Modal>
+
+      <Modal isOpen={feedbackModal.open} onClose={closeFeedback}>
+        <h2
+          className={`text-lg font-semibold mb-4 ${
+            feedbackModal.type === "error" ? "text-red-600" : "text-green-600"
+          }`}
+        >
+          {feedbackModal.type === "error" ? "Error" : "Listo"}
+        </h2>
+
+        <p className="text-gray-600">{feedbackModal.message}</p>
       </Modal>
     </>
   );
