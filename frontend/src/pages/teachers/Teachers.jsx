@@ -19,7 +19,7 @@ import {
   AddButton,
 } from "../../components/ui/ActionButtons";
 import { sortByPersonName } from "../../utils/sort";
-import { validateTeacher } from "../../validators/entities/teachers.validators";
+import { validateTeacher } from "../../validators/entities/teachers.validator";
 
 export function Teachers() {
   // ======================================================

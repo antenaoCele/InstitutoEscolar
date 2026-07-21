@@ -10,40 +10,61 @@ import Select from "../../components/form/Select";
 import { Modal } from "../../components/ui/Modal";
 import { isAdmin } from "../../utils/auth";
 import {
-  PencilIcon,
-  TrashBinIcon,
-  CloseLineIcon,
-  SaveIcon,
-  MoreIcon,
-  CreateIcon,
-} from "../../icons";
+  ViewButton,
+  EditButton,
+  DeleteButton,
+  PlusButton,
+  YesButton,
+  NoButton,
+} from "../../components/ui/ActionButtons";
 import { sortByProperty, sortByPersonName } from "../../utils/sort";
+import { mapErrors } from "../../validators/helpers/errorHelpers";
+import { validateTutorForm } from "../../validators/entities/tutors.validator";
 
 export function Tutors() {
+  // ======================================================
+  // DATOS
+  // ======================================================
   const [tutors, setTutors] = useState([]);
-  const [selectedTutor, setSelectedTutor] = useState(null);
-
   const [students, setStudents] = useState([]);
+
+  // ======================================================
+  // FILTROS
+  // ======================================================
   const [filterStudentId, setFilterStudentId] = useState("");
-
-  const [selectedStudentIds, setSelectedStudentIds] = useState([]);
-
-  const [firstName, setFirstName] = useState("");
-  const [lastName, setLastName] = useState("");
   const [searchFirstLastName, setSearchFirstLastName] = useState("");
-
-  const [dni, setDni] = useState("");
   const [searchDNI, setSearchDNI] = useState("");
 
-  const [phone, setPhone] = useState("");
-
+  // ======================================================
+  // MODALES
+  // ======================================================
+  const [openCreateModal, setOpenCreateModal] = useState(false);
   const [openEditModal, setOpenEditModal] = useState(false);
   const [openDeleteModal, setOpenDeleteModal] = useState(false);
-  const [openCreateModal, setOpenCreateModal] = useState(false);
 
+  // ======================================================
+  // TUTOR SELECCIONADO
+  // ======================================================
+  const [selectedTutor, setSelectedTutor] = useState(null);
+
+  // ======================================================
+  // FORMULARIO DEL TUTOR
+  // ======================================================
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
+  const [dni, setDni] = useState("");
+  const [phone, setPhone] = useState("");
+  const [selectedStudentIds, setSelectedStudentIds] = useState([]);
+
+  // ======================================================
+  // ERRORES
+  // ======================================================
   const [errorsCreate, setErrorsCreate] = useState({});
   const [errorsEdit, setErrorsEdit] = useState({});
 
+  // ======================================================
+  // CONSTANTES
+  // ======================================================
   const buttonClass = "cursor-pointer transition transform hover:scale-105";
 
   const inputClass = (error) =>
@@ -52,6 +73,9 @@ export function Tutors() {
     focus:outline-none focus:ring-1 focus:ring-[#0cc0df] focus:border-[#0cc0df]
     ${error ? "border-red-500 focus:ring-red-500 focus:border-red-500" : ""}`;
 
+  // ======================================================
+  // FETCH DATOS PRINCIPALES
+  // ======================================================
   const fetchTutors = async () => {
     try {
       const [tutorsRes, studentTutorsRes] = await Promise.all([
@@ -97,6 +121,9 @@ export function Tutors() {
     }
   };
 
+  // ======================================================
+  // FETCH AUXILIARES
+  // ======================================================
   const fetchStudents = async () => {
     try {
       const res = await studentService.getAll();
@@ -111,52 +138,22 @@ export function Tutors() {
     }
   };
 
-  useEffect(() => {
-    fetchTutors();
-  }, [filterStudentId]);
-
-  useEffect(() => {
-    fetchStudents();
-  }, []);
-
-  const filteredTutors = [...tutors]
-    .filter((t) => {
-      const textName = searchFirstLastName.toLowerCase();
-
-      const matchName =
-        !textName ||
-        t.first_name?.toLowerCase().includes(textName) ||
-        t.last_name?.toLowerCase().includes(textName);
-
-      const textDNI = searchDNI;
-
-      const matchDNI = !textDNI || t.dni?.toString().includes(textDNI);
-
-      return matchName && matchDNI;
-    })
-    .sort(sortByPersonName);
-
+  // ======================================================
+  // RESETEO
+  // ======================================================
   const resetForm = () => {
     setFirstName("");
     setLastName("");
     setDni("");
     setPhone("");
-
     setSelectedStudentIds([]);
-
     setErrorsCreate({});
     setErrorsEdit({});
   };
 
-  const mapErrors = (errors) => {
-    const formatted = {};
-
-    errors.forEach((e) => {
-      formatted[e.path] = e.msg;
-    });
-    return formatted;
-  };
-
+  // ======================================================
+  // HANDLES CRUD
+  // ======================================================
   const openCreate = () => {
     resetForm();
     setOpenCreateModal(true);
@@ -319,6 +316,58 @@ export function Tutors() {
     }
   };
 
+  // ======================================================
+  // USEEFFECTS
+  // ======================================================
+  useEffect(() => {
+    fetchTutors();
+  }, [filterStudentId]);
+
+  useEffect(() => {
+    fetchStudents();
+  }, []);
+
+  // ======================================================
+  // DATOS DERIVADOS
+  // ======================================================
+  const filteredTutors = [...tutors]
+    .filter((t) => {
+      const textName = searchFirstLastName.toLowerCase();
+
+      const matchName =
+        !textName ||
+        t.first_name?.toLowerCase().includes(textName) ||
+        t.last_name?.toLowerCase().includes(textName);
+
+      const textDNI = searchDNI;
+
+      const matchDNI = !textDNI || t.dni?.toString().includes(textDNI);
+
+      return matchName && matchDNI;
+    })
+    .sort(sortByPersonName);
+
+  const showCreateButtons = isAdmin();
+
+  const tableTitle = (
+    <div className="flex justify-between items-center">
+      <span>Tutores</span>
+
+      {showCreateButtons && (
+        <PlusButton title="Crear Materia" onClick={openCreate} />
+      )}
+    </div>
+  );
+
+  const mapErrors = (errors) => {
+    const formatted = {};
+
+    errors.forEach((e) => {
+      formatted[e.path] = e.msg;
+    });
+    return formatted;
+  };
+
   let columns = [
     { header: "Apellidos", accessor: "last_name" },
     { header: "Nombres", accessor: "first_name" },
@@ -362,70 +411,20 @@ export function Tutors() {
       header: "Acciones",
       render: (row) => (
         <div className="flex gap-2">
-          <Button
-            title="Editar"
-            size="sm"
-            onClick={() => handleEdit(row)}
-            className={buttonClass}
-          >
-            <PencilIcon className="w-5 h-5" />
-          </Button>
+          <EditButton title="Editar Tutor" onClick={() => handleEdit(row)} />
 
-          <Button
-            title="Eliminar"
-            size="sm"
-            variant="outline"
+          <DeleteButton
+            title="Eliminar Tutor"
             onClick={() => handleDelete(row)}
-            className={buttonClass}
-          >
-            <TrashBinIcon className="w-5 h-5" />
-          </Button>
+          />
         </div>
       ),
     });
   }
 
-  const showCreateButtons = isAdmin();
-
-  const tableTitle = (
-    <div className="flex justify-between items-center">
-      <span>Tutores</span>
-
-      {showCreateButtons && (
-        <Button
-          title="Crear Tutor"
-          size="sm"
-          onClick={openCreate}
-          className="
-            cursor-pointer
-            w-12
-            h-12
-            rounded
-            bg-[#0cc0df]
-            text-white
-            flex
-            items-center
-            justify-center
-            transition
-            transform
-            hover:scale-105
-          "
-        >
-          <img
-            src={CreateIcon}
-            alt="More"
-            className="
-              w-5
-              h-5
-              brightness-0
-              invert
-            "
-          />
-        </Button>
-      )}
-    </div>
-  );
-
+  // ======================================================
+  // RETURN
+  // ======================================================
   return (
     <>
       <div className="flex gap-3 mb-4 flex-wrap">
@@ -564,47 +563,14 @@ export function Tutors() {
         </div>
 
         <div className="flex justify-end gap-4 mt-10">
-          {/* <Button
-            variant="outline"
-            onClick={() => {
-              setOpenCreateModal(false);
-              resetForm();
-            }}
-            className={buttonClass}
-          >
-            Cancelar
-          </Button> */}
-
-          <Button
-            title="Guardar"
-            size="icon"
-            onClick={handleCreate}
-            className="
-              cursor-pointer
-              w-12
-              h-12
-              rounded
-              bg-[#0cc0df]
-              text-white
-              flex
-              items-center
-              justify-center
-              transition
-              transform
-              hover:scale-105
-            "
-          >
-            <img
-              src={SaveIcon}
-              alt="Guardar"
-              className="
-                w-5
-                h-5
-                brightness-0
-                invert
-              "
+          <div className="flex justify-end gap-3">
+            <NoButton
+              title="Cancelar"
+              onClick={() => setOpenCreateModal(false)}
             />
-          </Button>
+
+            <YesButton title="Aceptar" onClick={handleCreate} />
+          </div>
         </div>
       </Modal>
 
@@ -702,47 +668,9 @@ export function Tutors() {
         </div>
 
         <div className="flex justify-end gap-4 mt-10">
-          {/* <Button
-            variant="outline"
-            onClick={() => {
-              setOpenEditModal(false);
-              resetForm();
-            }}
-            className={buttonClass}
-          >
-            Cancelar
-          </Button> */}
+          <NoButton title="Cancelar" onClick={() => setOpenEditModal(false)} />
 
-          <Button
-            title="Guardar"
-            size="icon"
-            onClick={handleUpdate}
-            className="
-                        cursor-pointer
-                        w-12
-                        h-12
-                        rounded
-                        bg-[#0cc0df]
-                        text-white
-                        flex
-                        items-center
-                        justify-center
-                        transition
-                        transform
-                        hover:scale-105
-                      "
-          >
-            <img
-              src={SaveIcon}
-              alt="Guardar"
-              className="
-                          w-5
-                          h-5
-                          brightness-0
-                          invert
-                        "
-            />
-          </Button>
+          <YesButton title="Aceptar" onClick={handleUpdate} />
         </div>
       </Modal>
 
@@ -750,17 +678,12 @@ export function Tutors() {
         <h2 className="text-lg font-semibold mb-4">¿Eliminar Tutor?</h2>
 
         <div className="flex justify-end gap-2">
-          <Button
-            variant="outline"
+          <NoButton
+            title="Cancelar"
             onClick={() => setOpenDeleteModal(false)}
-            className={buttonClass}
-          >
-            No
-          </Button>
+          />
 
-          <Button onClick={confirmDelete} className={buttonClass}>
-            Sí
-          </Button>
+          <YesButton title="Aceptar" onClick={confirmDelete} />
         </div>
       </Modal>
     </>
