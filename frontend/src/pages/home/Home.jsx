@@ -18,7 +18,7 @@ export const Home = () => {
   const loadDashboard = async () => {
     try {
       const response = await DashboardService.getStats();
-      setDashboard(response.data.data);
+      setDashboard(response.data);
     } catch (error) {
       console.error(error);
     } finally {
@@ -42,8 +42,17 @@ export const Home = () => {
     );
   }
 
+  // El docente puede no tener un profesor asociado todavía.
+  if (!dashboard.hasTeacher) {
+    return (
+      <article className="p-6">
+        <p>{dashboard.message}</p>
+      </article>
+    );
+  }
+
   const { cards, studentsByLevel, studentsByPlan, studentsPerTeacher } =
-    dashboard;
+    dashboard.data;
 
   const isAdmin = user?.role === "ADMIN";
 
@@ -53,7 +62,11 @@ export const Home = () => {
       {/* TARJETAS */}
       {/* ===================== */}
 
-      <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-5">
+      <div
+        className={`grid grid-cols-1 gap-5 sm:grid-cols-2 ${
+          isAdmin ? "xl:grid-cols-5" : "xl:grid-cols-2"
+        }`}
+      >
         {isAdmin ? (
           <>
             <StatCard
@@ -63,14 +76,14 @@ export const Home = () => {
             />
 
             <StatCard
-              title="Alumnos que pagaron"
-              value={cards.studentsPaid}
+              title="Planes pagados"
+              value={cards.paidPlans}
               color="text-green-600"
             />
 
             <StatCard
-              title="Alumnos que deben"
-              value={cards.studentsDebt}
+              title="Planes pendientes"
+              value={cards.pendingPlans}
               color="text-red-600"
             />
 
@@ -92,24 +105,6 @@ export const Home = () => {
               title="Alumnos activos"
               value={cards.students}
               color="text-blue-600"
-            />
-
-            <StatCard
-              title="Docentes"
-              value={cards.teachers}
-              color="text-green-600"
-            />
-
-            <StatCard
-              title="Planes"
-              value={cards.plans}
-              color="text-purple-600"
-            />
-
-            <StatCard
-              title="Materias"
-              value={cards.subjects}
-              color="text-orange-600"
             />
 
             <StatCard
@@ -143,14 +138,16 @@ export const Home = () => {
         </ComponentCard>
       </div>
 
-      <ComponentCard title="Alumnos por docente">
-        <BarChartOne
-          title="Cantidad"
-          categories={studentsPerTeacher.map((item) => item.teacher)}
-          data={studentsPerTeacher.map((item) => item.total)}
-          height={350}
-        />
-      </ComponentCard>
+      {isAdmin && (
+        <ComponentCard title="Alumnos por docente">
+          <BarChartOne
+            title="Cantidad"
+            categories={studentsPerTeacher.map((item) => item.teacher)}
+            data={studentsPerTeacher.map((item) => item.total)}
+            height={350}
+          />
+        </ComponentCard>
+      )}
     </article>
   );
 };
