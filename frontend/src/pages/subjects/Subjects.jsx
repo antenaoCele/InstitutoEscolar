@@ -58,12 +58,6 @@ export function Subjects() {
   // ======================================================
   const buttonClass = "cursor-pointer transition transform hover:scale-105";
 
-  const inputClass = (error) =>
-    `w-full p-2 border rounded mb-1
-    border-gray-300
-    focus:outline-none focus:ring-1 focus:ring-[#0cc0df] focus:border-[#0cc0df]
-    ${error ? "border-red-500 focus:ring-red-500 focus:border-red-500" : ""}`;
-
   // ======================================================
   // FETCH DATOS PRINCIPALES
   // ======================================================
@@ -320,9 +314,8 @@ export function Subjects() {
       >
         <h2 className="text-xl font-bold mb-8">Crear Materia</h2>
 
-        <Label className="font-semibold mb-2">Nombre</Label>
+        <Label>Nombre</Label>
         <Input
-          className={inputClass(errorsCreate.name)}
           value={name}
           onChange={(e) => setName(e.target.value)}
           error={errorsCreate.name}
@@ -349,9 +342,8 @@ export function Subjects() {
       >
         <h2 className="text-xl font-bold mb-8">Editar Materia</h2>
 
-        <Label className="font-semibold mb-2">Nombre</Label>
+        <Label>Nombre</Label>
         <Input
-          className={inputClass(errorsEdit.name)}
           value={name}
           onChange={(e) => setName(e.target.value)}
           error={errorsEdit.name}
