@@ -5,5 +5,7 @@ export const PlanPriceService = {
   getById: (id) => api.get(`/plan_prices/${id}`),
   create: (data) => api.post("/plan_prices", data),
   update: (id, data) => api.put(`/plan_prices/${id}`, data),
+  changePrice: (planId, data) =>
+    api.put(`/plan_prices/change-price/${planId}`, data),
   delete: (id) => api.delete(`/plan_prices/${id}`),
 };
