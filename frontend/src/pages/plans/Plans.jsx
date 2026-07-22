@@ -732,9 +732,10 @@ export function Plans() {
           onChange={(e) => setPrice(e.target.value)}
           error={errorsEdit.price}
         />
-        <p className="text-sm italic text-gray-500">
+        <p className="text-sm italic text-gray-500 text-justify">
           Al guardar, el precio quedará vigente desde hoy. Podrá corregirlo
-          todas las veces que sea necesario durante el día de hoy.{" "}
+          todas las veces que sea necesario durante el día de hoy. <br />
+          <br />
           <strong>
             A partir de mañana ya no podrá modificar este precio y las
             actualizaciones solo estarán habilitadas entre los días 1 y 5 de
@@ -791,7 +792,9 @@ export function Plans() {
           {feedbackModal.type === "error" ? "Error" : "Listo"}
         </h2>
 
-        <p className="text-gray-600">{feedbackModal.message}</p>
+        <p className="text-gray-600 text-justify whitespace-pre-line leading-6">
+          {feedbackModal.message}
+        </p>
       </Modal>
     </>
   );

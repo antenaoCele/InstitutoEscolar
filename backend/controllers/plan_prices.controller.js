@@ -51,9 +51,11 @@ export const planPricesController = {
       };
 
       const today = new Date();
+
+      // => Para hacer pruebas, comentar:
       const day = today.getDate();
 
-      // Para pruebas:
+      // Para hacer pruebas, descomentar:
       // const day = 3;
 
       if (day < 1 || day > 5) {
