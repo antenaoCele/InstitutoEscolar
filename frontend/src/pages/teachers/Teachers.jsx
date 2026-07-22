@@ -358,7 +358,7 @@ export function Teachers() {
     columns.splice(3, 0, { header: "DNI", accessor: "dni" });
 
     columns.push({
-      header: "Usuario",
+      header: "Usuarios",
       render: (row) => (row.has_user ? row.username : "Sin usuario"),
     });
   }
