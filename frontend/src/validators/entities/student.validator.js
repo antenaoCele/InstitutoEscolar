@@ -27,45 +27,45 @@ export const validateStudentForm = ({
   if (isRequired(firstName)) {
     errors.first_name = "Campo obligatorio.";
   } else if (!isValidPersonName(firstName)) {
-    errors.first_name = "Nombre inválido.";
+    errors.first_name = "Formato inválido.";
   }
 
   if (isRequired(lastName)) {
     errors.last_name = "Campo obligatorio.";
   } else if (!isValidPersonName(lastName)) {
-    errors.last_name = "Apellido inválido.";
+    errors.last_name = "Formato inválido.";
   }
 
   if (isRequired(dni)) {
     errors.dni = "Campo obligatorio.";
   } else if (!isNumericDNI(dni)) {
-    errors.dni = "Este campo no puede contener un DNI no válido.";
+    errors.dni = "Formato inválido.";
   } else if (!isValidDNI(dni)) {
-    errors.dni = "Ingrese un DNI válido.";
+    errors.dni = "Formato inválido.";
   }
 
   if (isRequired(school)) {
     errors.school = "Campo obligatorio.";
   } else if (!isValidName(school)) {
-    errors.school = "Este campo no puede contener caracteres no válidos.";
+    errors.school = "Formato inválido.";
   }
 
   if (isRequired(birthDate)) {
     errors.birth_date = "Campo obligatorio.";
   } else if (!isValidBirthDate(birthDate)) {
-    errors.birth_date = "Ingrese una fecha de nacimiento válida.";
+    errors.birth_date = "Formato inválido.";
   }
 
   if (isRequired(level)) {
-    errors.level = "Seleccione una opción válida.";
+    errors.level = "Seleccione una opción.";
   } else if (!isValidLevel(level)) {
-    errors.level = "Seleccione una opción válida.";
+    errors.level = "Selección inválida.";
   }
 
   if (isRequired(grade)) {
-    errors.grade = "Seleccione una opción válida.";
+    errors.grade = "Seleccione una opción.";
   } else if (!isValidGrade(grade)) {
-    errors.grade = "Seleccione una opción válida.";
+    errors.grade = "Selección inválida.";
   }
 
   return errors;

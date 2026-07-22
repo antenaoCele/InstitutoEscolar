@@ -5,6 +5,7 @@ import { teacherService } from "../../services/teacher.service";
 import { planService } from "../../services/plan.service";
 import Label from "../../components/form/Label";
 import Button from "../../components/ui/Button";
+import Checkbox from "../../components/form/Checkbox";
 import Input from "../../components/form/Input";
 import Select from "../../components/form/Select";
 import SubmitButton from "../../components/form/SubmitButton";
@@ -50,10 +51,6 @@ export function Students() {
   const [openEditModal, setOpenEditModal] = useState(false);
   const [openDeleteModal, setOpenDeleteModal] = useState(false);
   const [openViewModal, setOpenViewModal] = useState(false);
-
-  // ======================================================
-  // MODAL DE FEEDBACK (hook compartido, reemplaza alert())
-  // ======================================================
   const { feedbackModal, showFeedback, closeFeedback } = useFeedbackModal();
 
   // ======================================================
@@ -84,11 +81,6 @@ export function Students() {
   // ======================================================
   const [errorsCreate, setErrorsCreate] = useState({});
   const [errorsEdit, setErrorsEdit] = useState({});
-
-  // ======================================================
-  // CONSTANTES
-  // ======================================================
-  const buttonClass = "cursor-pointer transition transform hover:scale-105";
 
   // ======================================================
   // FETCH DATOS PRINCIPALES
@@ -447,6 +439,8 @@ export function Students() {
   // ======================================================
   // DATOS DERIVADOS
   // ======================================================
+  const buttonClass = "cursor-pointer transition transform hover:scale-105";
+
   const filteredStudents = [...students]
     .filter((s) => {
       const textName = searchFirstLastName.toLowerCase();
@@ -554,9 +548,6 @@ export function Students() {
 
   const student = selectedStudent?.student;
 
-  // ======================================================
-  // BLOQUE REUTILIZABLE: checkboxes de planes (Crear/Editar)
-  // ======================================================
   const renderPlanCheckboxes = () => (
     <div className="mt-6 border-t pt-4">
       <h2 className="text-xl font-bold mb-4">Asignar Clases</h2>
@@ -577,14 +568,11 @@ export function Students() {
                 shadow-sm
               "
             >
-              <label className="flex items-center gap-2 font-medium cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={!!row}
-                  onChange={(e) => togglePlan(plan.id, e.target.checked)}
-                />
-                {plan.name}
-              </label>
+              <Checkbox
+                label={plan.name}
+                checked={!!row}
+                onChange={(checked) => togglePlan(plan.id, checked)}
+              />
 
               {row && (
                 <Select
@@ -712,44 +700,44 @@ export function Students() {
       >
         <h2 className="text-xl font-bold mb-8">Crear Estudiante</h2>
 
+        <Label>Nombre</Label>
         <Input
-          label="Nombre"
           value={firstName}
           onChange={(e) => setFirstName(e.target.value)}
           error={errorsCreate.first_name}
         />
 
+        <Label>Apellido</Label>
         <Input
-          label="Apellido"
           value={lastName}
           onChange={(e) => setLastName(e.target.value)}
           error={errorsCreate.last_name}
         />
 
+        <Label>DNI</Label>
         <Input
-          label="DNI"
           value={dni}
           onChange={(e) => setDni(e.target.value)}
           error={errorsCreate.dni}
         />
 
+        <Label>Colegio o universidad</Label>
         <Input
-          label="Colegio o Universidad"
           value={school}
           onChange={(e) => setSchool(e.target.value)}
           error={errorsCreate.school}
         />
 
+        <Label>Fecha de nacimiento</Label>
         <Input
-          label="Fecha de nacimiento"
           type="date"
           value={birthDate}
           onChange={(e) => setBirthDate(e.target.value)}
           error={errorsCreate.birth_date}
         />
 
+        <Label>Nivel </Label>
         <Select
-          label="Nivel"
           value={level}
           onChange={(e) => setLevel(e.target.value)}
           error={errorsCreate.level}
@@ -761,8 +749,8 @@ export function Students() {
           <option value="Universitario">Universitario</option>
         </Select>
 
+        <Label>Grado o año</Label>
         <Select
-          label="Grado o año"
           value={grade}
           onChange={(e) => setGrade(e.target.value)}
           error={errorsCreate.grade}
@@ -799,20 +787,21 @@ export function Students() {
       >
         <h2 className="text-xl font-bold mb-8">Editar Estudiante</h2>
 
+        <Label>Nombre</Label>
         <Input
-          label="Nombre"
           value={firstName}
           onChange={(e) => setFirstName(e.target.value)}
           error={errorsEdit.first_name}
         />
 
+        <Label>Apellido</Label>
         <Input
-          label="Apellido"
           value={lastName}
           onChange={(e) => setLastName(e.target.value)}
           error={errorsEdit.last_name}
         />
 
+        <Label>DNI</Label>
         <Input
           label="DNI"
           value={dni}
@@ -820,23 +809,23 @@ export function Students() {
           error={errorsEdit.dni}
         />
 
+        <Label>Colegio o universidad</Label>
         <Input
-          label="Colegio o Universidad"
           value={school}
           onChange={(e) => setSchool(e.target.value)}
           error={errorsEdit.school}
         />
 
+        <Label>Fecha de nacimiento</Label>
         <Input
-          label="Fecha de nacimiento"
           type="date"
           value={birthDate}
           onChange={(e) => setBirthDate(e.target.value)}
           error={errorsEdit.birth_date}
         />
 
+        <Label>Nivel</Label>
         <Select
-          label="Nivel"
           value={level}
           onChange={(e) => setLevel(e.target.value)}
           error={errorsEdit.level}
@@ -848,8 +837,8 @@ export function Students() {
           <option value="Universitario">Universitario</option>
         </Select>
 
+        <Label>Grado o año</Label>
         <Select
-          label="Grado o año"
           value={grade}
           onChange={(e) => setGrade(e.target.value)}
           error={errorsEdit.grade}
@@ -1017,10 +1006,6 @@ export function Students() {
         </h2>
 
         <p className="text-gray-600">{feedbackModal.message}</p>
-
-        <div className="flex justify-end mt-6">
-          <Button onClick={closeFeedback}>Cerrar</Button>
-        </div>
       </Modal>
     </>
   );
