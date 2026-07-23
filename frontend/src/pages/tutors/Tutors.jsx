@@ -70,12 +70,6 @@ export function Tutors() {
   // ======================================================
   const buttonClass = "cursor-pointer transition transform hover:scale-105";
 
-  const inputClass = (error) =>
-    `w-full p-2 border rounded mb-1 
-    border-gray-300
-    focus:outline-none focus:ring-1 focus:ring-[#0cc0df] focus:border-[#0cc0df]
-    ${error ? "border-red-500 focus:ring-red-500 focus:border-red-500" : ""}`;
-
   // ======================================================
   // FETCH DATOS PRINCIPALES
   // ======================================================
@@ -519,6 +513,7 @@ export function Tutors() {
 
         <Label>DNI</Label>
         <Input
+          type="number"
           value={dni}
           onChange={(e) => setDni(e.target.value)}
           error={errorsCreate.dni}
@@ -526,6 +521,7 @@ export function Tutors() {
 
         <Label>Teléfono</Label>
         <Input
+          type="number"
           value={phone}
           onChange={(e) => setPhone(e.target.value)}
           error={errorsCreate.phone}
@@ -570,6 +566,7 @@ export function Tutors() {
 
         <Label>DNI</Label>
         <Input
+          type="number"
           value={dni}
           onChange={(e) => setDni(e.target.value)}
           error={errorsEdit.dni}
@@ -577,6 +574,7 @@ export function Tutors() {
 
         <Label>Teléfono</Label>
         <Input
+          type="number"
           value={phone}
           onChange={(e) => setPhone(e.target.value)}
           error={errorsEdit.phone}

@@ -13,7 +13,10 @@ import {
   YesButton,
   NoButton,
 } from "../../components/ui/ActionButtons";
-import { sortByProperty, sortByPersonName } from "../../utils/sort";
+import { sortByProperty } from "../../utils/sort";
+import { mapErrors } from "../../validators/helpers/errorHelpers";
+import { useFeedbackModal } from "../../hooks/useFeedbackModal";
+import { validateSubjectForm } from "../../validators/entities/subjects.validator";
 
 export function Subjects() {
   // ======================================================
@@ -32,6 +35,7 @@ export function Subjects() {
   const [openCreateModal, setOpenCreateModal] = useState(false);
   const [openEditModal, setOpenEditModal] = useState(false);
   const [openDeleteModal, setOpenDeleteModal] = useState(false);
+  const { feedbackModal, showFeedback, closeFeedback } = useFeedbackModal();
 
   // ======================================================
   // MATERIA SELECCIONADA
@@ -42,7 +46,6 @@ export function Subjects() {
   // FORMULARIO DE LA MATERIA
   // ======================================================
   const [name, setName] = useState("");
-  // const [selectedTeacher, setSelectedTeacher] = useState("");
 
   // ======================================================
   // ERRORES
@@ -54,12 +57,6 @@ export function Subjects() {
   // CONSTANTES
   // ======================================================
   const buttonClass = "cursor-pointer transition transform hover:scale-105";
-
-  const inputClass = (error) =>
-    `w-full p-2 border rounded mb-1
-    border-gray-300
-    focus:outline-none focus:ring-1 focus:ring-[#0cc0df] focus:border-[#0cc0df]
-    ${error ? "border-red-500 focus:ring-red-500 focus:border-red-500" : ""}`;
 
   // ======================================================
   // FETCH DATOS PRINCIPALES
@@ -83,20 +80,13 @@ export function Subjects() {
   const resetForm = () => {
     setName("");
     setSelectedSubject(null);
+    setErrorsCreate({});
+    setErrorsEdit({});
   };
 
   // ======================================================
   // FUNCIONES AUXILIARES
   // ======================================================
-  const mapErrors = (errors) => {
-    const formatted = {};
-
-    errors.forEach((e) => {
-      formatted[e.path] = e.msg;
-    });
-
-    return formatted;
-  };
 
   // ======================================================
   // HANDLES CRUD
@@ -107,29 +97,37 @@ export function Subjects() {
   };
 
   const handleCreate = async () => {
+    const errors = validateSubjectForm({
+      name,
+    });
+
+    if (Object.keys(errors).length > 0) {
+      setErrorsCreate(errors);
+      return;
+    }
+
     try {
       setErrorsCreate({});
-
-      if (!name.trim()) {
-        setErrorsCreate({
-          name: "Campo obligatorio.",
-        });
-
-        return;
-      }
 
       await subjectService.create({ name });
 
       setOpenCreateModal(false);
-
+      fetchSubjects();
       resetForm();
 
-      fetchSubjects();
+      showFeedback("Materia creada correctamente.", "success");
     } catch (error) {
+      console.error(error.response?.data || error.message);
+
       const backendErrors = error.response?.data?.errors;
 
       if (backendErrors) {
         setErrorsCreate(mapErrors(backendErrors));
+      } else {
+        showFeedback(
+          error.response?.data?.message || "Error al crear la materia.",
+          "error",
+        );
       }
     }
   };
@@ -141,29 +139,37 @@ export function Subjects() {
   };
 
   const handleUpdate = async () => {
+    const errors = validateSubjectForm({
+      name,
+    });
+
+    if (Object.keys(errors).length > 0) {
+      setErrorsEdit(errors);
+      return;
+    }
+
     try {
       setErrorsEdit({});
-
-      if (!name.trim()) {
-        setErrorsEdit({
-          name: "Campo obligatorio.",
-        });
-
-        return;
-      }
 
       await subjectService.update(selectedSubject.id, { name });
 
       setOpenEditModal(false);
-
+      fetchSubjects();
       resetForm();
 
-      fetchSubjects();
+      showFeedback("Materia actualizada correctamente.", "success");
     } catch (error) {
+      console.error(error.response?.data || error.message);
+
       const backendErrors = error.response?.data?.errors;
 
       if (backendErrors) {
         setErrorsEdit(mapErrors(backendErrors));
+      } else {
+        showFeedback(
+          error.response?.data?.message || "Error al editar la materia.",
+          "error",
+        );
       }
     }
   };
@@ -178,12 +184,18 @@ export function Subjects() {
       await subjectService.delete(selectedSubject.id);
 
       setOpenDeleteModal(false);
-
       fetchSubjects();
-    } catch (error) {
-      console.error(error);
 
-      alert(error.response?.data?.message || "Error al eliminar");
+      showFeedback("Materia eliminada correctamente.", "success");
+    } catch (error) {
+      console.error(error.response?.data || error.message);
+
+      setOpenDeleteModal(false);
+
+      showFeedback(
+        error.response?.data?.message || "Error al eliminar la materia.",
+        "error",
+      );
     }
   };
 
@@ -302,19 +314,12 @@ export function Subjects() {
       >
         <h2 className="text-xl font-bold mb-8">Crear Materia</h2>
 
-        <div className="flex flex-col mb-6">
-          <Label className="font-semibold mb-2">Nombre</Label>
-
-          <Input
-            className={inputClass(errorsCreate.name)}
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-          />
-
-          {errorsCreate.name && (
-            <p className="text-red-500 text-sm mt-1">{errorsCreate.name}</p>
-          )}
-        </div>
+        <Label>Nombre</Label>
+        <Input
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          error={errorsCreate.name}
+        />
 
         <div className="flex justify-end gap-4 mt-10">
           <div className="flex justify-end gap-3">
@@ -337,19 +342,12 @@ export function Subjects() {
       >
         <h2 className="text-xl font-bold mb-8">Editar Materia</h2>
 
-        <div className="flex flex-col mb-6">
-          <Label className="font-semibold mb-2">Nombre</Label>
-
-          <Input
-            className={inputClass(errorsEdit.name)}
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-          />
-
-          {errorsEdit.name && (
-            <p className="text-red-500 text-sm mt-1">{errorsEdit.name}</p>
-          )}
-        </div>
+        <Label>Nombre</Label>
+        <Input
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          error={errorsEdit.name}
+        />
 
         <div className="flex justify-end gap-4 mt-10">
           <NoButton title="Cancelar" onClick={() => setOpenEditModal(false)} />
@@ -369,6 +367,18 @@ export function Subjects() {
 
           <YesButton title="Aceptar" onClick={confirmDelete} />
         </div>
+      </Modal>
+
+      <Modal isOpen={feedbackModal.open} onClose={closeFeedback}>
+        <h2
+          className={`text-lg font-semibold mb-4 ${
+            feedbackModal.type === "error" ? "text-red-600" : "text-green-600"
+          }`}
+        >
+          {feedbackModal.type === "error" ? "Error" : "Listo"}
+        </h2>
+
+        <p className="text-gray-600">{feedbackModal.message}</p>
       </Modal>
     </>
   );

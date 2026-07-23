@@ -368,7 +368,7 @@ export function Teachers() {
     columns.splice(3, 0, { header: "DNI", accessor: "dni" });
 
     columns.push({
-      header: "Usuario",
+      header: "Usuarios",
       render: (row) => (row.has_user ? row.username : "Sin usuario"),
     });
   }
@@ -448,29 +448,31 @@ export function Teachers() {
       >
         <h2 className="text-xl font-bold mb-8">Crear Docente</h2>
 
+        <Label>Nombre</Label>
         <Input
-          label="Nombre"
           value={firstName}
           onChange={(e) => setFirstName(e.target.value)}
           error={errorsCreate.first_name}
         />
 
+        <Label>Apellido</Label>
         <Input
-          label="Apellido"
           value={lastName}
           onChange={(e) => setLastName(e.target.value)}
           error={errorsCreate.last_name}
         />
 
+        <Label>DNI</Label>
         <Input
-          label="DNI"
+          type="number"
           value={dni}
           onChange={(e) => setDni(e.target.value)}
           error={errorsCreate.dni}
         />
 
+        <Label>Teléfono</Label>
         <Input
-          label="Teléfono"
+          type="number"
           value={phone}
           onChange={(e) => setPhone(e.target.value)}
           error={errorsCreate.phone}
@@ -512,36 +514,38 @@ export function Teachers() {
       >
         <h2 className="text-xl font-bold mb-8">Editar Docente</h2>
 
+        <Label>Nombre</Label>
         <Input
-          label="Nombre"
           value={firstName}
           onChange={(e) => setFirstName(e.target.value)}
           error={errorsEdit.first_name}
         />
 
+        <Label>Apellido</Label>
         <Input
-          label="Apellido"
           value={lastName}
           onChange={(e) => setLastName(e.target.value)}
           error={errorsEdit.last_name}
         />
 
+        <Label>DNI</Label>
         <Input
-          label="DNI"
+          type="number"
           value={dni}
           onChange={(e) => setDni(e.target.value)}
           error={errorsEdit.dni}
         />
 
+        <Label>Teléfono</Label>
         <Input
-          label="Teléfono"
+          type="number"
           value={phone}
           onChange={(e) => setPhone(e.target.value)}
           error={errorsEdit.phone}
         />
 
+        <Label>Usuario asignado</Label>
         <Select
-          label="Usuario asignado"
           value={userId}
           onChange={(e) => setUserId(e.target.value)}
           error={errorsEdit.user_id}

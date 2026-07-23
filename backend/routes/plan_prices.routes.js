@@ -17,6 +17,13 @@ const router = express.Router();
 
 router.get("/", authentication, planPricesController.getAll);
 
+router.put(
+  "/change-price/:planId",
+  authentication,
+  authorization("ADMIN"),
+  planPricesController.changePrice,
+);
+
 router.get(
   "/:id",
   authentication,
