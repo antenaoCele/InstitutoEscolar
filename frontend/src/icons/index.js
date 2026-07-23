@@ -53,6 +53,12 @@ import { ReactComponent as MoreDotIcon } from "./moredot.svg?react";
 import { ReactComponent as AlertHexaIcon } from "./alert-hexa.svg?react";
 import { ReactComponent as ErrorHexaIcon } from "./info-hexa.svg?react";
 import { ReactComponent as BirthdayIcon } from "./birthday.svg?react";
+import { ReactComponent as SubjectIcon } from "./libro.svg?react";
+import { ReactComponent as PlansIcon } from "./plans2.svg?react";
+import { ReactComponent as TutorIcon } from "./tutors.svg?react";
+import { ReactComponent as TeacherIcon } from "./teacher.svg?react";
+import { ReactComponent as DollarBagIcon } from "./dollar-bag.svg?react";
+import { ReactComponent as GainsIcon } from "./gains.svg?react";
 import SaveIcon from "./icons8-guardar-32.png";
 import MoreIcon from "./icons8-añadir-48-dos.png";
 import CreateIcon from "./icons8-crear-48.png";
@@ -63,21 +69,19 @@ import ViewIcon from "./icons8-ver-50.png";
 import YesIcon from "./icons8-check-mark-48.png";
 import NoIcon from "./icons8-cancel-48.png";
 import PlusSignIcon from "./icons8-añadir-48.png";
-import TutorsIcon from "./icons8-padre-50.png";
-import TutorIcon from "./icons8-tutor-50.png";
-import TeachersIcon from "./icons8-profesor-49.png";
-import SubjectsIcon from "./icons8-libro-50.png";
 import AssignTeacher from "./icons8-agregar-usuario-32.png";
 import BirthdaysIcon from "./icons8-cumpleaños-48.png";
 
 export {
+  GainsIcon,
+  DollarBagIcon,
+  PlansIcon,
+  SubjectIcon,
   BirthdayIcon,
   BirthdaysIcon,
   AssignTeacher,
   TutorIcon,
-  TutorsIcon,
-  TeachersIcon,
-  SubjectsIcon,
+  TeacherIcon,
   YesIcon,
   NoIcon,
   PlusSignIcon,
