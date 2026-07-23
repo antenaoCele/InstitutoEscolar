@@ -1,5 +1,6 @@
 import { useTheme } from "../../context/ThemeContext";
 import Switch from "../form/Switch";
+import { SunFatIcon, MoonIcon } from "../../icons";
 
 export const ThemeToggleButton = () => {
   const { theme, toggleTheme } = useTheme();
@@ -7,17 +8,17 @@ export const ThemeToggleButton = () => {
   const isDark = theme === "dark";
 
   return (
-    <Switch checked={isDark} onChange={toggleTheme}>
+    <Switch
+      checked={isDark}
+      onChange={toggleTheme}
+      title={isDark ? "Modo claro" : "Modo oscuro"}
+    >
       {/* Sol */}
-      <svg
+      <SunFatIcon
         className={`absolute left-2 w-3 h-3 transition-opacity ${
-          isDark ? "opacity-0" : "opacity-100 text-white"
+          isDark ? "opacity-0" : "opacity-100 text-yellow-400"
         }`}
-        viewBox="0 0 20 20"
-        fill="currentColor"
-      >
-        <path d="M10 7a3 3 0 100 6 3 3 0 000-6z" />
-      </svg>
+      />
 
       {/* Luna */}
       <svg

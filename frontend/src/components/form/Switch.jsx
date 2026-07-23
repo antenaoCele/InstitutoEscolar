@@ -5,11 +5,14 @@ export default function Switch({
   onChange,
   disabled = false,
   className = "",
+  title = "",
   children,
 }) {
   return (
     <Button
       type="button"
+      title={title}
+      aria-label={title}
       onClick={() => !disabled && onChange?.(!checked)}
       disabled={disabled}
       className={`
