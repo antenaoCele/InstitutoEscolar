@@ -11,6 +11,7 @@ import {
   NoIcon,
   PlusSignIcon,
   AssignTeacher,
+  CopyIcon,
 } from "../../icons";
 
 const baseClass =
@@ -209,6 +210,22 @@ export function AssignTeacherButton({ onClick, disabled = false, title = "" }) {
       }`}
     >
       <img src={AssignTeacher} alt="Asignar Docentes" className={imgClass} />
+    </Button>
+  );
+}
+
+export function CopyButton({ onClick, disabled = false, title = "" }) {
+  return (
+    <Button
+      title={title}
+      size="sm"
+      onClick={onClick}
+      disabled={disabled}
+      className={`${baseClass} ${
+        disabled ? "opacity-40 cursor-not-allowed hover:scale-100" : ""
+      }`}
+    >
+      <CopyIcon className="w-5 h-5" />
     </Button>
   );
 }
