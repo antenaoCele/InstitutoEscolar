@@ -1,8 +1,8 @@
 import api from "../utils/api";
 
 export const teacherLiquidationService = {
-  getAll: () => api.get("/teacher-liquidations"),
-  getById: (id) => api.get(`/teacher-liquidations/${id}`),
+  getAll: () => api.get("/teacher_liquidations"),
+  getById: (id) => api.get(`/teacher_liquidations/${id}`),
   getMonthly: (month, year) =>
-    api.get("/teacher-liquidations/monthly", { params: { month, year } }),
+    api.get("/teacher_liquidations/monthly", { params: { month, year } }),
 };

@@ -265,6 +265,7 @@ export function Students() {
 
         return {
           teacher_id: p.teacher_id,
+          original_teacher_id: p.teacher_id, // CAMBIO: guardamos el docente con el que arrancó, para detectar cambios al guardar
           plan_id: p.plan_id,
           student_plan_id: p.student_plan_id,
           start_date: p.start_date?.split("T")[0],
@@ -315,6 +316,19 @@ export function Students() {
         formClasses
           .filter((p) => p.teacher_id && p.plan_id)
           .map(async (p) => {
+            // CAMBIO: si ya existía la fila y el docente cambió, cerramos el plan viejo
+            // (conserva el docente original, para no alterar pagos pasados) y abrimos uno nuevo
+            if (p.student_plan_id && p.teacher_id !== p.original_teacher_id) {
+              await studentPlanService.delete(p.student_plan_id);
+
+              return studentPlanService.create({
+                student_id: selectedStudent.id,
+                teacher_id: p.teacher_id,
+                plan_id: p.plan_id,
+                start_date: new Date().toISOString().slice(0, 10),
+              });
+            }
+
             if (p.student_plan_id) {
               return studentPlanService.update(p.student_plan_id, {
                 student_id: selectedStudent.id,

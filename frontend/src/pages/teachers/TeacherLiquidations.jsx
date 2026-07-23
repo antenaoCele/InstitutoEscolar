@@ -92,10 +92,7 @@ export default function TeacherLiquidations() {
     },
     {
       header: "Mes",
-      render: (row) => {
-        const [y, m] = row.month.split("-");
-        return `${monthNames[Number(m) - 1]} ${y}`;
-      },
+      render: () => `${monthNames[month - 1]} ${year}`,
     },
     {
       header: "Total recaudado",

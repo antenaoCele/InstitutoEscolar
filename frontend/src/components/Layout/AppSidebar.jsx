@@ -32,7 +32,8 @@ const SidebarPngIcon = ({ src, alt }) => (
 
 const BRAND_COLOR = "#0cc0df";
 
-const navItems = [
+// navItems ahora es una función: arma la estructura según si el usuario es docente
+const getNavItems = (isTeacherRole) => [
   {
     icon: (
       <SidebarIcon>
@@ -50,16 +51,15 @@ const navItems = [
       </SidebarIcon>
     ),
     name: "Estudiantes",
-    subItems: [
-      {
-        name: "Estudiantes",
-        path: "/students",
-      },
-      {
-        name: "Pagos de estudiantes",
-        path: "/students/payments",
-      },
-    ],
+    // Docente: link directo a Estudiantes, sin "Pagos de estudiantes"
+    ...(isTeacherRole
+      ? { path: "/students" }
+      : {
+          subItems: [
+            { name: "Estudiantes", path: "/students" },
+            { name: "Pagos de estudiantes", path: "/students/payments" },
+          ],
+        }),
   },
 
   {
@@ -69,7 +69,13 @@ const navItems = [
       </SidebarIcon>
     ),
     name: "Docentes",
-    path: "/teachers",
+    subItems: [
+      { name: "Ver docentes", path: "/teachers" },
+      // "Sueldos" oculto para rol docente
+      ...(isTeacherRole
+        ? []
+        : [{ name: "Sueldos", path: "/teachers/liquidations" }]),
+    ],
   },
 
   {
@@ -100,14 +106,8 @@ const navItems = [
     ),
     name: "Horarios",
     subItems: [
-      {
-        name: "Calendario Semanal",
-        path: "/schedules?view=weekly",
-      },
-      {
-        name: "Calendario Mensual",
-        path: "/schedules?view=monthly",
-      },
+      { name: "Calendario Semanal", path: "/schedules?view=weekly" },
+      { name: "Calendario Mensual", path: "/schedules?view=monthly" },
     ],
   },
 
@@ -135,13 +135,18 @@ const navItems = [
 const AppSidebar = () => {
   const { user: currentUser } = useAuth();
 
-  const isCurrentUserAdmin = currentUser?.role?.toLowerCase() === "admin";
+  const role = currentUser?.role?.toLowerCase();
+  const isCurrentUserAdmin = role === "admin";
+  const isTeacherRole = role === "docente";
+
+  const navItems = getNavItems(isTeacherRole);
 
   const filteredNavItems = isCurrentUserAdmin
     ? navItems
     : navItems.filter(
         (item) => item.name !== "Usuarios" && item.name !== "Planes",
       );
+
   const {
     isExpanded,
     isMobileOpen,
