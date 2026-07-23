@@ -11,9 +11,11 @@ import {
   PageIcon,
   UserCircleIcon,
   GroupIcon,
-  TutorsIcon,
-  TeachersIcon,
-  SubjectsIcon,
+  FileIcon,
+  TutorIcon,
+  TeacherIcon,
+  SubjectIcon,
+  PlansIcon,
 } from "../../icons";
 
 const SidebarIcon = ({ children }) => (
@@ -40,6 +42,7 @@ const navItems = [
     name: "Inicio",
     path: "/",
   },
+
   {
     icon: (
       <SidebarIcon>
@@ -58,27 +61,43 @@ const navItems = [
       },
     ],
   },
-  {
-    icon: <SidebarPngIcon src={TeachersIcon} alt="Docentes" />,
-    name: "Docentes",
-    path: "/teachers",
-  },
-  {
-    icon: <SidebarPngIcon src={SubjectsIcon} alt="Materias" />,
-    name: "Materias",
-    path: "/subjects",
-  },
+
   {
     icon: (
       <SidebarIcon>
-        <PageIcon className="w-5 h-5" />
+        <TeacherIcon className="w-5 h-5" />
+      </SidebarIcon>
+    ),
+    name: "Docentes",
+    path: "/teachers",
+  },
+
+  {
+    icon: (
+      <SidebarIcon>
+        <FileIcon className="w-5 h-5" />
+      </SidebarIcon>
+    ),
+    name: "Materias",
+    path: "/subjects",
+  },
+
+  {
+    icon: (
+      <SidebarIcon>
+        <PlansIcon className="w-5 h-5" />
       </SidebarIcon>
     ),
     name: "Planes",
     path: "/plans",
   },
+
   {
-    icon: <CalenderIcon />,
+    icon: (
+      <SidebarIcon>
+        <CalenderIcon className="w-5 h-5" />
+      </SidebarIcon>
+    ),
     name: "Horarios",
     subItems: [
       {
@@ -91,11 +110,17 @@ const navItems = [
       },
     ],
   },
+
   {
-    icon: <SidebarPngIcon src={TutorsIcon} alt="Tutores" />,
+    icon: (
+      <SidebarIcon>
+        <TutorIcon className="w-5 h-5" />
+      </SidebarIcon>
+    ),
     name: "Tutores",
     path: "/tutors",
   },
+
   {
     icon: (
       <SidebarIcon>
