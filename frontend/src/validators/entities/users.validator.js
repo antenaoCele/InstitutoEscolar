@@ -27,21 +27,21 @@ export const validateUsersForm = (
   if (isRequired(first_name)) {
     errors.first_name = "Campo obligatorio.";
   } else if (!isValidPersonName(first_name)) {
-    errors.first_name = "Nombre inválido.";
+    errors.first_name = "Formato inválido.";
   }
 
   // Apellido
   if (isRequired(last_name)) {
     errors.last_name = "Campo obligatorio.";
   } else if (!isValidPersonName(last_name)) {
-    errors.last_name = "Apellido inválido.";
+    errors.last_name = "Formato inválido.";
   }
 
   // Username
   if (isRequired(username)) {
-    errors.username = "El nombre de usuario es obligatorio.";
+    errors.username = "Campo obligatorio.";
   } else if (!isValidUsername(username)) {
-    errors.username = "El nombre de usuario debe ser alfanumérico.";
+    errors.username = "Formato inválido.";
   }
 
   // Password
@@ -53,7 +53,7 @@ export const validateUsersForm = (
     }
   } else {
     if (isRequired(password)) {
-      errors.password = "La contraseña es obligatoria.";
+      errors.password = "Campo obligatorio.";
     } else if (!isValidPassword(password)) {
       errors.password =
         "La contraseña debe contener 8 caracteres como mínimo, una mayúscula, una minúscula, un número y un símbolo.";
@@ -62,9 +62,9 @@ export const validateUsersForm = (
 
   // Rol
   if (isRequired(role)) {
-    errors.role = "Seleccione un rol válido.";
+    errors.role = "Seleccione una opción.";
   } else if (!isValidRole(role)) {
-    errors.role = "Rol inválido.";
+    errors.role = "Selección inválida.";
   }
 
   return errors;

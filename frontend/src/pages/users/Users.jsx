@@ -1,25 +1,24 @@
 import { useEffect, useState } from "react";
-
 import BasicTable from "../../components/tables/BasicTables/BasicTablesOne";
 import Button from "../../components/ui/Button";
 import Label from "../../components/form/Label";
 import Input from "../../components/form/Input";
 import Select from "../../components/form/Select";
 import { Modal } from "../../components/ui/Modal";
-
 import { userService } from "../../services/user.service";
 import { isAdmin } from "../../utils/auth";
-import { mapErrors } from "../../validators/helpers/errorHelpers";
 import { validateUsersForm } from "../../validators/entities/users.validator";
-
 import {
-  PencilIcon,
-  TrashBinIcon,
-  CloseLineIcon,
-  SaveIcon,
-  MoreIcon,
-  CreateIcon,
-} from "../../icons";
+  ViewButton,
+  EditButton,
+  DeleteButton,
+  PlusButton,
+  YesButton,
+  NoButton,
+} from "../../components/ui/ActionButtons";
+import { sortByProperty, sortByPersonName } from "../../utils/sort";
+import { mapErrors } from "../../validators/helpers/errorHelpers";
+import { useFeedbackModal } from "../../hooks/useFeedbackModal";
 
 export function Users() {
   // ======================================================
@@ -39,6 +38,7 @@ export function Users() {
   const [openCreateModal, setOpenCreateModal] = useState(false);
   const [openEditModal, setOpenEditModal] = useState(false);
   const [openDeleteModal, setOpenDeleteModal] = useState(false);
+  const { feedbackModal, showFeedback, closeFeedback } = useFeedbackModal();
 
   // ======================================================
   // USUARIO SELECCIONADO
@@ -52,23 +52,18 @@ export function Users() {
   const [lastName, setLastName] = useState("");
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
-  const [role, setRole] = useState("DOCENTE");
+  const [role, setRole] = useState("");
 
   // ======================================================
   // ERRORES
   // ======================================================
-  const [errors, setErrors] = useState({});
+  const [errorsCreate, setErrorsCreate] = useState({});
+  const [errorsEdit, setErrorsEdit] = useState({});
 
   // ======================================================
   // CONSTANTES
   // ======================================================
   const buttonClass = "cursor-pointer transition transform hover:scale-105";
-
-  const inputClass = (error) =>
-    `w-full p-2 border rounded mb-1 
-    border-gray-300
-    focus:outline-none focus:ring-1 focus:ring-[#0cc0df] focus:border-[#0cc0df]
-    ${error ? "border-red-500 focus:ring-red-500 focus:border-red-500" : ""}`;
 
   // ======================================================
   // FETCH DATOS PRINCIPALES
@@ -98,9 +93,10 @@ export function Users() {
     setLastName("");
     setUsername("");
     setPassword("");
-    setRole("DOCENTE");
+    setRole("");
     setSelectedUser(null);
-    setErrors({});
+    setErrorsCreate({});
+    setErrorsEdit({});
   };
 
   // ======================================================
@@ -121,13 +117,13 @@ export function Users() {
     });
 
     if (Object.keys(formErrors).length > 0) {
-      setErrors(formErrors);
+      setErrorsCreate(formErrors);
       return;
     }
 
-    setErrors({});
-
     try {
+      setErrorsCreate({});
+
       await userService.create({
         first_name: firstName,
         last_name: lastName,
@@ -137,19 +133,27 @@ export function Users() {
       });
 
       setOpenCreateModal(false);
-      resetForm();
       fetchUsers();
+      resetForm();
+
+      showFeedback("Usuario creado correctamente.", "success");
     } catch (error) {
-      console.error(error);
+      console.error("Error al crear:", error.response?.data || error.message);
+
       const backendErrors = error.response?.data?.errors;
+
       if (backendErrors) {
-        setErrors(mapErrors(backendErrors));
+        setErrorsCreate(mapErrors(backendErrors));
+      } else {
+        showFeedback(
+          error.response?.data?.message || "Error al crear el usuario.",
+          "error",
+        );
       }
     }
   };
 
   const handleEdit = (user) => {
-    setErrors({});
     setSelectedUser(user);
 
     setFirstName(user.first_name || "");
@@ -158,6 +162,7 @@ export function Users() {
     setRole(user.role || "DOCENTE");
     setPassword("");
 
+    setErrorsEdit({});
     setOpenEditModal(true);
   };
 
@@ -176,13 +181,13 @@ export function Users() {
     );
 
     if (Object.keys(formErrors).length > 0) {
-      setErrors(formErrors);
+      setErrorsEdit(formErrors);
       return;
     }
 
-    setErrors({});
-
     try {
+      setErrorsEdit({});
+
       const payload = {
         first_name: firstName,
         last_name: lastName,
@@ -197,13 +202,22 @@ export function Users() {
       await userService.update(selectedUser.id, payload);
 
       setOpenEditModal(false);
-      resetForm();
       fetchUsers();
+      resetForm();
+
+      showFeedback("Usuario actualizado correctamente.", "success");
     } catch (error) {
-      console.error(error);
+      console.error(error.response?.data || error.message);
+
       const backendErrors = error.response?.data?.errors;
+
       if (backendErrors) {
-        setErrors(mapErrors(backendErrors));
+        setErrorsEdit(mapErrors(backendErrors));
+      } else {
+        showFeedback(
+          error.response?.data?.message || "Error al editar el usuario.",
+          "error",
+        );
       }
     }
   };
@@ -222,8 +236,17 @@ export function Users() {
       setOpenDeleteModal(false);
       setSelectedUser(null);
       fetchUsers();
+
+      showFeedback("Usuario eliminado correctamente.", "success");
     } catch (error) {
-      console.error("Error al eliminar usuario:", error);
+      console.error(error.response?.data || error.message);
+
+      setOpenDeleteModal(false);
+
+      showFeedback(
+        error.response?.data?.message || "Error al eliminar el usuario.",
+        "error",
+      );
     }
   };
 
@@ -273,24 +296,12 @@ export function Users() {
       header: "Acciones",
       render: (row) => (
         <div className="flex gap-2">
-          <Button
-            title="Editar"
-            size="sm"
-            onClick={() => handleEdit(row)}
-            className={buttonClass}
-          >
-            <PencilIcon className="w-5 h-5" />
-          </Button>
+          <EditButton title="Editar Tutor" onClick={() => handleEdit(row)} />
 
-          <Button
-            size="sm"
-            variant="outline"
+          <DeleteButton
+            title="Eliminar Tutor"
             onClick={() => handleDelete(row)}
-            className={buttonClass}
-            title="Eliminar"
-          >
-            <TrashBinIcon className="w-5 h-5" />
-          </Button>
+          />
         </div>
       ),
     });
@@ -300,38 +311,7 @@ export function Users() {
     <div className="flex justify-between items-center">
       <span>Usuarios</span>
 
-      {showActions && (
-        <Button
-          title="Crear Usuario"
-          size="sm"
-          onClick={openCreate}
-          className="
-            cursor-pointer
-            w-12
-            h-12
-            rounded
-            bg-[#0cc0df]
-            text-white
-            flex
-            items-center
-            justify-center
-            transition
-            transform
-            hover:scale-105
-          "
-        >
-          <img
-            src={CreateIcon}
-            alt="More"
-            className="
-              w-5
-              h-5
-              brightness-0
-              invert
-            "
-          />
-        </Button>
-      )}
+      {showActions && <PlusButton title="Crear Usuario" onClick={openCreate} />}
     </div>
   );
 
@@ -375,201 +355,120 @@ export function Users() {
         </div>
       )}
 
-      <Modal isOpen={openCreateModal} onClose={() => setOpenCreateModal(false)}>
+      <Modal
+        isOpen={openCreateModal}
+        onClose={() => {
+          setOpenCreateModal(false);
+          resetForm();
+        }}
+      >
         <h2 className="text-xl font-bold mb-8">Crear Usuario</h2>
 
-        <div className="flex flex-col mb-6">
-          <Label className="font-semibold mb-2">Nombre</Label>
-          <Input
-            value={firstName}
-            onChange={(e) => setFirstName(e.target.value)}
-            className={inputClass(errors.first_name)}
-          />
-          {errors.first_name && (
-            <p className="text-red-500 text-sm mt-1">{errors.first_name}</p>
-          )}
-        </div>
+        <Label>Nombre</Label>
+        <Input
+          value={firstName}
+          onChange={(e) => setFirstName(e.target.value)}
+          error={errorsCreate.first_name}
+        />
 
-        <div className="flex flex-col mb-6">
-          <Label className="font-semibold mb-2">Apellido</Label>
-          <Input
-            value={lastName}
-            onChange={(e) => setLastName(e.target.value)}
-            className={inputClass(errors.last_name)}
-          />
-          {errors.last_name && (
-            <p className="text-red-500 text-sm mt-1">{errors.last_name}</p>
-          )}
-        </div>
+        <Label>Apellido</Label>
+        <Input
+          value={lastName}
+          onChange={(e) => setLastName(e.target.value)}
+          error={errorsCreate.last_name}
+        />
 
-        <div className="flex flex-col mb-6">
-          <Label className="font-semibold mb-2">Usuario</Label>
-          <Input
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
-            className={inputClass(errors.username)}
-          />
-          {errors.username && (
-            <p className="text-red-500 text-sm mt-1">{errors.username}</p>
-          )}
-        </div>
+        <Label>Usuario</Label>
+        <Input
+          value={username}
+          onChange={(e) => setUsername(e.target.value)}
+          error={errorsCreate.username}
+        />
 
-        <div className="flex flex-col mb-6">
-          <Label className="font-semibold mb-2">Contraseña</Label>
-          <Input
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            className={inputClass(errors.password)}
-          />
-          {errors.password && (
-            <p className="text-red-500 text-sm mt-1">{errors.password}</p>
-          )}
-        </div>
+        <Label>Contraseña</Label>
+        <Input
+          type="password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          error={errorsCreate.password}
+        />
 
-        <div className="flex flex-col mb-6">
-          <Label className="font-semibold mb-2">Rol</Label>
-          <Select
-            value={role}
-            onChange={(e) => setRole(e.target.value)}
-            className={inputClass(errors.role)}
-          >
-            <option value="DOCENTE">Docente</option>
-            <option value="ADMIN">Administrador</option>
-          </Select>
-        </div>
+        <Label>Rol</Label>
+        <Select
+          value={role}
+          onChange={(e) => setRole(e.target.value)}
+          error={errorsCreate.role}
+        >
+          <option value="">Seleccione un rol</option>
+          <option value="DOCENTE">Docente</option>
+          <option value="ADMIN">Administrador</option>
+        </Select>
 
         <div className="flex justify-end gap-4 mt-10">
-          <Button
-            size="icon"
-            title="Guardar"
-            onClick={handleCreate}
-            className="
-              cursor-pointer
-              w-12
-              h-12
-              rounded
-              bg-[#0cc0df]
-              text-white
-              flex
-              items-center
-              justify-center
-              transition
-              transform
-              hover:scale-105
-            "
-          >
-            <img
-              src={SaveIcon}
-              alt="Guardar"
-              className="
-                w-5
-                h-5
-                brightness-0
-                invert
-              "
+          <div className="flex justify-end gap-3">
+            <NoButton
+              title="Cancelar"
+              onClick={() => setOpenCreateModal(false)}
             />
-          </Button>
+
+            <YesButton title="Aceptar" onClick={handleCreate} />
+          </div>
         </div>
       </Modal>
 
-      <Modal isOpen={openEditModal} onClose={() => setOpenEditModal(false)}>
+      <Modal
+        isOpen={openEditModal}
+        onClose={() => {
+          setOpenEditModal(false);
+          resetForm();
+        }}
+      >
         <h2 className="text-xl font-bold mb-8">Editar Usuario</h2>
 
-        <div className="flex flex-col mb-6">
-          <Label className="font-semibold mb-2">Nombre</Label>
-          <Input
-            value={firstName}
-            onChange={(e) => setFirstName(e.target.value)}
-            className={inputClass(errors.first_name)}
-          />
-          {errors.first_name && (
-            <p className="text-red-500 text-sm mt-1">{errors.first_name}</p>
-          )}
-        </div>
+        <Label>Nombre</Label>
+        <Input
+          value={firstName}
+          onChange={(e) => setFirstName(e.target.value)}
+          error={errorsEdit.first_name}
+        />
 
-        <div className="flex flex-col mb-6">
-          <Label className="font-semibold mb-2">Apellido</Label>
-          <Input
-            value={lastName}
-            onChange={(e) => setLastName(e.target.value)}
-            className={inputClass(errors.last_name)}
-          />
-          {errors.last_name && (
-            <p className="text-red-500 text-sm mt-1">{errors.last_name}</p>
-          )}
-        </div>
+        <Label>Apellido</Label>
+        <Input
+          value={lastName}
+          onChange={(e) => setLastName(e.target.value)}
+          error={errorsEdit.last_name}
+        />
 
-        <div className="flex flex-col mb-6">
-          <Label className="font-semibold mb-2">Usuario</Label>
-          <Input
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
-            className={inputClass(errors.username)}
-          />
-          {errors.username && (
-            <p className="text-red-500 text-sm mt-1">{errors.username}</p>
-          )}
-        </div>
+        <Label>Usuario</Label>
+        <Input
+          value={username}
+          onChange={(e) => setUsername(e.target.value)}
+          error={errorsEdit.username}
+        />
 
-        <div className="flex flex-col mb-6">
-          <Label className="font-semibold mb-2">
-            Nueva contraseña (opcional)
-          </Label>
-          <Input
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            className={inputClass(errors.password)}
-          />
-          {errors.password && (
-            <p className="text-red-500 text-sm mt-1">{errors.password}</p>
-          )}
-        </div>
+        <Label>Nueva contraseña (opcional)</Label>
+        <Input
+          type="password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          error={errorsEdit.password}
+        />
 
-        <div className="flex flex-col mb-6">
-          <Label className="font-semibold mb-2">Rol</Label>
-          <Select
-            value={role}
-            onChange={(e) => setRole(e.target.value)}
-            className={inputClass(errors.role)}
-          >
-            <option value="DOCENTE">Docente</option>
-            <option value="ADMIN">Administrador</option>
-          </Select>
-        </div>
+        <Label>Rol</Label>
+        <Select
+          value={role}
+          onChange={(e) => setRole(e.target.value)}
+          error={errorsEdit.role}
+        >
+          <option value="">Seleccione un rol</option>
+          <option value="DOCENTE">Docente</option>
+          <option value="ADMIN">Administrador</option>
+        </Select>
 
         <div className="flex justify-end gap-4 mt-10">
-          <Button
-            title="Guardar"
-            size="icon"
-            onClick={handleUpdate}
-            className="
-              cursor-pointer
-              w-12
-              h-12
-              rounded
-              bg-[#0cc0df]
-              text-white
-              flex
-              items-center
-              justify-center
-              transition
-              transform
-              hover:scale-105
-            "
-          >
-            <img
-              src={SaveIcon}
-              alt="Guardar"
-              className="
-                w-5
-                h-5
-                brightness-0
-                invert
-              "
-            />
-          </Button>
+          <NoButton title="Cancelar" onClick={() => setOpenEditModal(false)} />
+
+          <YesButton title="Aceptar" onClick={handleUpdate} />
         </div>
       </Modal>
 
@@ -577,18 +476,25 @@ export function Users() {
         <h2 className="text-lg font-semibold mb-4">¿Eliminar Usuario?</h2>
 
         <div className="flex justify-end gap-2">
-          <Button
-            variant="outline"
+          <NoButton
+            title="Cancelar"
             onClick={() => setOpenDeleteModal(false)}
-            className={buttonClass}
-          >
-            No
-          </Button>
+          />
 
-          <Button onClick={confirmDelete} className={buttonClass}>
-            Sí
-          </Button>
+          <YesButton title="Aceptar" onClick={confirmDelete} />
         </div>
+      </Modal>
+
+      <Modal isOpen={feedbackModal.open} onClose={closeFeedback}>
+        <h2
+          className={`text-lg font-semibold mb-4 ${
+            feedbackModal.type === "error" ? "text-red-600" : "text-green-600"
+          }`}
+        >
+          {feedbackModal.type === "error" ? "Error" : "Listo"}
+        </h2>
+
+        <p className="text-gray-600">{feedbackModal.message}</p>
       </Modal>
     </>
   );
