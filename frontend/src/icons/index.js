@@ -54,7 +54,7 @@ import { ReactComponent as AlertHexaIcon } from "./alert-hexa.svg?react";
 import { ReactComponent as ErrorHexaIcon } from "./info-hexa.svg?react";
 import { ReactComponent as BirthdayIcon } from "./birthday.svg?react";
 import { ReactComponent as SubjectIcon } from "./libro.svg?react";
-import { ReactComponent as PlansIcon } from "./plans2.svg?react";
+import { ReactComponent as PlansIcon } from "./plans3.svg?react";
 import { ReactComponent as TutorIcon } from "./tutors.svg?react";
 import { ReactComponent as TeacherIcon } from "./teacher.svg?react";
 import { ReactComponent as DollarBagIcon } from "./dollar-bag.svg?react";
