@@ -8,6 +8,7 @@ import Button from "../../components/ui/Button";
 import Label from "../../components/form/Label";
 import Input from "../../components/form/Input";
 import Select from "../../components/form/Select";
+import Switch from "../../components/form/Switch";
 import { Modal } from "../../components/ui/Modal";
 import { isAdmin } from "../../utils/auth";
 import {
@@ -18,6 +19,7 @@ import {
   YesButton,
   NoButton,
   AddButton,
+  CopyButton,
 } from "../../components/ui/ActionButtons";
 import { sortByPersonName } from "../../utils/sort";
 import { validateTeacher } from "../../validators/entities/teachers.validator";
@@ -172,6 +174,14 @@ export function Teachers() {
     } catch (error) {
       console.error(error);
     }
+  };
+
+  const copyUserAndPassword = async () => {
+    if (!newUserCredentials) return;
+
+    const text = `Usuario: ${newUserCredentials.username}\nContraseña: ${newUserCredentials.password}`;
+
+    await copyToClipboard(text, "both");
   };
 
   // ======================================================
@@ -342,8 +352,8 @@ export function Teachers() {
   const showCreateButtons = isAdmin();
 
   // Usuarios disponibles para asignar manualmente en el modal de Editar:
-  // los que no tienen docente todavía + el que ya está asignado a este
-  // docente (para no perderlo del listado).
+  // solo administradores que no tengan un docente asociado todavía,
+  // + el que ya está asignado a este docente (para no perderlo del listado).
   const assignableUsers = users.filter(
     (u) => !u.teacher_id || u.id === Number(userId),
   );
@@ -467,26 +477,18 @@ export function Teachers() {
         />
 
         <Label>Usuario de acceso</Label>
-        <button
-          type="button"
-          onClick={() => setGenerateUser((prev) => !prev)}
-          className={`w-full flex items-center justify-between p-3 border rounded mb-1 cursor-pointer transition
-            ${
-              generateUser
-                ? "border-[#0cc0df] bg-[#0cc0df]/10 text-[#0a8ea3]"
-                : "border-gray-300 text-gray-500"
-            }`}
-        >
-          <span className="text-sm text-left">
+        <div className="flex items-center justify-between gap-4 mb-1">
+          <p className="text-sm italic text-gray-500">
             {generateUser
               ? "Se va a generar un usuario de acceso para este docente"
               : "No se va a generar usuario de acceso"}
-          </span>
+          </p>
 
-          <span className="text-xs font-semibold whitespace-nowrap ml-3">
-            {generateUser ? "Generar usuario ✓" : "Generar usuario"}
-          </span>
-        </button>
+          <Switch
+            checked={!generateUser}
+            onChange={(checked) => setGenerateUser(!checked)}
+          />
+        </div>
 
         <div className="flex justify-end gap-4 mt-10">
           <div className="flex justify-end gap-3">
@@ -588,46 +590,63 @@ export function Teachers() {
           Guardá estos datos ahora: la contraseña no se va a volver a mostrar.
         </p>
 
-        <div className="space-y-4">
+        <div className="space-y-4 max-w-sm mx-auto">
           <div>
             <Label>Usuario</Label>
-            <div className="flex gap-2">
+            <div className="flex gap-2 items-center">
               <Input
                 value={newUserCredentials?.username || ""}
                 onChange={() => {}}
+                className="mb-0"
               />
 
-              <Button
-                type="button"
-                className="cursor-pointer whitespace-nowrap"
+              <CopyButton
+                title="Copiar usuario"
                 onClick={() =>
                   copyToClipboard(newUserCredentials?.username, "username")
                 }
-              >
-                {copiedField === "username" ? "Copiado ✓" : "Copiar"}
-              </Button>
+              />
             </div>
+            {copiedField === "username" && (
+              <span className="text-xs text-green-600 block text-right mt-1">
+                Copiado ✓
+              </span>
+            )}
           </div>
 
           <div>
             <Label>Contraseña</Label>
-            <div className="flex gap-2">
+            <div className="flex gap-2 items-center">
               <Input
                 value={newUserCredentials?.password || ""}
                 onChange={() => {}}
+                className="mb-0"
               />
 
-              <Button
-                type="button"
-                className="cursor-pointer whitespace-nowrap"
+              <CopyButton
+                title="Copiar contraseña"
                 onClick={() =>
                   copyToClipboard(newUserCredentials?.password, "password")
                 }
-              >
-                {copiedField === "password" ? "Copiado ✓" : "Copiar"}
-              </Button>
+              />
             </div>
+            {copiedField === "password" && (
+              <span className="text-xs text-green-600 block text-right mt-1">
+                Copiado ✓
+              </span>
+            )}
           </div>
+        </div>
+        <div className="flex justify-center mt-6">
+          <Button
+            type="button"
+            className="cursor-pointer whitespace-nowrap"
+            onClick={copyUserAndPassword}
+          >
+            {copiedField === "both"
+              ? "Copiado ✓"
+              : "Copiar usuario y contraseña"}
+          </Button>
         </div>
 
         <div className="flex justify-end mt-8">

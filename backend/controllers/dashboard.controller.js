@@ -139,20 +139,25 @@ export const dashboardController = {
           // =====================================
           db.execute(`
           SELECT
-            COALESCE(SUM(pp.price),0) AS total
-          FROM student_plans sp
-          INNER JOIN plan_prices pp
-            ON pp.plan_id = sp.plan_id
-            AND pp.end_date IS NULL
-          WHERE
-            sp.end_date IS NULL
-            AND sp.id NOT IN (
-              SELECT DISTINCT student_plan_id
-              FROM payments
-              WHERE
-                MONTH(payment_date)=MONTH(CURDATE())
-                AND YEAR(payment_date)=YEAR(CURDATE())
+          COALESCE(SUM(
+            ROUND(
+              pp.price * IF(DAY(CURDATE()) > 15, 1.15, 1),
+              2
             )
+          ), 0) AS total
+        FROM student_plans sp
+        INNER JOIN plan_prices pp
+          ON pp.plan_id = sp.plan_id
+          AND pp.end_date IS NULL
+        WHERE
+          sp.end_date IS NULL
+          AND sp.id NOT IN (
+            SELECT DISTINCT student_plan_id
+            FROM payments
+            WHERE
+              MONTH(payment_date)=MONTH(CURDATE())
+              AND YEAR(payment_date)=YEAR(CURDATE())
+          )
         `),
 
           // =====================================

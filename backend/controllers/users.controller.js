@@ -8,18 +8,20 @@ export const usersController = {
 
       let query = `
       SELECT
-        id,
-        first_name,
-        last_name,
-        username,
-        role
-      FROM users
+        u.id,
+        u.first_name,
+        u.last_name,
+        u.username,
+        u.role,
+        t.id AS teacher_id
+      FROM users u
+      LEFT JOIN teachers t ON t.user_id = u.id
     `;
 
       const params = [];
 
       if (role && role !== "all") {
-        query += " WHERE role = ?";
+        query += " WHERE u.role = ?";
         params.push(role);
       }
 
