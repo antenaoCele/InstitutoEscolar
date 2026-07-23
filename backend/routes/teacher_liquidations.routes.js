@@ -16,6 +16,13 @@ import {
 const router = express.Router();
 
 router.get(
+  "/monthly",
+  authentication,
+  authorization("ADMIN"),
+  teacherLiquidationsController.getMonthly,
+);
+
+router.get(
   "/",
   authentication,
   authorization("ADMIN"),

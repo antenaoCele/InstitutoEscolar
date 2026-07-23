@@ -31,6 +31,45 @@ export const teacherLiquidationsController = {
     }
   },
 
+  getMonthly: async (req, res) => {
+    try {
+      const { month, year } = req.query;
+
+      if (!month || !year) {
+        return res.status(400).json({
+          success: false,
+          message: "Debe indicar mes y año",
+        });
+      }
+
+      const monthStr = `${year}-${String(month).padStart(2, "0")}`;
+
+      const sql = `
+      SELECT 
+      tl.id,
+      t.id AS teacher_id,
+      t.first_name,
+      t.last_name,
+      tl.month,
+      tl.total_collected,
+      tl.net_salary
+      FROM teacher_liquidations tl
+      JOIN teachers t ON tl.teacher_id = t.id
+      WHERE tl.month = ?
+      ORDER BY t.last_name ASC, t.first_name ASC
+    `;
+
+      const [rows] = await db.execute(sql, [monthStr]);
+
+      res.json({ success: true, data: rows });
+    } catch (error) {
+      res.status(500).json({
+        success: false,
+        message: "Error al obtener las liquidaciones",
+      });
+    }
+  },
+
   getById: async (req, res) => {
     try {
       const id = Number(req.params.id);

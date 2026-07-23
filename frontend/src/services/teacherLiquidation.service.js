@@ -1,9 +1,8 @@
 import api from "../utils/api";
 
-export const userService = {
-  getAll: () => api.get("/users"),
-  getById: (id) => api.get(`/users/${id}`),
-  create: (data) => api.post("/users", data),
-  update: (id, data) => api.put(`/users/${id}`, data),
-  delete: (id) => api.delete(`/users/${id}`),
+export const teacherLiquidationService = {
+  getAll: () => api.get("/teacher-liquidations"),
+  getById: (id) => api.get(`/teacher-liquidations/${id}`),
+  getMonthly: (month, year) =>
+    api.get("/teacher-liquidations/monthly", { params: { month, year } }),
 };
