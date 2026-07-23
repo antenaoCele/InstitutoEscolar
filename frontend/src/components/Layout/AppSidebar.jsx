@@ -93,7 +93,11 @@ const navItems = [
   },
 
   {
-    icon: <CalenderIcon />,
+    icon: (
+      <SidebarIcon>
+        <CalenderIcon className="w-5 h-5" />
+      </SidebarIcon>
+    ),
     name: "Horarios",
     subItems: [
       {
