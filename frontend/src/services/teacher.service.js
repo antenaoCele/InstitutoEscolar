@@ -5,6 +5,8 @@ export const teacherService = {
 
   getById: (id) => api.get(`/teachers/${id}`),
 
+  reactivate: (id) => api.put(`/teachers/${id}/reactivate`),
+
   getAvailableStudents(id, planId) {
     return api.get(`/teachers/${id}/students`, {
       params: {

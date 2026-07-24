@@ -35,13 +35,13 @@ router.get(
   studentsController.getPlans,
 );
 
-router.get(
-  "/:id",
-  authentication,
-  ...validateID("students"),
-  checkValidations,
-  studentsController.getByStudentIdWithStatus,
-);
+// router.get(
+//   "/:id",
+//   authentication,
+//   ...validateID("students"),
+//   checkValidations,
+//   studentsController.getByStudentIdWithStatus,
+// );
 
 router.post(
   "/",
@@ -52,12 +52,12 @@ router.post(
   studentsController.createWithPlan,
 );
 
-router.post(
-  "/close-year",
-  authentication,
-  authorization("ADMIN"),
-  studentsController.closeYear,
-);
+// router.post(
+//   "/close-year",
+//   authentication,
+//   authorization("ADMIN"),
+//   studentsController.closeYear,
+// );
 
 router.put(
   "/:id",

@@ -83,6 +83,14 @@ router.put(
   teachersController.update,
 );
 
+router.put(
+  "/:id/reactivate",
+  authentication,
+  authorization("ADMIN"),
+  ...validateID("teachers"),
+  teachersController.reactivate,
+);
+
 router.delete(
   "/:id",
   authentication,
