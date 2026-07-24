@@ -70,7 +70,7 @@ const getNavItems = (isTeacherRole) => [
     ),
     name: "Docentes",
     subItems: [
-      { name: "Ver docentes", path: "/teachers" },
+      { name: "Docentes", path: "/teachers" },
       // "Sueldos" oculto para rol docente
       ...(isTeacherRole
         ? []

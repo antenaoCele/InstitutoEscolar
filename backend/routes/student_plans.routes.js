@@ -24,7 +24,7 @@ router.post(
   studentPlansController.reactivate,
 );
 
-//OBTENER EL ESTADO DE PAGO DE LOS ALUMNOS Y FILTRARLOS POR DOCENTE(es opcional lo del docente)
+//OBTENER EL ESTADO DE PAGO DE LOS ESTUDIANTES Y FILTRARLOS POR DOCENTE(es opcional lo del docente)
 router.get(
   "/account-status",
   authentication,

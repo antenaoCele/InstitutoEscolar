@@ -70,7 +70,7 @@ export const Home = () => {
         {isAdmin ? (
           <>
             <StatCard
-              title="Alumnos activos"
+              title="Estudiantes activos"
               value={cards.students}
               color="text-blue-600"
             />
@@ -102,7 +102,7 @@ export const Home = () => {
         ) : (
           <>
             <StatCard
-              title="Alumnos activos"
+              title="Estudiantes activos"
               value={cards.students}
               color="text-blue-600"
             />
@@ -121,7 +121,7 @@ export const Home = () => {
       {/* ===================== */}
 
       <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
-        <ComponentCard title="Alumnos por nivel">
+        <ComponentCard title="Estudiantes por nivel">
           <BarChartOne
             title="Cantidad"
             categories={studentsByLevel.map((item) => item.level)}
@@ -129,7 +129,7 @@ export const Home = () => {
           />
         </ComponentCard>
 
-        <ComponentCard title="Alumnos por plan">
+        <ComponentCard title="Estudiantes por plan">
           <BarChartOne
             title="Cantidad"
             categories={studentsByPlan.map((item) => item.name)}
@@ -139,7 +139,7 @@ export const Home = () => {
       </div>
 
       {isAdmin && (
-        <ComponentCard title="Alumnos por docente">
+        <ComponentCard title="Estudiantes por docente">
           <BarChartOne
             title="Cantidad"
             categories={studentsPerTeacher.map((item) => item.teacher)}
