@@ -20,6 +20,7 @@ import {
   NoButton,
   AddButton,
   CopyButton,
+  ActivationButton,
 } from "../../components/ui/ActionButtons";
 import { sortByPersonName } from "../../utils/sort";
 import { validateTeacher } from "../../validators/entities/teachers.validator";
@@ -438,13 +439,13 @@ export function Teachers() {
               onClick={() => handleDelete(row)}
             />
           ) : (
-            <button
+            <ActivationButton
               title="Reactivar Docente"
               onClick={() => handleReactivate(row)}
               className="w-9 h-9 flex items-center justify-center rounded-lg border hover:bg-gray-100"
             >
               {/* Después acá ponemos el ícono */}
-            </button>
+            </ActivationButton>
           )}
         </div>
       ),
