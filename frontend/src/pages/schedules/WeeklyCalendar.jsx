@@ -56,7 +56,7 @@ export default function WeeklyCalendar() {
   const [classroom, setClassroom] = useState("");
 
   // ======================================================
-  // ALUMNOS DEL HORARIO
+  // ESTUDIANTES DEL HORARIO
   // ======================================================
   const [selectedStudentId, setSelectedStudentId] = useState("");
   const [selectedStudents, setSelectedStudents] = useState([]);

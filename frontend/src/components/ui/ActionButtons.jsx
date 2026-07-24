@@ -12,12 +12,21 @@ import {
   PlusSignIcon,
   AssignTeacher,
   CopyIcon,
+  ActivationIcon,
 } from "../../icons";
 
 const baseClass =
   "cursor-pointer w-12 h-12 rounded flex items-center justify-center transition transform hover:scale-105";
 
 const imgClass = "w-5 h-5 brightness-0 invert";
+
+export function ActivationButton({ onClick, title = "" }) {
+  return (
+    <Button title={title} size="sm" onClick={onClick} className={baseClass}>
+      <ActivationIcon className="w-5 h-5" />
+    </Button>
+  );
+}
 
 export function ViewButton({ onClick, title = "" }) {
   return (

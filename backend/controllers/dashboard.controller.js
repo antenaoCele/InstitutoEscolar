@@ -25,7 +25,7 @@ export const dashboardController = {
           [pendingPlans],
         ] = await Promise.all([
           // =====================================
-          // ALUMNOS ACTIVOS
+          // ESTUDIANTES ACTIVOS
           // =====================================
           db.execute(`
           SELECT COUNT(DISTINCT student_id) AS total
@@ -67,7 +67,7 @@ export const dashboardController = {
         `),
 
           // =====================================
-          // ALUMNOS ACTIVOS POR NIVEL
+          // ESTUDIANTES ACTIVOS POR NIVEL
           // =====================================
           db.execute(`
           SELECT
@@ -255,7 +255,7 @@ export const dashboardController = {
         [studentsByPlan],
       ] = await Promise.all([
         // =====================================
-        // MIS ALUMNOS ACTIVOS
+        // MIS ESTUDIANTES ACTIVOS
         // =====================================
         db.execute(
           `
@@ -283,7 +283,7 @@ export const dashboardController = {
         ),
 
         // =====================================
-        // MIS ALUMNOS POR NIVEL
+        // MIS ESTUDIANTES POR NIVEL
         // =====================================
         db.execute(
           `
@@ -303,7 +303,7 @@ export const dashboardController = {
         ),
 
         // =====================================
-        // MIS ALUMNOS POR PLAN
+        // MIS ESTUDIANTES POR PLAN
         // =====================================
         db.execute(
           `
