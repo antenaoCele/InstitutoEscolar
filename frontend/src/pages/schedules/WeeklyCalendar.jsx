@@ -785,12 +785,18 @@ export default function WeeklyCalendar() {
         className="
           overflow-auto
           max-h-[700px]
+
+          bg-white
+          dark:bg-black
         "
       >
         <table
           className="
             w-full
             table-fixed
+
+            bg-white
+            dark:bg-black
 
             border
             border-gray-300
@@ -804,7 +810,7 @@ export default function WeeklyCalendar() {
               z-20
 
               bg-gray-100
-              dark:bg-gray-800
+              dark:bg-black
 
               text-gray-800
               dark:text-white
@@ -825,7 +831,7 @@ export default function WeeklyCalendar() {
                   dark:border-gray-700
 
                   bg-gray-100
-                  dark:bg-gray-800
+                  dark:bg-black
 
                   text-gray-800
                   dark:text-white
@@ -845,7 +851,7 @@ export default function WeeklyCalendar() {
                     dark:border-gray-700
 
                     bg-gray-100
-                    dark:bg-gray-800
+                    dark:bg-black
 
                     text-gray-800
                     dark:text-white
@@ -876,7 +882,7 @@ export default function WeeklyCalendar() {
                     dark:border-gray-700
 
                     bg-white
-                    dark:bg-gray-800
+                    dark:bg-black
 
                     text-gray-800
                     dark:text-white
@@ -909,10 +915,13 @@ export default function WeeklyCalendar() {
 
                         w-[180px]
 
+                        bg-white
+                        dark:bg-black
+
                         transition-colors
 
                         hover:bg-cyan-50
-                        dark:hover:bg-gray-800
+                        dark:hover:bg-gray-900
                     "
                     >
                       <div
@@ -1488,7 +1497,7 @@ dark:text-violet-200
                   p-4
                   mb-2
                   bg-gray-50
-                  dark:bg-gray-800
+                  dark:bg-black
 
                   border
                   border-gray-200
@@ -1609,7 +1618,7 @@ dark:text-violet-200
                   rounded-lg
                   p-4
                   bg-gray-50
-                  dark:bg-gray-800
+                  dark:bg-black
 
                   border
                   border-gray-200
@@ -1649,7 +1658,7 @@ dark:text-violet-200
                     rounded-lg
                     p-4
                     bg-gray-50
-                    dark:bg-gray-800
+                    dark:bg-black
 
                     border
                     border-gray-200
@@ -1668,7 +1677,7 @@ dark:text-violet-200
                       rounded-lg
                       p-4
                       bg-gray-50
-                      dark:bg-gray-800
+                      dark:bg-black
                       border
                       border-gray-200
                       dark:border-gray-700
@@ -1707,7 +1716,7 @@ dark:text-violet-200
                     rounded-lg
                     p-4
                     bg-gray-50
-                    dark:bg-gray-800
+                    dark:bg-black
 
                     border
                     border-gray-200
@@ -1726,7 +1735,7 @@ dark:text-violet-200
                       rounded-lg
                       p-4
                       bg-gray-50
-                      dark:bg-gray-800
+                      dark:bg-black
 
                       border
                       border-gray-200

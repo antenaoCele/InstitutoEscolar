@@ -17,6 +17,26 @@
 
 /* ---------- BASE ---------- */
 
+.apex-tooltip-dark {
+  background: #111827 !important;
+  color: #ffffff !important;
+}
+
+.apex-tooltip-dark .apexcharts-tooltip-title {
+  background: #1f2937 !important;
+  color: #ffffff !important;
+}
+
+.apex-tooltip-light {
+  background: #ffffff !important;
+  color: #111827 !important;
+}
+
+.apex-tooltip-light .apexcharts-tooltip-title {
+  background: #f3f4f6 !important;
+  color: #111827 !important;
+}
+
 @layer base {
   html {
     @apply bg-gray-50 dark:bg-black;
@@ -31,10 +51,6 @@
 
   #root {
     @apply bg-gray-50 dark:bg-black min-h-screen;
-  }
-
-  table {
-    @apply dark:bg-gray-900;
   }
 
   th,

@@ -88,7 +88,7 @@ export const Home = () => {
             />
 
             <StatCard
-              title="Cobrado este mes"
+              title="Ingreso mensual"
               value={`$ ${cards.moneyReceived.toLocaleString("es-AR")}`}
               color="text-emerald-600"
             />
@@ -154,8 +154,8 @@ export const Home = () => {
 
 function StatCard({ title, value, color }) {
   return (
-    <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-gray-900">
-      <p className="text-sm text-gray-500">{title}</p>
+    <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-black">
+      <p className="text-sm text-gray-500 dark:text-gray-400">{title}</p>
 
       <h2 className={`mt-2 text-3xl font-bold ${color}`}>{value}</h2>
     </div>

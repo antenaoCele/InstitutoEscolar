@@ -320,7 +320,7 @@ export default function MonthlyCalendar() {
     <div
       className="
         bg-white
-        dark:bg-gray-900
+        dark:bg-black
 
         border
         border-gray-200
@@ -385,8 +385,26 @@ export default function MonthlyCalendar() {
       )}
 
       {/* Tabla */}
-      <div className="overflow-auto">
-        <table className="w-full border border-gray-300 table-fixed">
+      <div
+        className="
+          overflow-auto
+
+          bg-white
+          dark:bg-black
+        "
+      >
+        <table
+          className="
+            w-full
+            border
+            border-gray-300
+            dark:border-gray-700
+            table-fixed
+
+            bg-white
+            dark:bg-black
+          "
+        >
           <thead>
             <tr>
               {[
@@ -406,7 +424,7 @@ export default function MonthlyCalendar() {
                     dark:border-gray-700
 
                     bg-gray-100
-                    dark:bg-gray-800
+                    dark:bg-black
 
                     text-gray-700
                     dark:text-gray-200
@@ -438,7 +456,7 @@ export default function MonthlyCalendar() {
                             dark:border-gray-700
 
                             bg-gray-50
-                            dark:bg-gray-800
+                            dark:bg-black
 
                             h-40
                           "
@@ -477,7 +495,7 @@ export default function MonthlyCalendar() {
                           dark:border-gray-700
 
                           bg-white
-                          dark:bg-gray-900
+                          dark:bg-black
 
                           p-2
                           h-40
@@ -487,7 +505,7 @@ export default function MonthlyCalendar() {
                           duration-150
 
                           hover:bg-cyan-50
-                          dark:hover:bg-gray-800
+                          dark:hover:bg-gray-900
                         "
                       >
                         <div

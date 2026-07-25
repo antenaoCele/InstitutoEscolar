@@ -1,9 +1,9 @@
 import {
   isEmptyArray,
+  isNotFutureDate,
   isPositiveNumber,
   isRequired,
 } from "../rules/formatRules";
-
 /**
  * Valida el formulario de registrar inscripción (permite varios
  * estudiantes a la vez, para hermanos).
@@ -26,6 +26,8 @@ export const validateEnrollmentForm = ({
 
   if (isRequired(enrollmentDate)) {
     errors.date = "Ingrese una fecha de pago.";
+  } else if (!isNotFutureDate(enrollmentDate)) {
+    errors.date = "La fecha no puede ser futura.";
   }
 
   return errors;
@@ -52,6 +54,8 @@ export const validateEditEnrollmentForm = ({
 
   if (isRequired(enrollmentDate)) {
     errors.date = "Ingrese una fecha de pago.";
+  } else if (!isNotFutureDate(enrollmentDate)) {
+    errors.date = "La fecha no puede ser futura.";
   }
 
   return errors;

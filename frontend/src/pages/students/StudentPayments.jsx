@@ -22,6 +22,7 @@ import {
   EditButton,
   DeleteButton,
 } from "../../components/ui/ActionButtons";
+import { getTodayLocal } from "../../utils/date";
 
 export default function StudentPayments() {
   // ======================================================
@@ -104,6 +105,13 @@ export default function StudentPayments() {
     "Noviembre",
     "Diciembre",
   ];
+
+  const today = getTodayLocal();
+
+  const currentYear = Number(today.split("-")[0]);
+  const currentMonth = Number(today.split("-")[1]);
+
+  const isCurrentMonth = month === currentMonth && year === currentYear;
 
   // ======================================================
   // FETCH DATOS
@@ -576,7 +584,9 @@ export default function StudentPayments() {
           {monthNames[month - 1]} {year}
         </h2>
 
-        <Button onClick={nextMonth}>▶</Button>
+        <Button onClick={nextMonth} disabled={isCurrentMonth}>
+          ▶
+        </Button>
       </div>
 
       {/* ---------- Totales ---------- */}

@@ -1,4 +1,8 @@
-import { isRequired, isValidPaymentMethod } from "../rules/formatRules";
+import {
+  isNotFutureDate,
+  isRequired,
+  isValidPaymentMethod,
+} from "../rules/formatRules";
 
 /**
  * Valida el formulario de registrar pago.
@@ -22,6 +26,8 @@ export const validatePaymentForm = ({
 
   if (isRequired(paymentDate)) {
     errors.date = "Ingrese una fecha de pago.";
+  } else if (!isNotFutureDate(paymentDate)) {
+    errors.date = "La fecha no puede ser futura.";
   }
 
   if (isRequired(paymentMethod)) {

@@ -147,3 +147,20 @@ ya que el backend solo recibe newPassword, no la confirmación.
 ========================================================= */
 export const doPasswordsMatch = (password, confirmPassword) =>
   password === confirmPassword;
+
+/* =========================================================
+FECHA (no permite fechas futuras)
+========================================================= */
+export const isNotFutureDate = (value) => {
+  if (!value || isNaN(Date.parse(value))) return false;
+
+  const [year, month, day] = value.split("-").map(Number);
+
+  const inputDate = new Date(year, month - 1, day);
+  inputDate.setHours(0, 0, 0, 0);
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  return inputDate <= today;
+};
