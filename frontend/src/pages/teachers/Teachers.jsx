@@ -20,6 +20,7 @@ import {
   NoButton,
   AddButton,
   CopyButton,
+  ActivationButton,
 } from "../../components/ui/ActionButtons";
 import { sortByPersonName } from "../../utils/sort";
 import { validateTeacher } from "../../validators/entities/teachers.validator";
@@ -45,6 +46,7 @@ export function Teachers() {
   // ======================================================
   const [openEditModal, setOpenEditModal] = useState(false);
   const [openDeleteModal, setOpenDeleteModal] = useState(false);
+  const [deleteUserToo, setDeleteUserToo] = useState(false);
   const [openCreateModal, setOpenCreateModal] = useState(false);
 
   // Modal que muestra el usuario recién generado al crear un docente
@@ -61,6 +63,7 @@ export function Teachers() {
   // DOCENTE SELECCIONADO
   // ======================================================
   const [selectedTeacher, setSelectedTeacher] = useState(null);
+  const [selectedStatus, setSelectedStatus] = useState("");
 
   // ======================================================
   // FORMULARIO DEL DOCENTE
@@ -108,6 +111,10 @@ export function Teachers() {
 
       if (selectedPlan) {
         queryParams.plan_id = selectedPlan;
+      }
+
+      if (selectedStatus) {
+        queryParams.active = selectedStatus;
       }
 
       const { data } = await teacherService.getAll(queryParams);
@@ -294,14 +301,47 @@ export function Teachers() {
     }
   };
 
+  const handleReactivate = async (teacher) => {
+    try {
+      await teacherService.reactivate(teacher.id);
+
+      fetchTeachers();
+
+      showFeedback("Docente reactivado correctamente", "success");
+    } catch (error) {
+      showFeedback(
+        error.response?.data?.message || "Error al reactivar el docente",
+        "error",
+      );
+    }
+  };
+
   const handleDelete = (teacher) => {
     setSelectedTeacher(teacher);
+    setDeleteUserToo(false);
     setOpenDeleteModal(true);
   };
 
   const confirmDelete = async () => {
     try {
       await teacherService.delete(selectedTeacher.id);
+
+      // Si el docente tenía usuario asignado y el admin marcó la opción, lo eliminamos también
+      if (deleteUserToo && selectedTeacher.user_id) {
+        try {
+          await userService.delete(selectedTeacher.user_id);
+        } catch (userError) {
+          console.error(userError.response?.data || userError.message);
+          setOpenDeleteModal(false);
+          fetchTeachers();
+          showFeedback(
+            "Docente eliminado, pero hubo un error al eliminar el usuario asignado",
+            "error",
+          );
+          return;
+        }
+      }
+
       setOpenDeleteModal(false);
       fetchTeachers();
       showFeedback("Docente eliminado correctamente", "success");
@@ -320,7 +360,7 @@ export function Teachers() {
   // ======================================================
   useEffect(() => {
     fetchTeachers();
-  }, [selectedPlan]);
+  }, [selectedPlan, selectedStatus]);
 
   useEffect(() => {
     fetchFilters();
@@ -364,6 +404,19 @@ export function Teachers() {
     { header: "Teléfonos", accessor: "phone" },
   ];
 
+  columns.splice(2, 0, {
+    header: "Estado",
+    render: (row) => (
+      <span
+        className={`font-medium ${
+          row.active ? "text-green-600" : "text-red-600"
+        }`}
+      >
+        ● {row.active ? "Activo" : "Inactivo"}
+      </span>
+    ),
+  });
+
   if (isAdmin()) {
     columns.splice(3, 0, { header: "DNI", accessor: "dni" });
 
@@ -380,10 +433,20 @@ export function Teachers() {
         <div className="flex gap-2">
           <EditButton title="Editar Docente" onClick={() => handleEdit(row)} />
 
-          <DeleteButton
-            title="Eliminar Docente"
-            onClick={() => handleDelete(row)}
-          />
+          {row.active ? (
+            <DeleteButton
+              title="Desactivar Docente"
+              onClick={() => handleDelete(row)}
+            />
+          ) : (
+            <ActivationButton
+              title="Reactivar Docente"
+              onClick={() => handleReactivate(row)}
+              className="w-9 h-9 flex items-center justify-center rounded-lg border hover:bg-gray-100"
+            >
+              {/* Después acá ponemos el ícono */}
+            </ActivationButton>
+          )}
         </div>
       ),
     });
@@ -422,6 +485,16 @@ export function Teachers() {
           onChange={(e) => setSearchDNI(e.target.value)}
           className="p-2 border border-gray-300 rounded w-40"
         />
+
+        <Select
+          value={selectedStatus}
+          onChange={(e) => setSelectedStatus(e.target.value)}
+          className="p-2 border border-gray-300 rounded min-w-56"
+        >
+          <option value="">Todos los docentes</option>
+          <option value="true">Activos</option>
+          <option value="false">Inactivos</option>
+        </Select>
       </div>
 
       <BasicTable
@@ -567,8 +640,22 @@ export function Teachers() {
       </Modal>
 
       {/* DELETE MODAL */}
+      {/* DELETE MODAL */}
       <Modal isOpen={openDeleteModal} onClose={() => setOpenDeleteModal(false)}>
         <h2 className="text-lg font-semibold mb-4">¿Eliminar Docente?</h2>
+
+        {selectedTeacher?.has_user && (
+          <div className="flex items-center justify-between gap-4 mb-4">
+            <p className="text-sm text-gray-600">
+              Eliminar también el usuario asignado ({selectedTeacher.username})
+            </p>
+
+            <Switch
+              checked={deleteUserToo}
+              onChange={(checked) => setDeleteUserToo(checked)}
+            />
+          </div>
+        )}
 
         <div className="flex justify-end gap-2">
           <NoButton

@@ -15,7 +15,6 @@ export async function getPlanPriceAtDate(student_plan_id, date) {
     [student_plan_id, date, date],
   );
 
-  // Si no hay precio, devolvemos null (NO error)
   if (rows.length === 0) {
     return null;
   }
@@ -27,17 +26,36 @@ export async function existingPayment(student_plan_id, date, excludeId = null) {
   const paymentDateObj = new Date(date);
   const yearMonth = paymentDateObj.toISOString().slice(0, 7);
 
+  // Obtener el alumno y el plan del student_plan recibido
+  const [studentPlanRows] = await db.execute(
+    `
+    SELECT student_id, plan_id
+    FROM student_plans
+    WHERE id = ?
+    `,
+    [student_plan_id],
+  );
+
+  if (studentPlanRows.length === 0) {
+    return false;
+  }
+
+  const { student_id, plan_id } = studentPlanRows[0];
+
   let sql = `
-    SELECT id
-    FROM payments
-    WHERE student_plan_id = ?
-    AND DATE_FORMAT(payment_date, '%Y-%m') = ?
+    SELECT p.id
+    FROM payments p
+    JOIN student_plans sp
+      ON p.student_plan_id = sp.id
+    WHERE sp.student_id = ?
+      AND sp.plan_id = ?
+      AND DATE_FORMAT(p.payment_date, '%Y-%m') = ?
   `;
 
-  const params = [student_plan_id, yearMonth];
+  const params = [student_id, plan_id, yearMonth];
 
   if (excludeId) {
-    sql += " AND id != ?";
+    sql += " AND p.id != ?";
     params.push(excludeId);
   }
 

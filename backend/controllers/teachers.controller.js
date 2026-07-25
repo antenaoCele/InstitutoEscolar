@@ -127,39 +127,51 @@ export const teachersController = {
 
   getAll: async (req, res) => {
     try {
-      const { plan_id } = req.query;
+      const { plan_id, active } = req.query;
 
       let query = `
-  SELECT DISTINCT
-    t.id,
-    t.first_name,
-    t.last_name,
-    t.dni,
-    t.phone,
-    t.user_id,
-    u.username,
-    u.role,
-    (t.user_id IS NOT NULL) AS has_user
-  FROM teachers t
-  LEFT JOIN users u
-    ON u.id = t.user_id
+SELECT DISTINCT
+  t.id,
+  t.first_name,
+  t.last_name,
+  t.dni,
+  t.phone,
+  t.user_id,
+  t.active,
+  u.username,
+  u.role,
+  (t.user_id IS NOT NULL) AS has_user
+FROM teachers t
+LEFT JOIN users u
+  ON u.id = t.user_id
 `;
 
       const params = [];
+      const conditions = [];
 
       if (plan_id) {
         query += `
-        INNER JOIN teacher_plans tp
-          ON tp.teacher_id = t.id
-        WHERE tp.plan_id = ?
-      `;
-
+      INNER JOIN teacher_plans tp
+        ON tp.teacher_id = t.id
+    `;
+        conditions.push("tp.plan_id = ?");
         params.push(plan_id);
       }
 
+      // active=true / active=false / sin mandar el param => trae todos
+      if (active === "true") {
+        conditions.push("t.active = true");
+      } else if (active === "false") {
+        conditions.push("t.active = false");
+      }
+
+      if (conditions.length > 0) {
+        query += ` WHERE ${conditions.join(" AND ")}`;
+      }
+
       query += `
-      ORDER BY t.last_name, t.first_name
-    `;
+    ORDER BY t.last_name, t.first_name
+  `;
 
       const [rows] = await db.execute(query, params);
 
@@ -376,6 +388,131 @@ export const teachersController = {
       res.status(500).json({
         success: false,
         message: "Error al liquidar sueldo",
+      });
+    }
+  },
+
+  // ======================================================
+  // DELETE (soft-delete)
+  // Desactiva al docente y cierra (end_date) todos los
+  // student_plans que tenía abiertos, en una transacción.
+  // ======================================================
+  delete: async (req, res) => {
+    const { id } = req.params;
+    const { delete_user_too } = req.query; // o req.body, según cómo lo mandes desde el front
+
+    const connection = await db.getConnection();
+
+    try {
+      await connection.beginTransaction();
+
+      const [teacherRows] = await connection.execute(
+        "SELECT id, active, user_id FROM teachers WHERE id = ?",
+        [id],
+      );
+
+      if (!teacherRows.length) {
+        await connection.rollback();
+        return res.status(404).json({
+          success: false,
+          message: "Docente no encontrado",
+        });
+      }
+
+      if (!teacherRows[0].active) {
+        await connection.rollback();
+        return res.status(400).json({
+          success: false,
+          message: "El docente ya está desactivado",
+        });
+      }
+
+      const userId = teacherRows[0].user_id;
+
+      // Cerramos todos los student_plans abiertos de este docente
+      await connection.execute(
+        `UPDATE student_plans
+       SET end_date = CURDATE()
+       WHERE teacher_id = ? AND end_date IS NULL`,
+        [id],
+      );
+
+      // Desactivamos al docente (no se borra físicamente)
+      await connection.execute(
+        "UPDATE teachers SET active = false WHERE id = ?",
+        [id],
+      );
+
+      // Si tenía usuario y se pidió eliminarlo también
+      if (delete_user_too === "true" && userId) {
+        await connection.execute("DELETE FROM users WHERE id = ?", [userId]);
+
+        // Como el docente sigue existiendo (soft-delete), hay que
+        // limpiar la referencia para no dejar un user_id colgando
+        // de un usuario que ya no existe
+        await connection.execute(
+          "UPDATE teachers SET user_id = NULL WHERE id = ?",
+          [id],
+        );
+      }
+
+      await connection.commit();
+
+      res.json({
+        success: true,
+        message: "Docente desactivado correctamente",
+      });
+    } catch (error) {
+      await connection.rollback();
+      console.error(error);
+
+      res.status(500).json({
+        success: false,
+        message: "Error al desactivar el docente",
+      });
+    } finally {
+      connection.release();
+    }
+  },
+
+  // ======================================================
+  // REACTIVATE
+  // ======================================================
+  reactivate: async (req, res) => {
+    const { id } = req.params;
+
+    try {
+      const [teacherRows] = await db.execute(
+        "SELECT id, active FROM teachers WHERE id = ?",
+        [id],
+      );
+
+      if (!teacherRows.length) {
+        return res.status(404).json({
+          success: false,
+          message: "Docente no encontrado",
+        });
+      }
+
+      if (teacherRows[0].active) {
+        return res.status(400).json({
+          success: false,
+          message: "El docente ya está activo",
+        });
+      }
+
+      await db.execute("UPDATE teachers SET active = true WHERE id = ?", [id]);
+
+      res.json({
+        success: true,
+        message: "Docente reactivado correctamente",
+      });
+    } catch (error) {
+      console.error(error);
+
+      res.status(500).json({
+        success: false,
+        message: "Error al reactivar el docente",
       });
     }
   },

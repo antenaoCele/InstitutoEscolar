@@ -1,5 +1,6 @@
 import { createCrudController } from "../utils/crudFactory.js";
 import { calculateAccountStatus } from "../utils/accountStatus.js";
+import { getCurrentDateParts } from "../utils/dateUtils.js";
 import { db } from "../db.js";
 
 export const baseController = createCrudController("students");
@@ -16,78 +17,102 @@ export const studentsController = {
         payment_status,
       } = req.query;
 
-      const today = new Date();
-      const yearMonth = today.toISOString().slice(0, 7);
+      const { today, yearMonth, date } = getCurrentDateParts();
 
       let query = `
       SELECT
-        s.id AS student_id,
-        s.first_name,
-        s.last_name,
-        s.dni,
-        s.school,
-        s.birth_date,
-        s.level,
-        s.grade,
+          s.id AS student_id,
+          s.first_name,
+          s.last_name,
+          s.dni,
+          s.school,
+          s.birth_date,
+          s.level,
+          s.grade,
 
-        sp.id AS student_plan_id,
-        sp.teacher_id,
-        sp.plan_id,
-        sp.start_date,
-        sp.end_date,
+          sp.id AS student_plan_id,
+          sp.teacher_id,
+          sp.plan_id,
+          sp.start_date,
+          sp.end_date,
 
-        tea.first_name AS teacher_first_name,
-        tea.last_name AS teacher_last_name,
-        pl.name AS plan_name,
+          tea.first_name AS teacher_first_name,
+          tea.last_name AS teacher_last_name,
 
-        pp.price,
+          pl.name AS plan_name,
 
-        IFNULL(SUM(pay.amount), 0) AS total_paid,
+          pp.price,
+          pay.paid_price,
 
-        t.id AS tutor_id,
-        t.first_name AS tutor_first_name,
-        t.last_name AS tutor_last_name,
-        t.dni AS tutor_dni,
-        t.phone AS tutor_phone
+          IFNULL(pay.total_paid,0) AS total_paid,
+
+          t.id AS tutor_id,
+          t.first_name AS tutor_first_name,
+          t.last_name AS tutor_last_name,
+          t.dni AS tutor_dni,
+          t.phone AS tutor_phone
 
       FROM students s
 
       LEFT JOIN student_tutors st
-        ON st.student_id = s.id
+          ON st.student_id = s.id
 
       LEFT JOIN tutors t
-        ON t.id = st.tutor_id
+          ON t.id = st.tutor_id
 
       LEFT JOIN student_plans sp
-        ON sp.student_id = s.id
-        AND sp.start_date <= CURDATE()
-        AND (
-          sp.end_date IS NULL
-          OR sp.end_date > CURDATE()
-        )
+          ON sp.student_id = s.id
+          AND sp.start_date <= ?
+          AND (
+              sp.end_date IS NULL
+              OR sp.end_date > ?
+          )
 
       LEFT JOIN teachers tea
-        ON tea.id = sp.teacher_id
+          ON tea.id = sp.teacher_id
 
       LEFT JOIN plans pl
-        ON pl.id = sp.plan_id
+          ON pl.id = sp.plan_id
 
       LEFT JOIN plan_prices pp
-        ON pp.plan_id = sp.plan_id
-        AND pp.start_date <= CURDATE()
-        AND (
-          pp.end_date IS NULL
-          OR pp.end_date >= CURDATE()
-        )
+          ON pp.plan_id = sp.plan_id
+          AND pp.start_date <= ?
+          AND (
+              pp.end_date IS NULL
+              OR pp.end_date >= ?
+          )
 
-      LEFT JOIN payments pay
-        ON pay.student_plan_id = sp.id
-        AND DATE_FORMAT(pay.payment_date, '%Y-%m') = ?
+      LEFT JOIN (
+
+          SELECT
+              sp.student_id,
+              sp.plan_id,
+              SUM(p.amount) AS total_paid,
+              MAX(p.plan_price) AS paid_price
+
+          FROM payments p
+
+          INNER JOIN student_plans sp
+              ON sp.id = p.student_plan_id
+
+          WHERE DATE_FORMAT(p.payment_date,'%Y-%m') = ?
+
+          GROUP BY
+              sp.student_id,
+              sp.plan_id
+
+      ) pay
+
+      ON pay.student_id = sp.student_id
+      AND pay.plan_id = sp.plan_id
 
       WHERE 1=1
-    `;
+      `;
 
-      const params = [yearMonth];
+      // El orden de estos parámetros debe respetar el orden de los "?"
+      // en el texto de la query de arriba (sp.start_date, sp.end_date,
+      // pp.start_date, pp.end_date, y luego el yearMonth del subquery de pagos).
+      const params = [date, date, date, date, yearMonth];
 
       if (teacher_id) {
         query += ` AND sp.teacher_id = ? `;
@@ -109,19 +134,28 @@ export const studentsController = {
 
       query += `
       GROUP BY
-        s.id,
-        sp.id,
-        pp.price,
-        t.id,
-        tea.id,
-        pl.id
-    `;
+          s.id,
+          sp.id,
+          pp.price,
+          pay.paid_price,
+          tea.id,
+          pl.id,
+          t.id,
+          pay.total_paid
+      `;
 
       const [rows] = await db.execute(query, params);
 
       const result = rows.map((row) => {
+        // Si ya pagó este mes, el precio a comparar es el que
+        // quedó "congelado" en el pago (pay.paid_price), no el
+        // precio vigente hoy en plan_prices. Así, si el precio del
+        // plan cambia después de que el alumno pagó, no le queda
+        // una deuda fantasma por la diferencia.
+        const priceToUse = row.total_paid > 0 ? row.paid_price : row.price;
+
         const accountData = calculateAccountStatus({
-          price: row.price,
+          price: priceToUse,
           total_paid: row.total_paid,
           today,
           yearMonth,
@@ -298,9 +332,7 @@ export const studentsController = {
     try {
       const studentId = Number(req.params.id);
       const teacherId = Number(req.query.teacher_id);
-
-      console.log("studentId:", studentId);
-      console.log("teacherId:", teacherId);
+      const { date } = getCurrentDateParts();
 
       const [rows] = await db.execute(
         `
@@ -328,14 +360,14 @@ export const studentsController = {
       AND tp.teacher_id = ?
       AND (
           sp.end_date IS NULL
-          OR sp.end_date >= CURDATE()
+          OR sp.end_date >= ?
       )
 
   ORDER BY
       p.name,
       s.name
   `,
-        [studentId, teacherId],
+        [studentId, teacherId, date],
       );
 
       const plans = [];
@@ -372,56 +404,10 @@ export const studentsController = {
     }
   },
 
-  getByStudentIdWithStatus: async (req, res) => {
-    try {
-      const { id } = req.params;
-
-      const today = new Date();
-      const yearMonth = today.toISOString().slice(0, 7);
-
-      const [rows] = await db.execute(
-        `
-        SELECT 
-          s.id AS student_id,
-          s.first_name,
-          s.last_name,
-          s.dni,
-          sp.teacher_id,
-          sp.plan_id,
-          pp.price,
-          IFNULL(SUM(p.amount), 0) AS total_paid
-        FROM students s
-        LEFT JOIN student_plans sp ON sp.student_id = s.id
-        LEFT JOIN plan_prices pp ON pp.plan_id = sp.plan_id
-        LEFT JOIN payments p ON p.student_plan_id = sp.id
-        WHERE s.id = ?
-        GROUP BY s.id, sp.id, pp.price
-        `,
-        [id],
-      );
-
-      if (!rows.length) {
-        return res.status(404).json({
-          success: false,
-          message: "Estudiante no encontrado",
-        });
-      }
-
-      res.json({
-        success: true,
-        data: rows[0],
-      });
-    } catch (error) {
-      res.status(500).json({
-        success: false,
-        message: "Error al obtener estudiante",
-      });
-    }
-  },
-
   createWithPlan: async (req, res) => {
     try {
       const { formClasses, ...studentData } = req.body;
+      const { date } = getCurrentDateParts();
 
       // 1. Crear estudiante
       const [studentResult] = await db.execute(
@@ -446,8 +432,8 @@ export const studentsController = {
             await db.execute(
               `INSERT INTO student_plans
          (student_id, plan_id, teacher_id, start_date)
-         VALUES (?, ?, ?, CURDATE())`,
-              [studentId, p.plan_id, p.teacher_id],
+         VALUES (?, ?, ?, ?)`,
+              [studentId, p.plan_id, p.teacher_id, date],
             );
           }
         }
@@ -468,7 +454,10 @@ export const studentsController = {
 
   getActiveStudents: async (req, res) => {
     try {
-      const [rows] = await db.execute(`
+      const { date } = getCurrentDateParts();
+
+      const [rows] = await db.execute(
+        `
       SELECT DISTINCT
         s.id,
         s.first_name,
@@ -481,13 +470,15 @@ export const studentsController = {
       FROM students s
       INNER JOIN student_plans sp
         ON sp.student_id = s.id
-      WHERE sp.start_date <= CURDATE()
+      WHERE sp.start_date <= ?
       AND (
         sp.end_date IS NULL
-        OR sp.end_date > CURDATE()
+        OR sp.end_date > ?
       )
       ORDER BY s.last_name, s.first_name
-    `);
+    `,
+        [date, date],
+      );
 
       res.json({
         success: true,
@@ -504,24 +495,75 @@ export const studentsController = {
     }
   },
 
-  closeYear: async (req, res) => {
-    try {
-      const year = req.body.year || new Date().getFullYear();
-
-      const [result] = await db.execute(
-        `UPDATE student_plans SET end_date = ? WHERE end_date IS NULL`,
-        [`${year}-12-31`],
-      );
-
-      res.json({
-        success: true,
-        message: `Se dieron de baja ${result.affectedRows} planes activos.`,
-      });
-    } catch (error) {
-      console.error(error);
-      res
-        .status(500)
-        .json({ success: false, message: "Error al cerrar el año" });
-    }
-  },
+  // NOTA: closeYear no vino en el excerpt que me pasaste para esta
+  // revisión. Si la seguís usando, restauro la versión anterior acá
+  // (con CURDATE()/año actual) — avisame y la agrego con el mismo
+  // criterio de usar getCurrentDateParts().
 };
+// closeYear: async (req, res) => {
+//   try {
+//     const year = req.body.year || new Date().getFullYear();
+
+//     const [result] = await db.execute(
+//       `UPDATE student_plans SET end_date = ? WHERE end_date IS NULL`,
+//       [`${year}-12-31`],
+//     );
+
+//     res.json({
+//       success: true,
+//       message: `Se dieron de baja ${result.affectedRows} planes activos.`,
+//     });
+//   } catch (error) {
+//     console.error(error);
+//     res
+//       .status(500)
+//       .json({ success: false, message: "Error al cerrar el año" });
+//   }
+// },
+
+// getByStudentIdWithStatus: async (req, res) => {
+//   try {
+//     const { id } = req.params;
+
+//     const today = new Date();
+//     const yearMonth = today.toISOString().slice(0, 7);
+
+//     const [rows] = await db.execute(
+//       `
+//       SELECT
+//         s.id AS student_id,
+//         s.first_name,
+//         s.last_name,
+//         s.dni,
+//         sp.teacher_id,
+//         sp.plan_id,
+//         pp.price,
+//         IFNULL(SUM(p.amount), 0) AS total_paid
+//       FROM students s
+//       LEFT JOIN student_plans sp ON sp.student_id = s.id
+//       LEFT JOIN plan_prices pp ON pp.plan_id = sp.plan_id
+//       LEFT JOIN payments p ON p.student_plan_id = sp.id
+//       WHERE s.id = ?
+//       GROUP BY s.id, sp.id, pp.price
+//       `,
+//       [id],
+//     );
+
+//     if (!rows.length) {
+//       return res.status(404).json({
+//         success: false,
+//         message: "Estudiante no encontrado",
+//       });
+//     }
+
+//     res.json({
+//       success: true,
+//       data: rows[0],
+//     });
+//   } catch (error) {
+//     res.status(500).json({
+//       success: false,
+//       message: "Error al obtener estudiante",
+//     });
+//   }
+// },

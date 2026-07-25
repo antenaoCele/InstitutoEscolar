@@ -115,11 +115,21 @@ export const dashboardController = {
           // PLANES PAGADOS ESTE MES
           // =====================================
           db.execute(`
-          SELECT COUNT(DISTINCT student_plan_id) AS total
-          FROM payments
-          WHERE
-            MONTH(payment_date)=MONTH(CURDATE())
-            AND YEAR(payment_date)=YEAR(CURDATE())
+          SELECT COUNT(*) AS total
+          FROM (
+              SELECT
+                  sp.student_id,
+                  sp.plan_id
+              FROM payments p
+              INNER JOIN student_plans sp
+                  ON sp.id = p.student_plan_id
+              WHERE
+                  MONTH(p.payment_date) = MONTH(CURDATE())
+                  AND YEAR(p.payment_date) = YEAR(CURDATE())
+              GROUP BY
+                  sp.student_id,
+                  sp.plan_id
+          ) paid
         `),
 
           // =====================================
@@ -139,24 +149,31 @@ export const dashboardController = {
           // =====================================
           db.execute(`
           SELECT
-          COALESCE(SUM(
-            ROUND(
-              pp.price * IF(DAY(CURDATE()) > 15, 1.15, 1),
-              2
-            )
-          ), 0) AS total
-        FROM student_plans sp
-        INNER JOIN plan_prices pp
+          COALESCE(
+              SUM(
+                  ROUND(
+                      pp.price * IF(DAY(CURDATE()) > 15, 1.15, 1),
+                      2
+                  )
+              ),
+              0
+          ) AS total
+      FROM student_plans sp
+      INNER JOIN plan_prices pp
           ON pp.plan_id = sp.plan_id
           AND pp.end_date IS NULL
-        WHERE
+      WHERE
           sp.end_date IS NULL
-          AND sp.id NOT IN (
-            SELECT DISTINCT student_plan_id
-            FROM payments
-            WHERE
-              MONTH(payment_date)=MONTH(CURDATE())
-              AND YEAR(payment_date)=YEAR(CURDATE())
+          AND NOT EXISTS (
+              SELECT 1
+              FROM payments p
+              INNER JOIN student_plans sp2
+                  ON sp2.id = p.student_plan_id
+              WHERE
+                  sp2.student_id = sp.student_id
+                  AND sp2.plan_id = sp.plan_id
+                  AND MONTH(p.payment_date) = MONTH(CURDATE())
+                  AND YEAR(p.payment_date) = YEAR(CURDATE())
           )
         `),
 
@@ -164,16 +181,20 @@ export const dashboardController = {
           // PLANES PENDIENTES
           // =====================================
           db.execute(`
-          SELECT COUNT(*) AS total
-          FROM student_plans sp
-          WHERE
+         SELECT COUNT(*) AS total
+        FROM student_plans sp
+        WHERE
             sp.end_date IS NULL
-            AND sp.id NOT IN (
-              SELECT DISTINCT student_plan_id
-              FROM payments
-              WHERE
-                MONTH(payment_date)=MONTH(CURDATE())
-                AND YEAR(payment_date)=YEAR(CURDATE())
+            AND NOT EXISTS (
+                SELECT 1
+                FROM payments p
+                INNER JOIN student_plans sp2
+                    ON sp2.id = p.student_plan_id
+                WHERE
+                    sp2.student_id = sp.student_id
+                    AND sp2.plan_id = sp.plan_id
+                    AND MONTH(p.payment_date) = MONTH(CURDATE())
+                    AND YEAR(p.payment_date) = YEAR(CURDATE())
             )
         `),
         ]);
