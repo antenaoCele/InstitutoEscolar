@@ -675,10 +675,6 @@ export function Teachers() {
         </h2>
 
         <p className="text-gray-600">{feedbackModal.message}</p>
-
-        <div className="flex justify-end mt-6">
-          <Button onClick={closeFeedback}>Cerrar</Button>
-        </div>
       </Modal>
     </>
   );

@@ -16,7 +16,12 @@ import {
   validateEnrollmentForm,
   validateEditEnrollmentForm,
 } from "../../validators/entities/enrollments.validator";
-import { EditButton, DeleteButton } from "../../components/ui/ActionButtons";
+import {
+  YesButton,
+  NoButton,
+  EditButton,
+  DeleteButton,
+} from "../../components/ui/ActionButtons";
 
 export default function StudentPayments() {
   // ======================================================
@@ -669,18 +674,18 @@ export default function StudentPayments() {
           <option value="otro">Otro</option>
         </Select>
 
-        <div className="flex justify-end gap-3 mt-6">
-          <Button
+        <div className="flex justify-end gap-3">
+          <NoButton
+            title="Cancelar"
             variant="outline"
             onClick={() => {
               setOpenCreateModal(false);
               resetPaymentForm();
             }}
-          >
-            Cancelar
-          </Button>
+            onClick={() => setOpenCreateModal(false)}
+          />
 
-          <Button onClick={handleCreatePayment}>Registrar</Button>
+          <YesButton title="Aceptar" onClick={handleCreatePayment} />
         </div>
       </Modal>
 
@@ -748,18 +753,18 @@ export default function StudentPayments() {
           <option value="otro">Otro</option>
         </Select>
 
-        <div className="flex justify-end gap-3 mt-6">
-          <Button
+        <div className="flex justify-end gap-3">
+          <NoButton
+            title="Cancelar"
             variant="outline"
             onClick={() => {
               setOpenEditPaymentModal(false);
               resetEditPaymentForm();
             }}
-          >
-            Cancelar
-          </Button>
+            onClick={() => setOpenCreateModal(false)}
+          />
 
-          <Button onClick={handleUpdatePayment}>Guardar</Button>
+          <YesButton title="Aceptar" onClick={handleUpdatePayment} />
         </div>
       </Modal>
 
@@ -818,18 +823,18 @@ export default function StudentPayments() {
           error={errorsEnrollment.date}
         />
 
-        <div className="flex justify-end gap-3 mt-6">
-          <Button
+        <div className="flex justify-end gap-3">
+          <NoButton
+            title="Cancelar"
             variant="outline"
             onClick={() => {
               setOpenCreateEnrollmentModal(false);
               resetEnrollmentForm();
             }}
-          >
-            Cancelar
-          </Button>
+            onClick={() => setOpenCreateModal(false)}
+          />
 
-          <Button onClick={handleCreateEnrollment}>Registrar</Button>
+          <YesButton title="Aceptar" onClick={handleCreateEnrollment} />
         </div>
       </Modal>
 
@@ -876,18 +881,18 @@ export default function StudentPayments() {
           error={errorsEditEnrollment.date}
         />
 
-        <div className="flex justify-end gap-3 mt-6">
-          <Button
+        <div className="flex justify-end gap-3">
+          <NoButton
+            title="Cancelar"
             variant="outline"
             onClick={() => {
               setOpenEditEnrollmentModal(false);
               resetEditEnrollmentForm();
             }}
-          >
-            Cancelar
-          </Button>
+            onClick={() => setOpenCreateModal(false)}
+          />
 
-          <Button onClick={handleUpdateEnrollment}>Guardar</Button>
+          <YesButton title="Aceptar" onClick={handleUpdateEnrollment} />
         </div>
       </Modal>
 

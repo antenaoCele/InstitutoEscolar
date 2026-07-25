@@ -566,11 +566,15 @@ export function Plans() {
       : []),
   ];
 
+  const showCreateButtons = isAdmin();
+
   const tableTitle = (
     <div className="flex justify-between items-center">
       <span>Planes</span>
 
-      {isAdmin() && <PlusButton title="Crear Plan" onClick={openCreate} />}
+      {showCreateButtons && (
+        <PlusButton title="Crear Plan" onClick={openCreate} />
+      )}
     </div>
   );
 
@@ -614,6 +618,13 @@ export function Plans() {
         columns={columns}
         data={filteredCurrentPlans}
       />
+      {showCreateButtons && (
+        <div className="mt-8">
+          <Button onClick={openCreate} className={buttonClass}>
+            Crear Plan
+          </Button>
+        </div>
+      )}
 
       {/* ================== MODAL: CREAR PLAN ================== */}
       <Modal isOpen={openCreateModal} onClose={() => setOpenCreateModal(false)}>
