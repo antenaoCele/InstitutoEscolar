@@ -393,13 +393,21 @@ LEFT JOIN users u
   },
 
   // ======================================================
-  // DELETE (soft-delete)
-  // Desactiva al docente y cierra (end_date) todos los
-  // student_plans que tenía abiertos, en una transacción.
+  // DELETE (soft-delete del docente, hard-delete de sus
+  // relaciones de planes y horarios)
+  //
+  // - teacher_plans y schedules NO tienen valor histórico
+  //   (no afectan sueldos ni liquidaciones), así que se
+  //   eliminan físicamente al desactivar al docente.
+  // - student_plans SÍ es histórico (payments/liquidations
+  //   dependen de él), así que se sigue cerrando con
+  //   end_date en vez de borrarse.
+  // - Nota: si reactivás al docente después, los planes y
+  //   horarios NO vuelven; hay que recargarlos a mano.
   // ======================================================
   delete: async (req, res) => {
     const { id } = req.params;
-    const { delete_user_too } = req.query; // o req.body, según cómo lo mandes desde el front
+    const { delete_user_too } = req.query;
 
     const connection = await db.getConnection();
 
@@ -429,7 +437,28 @@ LEFT JOIN users u
 
       const userId = teacherRows[0].user_id;
 
-      // Cerramos todos los student_plans abiertos de este docente
+      // Borramos primero las relaciones alumno-horario que
+      // dependen de los schedules de este docente (por la FK)
+      await connection.execute(
+        `DELETE ss FROM schedule_students ss
+         JOIN schedules sch ON sch.id = ss.schedule_id
+         WHERE sch.teacher_id = ?`,
+        [id],
+      );
+
+      // Ahora sí, borramos los horarios del docente
+      await connection.execute("DELETE FROM schedules WHERE teacher_id = ?", [
+        id,
+      ]);
+
+      // Borramos la relación de qué planes puede dictar
+      await connection.execute(
+        "DELETE FROM teacher_plans WHERE teacher_id = ?",
+        [id],
+      );
+
+      // Cerramos (no borramos) los student_plans, porque de
+      // ahí salen payments y teacher_liquidations
       await connection.execute(
         `UPDATE student_plans
        SET end_date = CURDATE()
@@ -437,19 +466,15 @@ LEFT JOIN users u
         [id],
       );
 
-      // Desactivamos al docente (no se borra físicamente)
+      // Desactivamos al docente
       await connection.execute(
         "UPDATE teachers SET active = false WHERE id = ?",
         [id],
       );
 
-      // Si tenía usuario y se pidió eliminarlo también
       if (delete_user_too === "true" && userId) {
         await connection.execute("DELETE FROM users WHERE id = ?", [userId]);
 
-        // Como el docente sigue existiendo (soft-delete), hay que
-        // limpiar la referencia para no dejar un user_id colgando
-        // de un usuario que ya no existe
         await connection.execute(
           "UPDATE teachers SET user_id = NULL WHERE id = ?",
           [id],

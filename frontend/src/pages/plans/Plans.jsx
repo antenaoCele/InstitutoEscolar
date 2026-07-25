@@ -441,7 +441,7 @@ export function Plans() {
         const planSubjectsRes = await PlanSubjectService.getAll();
         setAllPlanSubjects(planSubjectsRes.data.data || []);
 
-        const teachersRes = await teacherService.getAll();
+        const teachersRes = await teacherService.getAll({ active: true });
         setTeachers(teachersRes.data.data || []);
       } catch (error) {
         console.error(error);

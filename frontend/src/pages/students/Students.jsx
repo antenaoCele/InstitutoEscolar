@@ -24,6 +24,7 @@ import { sortByProperty, sortByPersonName } from "../../utils/sort";
 import { useFeedbackModal } from "../../hooks/useFeedbackModal";
 import { mapErrors } from "../../validators/helpers/errorHelpers";
 import { validateStudentForm } from "../../validators/entities/student.validator";
+import { getTodayLocal } from "../../utils/date.js";
 
 export function Students() {
   // ======================================================
@@ -149,7 +150,7 @@ export function Students() {
   // ======================================================
   const fetchFilters = async () => {
     try {
-      const teachersRes = await teacherService.getAll();
+      const teachersRes = await teacherService.getAll({ active: true });
       const plansRes = await planService.getAll();
 
       setTeachers(teachersRes.data.data || []);
@@ -325,7 +326,7 @@ export function Students() {
                 student_id: selectedStudent.id,
                 teacher_id: p.teacher_id,
                 plan_id: p.plan_id,
-                start_date: new Date().toISOString().slice(0, 10),
+                start_date: getTodayLocal(),
               });
             }
 
@@ -342,7 +343,7 @@ export function Students() {
               student_id: selectedStudent.id,
               teacher_id: p.teacher_id,
               plan_id: p.plan_id,
-              start_date: new Date().toISOString().slice(0, 10),
+              start_date: getTodayLocal(),
             });
           }),
       );
@@ -576,9 +577,11 @@ export function Students() {
               className="
                 border
                 border-gray-200
+                dark:border-gray-700
                 rounded-xl
                 p-3
                 bg-white
+                dark:bg-gray-800
                 shadow-sm
               "
             >

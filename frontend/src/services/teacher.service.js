@@ -21,6 +21,7 @@ export const teacherService = {
     return api.get("/teachers", {
       params: {
         plan_id: planId,
+        active: true,
       },
     });
   },

@@ -109,7 +109,7 @@ export default function WeeklyCalendar() {
   // ======================================================
   const fetchTeachers = async () => {
     try {
-      const res = await teacherService.getAll();
+      const res = await teacherService.getAll({ active: true });
 
       const orderedTeachers = (res.data.data || []).sort(
         (a, b) =>
@@ -125,7 +125,7 @@ export default function WeeklyCalendar() {
 
   const fetchStudents = async () => {
     try {
-      const res = await studentService.getAll();
+      const res = await studentService.getActiveStudents();
 
       const uniqueStudents = [
         ...new Map(
@@ -1248,78 +1248,6 @@ dark:text-violet-200
 
           {selectedStudentPlans.map((student) => (
             <div key={student.studentId}>
-              <div
-                className="
-                  cursor-pointer
-                  border
-                  rounded-lg
-                  p-4
-                  mb-2
-                  bg-gray-50
-                  dark:bg-gray-800
-
-                  border
-                  border-gray-200
-                  dark:border-gray-700
-                "
-              >
-                <div className="flex justify-between items-center">
-                  <div className="font-semibold">{student.studentName}</div>
-
-                  <button
-                    type="button"
-                    className="cursor-pointer text-red-500 font-bold"
-                    onClick={() => handleRemoveStudent(student.studentId)}
-                  >
-                    ✕
-                  </button>
-                </div>
-                <div className="mt-4 font-semibold">Planes disponibles</div>
-                <div className="space-y-2 mt-2">
-                  {student.plans.map((plan) => (
-                    <div key={plan.id}>
-                      <label>
-                        <input
-                          type="checkbox"
-                          checked={student.selectedPlans.some(
-                            (p) => p.id === plan.id,
-                          )}
-                          onChange={() =>
-                            handlePlanToggle(student.studentId, plan)
-                          }
-                        />{" "}
-                        {plan.name}
-                      </label>
-                    </div>
-                  ))}
-                </div>
-                {student.selectedPlans.length > 0 && (
-                  <div className="mt-4">
-                    <p className="font-semibold mb-2">Materias</p>
-
-                    <ul
-                      className="
-                        ml-5
-                        list-disc
-                        text-sm
-                        text-gray-600
-                        dark:text-gray-300
-                        space-y-1
-                      "
-                    >
-                      {[
-                        ...new Set(
-                          student.selectedPlans.flatMap(
-                            (plan) => plan.subjects ?? [],
-                          ),
-                        ),
-                      ].map((subject) => (
-                        <li key={subject}>{subject}</li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
-              </div>
               {errorsCreate.studentConflict && (
                 <div className="mt-4 text-sm text-red-500">
                   {errorsCreate.studentConflict}

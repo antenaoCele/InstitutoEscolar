@@ -351,21 +351,60 @@ export const studentPlansController = {
   },
 
   softDelete: async (req, res) => {
-    try {
-      const id = Number(req.params.id);
+    const id = Number(req.params.id);
+    const connection = await db.getConnection();
 
-      await db.execute(
+    try {
+      await connection.beginTransaction();
+
+      const [rows] = await connection.execute(
+        `SELECT student_id, teacher_id, plan_id
+         FROM student_plans
+         WHERE id = ?`,
+        [id],
+      );
+
+      if (!rows.length) {
+        await connection.rollback();
+        return res.status(404).json({
+          success: false,
+          message: "Registro no encontrado",
+        });
+      }
+
+      const { student_id, teacher_id, plan_id } = rows[0];
+
+      // Sacamos al alumno de los horarios correspondientes a
+      // este plan/docente puntual. No borramos el schedule en
+      // sí, porque puede tener otros alumnos anotados.
+      await connection.execute(
+        `DELETE ss FROM schedule_students ss
+         JOIN schedules sch ON sch.id = ss.schedule_id
+         WHERE ss.student_id = ?
+         AND sch.teacher_id = ?
+         AND sch.plan_id = ?`,
+        [student_id, teacher_id, plan_id],
+      );
+
+      await connection.execute(
         `UPDATE student_plans
         SET end_date = CURDATE()
         WHERE id = ?`,
         [id],
       );
 
+      await connection.commit();
+
       res.json({ success: true, message: "Baja realizada correctamente" });
     } catch (error) {
+      await connection.rollback();
+      console.error(error);
+
       res
         .status(500)
         .json({ success: false, message: "Error al procesar la baja" });
+    } finally {
+      connection.release();
     }
   },
 

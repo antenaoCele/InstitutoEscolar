@@ -576,18 +576,18 @@ export default function StudentPayments() {
 
       {/* ---------- Totales ---------- */}
       <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
-        <ComponentCard title="Pagos registrados">
+        <ComponentCard title="Cuotas">
           <p className="text-2xl font-bold">{payments.length}</p>
         </ComponentCard>
 
-        <ComponentCard title="Inscripciones registradas">
-          <p className="text-2xl font-bold">{enrollments.length}</p>
-        </ComponentCard>
-
-        <ComponentCard title="Total de pagos">
+        <ComponentCard title="Total de cuotas">
           <p className="text-2xl font-bold">
             ${totalPayments.toLocaleString("es-AR")}
           </p>
+        </ComponentCard>
+
+        <ComponentCard title="Inscripciones">
+          <p className="text-2xl font-bold">{enrollments.length}</p>
         </ComponentCard>
 
         <ComponentCard title="Total de inscripciones">
@@ -774,27 +774,20 @@ export default function StudentPayments() {
         }}
       >
         <h2 className="text-xl font-bold mb-6">Registrar inscripción</h2>
+        <Select
+          label="Estudiante"
+          value={enrollmentStudent}
+          onChange={(e) => setEnrollmentStudent(e.target.value)}
+          error={errorsEnrollment.student}
+        >
+          <option value="">Seleccione un estudiante</option>
 
-        <Label>Estudiantes (tilde uno o más si son hermanos)</Label>
-        <div className="max-h-56 overflow-y-auto border border-gray-200 rounded-lg p-3 space-y-1 mb-1">
-          {students.length === 0 && (
-            <p className="text-sm text-gray-500">No hay estudiantes activos.</p>
-          )}
-
-          {students.map((s) => (
-            <label
-              key={s.id}
-              className="flex items-center gap-2 cursor-pointer"
-            >
-              <input
-                type="checkbox"
-                checked={enrollmentStudents.includes(s.id)}
-                onChange={() => toggleEnrollmentStudent(s.id)}
-              />
-              {s.last_name}, {s.first_name}
-            </label>
+          {students.map((student) => (
+            <option key={student.id} value={student.id}>
+              {student.last_name}, {student.first_name}
+            </option>
           ))}
-        </div>
+        </Select>
 
         {errorsEnrollment.students && (
           <p className="text-red-500 text-sm mb-3">

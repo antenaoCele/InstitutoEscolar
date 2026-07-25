@@ -1,14 +1,23 @@
 import { db } from "../db.js";
+import { getCurrentDateParts } from "../utils/dateUtils.js";
 
 export const dashboardController = {
   getStats: async (req, res) => {
     const isAdmin = req.user.role === "ADMIN";
 
     try {
+      const { today, yearMonth, day } = getCurrentDateParts();
+
+      // Convertimos getDay() de JS (domingo=0...sábado=6) a la
+      // convención que usa la columna `day` de schedules
+      // (lunes=1...sábado=6, domingo=7), equivalente a lo que
+      // devolvía WEEKDAY(CURDATE())+1 en MySQL.
+      const jsDay = today.getDay();
+      const weekday = jsDay === 0 ? 7 : jsDay;
+
       // ====================================================
       // DASHBOARD ADMIN
       // ====================================================
-      // Se mantiene exactamente igual al actual.
       if (isAdmin) {
         const [
           [activeStudents],
@@ -60,11 +69,14 @@ export const dashboardController = {
           // =====================================
           // CLASES DEL DÍA
           // =====================================
-          db.execute(`
+          db.execute(
+            `
           SELECT COUNT(*) AS total
           FROM schedules
-          WHERE day = WEEKDAY(CURDATE()) + 1
-        `),
+          WHERE day = ?
+        `,
+            [weekday],
+          ),
 
           // =====================================
           // ESTUDIANTES ACTIVOS POR NIVEL
@@ -114,7 +126,8 @@ export const dashboardController = {
           // =====================================
           // PLANES PAGADOS ESTE MES
           // =====================================
-          db.execute(`
+          db.execute(
+            `
           SELECT COUNT(*) AS total
           FROM (
               SELECT
@@ -124,35 +137,46 @@ export const dashboardController = {
               INNER JOIN student_plans sp
                   ON sp.id = p.student_plan_id
               WHERE
-                  MONTH(p.payment_date) = MONTH(CURDATE())
-                  AND YEAR(p.payment_date) = YEAR(CURDATE())
+                  DATE_FORMAT(p.payment_date, '%Y-%m') = ?
               GROUP BY
                   sp.student_id,
                   sp.plan_id
           ) paid
-        `),
+        `,
+            [yearMonth],
+          ),
 
           // =====================================
           // DINERO COBRADO ESTE MES
+          // (payments + enrollments del mes actual)
           // =====================================
-          db.execute(`
-          SELECT
-            COALESCE(SUM(amount),0) AS total
-          FROM payments
-          WHERE
-            MONTH(payment_date)=MONTH(CURDATE())
-            AND YEAR(payment_date)=YEAR(CURDATE())
-        `),
+          db.execute(
+            `
+          SELECT COALESCE(SUM(total), 0) AS total FROM (
+              SELECT amount AS total
+              FROM payments
+              WHERE DATE_FORMAT(payment_date, '%Y-%m') = ?
+
+              UNION ALL
+
+              SELECT amount AS total
+              FROM enrollments
+              WHERE DATE_FORMAT(payment_date, '%Y-%m') = ?
+          ) combined
+        `,
+            [yearMonth, yearMonth],
+          ),
 
           // =====================================
           // DINERO PENDIENTE
           // =====================================
-          db.execute(`
+          db.execute(
+            `
           SELECT
           COALESCE(
               SUM(
                   ROUND(
-                      pp.price * IF(DAY(CURDATE()) > 15, 1.15, 1),
+                      pp.price * IF(? > 15, 1.15, 1),
                       2
                   )
               ),
@@ -172,15 +196,17 @@ export const dashboardController = {
               WHERE
                   sp2.student_id = sp.student_id
                   AND sp2.plan_id = sp.plan_id
-                  AND MONTH(p.payment_date) = MONTH(CURDATE())
-                  AND YEAR(p.payment_date) = YEAR(CURDATE())
+                  AND DATE_FORMAT(p.payment_date, '%Y-%m') = ?
           )
-        `),
+        `,
+            [day, yearMonth],
+          ),
 
           // =====================================
           // PLANES PENDIENTES
           // =====================================
-          db.execute(`
+          db.execute(
+            `
          SELECT COUNT(*) AS total
         FROM student_plans sp
         WHERE
@@ -193,10 +219,11 @@ export const dashboardController = {
                 WHERE
                     sp2.student_id = sp.student_id
                     AND sp2.plan_id = sp.plan_id
-                    AND MONTH(p.payment_date) = MONTH(CURDATE())
-                    AND YEAR(p.payment_date) = YEAR(CURDATE())
+                    AND DATE_FORMAT(p.payment_date, '%Y-%m') = ?
             )
-        `),
+        `,
+            [yearMonth],
+          ),
         ]);
 
         return res.json({
@@ -225,8 +252,6 @@ export const dashboardController = {
       // DASHBOARD DOCENTE
       // ====================================================
 
-      // Buscar el docente asociado al usuario autenticado.
-      // DESPUÉS
       const [teacherRows] = await db.execute(
         `
   SELECT id
@@ -235,8 +260,7 @@ export const dashboardController = {
   `,
         [req.user.userId],
       );
-      // Si el usuario no tiene un docente asociado,
-      // el frontend mostrará un mensaje.
+
       if (!teacherRows.length) {
         return res.json({
           success: true,
@@ -277,9 +301,9 @@ export const dashboardController = {
           FROM schedules
           WHERE
             teacher_id = ?
-            AND day = WEEKDAY(CURDATE()) + 1
+            AND day = ?
           `,
-          [teacherId],
+          [teacherId, weekday],
         ),
 
         // =====================================
