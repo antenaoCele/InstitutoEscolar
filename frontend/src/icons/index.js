@@ -63,6 +63,7 @@ import { ReactComponent as SunIcon } from "./sun.svg?react";
 import { ReactComponent as MoonIcon } from "./moon.svg?react";
 import { ReactComponent as SunFatIcon } from "./sun2.svg?react";
 import { ReactComponent as ActivationIcon } from "./activation.svg?react";
+import { ReactComponent as MenuIcon } from "./Menu.svg?react";
 import SaveIcon from "./icons8-guardar-32.png";
 import MoreIcon from "./icons8-añadir-48-dos.png";
 import CreateIcon from "./icons8-crear-48.png";
@@ -77,7 +78,8 @@ import AssignTeacher from "./icons8-agregar-usuario-32.png";
 import BirthdaysIcon from "./icons8-cumpleaños-48.png";
 
 export {
-  ActivationIcon,
+  ActivationIc,
+  MenuIcon,
   MoonIcon,
   SunIcon,
   SunFatIcon,
