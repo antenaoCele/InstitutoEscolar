@@ -18,6 +18,7 @@ import { Subjects } from "./pages/subjects/Subjects.jsx";
 import { Plans } from "./pages/plans/Plans.jsx";
 import { Home } from "./pages/home/Home.jsx";
 import TeacherLiquidations from "./pages/teachers/TeacherLiquidations.jsx";
+import MonthlyFinances from "./pages/gains/MonthlyFinances.jsx";
 
 export default function App() {
   const { isAuthenticated, sessionExpired, setSessionExpired, logout } =
@@ -69,6 +70,7 @@ export default function App() {
               path="/teachers/liquidations"
               element={<TeacherLiquidations />}
             />
+            <Route path="/gains" element={<MonthlyFinances />} />
           </Route>
         </Route>
 

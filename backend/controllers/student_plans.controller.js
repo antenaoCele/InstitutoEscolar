@@ -1,7 +1,7 @@
 import { db } from "../db.js";
 import { createCrudController } from "../utils/crudFactory.js";
-import { calculateAccountStatus } from "../utils/accountStatus.js";
 import { isTeacherCompatibleWithPlan } from "../utils/student_plans.utils.js";
+import { getStudentPlanStatus } from "../services/payments.service.js";
 
 const baseController = createCrudController("student_plans");
 
@@ -17,7 +17,8 @@ export const studentPlansController = {
         p.id AS plan_id,
         t.id AS teacher_id,
         sp.start_date,
-        sp.end_date
+        sp.end_date,
+        sp.first_payment_option
       FROM student_plans sp
       JOIN students s ON sp.student_id = s.id
       JOIN plans p ON sp.plan_id = p.id
@@ -30,6 +31,7 @@ export const studentPlansController = {
         data: rows,
       });
     } catch (error) {
+      console.error(error);
       res.status(500).json({
         success: false,
         message: "Error al obtener los registros",
@@ -49,7 +51,8 @@ export const studentPlansController = {
           p.id AS plan_id,
           t.id AS teacher_id,
           sp.start_date,
-          sp.end_date
+          sp.end_date,
+          sp.first_payment_option
         FROM student_plans sp
         JOIN students s ON sp.student_id = s.id
         JOIN plans p ON sp.plan_id = p.id
@@ -71,6 +74,7 @@ export const studentPlansController = {
         data: rows[0],
       });
     } catch (error) {
+      console.error(error);
       res.status(500).json({
         success: false,
         message: "Error al obtener el registro",
@@ -78,98 +82,43 @@ export const studentPlansController = {
     }
   },
 
+  // =====================================================
+  // ESTADO DE CUENTA (siempre "hoy", ya no admite consultar
+  // un mes histórico — usa getStudentPlanStatus del service)
+  // =====================================================
   getAccountStatus: async (req, res) => {
     try {
-      const { month, teacher_id } = req.query;
+      const { teacher_id } = req.query;
 
-      if (!month) {
-        return res.status(400).json({
-          success: false,
-          error: "Debe enviar el mes en formato YYYY-MM",
-        });
-      }
-
-      const firstDay = `${month}-01`;
-
-      const nextMonth = new Date(firstDay);
-      nextMonth.setMonth(nextMonth.getMonth() + 1);
-      const nextMonthStr = nextMonth.toISOString().slice(0, 10);
-
-      let query = `
-      SELECT
-        sp.id AS student_plan_id,
-        sp.student_id,
-        sp.teacher_id,
-
-        pp.price,
-
-      IFNULL(SUM(p.amount), 0) AS total_paid
-
-      FROM student_plans sp
-
-      LEFT JOIN plan_prices pp
-      ON sp.plan_id = pp.plan_id
-      AND pp.start_date <= LAST_DAY(?)
-      AND (pp.end_date IS NULL OR pp.end_date >= LAST_DAY(?))
-
-      LEFT JOIN payments p
-      ON p.student_plan_id = sp.id
-      AND p.payment_date >= ?
-      AND p.payment_date < ?
-
-      WHERE
-        sp.start_date <= LAST_DAY(?)
-      AND (sp.end_date IS NULL OR sp.end_date >= ?)
+      let sql = `
+        SELECT id, student_id, teacher_id
+        FROM student_plans
       `;
 
-      const params = [
-        firstDay,
-        firstDay,
-        firstDay,
-        nextMonthStr,
-        firstDay,
-        firstDay,
-      ];
+      const params = [];
 
       if (teacher_id) {
-        query += " AND sp.teacher_id = ? ";
+        sql += " WHERE teacher_id = ? ";
         params.push(teacher_id);
       }
 
-      query += `
-      GROUP BY sp.id, sp.student_id, sp.teacher_id, pp.price
-      `;
+      const [plans] = await db.execute(sql, params);
 
-      const [rows] = await db.execute(query, params);
+      const result = await Promise.all(
+        plans.map(async (plan) => {
+          const status = await getStudentPlanStatus(plan.id);
 
-      const today = new Date();
-
-      const result = rows.map((row) => {
-        const { interest, total_paid, price, expected_total, debt, status } =
-          calculateAccountStatus({
-            price: row.price,
-            total_paid: row.total_paid,
-            today,
-            yearMonth: month,
-          });
-
-        return {
-          student_plan_id: row.student_plan_id,
-          student_id: row.student_id,
-          teacher_id: row.teacher_id,
-
-          price,
-          total_paid,
-          interest,
-          expected_total,
-          debt,
-          status,
-        };
-      });
+          return {
+            student_plan_id: plan.id,
+            student_id: plan.student_id,
+            teacher_id: plan.teacher_id,
+            ...status,
+          };
+        }),
+      );
 
       res.json({
         success: true,
-        month,
         data: result,
       });
     } catch (error) {
@@ -177,6 +126,35 @@ export const studentPlansController = {
       res.status(500).json({
         success: false,
         error: "Error al calcular el estado de cuenta",
+      });
+    }
+  },
+
+  // =====================================================
+  // ESTADO DE UN student_plan PUNTUAL (para el formulario de pago)
+  // =====================================================
+  getStatus: async (req, res) => {
+    try {
+      const id = Number(req.params.id);
+
+      const status = await getStudentPlanStatus(id);
+
+      if (!status) {
+        return res.status(404).json({
+          success: false,
+          message: "Registro no encontrado",
+        });
+      }
+
+      res.json({
+        success: true,
+        data: status,
+      });
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({
+        success: false,
+        message: "Error al obtener el estado del plan",
       });
     }
   },
@@ -224,7 +202,8 @@ export const studentPlansController = {
           teacher_id,
           plan_id,
           start_date,
-          end_date
+          end_date,
+          first_payment_option
         FROM student_plans
         WHERE id = ?
         `,
@@ -326,7 +305,8 @@ export const studentPlansController = {
           teacher_id,
           plan_id,
           start_date,
-          end_date
+          end_date,
+          first_payment_option
         FROM student_plans
         WHERE id = ?
         `,
@@ -405,27 +385,6 @@ export const studentPlansController = {
         .json({ success: false, message: "Error al procesar la baja" });
     } finally {
       connection.release();
-    }
-  },
-
-  reactivate: async (req, res) => {
-    try {
-      const { student_id } = req.body;
-      await db.execute(
-        `UPDATE student_plans
-        SET end_date = NULL
-        WHERE student_id = ?
-        ORDER BY id DESC LIMIT 1`,
-        [student_id],
-      );
-      res.json({
-        success: true,
-        message: "Estudiante reactivado correctamente",
-      });
-    } catch (error) {
-      res
-        .status(500)
-        .json({ success: false, message: "Error al reactivar al estudiante" });
     }
   },
 };

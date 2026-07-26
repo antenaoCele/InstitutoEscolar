@@ -6,6 +6,7 @@ import {
   validateDate,
   validateDateRange,
   validateFKFormat,
+  validateFirstPaymentOption,
 } from "../rules/format.rules.js";
 
 export const validateStudentPlans = [
@@ -18,6 +19,7 @@ export const validateStudentPlans = [
   ...validateDate("start_date"),
   ...validateDate("end_date", true),
   ...validateDateRange("start_date", "end_date"),
+  ...validateFirstPaymentOption("first_payment_option"),
   ...validateUniqueCombination(
     "student_plans",
     ["student_id", "plan_id"],
@@ -36,6 +38,7 @@ export const validateEditStudentPlans = [
   ...validateDate("start_date", true),
   ...validateDate("end_date", true),
   ...validateDateRange("start_date", "end_date", true),
+  ...validateFirstPaymentOption("first_payment_option", true),
   ...validateUniqueCombination(
     "student_plans",
     ["student_id", "plan_id"],

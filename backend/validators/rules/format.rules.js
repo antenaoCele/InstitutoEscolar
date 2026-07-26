@@ -1,5 +1,6 @@
 import { body } from "express-validator";
 import { baseField, isTruthy } from "../helpers/validations.helpers.js";
+import { getCurrentDateParts } from "../../utils/dateUtils.js";
 
 /* =========================================================
 DATE
@@ -260,9 +261,50 @@ MONTH
 export const validateMonth = (field, optional = false) => [
   baseField(field, optional)
     .trim()
+    .toInt()
     .isInt({ min: 1, max: 12 })
     .withMessage("Mes inválido. Debe ser un número entre 1 y 12."),
 ];
+
+/* =========================================================
+MONTH/YEAR NOT IN THE FUTURE
+Bloquea que se cargue un cierre para un mes/año posterior
+al mes/año actual. Se ancla al campo "month" pero lee
+también "year" del body.
+========================================================= */
+export const validateNotFutureMonthYear = (
+  monthField,
+  yearField,
+  optional = false,
+) => {
+  let validator = body(monthField);
+
+  if (optional) {
+    validator = validator.optional();
+  }
+
+  return [
+    validator.custom((monthValue, { req }) => {
+      const yearValue = req.body[yearField];
+
+      if (monthValue === undefined || yearValue === undefined) return true;
+
+      const month = Number(monthValue);
+      const year = Number(yearValue);
+
+      const { year: currentYear, month: currentMonth } = getCurrentDateParts();
+
+      if (
+        year > currentYear ||
+        (year === currentYear && month > currentMonth)
+      ) {
+        throw new Error("No se puede cerrar un mes futuro.");
+      }
+
+      return true;
+    }),
+  ];
+};
 
 /* =========================================================
 NAME
@@ -311,6 +353,16 @@ export const validatePaymentMethod = (field, optional = false) => [
 ];
 
 /* =========================================================
+PERIOD (YYYY-MM)
+========================================================= */
+export const validatePeriod = (field, optional = false) => [
+  baseField(field, optional)
+    .trim()
+    .matches(/^\d{4}-(0[1-9]|1[0-2])$/)
+    .withMessage("El período debe tener formato YYYY-MM."),
+];
+
+/* =========================================================
 PERSON NAME
 ========================================================= */
 export const validatePersonName = (field, optional = false) => [
@@ -355,6 +407,15 @@ export const validateRole = (field, optional = false) => [
     .withMessage("Rol inválido."),
 ];
 
+/* =========================================================
+FIRST PAYMENT OPTION
+========================================================= */
+export const validateFirstPaymentOption = (field, optional = false) => [
+  baseField(field, optional)
+    .trim()
+    .isIn(["FULL", "HALF", "NEXT_MONTH"])
+    .withMessage("Opción de primer pago inválida."),
+];
 /* =========================================================
 START TIME
 ========================================================= */
@@ -402,6 +463,7 @@ YEAR
 export const validateYear = (field, optional = false) => [
   baseField(field, optional)
     .trim()
+    .toInt()
     .isInt({ min: 2000, max: 2100 })
     .withMessage("Año inválido."),
 ];

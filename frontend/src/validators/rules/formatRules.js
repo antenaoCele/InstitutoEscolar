@@ -164,3 +164,17 @@ export const isNotFutureDate = (value) => {
 
   return inputDate <= today;
 };
+
+/* =========================================================
+OPCIÓN DE PRIMER PAGO
+Regla espejo de validateFirstPaymentOption (backend).
+========================================================= */
+export const isValidFirstPaymentOption = (value) =>
+  ["FULL", "HALF", "NEXT_MONTH"].includes(value);
+
+/* =========================================================
+PERÍODO (YYYY-MM)
+Regla espejo de validatePeriod (backend).
+========================================================= */
+export const isValidPeriod = (value) =>
+  /^\d{4}-(0[1-9]|1[0-2])$/.test(value?.toString().trim() || "");

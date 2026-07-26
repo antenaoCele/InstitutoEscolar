@@ -1,60 +1,12 @@
 import { db } from "../db.js";
 import { createCrudController } from "../utils/crudFactory.js";
+import { calculateMonthlyFinance } from "../services/monthly.finances.service.js";
 
 const baseController = createCrudController("monthly_finances");
 
-const calculateMonthlyFinance = async (year, month, otherExpenses = 0) => {
-  const monthString = `${year}-${String(month).padStart(2, "0")}`;
-
-  const startDateObj = new Date(year, month - 1, 1);
-  const endDateObj = new Date(year, month, 0);
-
-  const startDate = startDateObj.toISOString().split("T")[0];
-  const endDate = endDateObj.toISOString().split("T")[0];
-
-  const [payments] = await db.execute(
-    `
-    SELECT COALESCE(SUM(amount), 0) AS total
-    FROM payments
-    WHERE payment_date BETWEEN ? AND ?
-    `,
-    [startDate, endDate],
-  );
-
-  const [enrollments] = await db.execute(
-    `
-    SELECT COALESCE(SUM(amount), 0) AS total
-    FROM enrollments
-    WHERE payment_date BETWEEN ? AND ?
-    `,
-    [startDate, endDate],
-  );
-
-  const totalIncome = Number(payments[0].total) + Number(enrollments[0].total);
-
-  const [salaries] = await db.execute(
-    `
-  SELECT COALESCE(SUM(net_salary), 0) AS total
-  FROM teacher_liquidations
-  WHERE month = ?
-  `,
-    [monthString],
-  );
-
-  const totalSalaries = Number(salaries[0].total);
-
-  const netProfit = totalIncome - totalSalaries - otherExpenses;
-
-  return {
-    monthString,
-    totalIncome,
-    totalSalaries,
-    netProfit,
-  };
-};
-
 export const monthlyFinancesController = {
   ...baseController,
+
   getAll: async (req, res) => {
     try {
       const [rows] = await db.execute(
@@ -79,17 +31,17 @@ export const monthlyFinancesController = {
 
       const [rows] = await db.execute(
         `
-      SELECT 
-        id, 
-        year, 
-        month, 
-        total_income, 
-        total_salaries, 
-        other_expenses, 
-        net_profit 
-      FROM monthly_finances 
-      WHERE id = ?
-      `,
+        SELECT 
+          id, 
+          year, 
+          month, 
+          total_income, 
+          total_salaries, 
+          other_expenses, 
+          net_profit 
+        FROM monthly_finances 
+        WHERE id = ?
+        `,
         [id],
       );
 
@@ -115,43 +67,7 @@ export const monthlyFinancesController = {
 
   create: async (req, res) => {
     try {
-      const { year, month, other_expenses = 0 } = req.body;
-
-      const numYear = Number(year);
-      const numMonth = Number(month);
-
-      if (!numYear || numYear < 2020 || numYear > 2100) {
-        return res.status(400).json({
-          success: false,
-          message: "Año inválido. Debe ser un año real.",
-        });
-      }
-
-      if (!numMonth || numMonth < 1 || numMonth > 12) {
-        return res.status(400).json({
-          success: false,
-          message: "Mes inválido. Debe estar entre 1 y 12.",
-        });
-      }
-
-      if (!year || !month) {
-        return res.status(400).json({
-          success: false,
-          message: "Año y mes son obligatorios",
-        });
-      }
-
-      const [exists] = await db.execute(
-        "SELECT id FROM monthly_finances WHERE year = ? AND month = ?",
-        [year, month],
-      );
-
-      if (exists.length > 0) {
-        return res.status(400).json({
-          success: false,
-          message: "Ese mes ya fue cerrado",
-        });
-      }
+      const { year, month, other_expenses } = req.body;
 
       const { totalIncome, totalSalaries, netProfit } =
         await calculateMonthlyFinance(year, month, other_expenses);
@@ -160,14 +76,7 @@ export const monthlyFinancesController = {
         `INSERT INTO monthly_finances 
         (year, month, total_income, total_salaries, other_expenses, net_profit) 
         VALUES (?, ?, ?, ?, ?, ?)`,
-        [
-          Number(year),
-          Number(month),
-          totalIncome,
-          totalSalaries,
-          Number(other_expenses),
-          netProfit,
-        ],
+        [year, month, totalIncome, totalSalaries, other_expenses, netProfit],
       );
 
       return res.status(201).json({
@@ -178,6 +87,8 @@ export const monthlyFinancesController = {
           year,
           month,
           total_income: totalIncome,
+          total_salaries: totalSalaries,
+          other_expenses,
           net_profit: netProfit,
         },
       });
@@ -196,26 +107,6 @@ export const monthlyFinancesController = {
       const id = Number(req.params.id);
       const { year, month, other_expenses } = req.body;
 
-      if (year !== undefined) {
-        const numYear = Number(year);
-        if (isNaN(numYear) || numYear < 2020 || numYear > 2100) {
-          return res.status(400).json({
-            success: false,
-            message: "Año inválido. Debe ser un año real.",
-          });
-        }
-      }
-
-      if (month !== undefined) {
-        const numMonth = Number(month);
-        if (isNaN(numMonth) || numMonth < 1 || numMonth > 12) {
-          return res.status(400).json({
-            success: false,
-            message: "Mes inválido. Debe estar entre 1 y 12.",
-          });
-        }
-      }
-
       const [rows] = await db.execute(
         "SELECT * FROM monthly_finances WHERE id = ?",
         [id],
@@ -230,40 +121,26 @@ export const monthlyFinancesController = {
 
       const current = rows[0];
 
-      const newYear = year !== undefined ? Number(year) : current.year;
-      const newMonth = month !== undefined ? Number(month) : current.month;
+      const newYear = year !== undefined ? year : current.year;
+      const newMonth = month !== undefined ? month : current.month;
       const newOtherExpenses =
-        other_expenses !== undefined
-          ? Number(other_expenses)
-          : current.other_expenses;
-
-      const [exists] = await db.execute(
-        "SELECT id FROM monthly_finances WHERE year = ? AND month = ? AND id != ?",
-        [newYear, newMonth, id],
-      );
-
-      if (exists.length > 0) {
-        return res.status(400).json({
-          success: false,
-          message: "Ya existe un cierre para ese mes y año.",
-        });
-      }
+        other_expenses !== undefined ? other_expenses : current.other_expenses;
 
       const { totalIncome, totalSalaries, netProfit } =
         await calculateMonthlyFinance(newYear, newMonth, newOtherExpenses);
 
       await db.execute(
         `
-      UPDATE monthly_finances
-      SET
-        year = ?,
-        month = ?,
-        total_income = ?,
-        total_salaries = ?,
-        other_expenses = ?,
-        net_profit = ?
-      WHERE id = ?
-      `,
+        UPDATE monthly_finances
+        SET
+          year = ?,
+          month = ?,
+          total_income = ?,
+          total_salaries = ?,
+          other_expenses = ?,
+          net_profit = ?
+        WHERE id = ?
+        `,
         [
           newYear,
           newMonth,

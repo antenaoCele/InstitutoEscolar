@@ -29,6 +29,15 @@ router.get(
   paymentsController.getStudentActivePlans,
 );
 
+// Chequeo de pago duplicado para un período (informativo, no bloquea).
+// El frontend lo llama antes de confirmar el pago para armar el aviso.
+router.get(
+  "/check-duplicate",
+  authentication,
+  authorization("ADMIN"),
+  paymentsController.checkDuplicate,
+);
+
 router.get(
   "/:id",
   authentication,

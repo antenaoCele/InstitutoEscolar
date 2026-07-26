@@ -6,6 +6,10 @@ import {
 } from "../middlewares/auth.middleware.js";
 import { validateID } from "../validators/helpers/validation.middleware.js";
 import { checkValidations } from "../validators/helpers/validation.middleware.js";
+import {
+  validateMonthlyFinances,
+  validateEditMonthlyFinances,
+} from "../validators/entities/monthly_finances.validator.js";
 
 const router = express.Router();
 
@@ -28,6 +32,8 @@ router.post(
   "/",
   authentication,
   authorization("ADMIN"),
+  ...validateMonthlyFinances,
+  checkValidations,
   monthlyFinancesController.create,
 );
 
@@ -36,6 +42,7 @@ router.put(
   authentication,
   authorization("ADMIN"),
   ...validateID("monthly_finances"),
+  ...validateEditMonthlyFinances,
   checkValidations,
   monthlyFinancesController.update,
 );

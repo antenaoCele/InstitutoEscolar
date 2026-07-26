@@ -16,6 +16,7 @@ import {
   TeacherIcon,
   SubjectIcon,
   PlansIcon,
+  DollarBagIcon,
 } from "../../icons";
 
 const SidebarIcon = ({ children }) => (
@@ -130,6 +131,21 @@ const getNavItems = (isTeacherRole) => [
     name: "Usuarios",
     path: "/users",
   },
+
+  // "Ganancias" oculto para rol docente
+  ...(isTeacherRole
+    ? []
+    : [
+        {
+          icon: (
+            <SidebarIcon>
+              <DollarBagIcon className="w-5 h-5" />
+            </SidebarIcon>
+          ),
+          name: "Ganancias",
+          path: "/gains",
+        },
+      ]),
 ];
 
 const AppSidebar = () => {

@@ -1,6 +1,6 @@
 import { createCrudController } from "../utils/crudFactory.js";
-import { calculateAccountStatus } from "../utils/accountStatus.js";
 import { getCurrentDateParts } from "../utils/dateUtils.js";
+import { getStudentPlanStatus } from "../services/payments.service.js";
 import { db } from "../db.js";
 
 export const baseController = createCrudController("students");
@@ -17,8 +17,10 @@ export const studentsController = {
         payment_status,
       } = req.query;
 
-      const { today, yearMonth, date } = getCurrentDateParts();
-
+      // Se sacó el filtro por fecha del JOIN de student_plans: ahora
+      // se traen TODOS (activos e inactivos). Un plan dado de baja
+      // puede seguir teniendo deuda pendiente, y no queremos que
+      // desaparezca del listado apenas se da la baja.
       let query = `
       SELECT
           s.id AS student_id,
@@ -41,11 +43,6 @@ export const studentsController = {
 
           pl.name AS plan_name,
 
-          pp.price,
-          pay.paid_price,
-
-          IFNULL(pay.total_paid,0) AS total_paid,
-
           t.id AS tutor_id,
           t.first_name AS tutor_first_name,
           t.last_name AS tutor_last_name,
@@ -62,11 +59,6 @@ export const studentsController = {
 
       LEFT JOIN student_plans sp
           ON sp.student_id = s.id
-          AND sp.start_date <= ?
-          AND (
-              sp.end_date IS NULL
-              OR sp.end_date > ?
-          )
 
       LEFT JOIN teachers tea
           ON tea.id = sp.teacher_id
@@ -74,45 +66,10 @@ export const studentsController = {
       LEFT JOIN plans pl
           ON pl.id = sp.plan_id
 
-      LEFT JOIN plan_prices pp
-          ON pp.plan_id = sp.plan_id
-          AND pp.start_date <= ?
-          AND (
-              pp.end_date IS NULL
-              OR pp.end_date >= ?
-          )
-
-      LEFT JOIN (
-
-          SELECT
-              sp.student_id,
-              sp.plan_id,
-              SUM(p.amount) AS total_paid,
-              MAX(p.plan_price) AS paid_price
-
-          FROM payments p
-
-          INNER JOIN student_plans sp
-              ON sp.id = p.student_plan_id
-
-          WHERE DATE_FORMAT(p.payment_date,'%Y-%m') = ?
-
-          GROUP BY
-              sp.student_id,
-              sp.plan_id
-
-      ) pay
-
-      ON pay.student_id = sp.student_id
-      AND pay.plan_id = sp.plan_id
-
       WHERE 1=1
       `;
 
-      // El orden de estos parámetros debe respetar el orden de los "?"
-      // en el texto de la query de arriba (sp.start_date, sp.end_date,
-      // pp.start_date, pp.end_date, y luego el yearMonth del subquery de pagos).
-      const params = [date, date, date, date, yearMonth];
+      const params = [];
 
       if (teacher_id) {
         query += ` AND sp.teacher_id = ? `;
@@ -124,101 +81,110 @@ export const studentsController = {
         params.push(plan_id);
       }
 
-      if (filterStatus === "active") {
-        query += ` AND sp.id IS NOT NULL `;
-      }
-
-      if (filterStatus === "inactive") {
-        query += ` AND sp.id IS NULL `;
-      }
-
       query += `
       GROUP BY
           s.id,
           sp.id,
-          pp.price,
-          pay.paid_price,
           tea.id,
           pl.id,
-          t.id,
-          pay.total_paid
+          t.id
       `;
 
       const [rows] = await db.execute(query, params);
 
-      const result = rows.map((row) => {
-        // Si ya pagó este mes, el precio a comparar es el que
-        // quedó "congelado" en el pago (pay.paid_price), no el
-        // precio vigente hoy en plan_prices. Así, si el precio del
-        // plan cambia después de que el alumno pagó, no le queda
-        // una deuda fantasma por la diferencia.
-        const priceToUse = row.total_paid > 0 ? row.paid_price : row.price;
+      const rawResult = await Promise.all(
+        rows.map(async (row) => {
+          const studentData = {
+            id: row.student_id,
+            first_name: row.first_name,
+            last_name: row.last_name,
+            dni: row.dni,
+            school: row.school,
+            birth_date: row.birth_date,
+            level: row.level,
+            grade: row.grade,
+            student_plan_id: row.student_plan_id,
+          };
 
-        const accountData = calculateAccountStatus({
-          price: priceToUse,
-          total_paid: row.total_paid,
-          today,
-          yearMonth,
-        });
+          if (row.student_plan_id) {
+            const planStatus = await getStudentPlanStatus(row.student_plan_id);
 
-        const studentData = {
-          id: row.student_id,
-          first_name: row.first_name,
-          last_name: row.last_name,
-          dni: row.dni,
-          school: row.school,
-          birth_date: row.birth_date,
-          level: row.level,
-          grade: row.grade,
-          student_plan_id: row.student_plan_id,
-        };
+            // Un plan INACTIVE sin ninguna deuda pendiente es una
+            // inscripción vieja ya resuelta: no aporta nada mostrarla,
+            // así que se descarta. Un plan INACTIVE CON deuda se
+            // mantiene visible a propósito (para no "olvidar" la
+            // deuda al dar de baja).
+            if (
+              planStatus.academic_status === "INACTIVE" &&
+              planStatus.account_status !== "OVERDUE"
+            ) {
+              return null;
+            }
 
-        if (row.student_plan_id) {
-          Object.assign(studentData, {
-            teacher_id: row.teacher_id,
-            start_date: row.start_date,
-            end_date: row.end_date,
+            Object.assign(studentData, {
+              teacher_id: row.teacher_id,
+              start_date: row.start_date,
+              end_date: row.end_date,
 
-            teacher_first_name: row.teacher_first_name,
-            teacher_last_name: row.teacher_last_name,
+              teacher_first_name: row.teacher_first_name,
+              teacher_last_name: row.teacher_last_name,
 
-            plan_id: row.plan_id,
-            plan_name: row.plan_name,
+              plan_id: row.plan_id,
+              plan_name: row.plan_name,
 
-            tutor: row.tutor_id
-              ? {
-                  id: row.tutor_id,
-                  first_name: row.tutor_first_name,
-                  last_name: row.tutor_last_name,
-                  dni: row.tutor_dni,
-                  phone: row.tutor_phone,
-                }
-              : null,
+              tutor: row.tutor_id
+                ? {
+                    id: row.tutor_id,
+                    first_name: row.tutor_first_name,
+                    last_name: row.tutor_last_name,
+                    dni: row.tutor_dni,
+                    phone: row.tutor_phone,
+                  }
+                : null,
 
-            price: accountData.price,
-            total_paid: accountData.total_paid,
-            interest: accountData.interest,
-            expected_total: accountData.expected_total,
-            debt: accountData.debt,
-            status: accountData.status,
-          });
-        }
+              academic_status: planStatus.academic_status,
+              account_status: planStatus.account_status,
+              overdue_periods: planStatus.overdue_periods,
+              current_period: planStatus.current_period,
+            });
+          }
 
-        return studentData;
-      });
+          return studentData;
+        }),
+      );
 
-      // FILTRO POR ESTADO DE PAGO DEL MES ACTUAL
+      const result = rawResult.filter(Boolean);
+
+      // FILTRO POR ESTADO ACADÉMICO (activo/inactivo)
+      // Se hace en JS porque ahora un mismo alumno puede tener más de
+      // una fila (una activa + una inactiva con deuda), y la condición
+      // es sobre el alumno en conjunto, no sobre una fila puntual.
       let filteredResult = result;
 
+      if (filterStatus === "active" || filterStatus === "inactive") {
+        const activeStudentIds = new Set(
+          result.filter((r) => r.academic_status === "ACTIVE").map((r) => r.id),
+        );
+
+        filteredResult = result.filter((r) =>
+          filterStatus === "active"
+            ? activeStudentIds.has(r.id)
+            : !activeStudentIds.has(r.id),
+        );
+      }
+
+      // FILTRO POR ESTADO DE PAGO DEL MES ACTUAL
       if (payment_status === "paid") {
-        filteredResult = result.filter(
-          (student) => student.student_plan_id && student.status === "PAGADO",
+        filteredResult = filteredResult.filter(
+          (student) => student.current_period?.status === "paid",
         );
       }
 
       if (payment_status === "pending") {
-        filteredResult = result.filter(
-          (student) => student.student_plan_id && student.status === "DEBE",
+        filteredResult = filteredResult.filter(
+          (student) =>
+            student.current_period?.status === "pending" ||
+            (student.overdue_periods && student.overdue_periods.length > 0),
         );
       }
 
@@ -426,14 +392,22 @@ export const studentsController = {
       const studentId = studentResult.insertId;
 
       // 2. Crear relación en student_plans
+      // (agregado: first_payment_option, faltaba acá y por eso se
+      // perdía la opción elegida en el alta desde el frontend)
       if (formClasses && Array.isArray(formClasses)) {
         for (const p of formClasses) {
           if (p.teacher_id && p.plan_id) {
             await db.execute(
               `INSERT INTO student_plans
-         (student_id, plan_id, teacher_id, start_date)
-         VALUES (?, ?, ?, ?)`,
-              [studentId, p.plan_id, p.teacher_id, date],
+         (student_id, plan_id, teacher_id, start_date, first_payment_option)
+         VALUES (?, ?, ?, ?, ?)`,
+              [
+                studentId,
+                p.plan_id,
+                p.teacher_id,
+                date,
+                p.first_payment_option,
+              ],
             );
           }
         }
@@ -500,70 +474,3 @@ export const studentsController = {
   // (con CURDATE()/año actual) — avisame y la agrego con el mismo
   // criterio de usar getCurrentDateParts().
 };
-// closeYear: async (req, res) => {
-//   try {
-//     const year = req.body.year || new Date().getFullYear();
-
-//     const [result] = await db.execute(
-//       `UPDATE student_plans SET end_date = ? WHERE end_date IS NULL`,
-//       [`${year}-12-31`],
-//     );
-
-//     res.json({
-//       success: true,
-//       message: `Se dieron de baja ${result.affectedRows} planes activos.`,
-//     });
-//   } catch (error) {
-//     console.error(error);
-//     res
-//       .status(500)
-//       .json({ success: false, message: "Error al cerrar el año" });
-//   }
-// },
-
-// getByStudentIdWithStatus: async (req, res) => {
-//   try {
-//     const { id } = req.params;
-
-//     const today = new Date();
-//     const yearMonth = today.toISOString().slice(0, 7);
-
-//     const [rows] = await db.execute(
-//       `
-//       SELECT
-//         s.id AS student_id,
-//         s.first_name,
-//         s.last_name,
-//         s.dni,
-//         sp.teacher_id,
-//         sp.plan_id,
-//         pp.price,
-//         IFNULL(SUM(p.amount), 0) AS total_paid
-//       FROM students s
-//       LEFT JOIN student_plans sp ON sp.student_id = s.id
-//       LEFT JOIN plan_prices pp ON pp.plan_id = sp.plan_id
-//       LEFT JOIN payments p ON p.student_plan_id = sp.id
-//       WHERE s.id = ?
-//       GROUP BY s.id, sp.id, pp.price
-//       `,
-//       [id],
-//     );
-
-//     if (!rows.length) {
-//       return res.status(404).json({
-//         success: false,
-//         message: "Estudiante no encontrado",
-//       });
-//     }
-
-//     res.json({
-//       success: true,
-//       data: rows[0],
-//     });
-//   } catch (error) {
-//     res.status(500).json({
-//       success: false,
-//       message: "Error al obtener estudiante",
-//     });
-//   }
-// },

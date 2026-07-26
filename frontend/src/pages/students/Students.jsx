@@ -72,7 +72,12 @@ export function Students() {
 
   // ======================================================
   // PLANES DEL ALUMNO (se seleccionan con checkboxes)
-  // Cada fila: { plan_id, teacher_id, availableTeachers, student_plan_id?, start_date? }
+  // Cada fila: { plan_id, teacher_id, availableTeachers, student_plan_id?,
+  // start_date?, first_payment_option? }
+  // first_payment_option solo se pide/usa para filas NUEVAS (sin
+  // student_plan_id todavía). Una fila existente que solo cambia de
+  // docente no lo pide: se manda "FULL" fijo, porque no es un alta
+  // real (el alumno ya venía cursando).
   // ======================================================
   const [formClasses, setFormClasses] = useState([]);
   const [removedClasses, setRemovedClasses] = useState([]);
@@ -132,6 +137,10 @@ export function Students() {
               plan_id: row.plan_id,
               plan_name: row.plan_name,
               start_date: row.start_date,
+              academic_status: row.academic_status,
+              account_status: row.account_status,
+              overdue_periods: row.overdue_periods,
+              current_period_status: row.current_period?.status,
             });
           }
         }
@@ -201,6 +210,20 @@ export function Students() {
       return;
     }
 
+    const activeRows = formClasses.filter((p) => p.teacher_id && p.plan_id);
+
+    // Es un alta real: TODOS los planes son nuevos, así que todos
+    // necesitan una opción de primer pago elegida.
+    const missingOption = activeRows.some((p) => !p.first_payment_option);
+
+    if (missingOption) {
+      showFeedback(
+        "Seleccione la opción de primer pago para cada plan asignado.",
+        "error",
+      );
+      return;
+    }
+
     try {
       setErrorsCreate({});
 
@@ -212,7 +235,7 @@ export function Students() {
         birth_date: birthDate,
         level,
         grade,
-        formClasses: formClasses.filter((p) => p.teacher_id && p.plan_id),
+        formClasses: activeRows,
       });
 
       setOpenCreateModal(false);
@@ -261,19 +284,26 @@ export function Students() {
     setGrade(student.grade || "");
 
     const rows = await Promise.all(
-      (student.activePlans || []).map(async (p) => {
-        const response = await teacherService.getTeachersByPlan(p.plan_id);
+      (student.activePlans || [])
+        .filter((p) => p.academic_status === "ACTIVE")
+        .map(async (p) => {
+          const response = await teacherService.getTeachersByPlan(p.plan_id);
 
-        return {
-          teacher_id: p.teacher_id,
-          original_teacher_id: p.teacher_id, // CAMBIO: guardamos el docente con el que arrancó, para detectar cambios al guardar
-          plan_id: p.plan_id,
-          student_plan_id: p.student_plan_id,
-          start_date: p.start_date?.split("T")[0],
+          return {
+            teacher_id: p.teacher_id,
+            original_teacher_id: p.teacher_id, // guardamos el docente con el que arrancó, para detectar cambios al guardar
+            plan_id: p.plan_id,
+            student_plan_id: p.student_plan_id,
+            start_date: p.start_date?.split("T")[0],
+            // Fila existente: no se pide first_payment_option, ya se
+            // definió en su momento y no se vuelve a preguntar.
+            first_payment_option: null,
 
-          availableTeachers: (response.data.data || []).sort(sortByPersonName),
-        };
-      }),
+            availableTeachers: (response.data.data || []).sort(
+              sortByPersonName,
+            ),
+          };
+        }),
     );
 
     setFormClasses(rows);
@@ -299,6 +329,24 @@ export function Students() {
       return;
     }
 
+    const activeRows = formClasses.filter((p) => p.teacher_id && p.plan_id);
+
+    // Solo las filas NUEVAS (planes recién agregados en esta edición,
+    // sin student_plan_id todavía) necesitan la opción de primer pago.
+    // Un cambio de docente sobre una fila existente no la pide (se
+    // manda FULL fijo más abajo, sin preguntar).
+    const missingOption = activeRows.some(
+      (p) => !p.student_plan_id && !p.first_payment_option,
+    );
+
+    if (missingOption) {
+      showFeedback(
+        "Seleccione la opción de primer pago para los planes nuevos.",
+        "error",
+      );
+      return;
+    }
+
     try {
       setErrorsEdit({});
 
@@ -314,38 +362,43 @@ export function Students() {
 
       // Actualizar o crear planes dinámicamente
       await Promise.all(
-        formClasses
-          .filter((p) => p.teacher_id && p.plan_id)
-          .map(async (p) => {
-            // CAMBIO: si ya existía la fila y el docente cambió, cerramos el plan viejo
-            // (conserva el docente original, para no alterar pagos pasados) y abrimos uno nuevo
-            if (p.student_plan_id && p.teacher_id !== p.original_teacher_id) {
-              await studentPlanService.delete(p.student_plan_id);
-
-              return studentPlanService.create({
-                student_id: selectedStudent.id,
-                teacher_id: p.teacher_id,
-                plan_id: p.plan_id,
-                start_date: getTodayLocal(),
-              });
-            }
-
-            if (p.student_plan_id) {
-              return studentPlanService.update(p.student_plan_id, {
-                student_id: selectedStudent.id,
-                teacher_id: p.teacher_id,
-                plan_id: p.plan_id,
-                start_date: p.start_date,
-              });
-            }
+        activeRows.map(async (p) => {
+          // Si ya existía la fila y el docente cambió, cerramos el plan
+          // viejo (conserva el docente original, para no alterar pagos
+          // pasados) y abrimos uno nuevo. No es un alta real -> FULL fijo,
+          // sin preguntarle al admin. La deuda vieja (si la hay) se
+          // sigue rastreando sola contra la fila vieja.
+          if (p.student_plan_id && p.teacher_id !== p.original_teacher_id) {
+            await studentPlanService.delete(p.student_plan_id);
 
             return studentPlanService.create({
               student_id: selectedStudent.id,
               teacher_id: p.teacher_id,
               plan_id: p.plan_id,
               start_date: getTodayLocal(),
+              first_payment_option: "FULL",
             });
-          }),
+          }
+
+          if (p.student_plan_id) {
+            return studentPlanService.update(p.student_plan_id, {
+              student_id: selectedStudent.id,
+              teacher_id: p.teacher_id,
+              plan_id: p.plan_id,
+              start_date: p.start_date,
+            });
+          }
+
+          // Plan nuevo agregado en esta edición: sí es una asignación
+          // real, se usa la opción que eligió el admin.
+          return studentPlanService.create({
+            student_id: selectedStudent.id,
+            teacher_id: p.teacher_id,
+            plan_id: p.plan_id,
+            start_date: getTodayLocal(),
+            first_payment_option: p.first_payment_option,
+          });
+        }),
       );
 
       // Eliminar las clases quitadas por el usuario
@@ -378,8 +431,14 @@ export function Students() {
 
   const confirmDelete = async () => {
     try {
-      // Baja lógica de todos los planes activos vinculados al estudiante
-      for (const p of selectedStudent.activePlans || []) {
+      // Baja lógica de los planes REALMENTE activos vinculados al
+      // estudiante (los que ya están inactivos con deuda no se tocan,
+      // ya tienen su end_date congelado).
+      const plansToDeactivate = (selectedStudent.activePlans || []).filter(
+        (p) => p.academic_status === "ACTIVE",
+      );
+
+      for (const p of plansToDeactivate) {
         await studentPlanService.delete(p.student_plan_id);
       }
 
@@ -421,7 +480,12 @@ export function Students() {
 
       setFormClasses((prev) => [
         ...prev,
-        { plan_id: planId, teacher_id: "", availableTeachers },
+        {
+          plan_id: planId,
+          teacher_id: "",
+          first_payment_option: "",
+          availableTeachers,
+        },
       ]);
     } catch (error) {
       console.error(error);
@@ -456,6 +520,26 @@ export function Students() {
   // ======================================================
   const buttonClass = "cursor-pointer transition transform hover:scale-105";
 
+  // Estado de un plan puntual, para la columna "Estado del plan".
+  const getPlanStatusInfo = (plan) => {
+    if (plan.academic_status === "INACTIVE") {
+      return { text: "Baja — con deuda", color: "text-red-700" };
+    }
+    if (plan.account_status === "OVERDUE") {
+      return { text: "Suspendido (debe)", color: "text-orange-600" };
+    }
+    if (plan.current_period_status === "pending") {
+      return { text: "Pendiente", color: "text-yellow-600" };
+    }
+    if (plan.current_period_status === "paid") {
+      return { text: "Al día", color: "text-green-600" };
+    }
+    if (plan.current_period_status === "not_due_yet") {
+      return { text: "Aún no corresponde", color: "text-gray-500" };
+    }
+    return { text: "-", color: "text-gray-400" };
+  };
+
   const filteredStudents = [...students]
     .filter((s) => {
       const textName = searchFirstLastName.toLowerCase();
@@ -480,49 +564,101 @@ export function Students() {
     { header: "Apellidos", accessor: "last_name" },
     { header: "Nombres", accessor: "first_name" },
     {
-      header: "Estados",
+      header: "Estado",
       render: (row) => {
-        const active = row.activePlans?.length > 0;
+        const plans = row.activePlans || [];
 
-        return (
-          <span
-            className={`font-medium ${
-              active ? "text-green-600" : "text-red-600"
-            }`}
-          >
-            ● {active ? "Activo" : "Inactivo"}
-          </span>
+        if (!plans.length) {
+          return <span className="font-medium text-red-600">● Inactivo</span>;
+        }
+
+        const hasActive = plans.some((p) => p.academic_status === "ACTIVE");
+
+        if (!hasActive) {
+          return (
+            <span className="font-medium text-red-700">
+              ● Inactivo (con deuda)
+            </span>
+          );
+        }
+
+        const suspended = plans.some(
+          (p) =>
+            p.academic_status === "ACTIVE" && p.account_status === "OVERDUE",
         );
+
+        if (suspended) {
+          return (
+            <span className="font-medium text-orange-600">● Suspendido</span>
+          );
+        }
+
+        return <span className="font-medium text-green-600">● Activo</span>;
       },
     },
   ];
 
   columns.push({
-    header: "Planes y Docentes",
+    header: "Plan",
     render: (row) => (
-      <div
-        className="
-          h-14
-          overflow-y-auto
-          overflow-x-hidden
-          flex
-          flex-col
-          gap-2
-          pr-1
-        "
-      >
+      <div className="flex flex-col gap-2">
         {row.activePlans?.length > 0 ? (
           row.activePlans.map((p) => (
-            <div key={p.student_plan_id}>
-              <div className="font-medium text-sm">{p.plan_name}</div>
-
-              <div className="text-xs text-gray-500">{p.teacher_name}</div>
+            <div
+              key={p.student_plan_id}
+              className="text-sm font-medium h-6 flex items-center"
+            >
+              {p.plan_name}
             </div>
           ))
         ) : (
-          <div className="text-sm italic text-gray-500">
+          <span className="text-sm italic text-gray-500">
             Editar para asignar plan y docente
-          </div>
+          </span>
+        )}
+      </div>
+    ),
+  });
+
+  columns.push({
+    header: "Docente",
+    render: (row) => (
+      <div className="flex flex-col gap-2">
+        {row.activePlans?.length > 0 ? (
+          row.activePlans.map((p) => (
+            <div
+              key={p.student_plan_id}
+              className="text-xs text-gray-500 h-6 flex items-center"
+            >
+              {p.teacher_name}
+            </div>
+          ))
+        ) : (
+          <span className="text-xs text-gray-400">—</span>
+        )}
+      </div>
+    ),
+  });
+
+  columns.push({
+    header: "Estado del plan",
+    render: (row) => (
+      <div className="flex flex-col gap-2">
+        {row.activePlans?.length > 0 ? (
+          row.activePlans.map((p) => {
+            const info = getPlanStatusInfo(p);
+
+            return (
+              <div
+                key={p.student_plan_id}
+                className={`text-xs font-medium h-6 flex items-center ${info.color}`}
+              >
+                {info.text}
+              </div>
+            );
+          })
+        ) : (
+          <span className="text-xs text-gray-400">—</span>
         )}
       </div>
     ),
@@ -592,21 +728,51 @@ export function Students() {
               />
 
               {row && (
-                <Select
-                  className="mt-2"
-                  value={row.teacher_id}
-                  onChange={(e) =>
-                    updateClassRowByPlan(plan.id, "teacher_id", e.target.value)
-                  }
-                >
-                  <option value="">Seleccione un Docente</option>
+                <>
+                  <Select
+                    className="mt-2"
+                    value={row.teacher_id}
+                    onChange={(e) =>
+                      updateClassRowByPlan(
+                        plan.id,
+                        "teacher_id",
+                        e.target.value,
+                      )
+                    }
+                  >
+                    <option value="">Seleccione un Docente</option>
 
-                  {row.availableTeachers?.map((teacher) => (
-                    <option key={teacher.id} value={teacher.id}>
-                      {teacher.last_name}, {teacher.first_name}
-                    </option>
-                  ))}
-                </Select>
+                    {row.availableTeachers?.map((teacher) => (
+                      <option key={teacher.id} value={teacher.id}>
+                        {teacher.last_name}, {teacher.first_name}
+                      </option>
+                    ))}
+                  </Select>
+
+                  {/* Solo se pide en planes NUEVOS (sin student_plan_id).
+                      Un plan existente que solo cambia de docente no
+                      vuelve a preguntar esto. */}
+                  {!row.student_plan_id && (
+                    <Select
+                      className="mt-2"
+                      value={row.first_payment_option || ""}
+                      onChange={(e) =>
+                        updateClassRowByPlan(
+                          plan.id,
+                          "first_payment_option",
+                          e.target.value,
+                        )
+                      }
+                    >
+                      <option value="">Primer pago</option>
+                      <option value="FULL">Cuota completa</option>
+                      <option value="HALF">Media cuota</option>
+                      <option value="NEXT_MONTH">
+                        Empieza a pagar el próximo mes
+                      </option>
+                    </Select>
+                  )}
+                </>
               )}
             </div>
           );

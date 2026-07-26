@@ -1,13 +1,20 @@
 import { db } from "../db.js";
 import { createCrudController } from "../utils/crudFactory.js";
-import { calculatePaymentAmount } from "../utils/paymentUtils.js";
 import {
   getPlanPriceAtDate,
   existingPayment,
+  existingRegularization,
+  getStudentPlanStatus,
+  getFirstObligatedPeriod,
+  periodToDate,
 } from "../services/payments.service.js";
 import { needsEnrollment } from "../services/enrollments.service.js";
 
 const baseController = createCrudController("payments");
+
+function round2(value) {
+  return Math.round(value * 100) / 100;
+}
 
 export const paymentsController = {
   ...baseController,
@@ -24,6 +31,8 @@ export const paymentsController = {
           p.plan_price,
           (p.amount - p.plan_price) AS interest,
           p.payment_date,
+          p.payment_period,
+          p.payment_type,
           p.payment_method
         FROM payments p
         JOIN student_plans sp ON p.student_plan_id = sp.id
@@ -36,6 +45,7 @@ export const paymentsController = {
         data: rows,
       });
     } catch (error) {
+      console.error(error);
       res.status(500).json({
         success: false,
         message: "Error al obtener los registros",
@@ -58,6 +68,8 @@ export const paymentsController = {
           p.plan_price,
           (p.amount - p.plan_price) AS interest,
           p.payment_date,
+          p.payment_period,
+          p.payment_type,
           p.payment_method
         FROM payments p
         JOIN student_plans sp ON p.student_plan_id = sp.id
@@ -78,6 +90,7 @@ export const paymentsController = {
         data: rows[0],
       });
     } catch (error) {
+      console.error(error);
       res.status(500).json({
         success: false,
         message: "Error al obtener el registro",
@@ -98,13 +111,15 @@ export const paymentsController = {
           (p.amount - p.plan_price) AS interest,
           p.payment_method,
           p.payment_date,
+          p.payment_period,
+          p.payment_type,
           sp.id AS student_plan_id,
           sp.plan_id,
           sp.teacher_id
         FROM payments p
         JOIN student_plans sp ON p.student_plan_id = sp.id
         WHERE sp.student_id = ?
-        ORDER BY p.payment_date DESC
+        ORDER BY p.payment_period DESC, p.payment_date DESC
         `,
         [id],
       );
@@ -115,6 +130,7 @@ export const paymentsController = {
         data: rows,
       });
     } catch (error) {
+      console.error(error);
       res.status(500).json({
         success: false,
         message: "Error al obtener los registros",
@@ -122,28 +138,62 @@ export const paymentsController = {
     }
   },
 
+  // =====================================================
+  // CHEQUEO DE DUPLICADO (informativo, NO bloquea)
+  // El frontend lo llama antes de confirmar el pago para
+  // mostrar la advertencia. El create() nunca rechaza por esto.
+  // =====================================================
+  checkDuplicate: async (req, res) => {
+    try {
+      const { student_plan_id, payment_period, exclude_id } = req.query;
+
+      if (!student_plan_id || !payment_period) {
+        return res.status(400).json({
+          success: false,
+          message: "Faltan parámetros",
+        });
+      }
+
+      const exists = await existingPayment(
+        Number(student_plan_id),
+        payment_period,
+        exclude_id ? Number(exclude_id) : null,
+      );
+
+      res.json({ success: true, exists });
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({
+        success: false,
+        message: "Error al verificar el pago",
+      });
+    }
+  },
+
   create: async (req, res) => {
     try {
-      const { student_plan_id, payment_date, payment_method } = req.body;
+      const { student_plan_id, payment_date, payment_period, payment_method } =
+        req.body;
 
-      // Obtener estudiante asociado al plan
-      const [studentRows] = await db.execute(
+      // Obtener el student_plan completo
+      const [spRows] = await db.execute(
         `
-      SELECT student_id
-      FROM student_plans
-      WHERE id = ?
-      `,
+        SELECT id, student_id, plan_id, start_date, first_payment_option
+        FROM student_plans
+        WHERE id = ?
+        `,
         [student_plan_id],
       );
 
-      if (studentRows.length === 0) {
+      if (spRows.length === 0) {
         return res.status(404).json({
           success: false,
           message: "Plan del estudiante no encontrado",
         });
       }
 
-      const studentId = studentRows[0].student_id;
+      const studentPlan = spRows[0];
+      const studentId = studentPlan.student_id;
 
       // Verificar si necesita una nueva inscripción
       if (await needsEnrollment(studentId, payment_date)) {
@@ -156,57 +206,146 @@ export const paymentsController = {
         });
       }
 
-      // Obtener precio vigente del plan
-      const planPrice = await getPlanPriceAtDate(student_plan_id, payment_date);
+      // Estado actual del plan: qué período está vencido (si hay)
+      // y cuál es el período "actual" habilitado para pago normal.
+      const status = await getStudentPlanStatus(student_plan_id);
 
-      if (!planPrice) {
-        return res.status(400).json({
+      if (!status) {
+        return res.status(404).json({
           success: false,
-          message: "No existe un precio para esa fecha",
+          message: "No se pudo calcular el estado del plan",
         });
       }
 
-      // Verificar si ya pagó ese mes
-      if (await existingPayment(student_plan_id, payment_date)) {
-        return res.status(400).json({
-          success: false,
-          message: "El estudiante ya pagó este mes",
-        });
-      }
-
-      // Calcular monto e interés
-      const { total, interest } = calculatePaymentAmount(
-        planPrice,
-        payment_date,
+      // Puede haber más de un período vencido a la vez (alumno que
+      // sigue ACTIVE acumulando meses sin pagar sin que lo den de
+      // baja). Cada uno se regulariza por separado.
+      const overdueMatch = status.overdue_periods.find(
+        (o) => o.period === payment_period,
       );
 
-      const amount = total;
+      const validTargets = [
+        ...status.overdue_periods.map((o) => o.period),
+        status.current_period?.period,
+      ].filter(Boolean);
 
-      // Registrar pago
+      if (!validTargets.includes(payment_period)) {
+        return res.status(400).json({
+          success: false,
+          message:
+            "El período indicado no corresponde a una obligación pendiente de este plan.",
+        });
+      }
+
+      const isRegularization = Boolean(overdueMatch);
+
+      // El student_plan_id efectivo puede ser distinto al que mandó
+      // el frontend: si es regularización, SIEMPRE se registra contra
+      // la fila que generó la deuda (aunque el alumno ya tenga otro
+      // docente hoy), para que la comisión le quede al docente correcto.
+      const effectiveStudentPlanId = isRegularization
+        ? overdueMatch.student_plan_id
+        : student_plan_id;
+
+      let planPrice;
+      let amount;
+
+      if (isRegularization) {
+        // Una regularización por período: bloqueo real, no advertencia.
+        if (
+          await existingRegularization(effectiveStudentPlanId, payment_period)
+        ) {
+          return res.status(400).json({
+            success: false,
+            message:
+              "Ya existe una regularización registrada para ese período.",
+          });
+        }
+
+        const historicPrice = await getPlanPriceAtDate(
+          effectiveStudentPlanId,
+          periodToDate(payment_period, "end"),
+        );
+
+        if (historicPrice == null) {
+          return res.status(400).json({
+            success: false,
+            message: "No existe un precio histórico para ese período.",
+          });
+        }
+
+        planPrice = historicPrice;
+        amount = round2(historicPrice * 1.15);
+      } else {
+        const currentPrice = await getPlanPriceAtDate(
+          effectiveStudentPlanId,
+          periodToDate(payment_period, "end"),
+        );
+
+        if (currentPrice == null) {
+          return res.status(400).json({
+            success: false,
+            message: "No existe un precio para ese período.",
+          });
+        }
+
+        planPrice = currentPrice;
+
+        const firstObligatedPeriod = await getFirstObligatedPeriod(studentPlan);
+        const isFirstPayment = payment_period === firstObligatedPeriod;
+
+        if (isFirstPayment && studentPlan.first_payment_option === "HALF") {
+          amount = round2(currentPrice * 0.5);
+        } else {
+          amount = currentPrice;
+        }
+      }
+
+      const paymentType = isRegularization ? "REGULARIZATION" : "NORMAL";
+
+      // Solo informativo, nunca bloquea
+      const duplicateWarning = await existingPayment(
+        effectiveStudentPlanId,
+        payment_period,
+      );
+
       const [result] = await db.execute(
         `
-      INSERT INTO payments
-      (
-        student_plan_id,
-        amount,
-        plan_price,
-        payment_date,
-        payment_method
-      )
-      VALUES (?, ?, ?, ?, ?)
-      `,
-        [student_plan_id, amount, planPrice, payment_date, payment_method],
+        INSERT INTO payments
+        (
+          student_plan_id,
+          amount,
+          plan_price,
+          payment_date,
+          payment_period,
+          payment_type,
+          payment_method
+        )
+        VALUES (?, ?, ?, ?, ?, ?, ?)
+        `,
+        [
+          effectiveStudentPlanId,
+          amount,
+          planPrice,
+          payment_date,
+          payment_period,
+          paymentType,
+          payment_method,
+        ],
       );
 
       res.status(201).json({
         success: true,
+        duplicateWarning,
         data: {
           id: result.insertId,
-          student_plan_id,
+          student_plan_id: effectiveStudentPlanId,
           amount,
           plan_price: planPrice,
-          interest,
+          interest: round2(amount - planPrice),
           payment_date,
+          payment_period,
+          payment_type: paymentType,
           payment_method,
         },
       });
@@ -223,62 +362,165 @@ export const paymentsController = {
   update: async (req, res) => {
     try {
       const id = Number(req.params.id);
-      const { student_plan_id, payment_date, payment_method } = req.body;
+      const { student_plan_id, payment_date, payment_period, payment_method } =
+        req.body;
 
-      // Crear nuevas variables
       const [rows] = await db.execute("SELECT * FROM payments WHERE id = ?", [
         id,
       ]);
 
+      if (rows.length === 0) {
+        return res.status(404).json({
+          success: false,
+          message: "Registro no encontrado",
+        });
+      }
+
       const newStudentPlanId = student_plan_id ?? rows[0].student_plan_id;
       const newPaymentDate = payment_date ?? rows[0].payment_date;
+      const newPaymentPeriod = payment_period ?? rows[0].payment_period;
       const newPaymentMethod = payment_method ?? rows[0].payment_method;
 
-      // 1. Obtener precio del plan vigente
-      const planPrice = await getPlanPriceAtDate(
-        newStudentPlanId,
-        newPaymentDate,
+      const [spRows] = await db.execute(
+        `
+        SELECT id, student_id, plan_id, start_date, first_payment_option
+        FROM student_plans
+        WHERE id = ?
+        `,
+        [newStudentPlanId],
       );
 
-      if (!planPrice) {
-        return res.status(400).json({
+      if (spRows.length === 0) {
+        return res.status(404).json({
           success: false,
-          message: "No existe un precio para esa fecha",
+          message: "Plan del estudiante no encontrado",
         });
       }
 
-      // 2. Verificar si ya pagó ese mes
-      if (await existingPayment(newStudentPlanId, newPaymentDate, id)) {
-        return res.status(400).json({
+      const studentPlan = spRows[0];
+
+      const status = await getStudentPlanStatus(newStudentPlanId);
+
+      if (!status) {
+        return res.status(404).json({
           success: false,
-          message: "El estudiante ya pagó este mes",
+          message: "No se pudo calcular el estado del plan",
         });
       }
 
-      // 3. Calcular monto e interés automáticamente
-      const { total, interest } = calculatePaymentAmount(
-        planPrice,
-        newPaymentDate,
+      const overdueMatch = status.overdue_periods.find(
+        (o) => o.period === newPaymentPeriod,
       );
 
-      const amount = total;
+      const validTargets = [
+        ...status.overdue_periods.map((o) => o.period),
+        status.current_period?.period,
+        // Permitimos mantener el período que el pago ya tenía, aunque
+        // ya no figure entre los "vigentes", para no romper una edición
+        // menor (ej. cambiar método de pago) de un pago ya regularizado.
+        rows[0].payment_period,
+      ].filter(Boolean);
 
-      // 4. Actualizar pago
+      if (!validTargets.includes(newPaymentPeriod)) {
+        return res.status(400).json({
+          success: false,
+          message:
+            "El período indicado no corresponde a una obligación pendiente de este plan.",
+        });
+      }
+
+      const isRegularization = Boolean(overdueMatch);
+
+      // Mismo criterio que en create(): la regularización se ata a la
+      // fila que generó la deuda, no a la que se mandó desde el form.
+      const effectiveStudentPlanId = isRegularization
+        ? overdueMatch.student_plan_id
+        : newStudentPlanId;
+
+      let planPrice;
+      let amount;
+
+      if (isRegularization) {
+        if (
+          await existingRegularization(
+            effectiveStudentPlanId,
+            newPaymentPeriod,
+            id,
+          )
+        ) {
+          return res.status(400).json({
+            success: false,
+            message:
+              "Ya existe una regularización registrada para ese período.",
+          });
+        }
+
+        const historicPrice = await getPlanPriceAtDate(
+          effectiveStudentPlanId,
+          periodToDate(newPaymentPeriod, "end"),
+        );
+
+        if (historicPrice == null) {
+          return res.status(400).json({
+            success: false,
+            message: "No existe un precio histórico para ese período.",
+          });
+        }
+
+        planPrice = historicPrice;
+        amount = round2(historicPrice * 1.15);
+      } else {
+        const currentPrice = await getPlanPriceAtDate(
+          effectiveStudentPlanId,
+          periodToDate(newPaymentPeriod, "end"),
+        );
+
+        if (currentPrice == null) {
+          return res.status(400).json({
+            success: false,
+            message: "No existe un precio para ese período.",
+          });
+        }
+
+        planPrice = currentPrice;
+
+        const firstObligatedPeriod = await getFirstObligatedPeriod(studentPlan);
+        const isFirstPayment = newPaymentPeriod === firstObligatedPeriod;
+
+        if (isFirstPayment && studentPlan.first_payment_option === "HALF") {
+          amount = round2(currentPrice * 0.5);
+        } else {
+          amount = currentPrice;
+        }
+      }
+
+      const paymentType = isRegularization ? "REGULARIZATION" : "NORMAL";
+
+      const duplicateWarning = await existingPayment(
+        effectiveStudentPlanId,
+        newPaymentPeriod,
+        id,
+      );
+
       await db.execute(
         `
-  UPDATE payments SET
-   student_plan_id = ?,
-   amount = ?,
-   plan_price = ?,
-   payment_date = ?,
-   payment_method = ?
-  WHERE id = ?
-  `,
+        UPDATE payments SET
+          student_plan_id = ?,
+          amount = ?,
+          plan_price = ?,
+          payment_date = ?,
+          payment_period = ?,
+          payment_type = ?,
+          payment_method = ?
+        WHERE id = ?
+        `,
         [
-          newStudentPlanId,
+          effectiveStudentPlanId,
           amount,
           planPrice,
           newPaymentDate,
+          newPaymentPeriod,
+          paymentType,
           newPaymentMethod,
           id,
         ],
@@ -286,17 +528,21 @@ export const paymentsController = {
 
       res.status(200).json({
         success: true,
+        duplicateWarning,
         data: {
           id,
-          student_plan_id: newStudentPlanId,
+          student_plan_id: effectiveStudentPlanId,
           amount,
           plan_price: planPrice,
-          interest,
+          interest: round2(amount - planPrice),
           payment_date: newPaymentDate,
+          payment_period: newPaymentPeriod,
+          payment_type: paymentType,
           payment_method: newPaymentMethod,
         },
       });
     } catch (error) {
+      console.error(error);
       res.status(500).json({
         success: false,
         message: "Error al editar el pago",
@@ -317,6 +563,8 @@ export const paymentsController = {
         p.plan_price,
         (p.amount - p.plan_price) AS interest,
         p.payment_date,
+        p.payment_period,
+        p.payment_type,
         p.payment_method,
 
         s.id AS student_id,
@@ -350,6 +598,7 @@ export const paymentsController = {
         data: rows,
       });
     } catch (error) {
+      console.error(error);
       res.status(500).json({
         success: false,
         message: "Error al obtener pagos mensuales",
@@ -382,6 +631,7 @@ export const paymentsController = {
         data: rows,
       });
     } catch (error) {
+      console.error(error);
       res.status(500).json({
         success: false,
         message: "Error al obtener planes activos",

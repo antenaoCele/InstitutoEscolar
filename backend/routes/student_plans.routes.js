@@ -17,19 +17,21 @@ const router = express.Router();
 
 router.get("/", authentication, studentPlansController.getAll);
 
-router.post(
-  "/reactivate",
-  authentication,
-  authorization("ADMIN"),
-  studentPlansController.reactivate,
-);
-
 //OBTENER EL ESTADO DE PAGO DE LOS ESTUDIANTES Y FILTRARLOS POR DOCENTE(es opcional lo del docente)
 router.get(
   "/account-status",
   authentication,
   authorization("ADMIN"),
   studentPlansController.getAccountStatus,
+);
+
+router.get(
+  "/:id/status",
+  authentication,
+  authorization("ADMIN"),
+  ...validateID("student_plans"),
+  checkValidations,
+  studentPlansController.getStatus,
 );
 
 router.get(

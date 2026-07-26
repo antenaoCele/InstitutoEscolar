@@ -2,6 +2,7 @@ import {
   isNotFutureDate,
   isRequired,
   isValidPaymentMethod,
+  isValidPeriod,
 } from "../rules/formatRules";
 
 /**
@@ -12,6 +13,7 @@ export const validatePaymentForm = ({
   selectedStudent,
   selectedStudentPlan,
   paymentDate,
+  paymentPeriod,
   paymentMethod,
 }) => {
   const errors = {};
@@ -28,6 +30,12 @@ export const validatePaymentForm = ({
     errors.date = "Ingrese una fecha de pago.";
   } else if (!isNotFutureDate(paymentDate)) {
     errors.date = "La fecha no puede ser futura.";
+  }
+
+  if (isRequired(paymentPeriod)) {
+    errors.period = "Seleccione el período a pagar.";
+  } else if (!isValidPeriod(paymentPeriod)) {
+    errors.period = "Período inválido.";
   }
 
   if (isRequired(paymentMethod)) {

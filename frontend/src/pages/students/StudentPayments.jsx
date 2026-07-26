@@ -8,6 +8,7 @@ import SubmitButton from "../../components/form/SubmitButton";
 import { Modal } from "../../components/ui/Modal";
 import ComponentCard from "../../components/common/ComponentCard";
 import { PaymentService } from "../../services/payment.service";
+import { studentPlanService } from "../../services/studenPlan.service";
 import { studentService } from "../../services/student.service";
 import { EnrollmentService } from "../../services/enrollment.service";
 import { useFeedbackModal } from "../../hooks/useFeedbackModal";
@@ -23,6 +24,63 @@ import {
   DeleteButton,
 } from "../../components/ui/ActionButtons";
 import { getTodayLocal } from "../../utils/date";
+
+// ======================================================
+// Arma las opciones de período que se le pueden ofrecer al admin
+// para un student_plan puntual, a partir del estado que devuelve
+// studentPlanService.getStatus(). extraPeriod es el período que ya
+// tenía un pago que se está editando (para no perder la posibilidad
+// de mantenerlo aunque ya no figure como "vigente").
+// ======================================================
+const STATUS_LABELS = {
+  pending: "Pendiente",
+  paid: "Ya pagado",
+  on_hold: "En espera (hay una deuda anterior)",
+  not_due_yet: "Todavía no corresponde pagar",
+};
+
+function getPeriodOptions(status, extraPeriod = null) {
+  const options = [];
+
+  (status?.overdue_periods || []).forEach((o) => {
+    options.push({
+      value: o.period,
+      label: `Regularizar ${o.period} (+15%)`,
+    });
+  });
+
+  const currentIsOverdue = (status?.overdue_periods || []).some(
+    (o) => o.period === status?.current_period?.period,
+  );
+
+  // No ofrecemos un período que ya está pagado como opción normal
+  // (para eso está extraPeriod, que lo mantiene disponible SOLO al
+  // editar el pago que ya lo saldó).
+  if (
+    status?.current_period &&
+    status.current_period.status !== "not_due_yet" &&
+    status.current_period.status !== "paid" &&
+    !currentIsOverdue
+  ) {
+    const label =
+      STATUS_LABELS[status.current_period.status] ||
+      status.current_period.status;
+
+    options.push({
+      value: status.current_period.period,
+      label: `${status.current_period.period} — ${label}`,
+    });
+  }
+
+  if (extraPeriod && !options.some((o) => o.value === extraPeriod)) {
+    options.push({
+      value: extraPeriod,
+      label: `${extraPeriod} (período original de este pago)`,
+    });
+  }
+
+  return options;
+}
 
 export default function StudentPayments() {
   // ======================================================
@@ -44,10 +102,6 @@ export default function StudentPayments() {
 
   // ======================================================
   // MODAL DE FEEDBACK (hook compartido)
-  // Se usa SOLO para: éxito de una operación, o errores que no
-  // corresponden a un campo puntual (fallas de red, reglas de
-  // negocio del backend, etc). Las validaciones de formulario
-  // NO usan este modal, se muestran debajo de cada campo.
   // ======================================================
   const { feedbackModal, showFeedback, closeFeedback } = useFeedbackModal();
 
@@ -61,6 +115,14 @@ export default function StudentPayments() {
   const [editingPaymentId, setEditingPaymentId] = useState(null);
   const [errorsEditPayment, setErrorsEditPayment] = useState({});
 
+  // Estado del plan seleccionado (académico + de cuenta + período a
+  // pagar), y período elegido por el admin dentro de las opciones
+  // que ese estado habilita. originalPaymentPeriod solo se usa en
+  // edición, para no perder el período que el pago ya tenía.
+  const [planStatus, setPlanStatus] = useState(null);
+  const [paymentPeriod, setPaymentPeriod] = useState("");
+  const [originalPaymentPeriod, setOriginalPaymentPeriod] = useState(null);
+
   // Fecha local (evita el corrimiento de día por UTC-3 de toISOString)
   const getLocalDateString = () => {
     const d = new Date();
@@ -72,7 +134,6 @@ export default function StudentPayments() {
 
   // ======================================================
   // FORMULARIO: REGISTRAR INSCRIPCIÓN
-  // Se pueden tildar varios estudiantes (hermanos)
   // ======================================================
   const [enrollmentStudents, setEnrollmentStudents] = useState([]);
   const [enrollmentAmount, setEnrollmentAmount] = useState("");
@@ -80,7 +141,7 @@ export default function StudentPayments() {
   const [errorsEnrollment, setErrorsEnrollment] = useState({});
 
   // ======================================================
-  // FORMULARIO: EDITAR INSCRIPCIÓN (de a un estudiante por vez)
+  // FORMULARIO: EDITAR INSCRIPCIÓN
   // ======================================================
   const [enrollmentStudent, setEnrollmentStudent] = useState("");
   const [editingEnrollmentId, setEditingEnrollmentId] = useState(null);
@@ -153,6 +214,21 @@ export default function StudentPayments() {
     fetchStudents();
   }, [month, year]);
 
+  // Cuando cambia el estado del plan (recién elegido, o recién
+  // cargado al editar), si todavía no hay un período elegido, se
+  // preselecciona el primero disponible (prioriza la deuda vieja
+  // sobre el período actual, por eso va primero en getPeriodOptions).
+  useEffect(() => {
+    if (!planStatus) return;
+
+    setPaymentPeriod((prev) => {
+      if (prev) return prev;
+
+      const options = getPeriodOptions(planStatus, originalPaymentPeriod);
+      return options[0]?.value || "";
+    });
+  }, [planStatus]);
+
   // ======================================================
   // NAVEGACIÓN DE MES
   // ======================================================
@@ -197,6 +273,9 @@ export default function StudentPayments() {
     setSelectedStudentPlan("");
     setPaymentMethod("");
     setPaymentDate(getLocalDateString());
+    setPlanStatus(null);
+    setPaymentPeriod("");
+    setOriginalPaymentPeriod(null);
     setErrorsPayment({});
   };
 
@@ -206,6 +285,9 @@ export default function StudentPayments() {
     setStudentPlans([]);
     setPaymentMethod("");
     setPaymentDate(getLocalDateString());
+    setPlanStatus(null);
+    setPaymentPeriod("");
+    setOriginalPaymentPeriod(null);
     setEditingPaymentId(null);
     setErrorsEditPayment({});
   };
@@ -231,6 +313,8 @@ export default function StudentPayments() {
   const handleStudentChange = async (studentId) => {
     setSelectedStudent(studentId);
     setSelectedStudentPlan("");
+    setPlanStatus(null);
+    setPaymentPeriod("");
 
     try {
       const { data } = await PaymentService.getStudentPlans(studentId);
@@ -241,11 +325,30 @@ export default function StudentPayments() {
     }
   };
 
+  // Al elegir un plan (o al cargarlo automáticamente al editar), se
+  // consulta su estado para saber qué períodos se pueden pagar y si
+  // corresponde regularización.
+  const handlePlanSelect = async (studentPlanId) => {
+    setSelectedStudentPlan(studentPlanId);
+    setPaymentPeriod("");
+    setPlanStatus(null);
+
+    if (!studentPlanId) return;
+
+    try {
+      const { data } = await studentPlanService.getStatus(studentPlanId);
+      setPlanStatus(data.data);
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
   const handleCreatePayment = async () => {
     const errors = validatePaymentForm({
       selectedStudent,
       selectedStudentPlan,
       paymentDate,
+      paymentPeriod,
       paymentMethod,
     });
 
@@ -257,9 +360,24 @@ export default function StudentPayments() {
     try {
       setErrorsPayment({});
 
+      // Aviso de duplicado: informativo, no bloquea. El admin decide
+      // si continúa.
+      const { data: dupData } = await PaymentService.checkDuplicate(
+        selectedStudentPlan,
+        paymentPeriod,
+      );
+
+      if (dupData?.exists) {
+        const confirmed = window.confirm(
+          "Ya existe un pago registrado para este período. ¿Desea registrarlo de todos modos?",
+        );
+        if (!confirmed) return;
+      }
+
       await PaymentService.create({
         student_plan_id: selectedStudentPlan,
         payment_date: paymentDate,
+        payment_period: paymentPeriod,
         payment_method: paymentMethod,
       });
 
@@ -289,6 +407,8 @@ export default function StudentPayments() {
     setSelectedStudent(payment.student_id);
     setPaymentDate(payment.payment_date.split("T")[0]);
     setPaymentMethod(payment.payment_method);
+    setPaymentPeriod(payment.payment_period);
+    setOriginalPaymentPeriod(payment.payment_period);
     setErrorsEditPayment({});
 
     try {
@@ -296,6 +416,11 @@ export default function StudentPayments() {
 
       setStudentPlans(data.data || []);
       setSelectedStudentPlan(payment.student_plan_id);
+
+      const { data: statusData } = await studentPlanService.getStatus(
+        payment.student_plan_id,
+      );
+      setPlanStatus(statusData.data);
     } catch (error) {
       console.error(error);
     }
@@ -308,6 +433,7 @@ export default function StudentPayments() {
       selectedStudent,
       selectedStudentPlan,
       paymentDate,
+      paymentPeriod,
       paymentMethod,
     });
 
@@ -319,9 +445,23 @@ export default function StudentPayments() {
     try {
       setErrorsEditPayment({});
 
+      const { data: dupData } = await PaymentService.checkDuplicate(
+        selectedStudentPlan,
+        paymentPeriod,
+        editingPaymentId,
+      );
+
+      if (dupData?.exists) {
+        const confirmed = window.confirm(
+          "Ya existe otro pago registrado para este período. ¿Desea guardar de todos modos?",
+        );
+        if (!confirmed) return;
+      }
+
       await PaymentService.update(editingPaymentId, {
         student_plan_id: selectedStudentPlan,
         payment_date: paymentDate,
+        payment_period: paymentPeriod,
         payment_method: paymentMethod,
       });
 
@@ -498,6 +638,24 @@ export default function StudentPayments() {
       accessor: "plan_name",
     },
     {
+      header: "Período",
+      accessor: "payment_period",
+    },
+    {
+      header: "Tipo",
+      render: (row) => (
+        <span
+          className={
+            row.payment_type === "REGULARIZATION"
+              ? "text-amber-600 font-medium"
+              : "text-gray-600"
+          }
+        >
+          {row.payment_type === "REGULARIZATION" ? "Regularización" : "Normal"}
+        </span>
+      ),
+    },
+    {
       header: "Monto",
       render: (row) => `$${Number(row.amount).toLocaleString("es-AR")}`,
     },
@@ -571,6 +729,9 @@ export default function StudentPayments() {
     </div>
   );
 
+  const createPeriodOptions = getPeriodOptions(planStatus);
+  const editPeriodOptions = getPeriodOptions(planStatus, originalPaymentPeriod);
+
   // ======================================================
   // RETURN
   // ======================================================
@@ -620,8 +781,6 @@ export default function StudentPayments() {
 
       {/* ======================================================
           MODAL: REGISTRAR PAGO
-          Los errores de validación se muestran debajo de cada campo
-          via la prop "error" (no en el modal de feedback).
       ====================================================== */}
       <Modal
         isOpen={openCreateModal}
@@ -650,7 +809,7 @@ export default function StudentPayments() {
         <Select
           label="Plan"
           value={selectedStudentPlan}
-          onChange={(e) => setSelectedStudentPlan(e.target.value)}
+          onChange={(e) => handlePlanSelect(e.target.value)}
           error={errorsPayment.plan}
         >
           <option value="">Seleccione un plan</option>
@@ -661,6 +820,30 @@ export default function StudentPayments() {
             </option>
           ))}
         </Select>
+
+        {selectedStudentPlan && createPeriodOptions.length > 0 && (
+          <Select
+            label="Período a pagar"
+            value={paymentPeriod}
+            onChange={(e) => setPaymentPeriod(e.target.value)}
+            error={errorsPayment.period}
+          >
+            <option value="">Seleccione un período</option>
+
+            {createPeriodOptions.map((opt) => (
+              <option key={opt.value} value={opt.value}>
+                {opt.label}
+              </option>
+            ))}
+          </Select>
+        )}
+
+        {selectedStudentPlan && createPeriodOptions.length === 0 && (
+          <p className="text-green-600 font-medium my-2">
+            Este alumno está al día con este plan. No hay ningún período
+            pendiente de pago.
+          </p>
+        )}
 
         <Input
           type="date"
@@ -692,10 +875,13 @@ export default function StudentPayments() {
               setOpenCreateModal(false);
               resetPaymentForm();
             }}
-            onClick={() => setOpenCreateModal(false)}
           />
 
-          <YesButton title="Aceptar" onClick={handleCreatePayment} />
+          <YesButton
+            title="Aceptar"
+            onClick={handleCreatePayment}
+            disabled={!!selectedStudentPlan && createPeriodOptions.length === 0}
+          />
         </div>
       </Modal>
 
@@ -729,7 +915,7 @@ export default function StudentPayments() {
         <Select
           label="Plan"
           value={selectedStudentPlan}
-          onChange={(e) => setSelectedStudentPlan(e.target.value)}
+          onChange={(e) => handlePlanSelect(e.target.value)}
           error={errorsEditPayment.plan}
         >
           <option value="">Seleccione un plan</option>
@@ -740,6 +926,23 @@ export default function StudentPayments() {
             </option>
           ))}
         </Select>
+
+        {selectedStudentPlan && (
+          <Select
+            label="Período a pagar"
+            value={paymentPeriod}
+            onChange={(e) => setPaymentPeriod(e.target.value)}
+            error={errorsEditPayment.period}
+          >
+            <option value="">Seleccione un período</option>
+
+            {editPeriodOptions.map((opt) => (
+              <option key={opt.value} value={opt.value}>
+                {opt.label}
+              </option>
+            ))}
+          </Select>
+        )}
 
         <Input
           type="date"
@@ -771,7 +974,6 @@ export default function StudentPayments() {
               setOpenEditPaymentModal(false);
               resetEditPaymentForm();
             }}
-            onClick={() => setOpenCreateModal(false)}
           />
 
           <YesButton title="Aceptar" onClick={handleUpdatePayment} />
@@ -834,7 +1036,6 @@ export default function StudentPayments() {
               setOpenCreateEnrollmentModal(false);
               resetEnrollmentForm();
             }}
-            onClick={() => setOpenCreateModal(false)}
           />
 
           <YesButton title="Aceptar" onClick={handleCreateEnrollment} />
@@ -892,7 +1093,6 @@ export default function StudentPayments() {
               setOpenEditEnrollmentModal(false);
               resetEditEnrollmentForm();
             }}
-            onClick={() => setOpenCreateModal(false)}
           />
 
           <YesButton title="Aceptar" onClick={handleUpdateEnrollment} />
@@ -901,9 +1101,6 @@ export default function StudentPayments() {
 
       {/* ======================================================
           MODAL DE FEEDBACK (éxito/error general)
-          Viene del hook useFeedbackModal. Se dispara al crear,
-          editar o eliminar con éxito, y en errores de backend
-          que no corresponden a un campo puntual del formulario.
       ====================================================== */}
       <Modal isOpen={feedbackModal.open} onClose={closeFeedback}>
         <h2
