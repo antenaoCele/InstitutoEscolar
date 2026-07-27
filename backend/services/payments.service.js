@@ -141,49 +141,69 @@ export async function existingRegularization(
 
 /* =========================================================
 CADENA COMPLETA DE UN student_plan
-Camina hacia atrás mientras encuentre una fila anterior (mismo
-alumno + mismo plan) cuyo end_date coincida EXACTAMENTE con el
-start_date de la fila siguiente (cambio de docente sin hueco
-real). Si hay un hueco de calendario real (baja + vuelta meses
-después), la cadena se corta ahí.
+Trae TODAS las filas históricas de ese alumno+plan y camina hacia
+atrás desde la fila dada mientras cada una conecte "sin hueco de
+calendario" con la anterior: se considera continuo si la fila
+siguiente arranca dentro del mismo mes en el que terminó la
+anterior, o como mucho el mes inmediato posterior. Esto cubre tanto
+un cambio de docente el mismo día como una reincorporación unos
+días después dentro del mismo mes (ej. dar de baja y reactivar un
+docente, reasignando a sus alumnos poco después). Si hay un hueco
+de calendario real (mes de por medio sin ninguna fila activa), la
+cadena se corta ahí.
 
 Devuelve un array ordenado de la fila más vieja a la más nueva
-(incluye la fila que se pasó como parámetro al final).
+(incluye la fila que se pasó como parámetro).
 ========================================================= */
 async function resolveChain(student_plan) {
-  const chain = [
-    {
-      id: student_plan.id,
-      start_date: student_plan.start_date,
-      end_date: student_plan.end_date ?? null,
-      first_payment_option: student_plan.first_payment_option,
-    },
-  ];
+  const [allRows] = await db.execute(
+    `
+    SELECT id, start_date, end_date, first_payment_option
+    FROM student_plans
+    WHERE student_id = ?
+      AND plan_id = ?
+    ORDER BY start_date ASC, id ASC
+    `,
+    [student_plan.student_id, student_plan.plan_id],
+  );
 
-  let cursor = chain[0];
+  const targetIndex = allRows.findIndex((r) => r.id === student_plan.id);
 
-  // Límite de seguridad para evitar loops infinitos ante datos corruptos
-  for (let i = 0; i < 50; i++) {
-    const [prevRows] = await db.execute(
-      `
-      SELECT id, start_date, end_date, first_payment_option
-      FROM student_plans
-      WHERE student_id = ?
-        AND plan_id = ?
-        AND end_date = ?
-      ORDER BY id DESC
-      LIMIT 1
-      `,
-      [student_plan.student_id, student_plan.plan_id, cursor.start_date],
-    );
-
-    if (!prevRows.length) break;
-
-    cursor = prevRows[0];
-    chain.unshift(cursor);
+  // No debería pasar, pero por las dudas devolvemos solo la fila que
+  // nos pasaron si no la encontramos en la consulta.
+  if (targetIndex === -1) {
+    return [
+      {
+        id: student_plan.id,
+        start_date: student_plan.start_date,
+        end_date: student_plan.end_date ?? null,
+        first_payment_option: student_plan.first_payment_option,
+      },
+    ];
   }
 
-  return chain;
+  let chainStart = targetIndex;
+
+  for (let i = targetIndex; i > 0; i--) {
+    const prev = allRows[i - 1];
+    const curr = allRows[i];
+
+    if (prev.end_date === null) break; // dos filas activas a la vez: no debería pasar, cortamos por seguridad
+
+    const prevEndPeriod = toPeriod(prev.end_date);
+    const currStartPeriod = toPeriod(curr.start_date);
+
+    const isContinuous = periodLTE(
+      currStartPeriod,
+      addMonths(prevEndPeriod, 1),
+    );
+
+    if (!isContinuous) break;
+
+    chainStart = i - 1;
+  }
+
+  return allRows.slice(chainStart, targetIndex + 1);
 }
 
 /* =========================================================
@@ -203,6 +223,41 @@ function findOwnerId(chain, period) {
   }
 
   return owner.id;
+}
+
+/* =========================================================
+¿ESTA FILA FUE REEMPLAZADA POR OTRA QUE LA CONTINÚA?
+Una fila dada de baja que tiene una fila POSTERIOR del mismo
+alumno+plan que la continúa (mismo mes de la baja, o el mes
+siguiente) no es una baja real: es un cambio de docente / una
+reasignación. En ese caso la fila vieja NO debe reclamar deuda
+propia — la obligación de ese período le corresponde a la fila
+que quedó vigente. Sin esto, el mismo período aparecería
+reclamado dos veces (una por cada fila).
+========================================================= */
+async function hasSuccessor(plan) {
+  if (plan.end_date === null) return false;
+
+  const [rows] = await db.execute(
+    `
+    SELECT start_date
+    FROM student_plans
+    WHERE student_id = ?
+      AND plan_id = ?
+      AND id != ?
+      AND start_date >= ?
+    ORDER BY start_date ASC
+    LIMIT 1
+    `,
+    [plan.student_id, plan.plan_id, plan.id, plan.end_date],
+  );
+
+  if (!rows.length) return false;
+
+  const endPeriod = toPeriod(plan.end_date);
+  const successorStartPeriod = toPeriod(rows[0].start_date);
+
+  return periodLTE(successorStartPeriod, addMonths(endPeriod, 1));
 }
 
 /* =========================================================
@@ -229,6 +284,21 @@ export async function getStudentPlanStatus(student_plan_id) {
   const isActive = plan.end_date === null;
 
   const { yearMonth: currentPeriod, day } = getCurrentDateParts();
+
+  // Si esta fila fue reemplazada por otra que la continúa (cambio de
+  // docente, reasignación), no reclama deuda propia: la obligación
+  // del período la lleva la fila vigente.
+  if (!isActive && (await hasSuccessor(plan))) {
+    return {
+      student_plan_id: plan.id,
+      academic_status: "INACTIVE",
+      account_status: "CURRENT",
+      overdue_period: null,
+      overdue_student_plan_id: null,
+      current_period: null,
+      superseded: true,
+    };
+  }
 
   // Resolvemos la cadena completa (por si hubo cambios de docente sin
   // hueco de calendario) para no perder deuda vieja, y para saber en

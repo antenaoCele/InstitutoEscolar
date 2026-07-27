@@ -112,16 +112,20 @@ export const studentsController = {
           if (row.student_plan_id) {
             const planStatus = await getStudentPlanStatus(row.student_plan_id);
 
-            // Un plan INACTIVE sin ninguna deuda pendiente es una
-            // inscripción vieja ya resuelta: no aporta nada mostrarla,
-            // así que se descarta. Un plan INACTIVE CON deuda se
-            // mantiene visible a propósito (para no "olvidar" la
-            // deuda al dar de baja).
-            if (
+            // Un plan INACTIVE sin deuda pendiente (o una fila
+            // reemplazada por otra que la continúa) es historial ya
+            // resuelto: no se muestra como plan. PERO no descartamos
+            // al alumno: se devuelve "pelado" (sin datos de plan),
+            // para que siga apareciendo en el listado y se le pueda
+            // reasignar docente. Más abajo se deduplica.
+            // Un plan INACTIVE CON deuda sí se mantiene visible a
+            // propósito (para no "olvidar" la deuda al dar de baja).
+            const isResolvedHistory =
               planStatus.academic_status === "INACTIVE" &&
-              planStatus.account_status !== "OVERDUE"
-            ) {
-              return null;
+              planStatus.account_status !== "OVERDUE";
+
+            if (isResolvedHistory) {
+              return { ...studentData, student_plan_id: null };
             }
 
             Object.assign(studentData, {
@@ -156,7 +160,27 @@ export const studentsController = {
         }),
       );
 
-      const result = rawResult.filter(Boolean);
+      // Deduplicación: si un alumno tiene al menos una fila con plan
+      // visible, se descartan sus filas "peladas" (que venían de
+      // planes viejos ya resueltos). Si no tiene ninguna, se deja una
+      // sola fila pelada para que igual aparezca en el listado como
+      // inactivo y se le pueda asignar un plan.
+      const studentsWithPlan = new Set(
+        rawResult.filter((r) => r.student_plan_id).map((r) => r.id),
+      );
+
+      const seenBareStudents = new Set();
+
+      const result = rawResult.filter((r) => {
+        if (r.student_plan_id) return true;
+
+        if (studentsWithPlan.has(r.id)) return false;
+
+        if (seenBareStudents.has(r.id)) return false;
+
+        seenBareStudents.add(r.id);
+        return true;
+      });
 
       // FILTRO POR ESTADO ACADÉMICO (activo/inactivo)
       // Se hace en JS porque ahora un mismo alumno puede tener más de
