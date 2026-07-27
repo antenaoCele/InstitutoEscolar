@@ -307,6 +307,48 @@ export const validateNotFutureMonthYear = (
 };
 
 /* =========================================================
+CURRENT YEAR + PAST/CURRENT MONTH
+Solo permite generar cierres del año actual y hasta el mes
+actual.
+========================================================= */
+export const validateCurrentYearMonth = (
+  monthField,
+  yearField,
+  optional = false,
+) => {
+  let validator = body(monthField);
+
+  if (optional) {
+    validator = validator.optional();
+  }
+
+  return [
+    validator.custom((monthValue, { req }) => {
+      const yearValue = req.body[yearField];
+
+      if (monthValue === undefined || yearValue === undefined) {
+        return true;
+      }
+
+      const month = Number(monthValue);
+      const year = Number(yearValue);
+
+      const { year: currentYear, month: currentMonth } = getCurrentDateParts();
+
+      if (year !== currentYear) {
+        throw new Error("Solo se pueden generar cierres del año actual.");
+      }
+
+      if (month > currentMonth) {
+        throw new Error("No se puede generar un cierre para un mes futuro.");
+      }
+
+      return true;
+    }),
+  ];
+};
+
+/* =========================================================
 NAME
 ========================================================= */
 export const validateName = (field, optional = false) => [

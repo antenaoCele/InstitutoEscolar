@@ -54,6 +54,9 @@ MONTO / DINERO (positivo)
 export const isPositiveNumber = (value) =>
   value !== "" && value !== null && !isNaN(value) && Number(value) > 0;
 
+export const isPositiveOrZeroNumber = (value) =>
+  value !== "" && value !== null && !isNaN(value) && Number(value) >= 0;
+
 /* =========================================================
 TELÉFONO
 Regla espejo de validatePhone (backend): notEmpty, max 20
@@ -178,3 +181,47 @@ Regla espejo de validatePeriod (backend).
 ========================================================= */
 export const isValidPeriod = (value) =>
   /^\d{4}-(0[1-9]|1[0-2])$/.test(value?.toString().trim() || "");
+
+/* =========================================================
+MES
+========================================================= */
+export const isValidMonth = (value) => {
+  const month = Number(value);
+  return Number.isInteger(month) && month >= 1 && month <= 12;
+};
+
+/* =========================================================
+MES Y AÑO (no permite períodos futuros)
+========================================================= */
+export const isNotFutureMonthYear = (month, year) => {
+  const m = Number(month);
+  const y = Number(year);
+
+  if (!Number.isInteger(m) || !Number.isInteger(y)) return false;
+
+  const today = new Date();
+
+  const currentYear = today.getFullYear();
+  const currentMonth = today.getMonth() + 1;
+
+  return y < currentYear || (y === currentYear && m <= currentMonth);
+};
+
+/* =========================================================
+AÑO ACTUAL + MES ACTUAL O ANTERIOR
+========================================================= */
+export const isCurrentYearPastOrCurrentMonth = (month, year) => {
+  const m = Number(month);
+  const y = Number(year);
+
+  if (!Number.isInteger(m) || !Number.isInteger(y)) {
+    return false;
+  }
+
+  const today = new Date();
+
+  const currentYear = today.getFullYear();
+  const currentMonth = today.getMonth() + 1;
+
+  return y === currentYear && m <= currentMonth;
+};
