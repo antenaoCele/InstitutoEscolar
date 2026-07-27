@@ -1132,10 +1132,17 @@ export function Students() {
                 key={plan.id}
                 className="rounded-lg border border-gray-200 p-4"
               >
-                <div className="grid grid-cols-3 gap-4">
+                <div className="grid grid-cols-4 gap-4">
                   <div>
                     <h4 className="font-semibold">Plan</h4>
-                    <p className="text-gray-500">{plan.plan_name}</p>
+                    <p className="text-gray-500">
+                      {plan.plan_name}
+                      {plan.academic_status === "INACTIVE" && (
+                        <span className="text-red-600 text-xs ml-1">
+                          (de baja)
+                        </span>
+                      )}
+                    </p>
                   </div>
 
                   <div>
@@ -1152,6 +1159,21 @@ export function Students() {
                       {plan.start_date
                         ? new Date(plan.start_date).toLocaleDateString("es-AR")
                         : "-"}
+                    </p>
+                  </div>
+
+                  <div>
+                    <h4 className="font-semibold">Debe</h4>
+                    <p
+                      className={
+                        plan.debt > 0
+                          ? "text-red-600 font-semibold"
+                          : "text-gray-500"
+                      }
+                    >
+                      {plan.debt > 0
+                        ? `$${Number(plan.debt).toLocaleString("es-AR")}`
+                        : "Al día"}
                     </p>
                   </div>
                 </div>

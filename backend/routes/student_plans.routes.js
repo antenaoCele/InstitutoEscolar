@@ -17,6 +17,16 @@ const router = express.Router();
 
 router.get("/", authentication, studentPlansController.getAll);
 
+// Dispara manualmente la baja automática por deuda no regularizada a
+// tiempo (misma función que corre el cron todos los días). Útil para
+// probarla ahora mismo sin esperar al horario programado.
+router.post(
+  "/close-overdue",
+  authentication,
+  authorization("ADMIN"),
+  studentPlansController.closeOverduePlans,
+);
+
 //OBTENER EL ESTADO DE PAGO DE LOS ESTUDIANTES Y FILTRARLOS POR DOCENTE(es opcional lo del docente)
 router.get(
   "/account-status",

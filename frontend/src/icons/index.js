@@ -78,7 +78,7 @@ import AssignTeacher from "./icons8-agregar-usuario-32.png";
 import BirthdaysIcon from "./icons8-cumpleaños-48.png";
 
 export {
-  ActivationIc,
+  ActivationIcon,
   MenuIcon,
   MoonIcon,
   SunIcon,

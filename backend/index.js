@@ -4,6 +4,7 @@ import passport from "passport";
 
 import { configurePassport } from "./config/passport.js";
 import { connectDB } from "./db.js";
+import { scheduleCloseOverduePlans } from "./jobs/closeOverduePlans.job.js";
 
 import loginRouter from "./routes/login.routes.js";
 import enrollmentsRouter from "./routes/enrollments.routes.js";
@@ -65,6 +66,11 @@ app.use("/dashboard", dashboardRoutes);
 app.listen(port, () => {
   console.log(`Servidor corriendo en puerto ${port}`);
 });
+
+// Cron: da de baja automáticamente los student_plans cuya deuda no
+// se regularizó dentro de la ventana de gracia (día 5 del mes
+// siguiente al que quedó impago). Corre todos los días a las 03:00.
+scheduleCloseOverduePlans();
 
 process.on("uncaughtException", (err) => {
   console.error("UNCAUGHT EXCEPTION");

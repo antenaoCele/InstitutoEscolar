@@ -1,12 +1,10 @@
 import { db } from "../db.js";
 import { createCrudController } from "../utils/crudFactory.js";
 import {
-  getPlanPriceAtDate,
   existingPayment,
   existingRegularization,
   getStudentPlanStatus,
-  getFirstObligatedPeriod,
-  periodToDate,
+  getExpectedBaseAmount,
 } from "../services/payments.service.js";
 import { needsEnrollment } from "../services/enrollments.service.js";
 
@@ -217,15 +215,8 @@ export const paymentsController = {
         });
       }
 
-      // Puede haber más de un período vencido a la vez (alumno que
-      // sigue ACTIVE acumulando meses sin pagar sin que lo den de
-      // baja). Cada uno se regulariza por separado.
-      const overdueMatch = status.overdue_periods.find(
-        (o) => o.period === payment_period,
-      );
-
       const validTargets = [
-        ...status.overdue_periods.map((o) => o.period),
+        status.overdue_period,
         status.current_period?.period,
       ].filter(Boolean);
 
@@ -237,14 +228,14 @@ export const paymentsController = {
         });
       }
 
-      const isRegularization = Boolean(overdueMatch);
+      const isRegularization = payment_period === status.overdue_period;
 
       // El student_plan_id efectivo puede ser distinto al que mandó
       // el frontend: si es regularización, SIEMPRE se registra contra
       // la fila que generó la deuda (aunque el alumno ya tenga otro
       // docente hoy), para que la comisión le quede al docente correcto.
       const effectiveStudentPlanId = isRegularization
-        ? overdueMatch.student_plan_id
+        ? status.overdue_student_plan_id
         : student_plan_id;
 
       let planPrice;
@@ -262,43 +253,35 @@ export const paymentsController = {
           });
         }
 
-        const historicPrice = await getPlanPriceAtDate(
-          effectiveStudentPlanId,
-          periodToDate(payment_period, "end"),
+        const baseAmount = await getExpectedBaseAmount(
+          studentPlan,
+          payment_period,
         );
 
-        if (historicPrice == null) {
+        if (baseAmount == null) {
           return res.status(400).json({
             success: false,
             message: "No existe un precio histórico para ese período.",
           });
         }
 
-        planPrice = historicPrice;
-        amount = round2(historicPrice * 1.15);
+        planPrice = baseAmount;
+        amount = round2(baseAmount * 1.15);
       } else {
-        const currentPrice = await getPlanPriceAtDate(
-          effectiveStudentPlanId,
-          periodToDate(payment_period, "end"),
+        const baseAmount = await getExpectedBaseAmount(
+          studentPlan,
+          payment_period,
         );
 
-        if (currentPrice == null) {
+        if (baseAmount == null) {
           return res.status(400).json({
             success: false,
             message: "No existe un precio para ese período.",
           });
         }
 
-        planPrice = currentPrice;
-
-        const firstObligatedPeriod = await getFirstObligatedPeriod(studentPlan);
-        const isFirstPayment = payment_period === firstObligatedPeriod;
-
-        if (isFirstPayment && studentPlan.first_payment_option === "HALF") {
-          amount = round2(currentPrice * 0.5);
-        } else {
-          amount = currentPrice;
-        }
+        planPrice = baseAmount;
+        amount = baseAmount;
       }
 
       const paymentType = isRegularization ? "REGULARIZATION" : "NORMAL";
@@ -408,12 +391,8 @@ export const paymentsController = {
         });
       }
 
-      const overdueMatch = status.overdue_periods.find(
-        (o) => o.period === newPaymentPeriod,
-      );
-
       const validTargets = [
-        ...status.overdue_periods.map((o) => o.period),
+        status.overdue_period,
         status.current_period?.period,
         // Permitimos mantener el período que el pago ya tenía, aunque
         // ya no figure entre los "vigentes", para no romper una edición
@@ -429,12 +408,12 @@ export const paymentsController = {
         });
       }
 
-      const isRegularization = Boolean(overdueMatch);
+      const isRegularization = newPaymentPeriod === status.overdue_period;
 
       // Mismo criterio que en create(): la regularización se ata a la
       // fila que generó la deuda, no a la que se mandó desde el form.
       const effectiveStudentPlanId = isRegularization
-        ? overdueMatch.student_plan_id
+        ? status.overdue_student_plan_id
         : newStudentPlanId;
 
       let planPrice;
@@ -455,43 +434,35 @@ export const paymentsController = {
           });
         }
 
-        const historicPrice = await getPlanPriceAtDate(
-          effectiveStudentPlanId,
-          periodToDate(newPaymentPeriod, "end"),
+        const baseAmount = await getExpectedBaseAmount(
+          studentPlan,
+          newPaymentPeriod,
         );
 
-        if (historicPrice == null) {
+        if (baseAmount == null) {
           return res.status(400).json({
             success: false,
             message: "No existe un precio histórico para ese período.",
           });
         }
 
-        planPrice = historicPrice;
-        amount = round2(historicPrice * 1.15);
+        planPrice = baseAmount;
+        amount = round2(baseAmount * 1.15);
       } else {
-        const currentPrice = await getPlanPriceAtDate(
-          effectiveStudentPlanId,
-          periodToDate(newPaymentPeriod, "end"),
+        const baseAmount = await getExpectedBaseAmount(
+          studentPlan,
+          newPaymentPeriod,
         );
 
-        if (currentPrice == null) {
+        if (baseAmount == null) {
           return res.status(400).json({
             success: false,
             message: "No existe un precio para ese período.",
           });
         }
 
-        planPrice = currentPrice;
-
-        const firstObligatedPeriod = await getFirstObligatedPeriod(studentPlan);
-        const isFirstPayment = newPaymentPeriod === firstObligatedPeriod;
-
-        if (isFirstPayment && studentPlan.first_payment_option === "HALF") {
-          amount = round2(currentPrice * 0.5);
-        } else {
-          amount = currentPrice;
-        }
+        planPrice = baseAmount;
+        amount = baseAmount;
       }
 
       const paymentType = isRegularization ? "REGULARIZATION" : "NORMAL";
@@ -615,20 +586,49 @@ export const paymentsController = {
       SELECT
         sp.id AS student_plan_id,
         sp.plan_id,
-        p.name AS plan_name
+        p.name AS plan_name,
+        sp.end_date
       FROM student_plans sp
       JOIN plans p
         ON p.id = sp.plan_id
       WHERE sp.student_id = ?
-      AND sp.end_date IS NULL
       ORDER BY p.name
       `,
         [studentId],
       );
 
+      // Los planes activos se muestran siempre. Los inactivos SOLO se
+      // muestran si todavía tienen deuda pendiente (para poder
+      // regularizarla aunque el alumno ya no esté cursando ese plan),
+      // etiquetados distinto para que no se confundan con el actual.
+      const result = [];
+
+      for (const row of rows) {
+        const isActive = row.end_date === null;
+
+        if (isActive) {
+          result.push({
+            student_plan_id: row.student_plan_id,
+            plan_id: row.plan_id,
+            plan_name: row.plan_name,
+          });
+          continue;
+        }
+
+        const status = await getStudentPlanStatus(row.student_plan_id);
+
+        if (status?.overdue_period) {
+          result.push({
+            student_plan_id: row.student_plan_id,
+            plan_id: row.plan_id,
+            plan_name: `${row.plan_name} (de baja — debe ${status.overdue_period})`,
+          });
+        }
+      }
+
       res.json({
         success: true,
-        data: rows,
+        data: result,
       });
     } catch (error) {
       console.error(error);

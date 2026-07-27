@@ -42,16 +42,12 @@ const STATUS_LABELS = {
 function getPeriodOptions(status, extraPeriod = null) {
   const options = [];
 
-  (status?.overdue_periods || []).forEach((o) => {
+  if (status?.overdue_period) {
     options.push({
-      value: o.period,
-      label: `Regularizar ${o.period} (+15%)`,
+      value: status.overdue_period,
+      label: `Regularizar ${status.overdue_period} (+15%)`,
     });
-  });
-
-  const currentIsOverdue = (status?.overdue_periods || []).some(
-    (o) => o.period === status?.current_period?.period,
-  );
+  }
 
   // No ofrecemos un período que ya está pagado como opción normal
   // (para eso está extraPeriod, que lo mantiene disponible SOLO al
@@ -60,7 +56,7 @@ function getPeriodOptions(status, extraPeriod = null) {
     status?.current_period &&
     status.current_period.status !== "not_due_yet" &&
     status.current_period.status !== "paid" &&
-    !currentIsOverdue
+    status.current_period.period !== status.overdue_period
   ) {
     const label =
       STATUS_LABELS[status.current_period.status] ||

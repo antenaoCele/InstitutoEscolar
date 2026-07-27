@@ -1,6 +1,9 @@
 import { createCrudController } from "../utils/crudFactory.js";
 import { getCurrentDateParts } from "../utils/dateUtils.js";
-import { getStudentPlanStatus } from "../services/payments.service.js";
+import {
+  getStudentPlanStatus,
+  getExpectedBaseAmount,
+} from "../services/payments.service.js";
 import { db } from "../db.js";
 
 export const baseController = createCrudController("students");
@@ -144,7 +147,7 @@ export const studentsController = {
 
               academic_status: planStatus.academic_status,
               account_status: planStatus.account_status,
-              overdue_periods: planStatus.overdue_periods,
+              overdue_period: planStatus.overdue_period,
               current_period: planStatus.current_period,
             });
           }
@@ -184,7 +187,7 @@ export const studentsController = {
         filteredResult = filteredResult.filter(
           (student) =>
             student.current_period?.status === "pending" ||
-            (student.overdue_periods && student.overdue_periods.length > 0),
+            student.account_status === "OVERDUE",
         );
       }
 
@@ -250,15 +253,20 @@ export const studentsController = {
         [studentId],
       );
 
-      // Planes activos
-      const [plans] = await db.execute(
+      // Planes: activos, más los inactivos que TODAVÍA tengan deuda
+      // pendiente (para poder ver cuánto debe pagar para reincorporarse
+      // aunque ya no esté cursando ese plan).
+      const [allPlans] = await db.execute(
         `
       SELECT
         sp.id,
+        sp.plan_id,
+        sp.first_payment_option,
         p.name AS plan_name,
         te.first_name,
         te.last_name,
-        sp.start_date
+        sp.start_date,
+        sp.end_date
       FROM student_plans sp
 
       JOIN plans p
@@ -269,19 +277,71 @@ export const studentsController = {
 
       WHERE
         sp.student_id = ?
-        AND sp.end_date IS NULL
 
       ORDER BY p.name
       `,
         [studentId],
       );
 
+      // Cuánto debe cada plan: su período vencido, calculado con el
+      // precio histórico de ESE período (nunca el actual) + 15%. Si
+      // ese período era la primera cuota y el alumno eligió media
+      // cuota, el 15% se aplica sobre la mitad, no sobre el total
+      // (getExpectedBaseAmount centraliza esa regla). Si no debe
+      // nada, 0.
+      const plansWithDebtRaw = await Promise.all(
+        allPlans.map(async (plan) => {
+          const status = await getStudentPlanStatus(plan.id);
+
+          // Plan inactivo sin deuda pendiente: no aporta nada
+          // mostrarlo acá, es historial viejo ya resuelto.
+          if (
+            status.academic_status === "INACTIVE" &&
+            status.account_status !== "OVERDUE"
+          ) {
+            return null;
+          }
+
+          let debt = 0;
+
+          if (status.overdue_period) {
+            const baseAmount = await getExpectedBaseAmount(
+              {
+                id: plan.id,
+                student_id: studentId,
+                plan_id: plan.plan_id,
+                start_date: plan.start_date,
+                first_payment_option: plan.first_payment_option,
+              },
+              status.overdue_period,
+            );
+
+            if (baseAmount != null) {
+              debt = Math.round(baseAmount * 1.15 * 100) / 100;
+            }
+          }
+
+          return {
+            id: plan.id,
+            plan_name: plan.plan_name,
+            first_name: plan.first_name,
+            last_name: plan.last_name,
+            start_date: plan.start_date,
+            academic_status: status.academic_status,
+            debt,
+            overdue_period: status.overdue_period,
+          };
+        }),
+      );
+
+      const plansWithDebt = plansWithDebtRaw.filter(Boolean);
+
       res.json({
         success: true,
         data: {
           student,
           tutors,
-          plans,
+          plans: plansWithDebt,
         },
       });
     } catch (error) {
