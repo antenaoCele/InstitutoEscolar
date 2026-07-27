@@ -6,7 +6,10 @@ import Label from "../../components/form/Label";
 import MonthlyProfitChart from "../../components/charts/monthlyProfitChart/MonthlyProfitChart";
 import Select from "../../components/form/Select";
 import ComponentCard from "../../components/common/ComponentCard";
+import { Modal } from "../../components/ui/Modal";
 import { MonthlyFinanceService } from "../../services/monthlyFinances.service";
+import { validateMonthlyFinanceForm } from "../../validators/entities/monthy_finances";
+import { useFeedbackModal } from "../../hooks/useFeedbackModal";
 import {
   ViewButton,
   EditButton,
@@ -54,7 +57,25 @@ export default function MonthlyFinances() {
   const currentDate = new Date();
   const currentYear = currentDate.getFullYear();
 
+  // ======================================================
+  // FORMULARIO DEL TUTOR
+  // ======================================================
   const [selectedYear, setSelectedYear] = useState(currentYear);
+  const [selectedFinance, setSelectedFinance] = useState(null);
+
+  // ======================================================
+  // MODALES
+  // ======================================================
+  const [openEditModal, setOpenEditModal] = useState(false);
+  const [openDeleteModal, setOpenDeleteModal] = useState(false);
+  const [editOtherExpenses, setEditOtherExpenses] = useState("");
+  const [errorsEdit, setErrorsEdit] = useState({});
+  const { feedbackModal, showFeedback, closeFeedback } = useFeedbackModal();
+
+  // ======================================================
+  // ERRORES
+  // ======================================================
+  const [errors, setErrors] = useState({});
 
   // ======================================================
   // FETCH DATOS
@@ -69,6 +90,81 @@ export default function MonthlyFinances() {
       setFinances([]);
     } finally {
       setLoading(false);
+    }
+  };
+
+  // ======================================================
+  // HANDLES CRUD
+  // ======================================================
+  const handleEdit = (finance) => {
+    setSelectedFinance(finance);
+
+    setEditOtherExpenses(finance.other_expenses);
+
+    setErrorsEdit({});
+
+    setOpenEditModal(true);
+  };
+
+  const handleUpdate = async () => {
+    const validationErrors = validateMonthlyFinanceForm({
+      month: selectedFinance.month,
+      year: selectedFinance.year,
+      otherExpenses: editOtherExpenses,
+    });
+
+    if (Object.keys(validationErrors).length > 0) {
+      setErrorsEdit(validationErrors);
+      return;
+    }
+    try {
+      await MonthlyFinanceService.update(selectedFinance.id, {
+        other_expenses: Number(editOtherExpenses),
+      });
+
+      await fetchFinances();
+
+      setOpenEditModal(false);
+      setSelectedFinance(null);
+      setEditOtherExpenses("");
+      setErrorsEdit({});
+
+      showFeedback("Cierre mensual actualizado correctamente.", "success");
+    } catch (error) {
+      console.error(error);
+
+      showFeedback(
+        error.response?.data?.message ||
+          "Error al actualizar el cierre mensual.",
+        "error",
+      );
+    }
+  };
+
+  const handleDelete = (finance) => {
+    setSelectedFinance(finance);
+    setOpenDeleteModal(true);
+  };
+
+  const confirmDelete = async () => {
+    try {
+      await MonthlyFinanceService.delete(selectedFinance.id);
+
+      setOpenDeleteModal(false);
+      setSelectedFinance(null);
+
+      await fetchFinances();
+
+      showFeedback("Cierre mensual eliminado correctamente.", "success");
+    } catch (error) {
+      console.error(error.response?.data || error.message);
+
+      setOpenDeleteModal(false);
+
+      showFeedback(
+        error.response?.data?.message || "Error al eliminar el cierre mensual.",
+        "error",
+      );
     }
   };
 
@@ -92,15 +188,22 @@ export default function MonthlyFinances() {
   // GENERAR CIERRE
   // ======================================================
   const handleGenerate = async () => {
+    setErrors({});
     setFormError("");
 
-    if (!newYear || !newMonth) {
-      setFormError("Año y mes son obligatorios");
+    const validationErrors = validateMonthlyFinanceForm({
+      month: newMonth,
+      year: newYear,
+      otherExpenses,
+    });
+
+    if (Object.keys(validationErrors).length > 0) {
+      setErrors(validationErrors);
       return;
     }
 
     if (alreadyClosed) {
-      setFormError("Ese mes ya fue cerrado");
+      setFormError("Ese mes ya fue cerrado.");
       return;
     }
 
@@ -189,6 +292,19 @@ export default function MonthlyFinances() {
       header: "Ganancias",
       render: (row) => `$${Number(row.net_profit).toLocaleString("es-AR")}`,
     },
+    {
+      header: "Acciones",
+      render: (row) => (
+        <div className="flex gap-2">
+          <EditButton title="Editar cierre" onClick={() => handleEdit(row)} />
+
+          <DeleteButton
+            title="Eliminar cierre"
+            onClick={() => handleDelete(row)}
+          />
+        </div>
+      ),
+    },
   ];
 
   const tableTitle = (
@@ -218,30 +334,30 @@ export default function MonthlyFinances() {
         />
       </div>
 
-      <ComponentCard title="Total de ingresos netos por mes">
-        <MonthlyProfitChart finances={finances} year={selectedYear} />
-      </ComponentCard>
+      <div className="mb-8">
+        <ComponentCard title="Total de ingresos netos por mes">
+          <MonthlyProfitChart finances={finances} year={selectedYear} />
+        </ComponentCard>
+      </div>
 
       {/* ---------- Totales ---------- */}
-      <div className="grid grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 mb-6 gap-4 mb-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 mb-6">
+        {" "}
         <ComponentCard title="Total de cierres registrados en el año seleccionado">
           <p className="text-2xl font-bold">
             {finances.filter((f) => Number(f.year) === selectedYear).length}
           </p>
         </ComponentCard>
-
         <ComponentCard title="Total de ingresos netos en el año seleccionado">
           <p className="text-2xl font-bold">
             ${annualProfit.toLocaleString("es-AR")}
           </p>
         </ComponentCard>
-
         <ComponentCard title="Total histórico de ingresos brutos">
           <p className="text-2xl font-bold">
             ${totalIncome.toLocaleString("es-AR")}
           </p>
         </ComponentCard>
-
         <ComponentCard title="Total histórico de ingresos netos">
           <p className="text-2xl font-bold">
             ${totalProfit.toLocaleString("es-AR")}
@@ -267,6 +383,10 @@ export default function MonthlyFinances() {
                 </option>
               ))}
             </Select>
+
+            {errors.month && (
+              <p className="text-sm text-red-600 mt-1">{errors.month}</p>
+            )}
           </div>
           <div>
             <Label className="block text-sm mb-1">Año</Label>
@@ -277,6 +397,9 @@ export default function MonthlyFinances() {
               value={newYear}
               onChange={(e) => setNewYear(Number(e.target.value))}
             />
+            {errors.year && (
+              <p className="text-sm text-red-600 mt-1">{errors.year}</p>
+            )}
           </div>
           <div>
             <Label noMargin className="block text-sm mb-1">
@@ -291,6 +414,11 @@ export default function MonthlyFinances() {
               onChange={(e) => setOtherExpenses(e.target.value)}
               placeholder="0"
             />
+            {errors.other_expenses && (
+              <p className="text-sm text-red-600 mt-1">
+                {errors.other_expenses}
+              </p>
+            )}
           </div>
           <div className="flex items-end h-full">
             <Button
@@ -320,6 +448,94 @@ export default function MonthlyFinances() {
           loading={loading}
         />
       </div>
+
+      <Modal
+        isOpen={openEditModal}
+        onClose={() => {
+          setOpenEditModal(false);
+          setSelectedFinance(null);
+          setEditOtherExpenses("");
+        }}
+      >
+        <h2 className="text-xl font-bold mb-8">Editar cierre mensual</h2>
+
+        {selectedFinance && (
+          <>
+            <p>
+              <strong>Mes:</strong> {monthNames[selectedFinance.month - 1]}
+            </p>
+
+            <p className="mb-4">
+              <strong>Año:</strong> {selectedFinance.year}
+            </p>
+
+            <Label>Otros gastos</Label>
+
+            <Input
+              type="number"
+              value={editOtherExpenses}
+              onChange={(e) => setEditOtherExpenses(e.target.value)}
+              error={errorsEdit.other_expenses}
+            />
+
+            <div className="flex justify-end gap-4 mt-10">
+              <NoButton
+                title="Cancelar"
+                onClick={() => {
+                  setOpenEditModal(false);
+                  setSelectedFinance(null);
+                  setEditOtherExpenses("");
+                  setErrorsEdit({});
+                }}
+              />
+
+              <YesButton title="Aceptar" onClick={handleUpdate} />
+            </div>
+          </>
+        )}
+      </Modal>
+
+      <Modal
+        isOpen={openDeleteModal}
+        onClose={() => {
+          setOpenDeleteModal(false);
+          setSelectedFinance(null);
+        }}
+      >
+        <h2 className="text-lg font-semibold mb-4">
+          ¿Eliminar cierre mensual?
+        </h2>
+
+        <p className="mb-6">
+          <strong>
+            {monthNames[selectedFinance?.month - 1]} {selectedFinance?.year}
+          </strong>
+        </p>
+
+        <div className="flex justify-end gap-2">
+          <NoButton
+            title="Cancelar"
+            onClick={() => {
+              setOpenDeleteModal(false);
+              setSelectedFinance(null);
+            }}
+          />
+
+          <YesButton title="Aceptar" onClick={confirmDelete} />
+        </div>
+      </Modal>
+
+      <Modal isOpen={feedbackModal.open} onClose={closeFeedback}>
+        <h2
+          className={`text-lg font-semibold mb-4 ${
+            feedbackModal.type === "error" ? "text-red-600" : "text-green-600"
+          }`}
+        >
+          {feedbackModal.type === "error" ? "Error" : "Listo"}
+        </h2>
+
+        <p className="text-gray-600">{feedbackModal.message}</p>
+      </Modal>
     </>
   );
 }
