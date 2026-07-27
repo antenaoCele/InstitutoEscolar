@@ -14,12 +14,43 @@ import {
   CopyIcon,
   ActivationIcon,
   GainsIcon,
+  PaperPlaneIcon,
 } from "../../icons";
 
 const baseClass =
   "cursor-pointer w-12 h-12 rounded flex items-center justify-center transition transform hover:scale-105";
 
 const imgClass = "w-5 h-5 brightness-0 invert";
+
+const disabledClass = "opacity-40 cursor-not-allowed hover:scale-100";
+
+export function PreviousButton({ onClick, disabled = false, title = "" }) {
+  return (
+    <Button
+      title={title}
+      size="sm"
+      onClick={onClick}
+      disabled={disabled}
+      className={`${baseClass} ${disabled ? disabledClass : ""}`}
+    >
+      <PaperPlaneIcon className="w-5 h-5 rotate-180" />
+    </Button>
+  );
+}
+
+export function NextButton({ onClick, disabled = false, title = "" }) {
+  return (
+    <Button
+      title={title}
+      size="sm"
+      onClick={onClick}
+      disabled={disabled}
+      className={`${baseClass} ${disabled ? disabledClass : ""}`}
+    >
+      <PaperPlaneIcon className="w-5 h-5" />
+    </Button>
+  );
+}
 
 export function GainsButton({ onClick, title = "" }) {
   return (
@@ -223,9 +254,7 @@ export function AssignTeacherButton({ onClick, disabled = false, title = "" }) {
       size="sm"
       onClick={onClick}
       disabled={disabled}
-      className={`${baseClass} ${
-        disabled ? "opacity-40 cursor-not-allowed hover:scale-100" : ""
-      }`}
+      className={`${baseClass} ${disabled ? disabledClass : ""}`}
     >
       <img src={AssignTeacher} alt="Asignar Docentes" className={imgClass} />
     </Button>
@@ -239,9 +268,7 @@ export function CopyButton({ onClick, disabled = false, title = "" }) {
       size="sm"
       onClick={onClick}
       disabled={disabled}
-      className={`${baseClass} ${
-        disabled ? "opacity-40 cursor-not-allowed hover:scale-100" : ""
-      }`}
+      className={`${baseClass} ${disabled ? disabledClass : ""}`}
     >
       <CopyIcon className="w-5 h-5" />
     </Button>
