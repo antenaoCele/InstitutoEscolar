@@ -10,6 +10,7 @@ import Button from "../../components/ui/Button";
 import Label from "../../components/form/Label";
 import Input from "../../components/form/Input";
 import { YesButton, NoButton } from "../../components/ui/ActionButtons";
+import { EyeIcon, EyeCloseIcon } from "../../icons/index.js";
 
 export default function UserProfiles() {
   const [formData, setFormData] = useState({
@@ -22,6 +23,12 @@ export default function UserProfiles() {
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(true);
   const [status, setStatus] = useState({ type: "", message: "" });
+
+  const [showPassword, setShowPassword] = useState({
+    currentPassword: false,
+    newPassword: false,
+    confirmPassword: false,
+  });
 
   const [showPasswordFields, setShowPasswordFields] = useState(false);
   const [passwordData, setPasswordData] = useState({
@@ -271,13 +278,60 @@ export default function UserProfiles() {
                 ].map(({ name, label }) => (
                   <div key={name} className="flex flex-col">
                     <Label className="font-semibold mb-2">{label}</Label>
-                    <Input
-                      type="password"
-                      name={name}
-                      value={passwordData[name]}
-                      onChange={handlePasswordChange}
-                      className={inputClass(passwordErrors[name])}
-                    />
+
+                    <div className="relative">
+                      <input
+                        type={showPassword[name] ? "text" : "password"}
+                        name={name}
+                        value={passwordData[name]}
+                        onChange={handlePasswordChange}
+                        className={`
+                          w-full rounded-lg border-2 h-11 px-3 pr-10
+                          focus:border-[#0cc0df]
+                          focus:ring-2 focus:ring-[#0cc0df]/30
+                          focus:outline-none
+                          dark:border-gray-600
+                          dark:bg-black
+                          dark:text-white
+                          ${
+                            passwordErrors[name]
+                              ? "border-red-500 focus:border-red-500 focus:ring-red-500/30"
+                              : "border-gray-300"
+                          }
+                        `}
+                      />
+
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setShowPassword((prev) => ({
+                            ...prev,
+                            [name]: !prev[name],
+                          }))
+                        }
+                        className="
+                          absolute
+                          inset-y-0
+                          right-3
+                          flex
+                          items-center
+                          justify-center
+                          h-full
+                          text-gray-500
+                          hover:text-gray-700
+                          dark:text-gray-400
+                          dark:hover:text-gray-200
+                          cursor-pointer
+                        "
+                      >
+                        {showPassword[name] ? (
+                          <EyeCloseIcon className="w-5 h-5" />
+                        ) : (
+                          <EyeIcon className="w-5 h-5" />
+                        )}
+                      </button>
+                    </div>
+
                     {passwordErrors[name] && (
                       <p className="text-red-500 text-sm mt-1">
                         {passwordErrors[name]}
