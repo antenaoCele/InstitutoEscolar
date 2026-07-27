@@ -1,12 +1,41 @@
 import { db } from "../db.js";
 import { createCrudController } from "../utils/crudFactory.js";
 import { isTeacherCompatibleWithPlan } from "../utils/student_plans.utils.js";
-import { getStudentPlanStatus } from "../services/payments.service.js";
+import {
+  getStudentPlanStatus,
+  closeOverduePlansPastGracePeriod,
+} from "../services/payments.service.js";
 
 const baseController = createCrudController("student_plans");
 
 export const studentPlansController = {
   ...baseController,
+
+  // =====================================================
+  // DISPARO MANUAL de la baja automática por deuda no
+  // regularizada a tiempo. Es la misma función que corre el cron
+  // todos los días — este endpoint sirve para probarla ahora mismo
+  // sin esperar al horario programado, y como botón manual si algún
+  // día lo necesitás (ej. el cron falló esa noche).
+  // Devuelve el detalle de qué planes tocó, para poder verificar.
+  // =====================================================
+  closeOverduePlans: async (req, res) => {
+    try {
+      const closed = await closeOverduePlansPastGracePeriod();
+
+      res.json({
+        success: true,
+        total: closed.length,
+        data: closed,
+      });
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({
+        success: false,
+        message: "Error al cerrar los planes vencidos",
+      });
+    }
+  },
 
   getAll: async (req, res) => {
     try {

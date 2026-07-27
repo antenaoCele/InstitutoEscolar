@@ -141,49 +141,69 @@ export async function existingRegularization(
 
 /* =========================================================
 CADENA COMPLETA DE UN student_plan
-Camina hacia atrás mientras encuentre una fila anterior (mismo
-alumno + mismo plan) cuyo end_date coincida EXACTAMENTE con el
-start_date de la fila siguiente (cambio de docente sin hueco
-real). Si hay un hueco de calendario real (baja + vuelta meses
-después), la cadena se corta ahí.
+Trae TODAS las filas históricas de ese alumno+plan y camina hacia
+atrás desde la fila dada mientras cada una conecte "sin hueco de
+calendario" con la anterior: se considera continuo si la fila
+siguiente arranca dentro del mismo mes en el que terminó la
+anterior, o como mucho el mes inmediato posterior. Esto cubre tanto
+un cambio de docente el mismo día como una reincorporación unos
+días después dentro del mismo mes (ej. dar de baja y reactivar un
+docente, reasignando a sus alumnos poco después). Si hay un hueco
+de calendario real (mes de por medio sin ninguna fila activa), la
+cadena se corta ahí.
 
 Devuelve un array ordenado de la fila más vieja a la más nueva
-(incluye la fila que se pasó como parámetro al final).
+(incluye la fila que se pasó como parámetro).
 ========================================================= */
 async function resolveChain(student_plan) {
-  const chain = [
-    {
-      id: student_plan.id,
-      start_date: student_plan.start_date,
-      end_date: student_plan.end_date ?? null,
-      first_payment_option: student_plan.first_payment_option,
-    },
-  ];
+  const [allRows] = await db.execute(
+    `
+    SELECT id, start_date, end_date, first_payment_option
+    FROM student_plans
+    WHERE student_id = ?
+      AND plan_id = ?
+    ORDER BY start_date ASC, id ASC
+    `,
+    [student_plan.student_id, student_plan.plan_id],
+  );
 
-  let cursor = chain[0];
+  const targetIndex = allRows.findIndex((r) => r.id === student_plan.id);
 
-  // Límite de seguridad para evitar loops infinitos ante datos corruptos
-  for (let i = 0; i < 50; i++) {
-    const [prevRows] = await db.execute(
-      `
-      SELECT id, start_date, end_date, first_payment_option
-      FROM student_plans
-      WHERE student_id = ?
-        AND plan_id = ?
-        AND end_date = ?
-      ORDER BY id DESC
-      LIMIT 1
-      `,
-      [student_plan.student_id, student_plan.plan_id, cursor.start_date],
-    );
-
-    if (!prevRows.length) break;
-
-    cursor = prevRows[0];
-    chain.unshift(cursor);
+  // No debería pasar, pero por las dudas devolvemos solo la fila que
+  // nos pasaron si no la encontramos en la consulta.
+  if (targetIndex === -1) {
+    return [
+      {
+        id: student_plan.id,
+        start_date: student_plan.start_date,
+        end_date: student_plan.end_date ?? null,
+        first_payment_option: student_plan.first_payment_option,
+      },
+    ];
   }
 
-  return chain;
+  let chainStart = targetIndex;
+
+  for (let i = targetIndex; i > 0; i--) {
+    const prev = allRows[i - 1];
+    const curr = allRows[i];
+
+    if (prev.end_date === null) break; // dos filas activas a la vez: no debería pasar, cortamos por seguridad
+
+    const prevEndPeriod = toPeriod(prev.end_date);
+    const currStartPeriod = toPeriod(curr.start_date);
+
+    const isContinuous = periodLTE(
+      currStartPeriod,
+      addMonths(prevEndPeriod, 1),
+    );
+
+    if (!isContinuous) break;
+
+    chainStart = i - 1;
+  }
+
+  return allRows.slice(chainStart, targetIndex + 1);
 }
 
 /* =========================================================
@@ -206,9 +226,48 @@ function findOwnerId(chain, period) {
 }
 
 /* =========================================================
+¿ESTA FILA FUE REEMPLAZADA POR OTRA QUE LA CONTINÚA?
+Una fila dada de baja que tiene una fila POSTERIOR del mismo
+alumno+plan que la continúa (mismo mes de la baja, o el mes
+siguiente) no es una baja real: es un cambio de docente / una
+reasignación. En ese caso la fila vieja NO debe reclamar deuda
+propia — la obligación de ese período le corresponde a la fila
+que quedó vigente. Sin esto, el mismo período aparecería
+reclamado dos veces (una por cada fila).
+========================================================= */
+async function hasSuccessor(plan) {
+  if (plan.end_date === null) return false;
+
+  const [rows] = await db.execute(
+    `
+    SELECT start_date
+    FROM student_plans
+    WHERE student_id = ?
+      AND plan_id = ?
+      AND id != ?
+      AND start_date >= ?
+    ORDER BY start_date ASC
+    LIMIT 1
+    `,
+    [plan.student_id, plan.plan_id, plan.id, plan.end_date],
+  );
+
+  if (!rows.length) return false;
+
+  const endPeriod = toPeriod(plan.end_date);
+  const successorStartPeriod = toPeriod(rows[0].start_date);
+
+  return periodLTE(successorStartPeriod, addMonths(endPeriod, 1));
+}
+
+/* =========================================================
 ESTADO COMPLETO DE UN student_plan
 (cuota vencida congelada + estado del período actual)
 ========================================================= */
+// Día límite del mes SIGUIENTE al que quedó vencido para regularizar
+// antes de que se dé la baja automática. Fijo, no configurable.
+const GRACE_PERIOD_DAY = 5;
+
 export async function getStudentPlanStatus(student_plan_id) {
   const [rows] = await db.execute(
     `
@@ -226,10 +285,25 @@ export async function getStudentPlanStatus(student_plan_id) {
 
   const { yearMonth: currentPeriod, day } = getCurrentDateParts();
 
+  // Si esta fila fue reemplazada por otra que la continúa (cambio de
+  // docente, reasignación), no reclama deuda propia: la obligación
+  // del período la lleva la fila vigente.
+  if (!isActive && (await hasSuccessor(plan))) {
+    return {
+      student_plan_id: plan.id,
+      academic_status: "INACTIVE",
+      account_status: "CURRENT",
+      overdue_period: null,
+      overdue_student_plan_id: null,
+      current_period: null,
+      superseded: true,
+    };
+  }
+
   // Resolvemos la cadena completa (por si hubo cambios de docente sin
   // hueco de calendario) para no perder deuda vieja, y para saber en
-  // qué fila puntual se originó cada período (importante para que la
-  // regularización se cobre al docente correcto, no al actual).
+  // qué fila puntual se originó el período vencido (importante para
+  // que la regularización se cobre al docente correcto, no al actual).
   const chain = await resolveChain(plan);
   const origin = chain[0];
 
@@ -244,7 +318,7 @@ export async function getStudentPlanStatus(student_plan_id) {
   // - ACTIVE, día <= 20: hasta el mes ANTERIOR al actual (el actual
   //   todavía está en su plazo normal, se evalúa aparte).
   // - ACTIVE, día 21+: incluye también el mes actual, porque ya pasó
-  //   su fecha límite y pasa a ser una cuota vencida más.
+  //   su fecha límite.
   let scanEndPeriod;
   if (!isActive) {
     scanEndPeriod = toPeriod(plan.end_date);
@@ -269,20 +343,18 @@ export async function getStudentPlanStatus(student_plan_id) {
   );
   const paidPeriods = new Set(paymentRows.map((r) => r.payment_period));
 
-  // Buscamos TODOS los períodos impagos del rango (no solo el más
-  // viejo): si el alumno sigue ACTIVE sin que lo den de baja mientras
-  // acumula varios meses sin pagar, cada uno de esos meses es una
-  // cuota vencida real y se regulariza por separado, con el precio
-  // histórico de SU propio período.
-  const overduePeriods = [];
+  // Buscamos el período impago más antiguo. Con el cron que da de
+  // baja automáticamente a quien no regulariza dentro de la ventana
+  // de gracia, nunca debería acumularse más de uno mientras el plan
+  // sigue ACTIVE (si igual apareciera más de uno, por ejemplo porque
+  // el cron todavía no corrió, nos quedamos con el más viejo).
+  let overduePeriod = null;
   if (periodLTE(firstObligatedPeriod, scanEndPeriod)) {
     let cursor = firstObligatedPeriod;
     while (periodLTE(cursor, scanEndPeriod)) {
       if (!paidPeriods.has(cursor)) {
-        overduePeriods.push({
-          period: cursor,
-          student_plan_id: findOwnerId(chain, cursor),
-        });
+        overduePeriod = cursor;
+        break;
       }
       cursor = addMonths(cursor, 1);
     }
@@ -291,8 +363,14 @@ export async function getStudentPlanStatus(student_plan_id) {
   const result = {
     student_plan_id: plan.id,
     academic_status: isActive ? "ACTIVE" : "INACTIVE",
-    account_status: overduePeriods.length ? "OVERDUE" : "CURRENT",
-    overdue_periods: overduePeriods,
+    account_status: overduePeriod ? "OVERDUE" : "CURRENT",
+    overdue_period: overduePeriod,
+    // Fila real dueña de la deuda (puede ser una fila vieja/inactiva
+    // de un docente distinto al actual). Acá es donde se debe
+    // registrar el pago de regularización.
+    overdue_student_plan_id: overduePeriod
+      ? findOwnerId(chain, overduePeriod)
+      : null,
     current_period: null,
   };
 
@@ -301,16 +379,9 @@ export async function getStudentPlanStatus(student_plan_id) {
       // Eligió "empezar el próximo mes" y todavía estamos en el mes
       // de alta: no hay ninguna obligación de pago este mes.
       result.current_period = { period: currentPeriod, status: "not_due_yet" };
-    } else if (day > 20) {
-      // El mes actual ya se evaluó dentro del escaneo de arriba: si
-      // no estaba pago, ya quedó adentro de overduePeriods. Si sí
-      // está pago, lo reflejamos acá.
-      if (paidPeriods.has(currentPeriod)) {
-        result.current_period = { period: currentPeriod, status: "paid" };
-      }
-    } else if (overduePeriods.length) {
-      // Hay deuda de meses anteriores, pero el mes actual todavía
-      // está dentro de su plazo normal (día <= 20): queda en espera.
+    } else if (overduePeriod) {
+      // Hay un mes vencido (sea el actual u otro anterior): el mes
+      // actual queda en espera hasta que se regularice.
       result.current_period = { period: currentPeriod, status: "on_hold" };
     } else if (paidPeriods.has(currentPeriod)) {
       result.current_period = { period: currentPeriod, status: "paid" };
@@ -320,6 +391,68 @@ export async function getStudentPlanStatus(student_plan_id) {
   }
 
   return result;
+}
+
+/* =========================================================
+CRON: BAJA AUTOMÁTICA POR DEUDA NO REGULARIZADA A TIEMPO
+========================================================= */
+
+// Devuelve la lista de student_plans ACTIVE cuyo período vencido más
+// viejo ya superó el día de gracia (día 5 del mes siguiente al que
+// quedó impago). Separada de la función que efectivamente escribe en
+// la base, para poder testear/inspeccionar sin modificar nada todavía.
+export async function findPlansPastGracePeriod() {
+  const [activePlans] = await db.execute(
+    `SELECT id FROM student_plans WHERE end_date IS NULL`,
+  );
+
+  const { yearMonth: currentPeriod, day } = getCurrentDateParts();
+
+  const results = [];
+
+  for (const row of activePlans) {
+    const status = await getStudentPlanStatus(row.id);
+
+    if (!status?.overdue_period) continue;
+
+    const graceDeadlinePeriod = addMonths(status.overdue_period, 1);
+
+    const pastDeadline =
+      currentPeriod > graceDeadlinePeriod ||
+      (currentPeriod === graceDeadlinePeriod && day > GRACE_PERIOD_DAY);
+
+    if (pastDeadline) {
+      results.push({
+        student_plan_id: row.id,
+        overdue_period: status.overdue_period,
+      });
+    }
+  }
+
+  return results;
+}
+
+// Efectivamente da de baja (end_date = último día del mes vencido) a
+// los planes que superaron la ventana de gracia. Devuelve el detalle
+// de lo que hizo, útil tanto para el log del cron como para probarlo
+// a mano y ver qué tocó.
+export async function closeOverduePlansPastGracePeriod() {
+  const candidates = await findPlansPastGracePeriod();
+
+  const results = [];
+
+  for (const { student_plan_id, overdue_period } of candidates) {
+    const endDate = periodToDate(overdue_period, "end");
+
+    await db.execute(`UPDATE student_plans SET end_date = ? WHERE id = ?`, [
+      endDate,
+      student_plan_id,
+    ]);
+
+    results.push({ student_plan_id, overdue_period, end_date: endDate });
+  }
+
+  return results;
 }
 
 /* =========================================================
@@ -333,6 +466,34 @@ export async function getFirstObligatedPeriod(student_plan) {
   return origin.first_payment_option === "NEXT_MONTH"
     ? addMonths(startPeriod, 1)
     : startPeriod;
+}
+
+// Precio BASE esperado para un período de un student_plan, antes de
+// aplicar el 15% de regularización si corresponde. Centraliza la
+// regla de "media cuota" para que nunca se desincronice entre el
+// cálculo de un pago normal, una regularización, o el "Debe" que se
+// muestra en la ficha del alumno: si el período es justo la primera
+// cuota obligada Y el alumno eligió HALF, el precio base es la mitad
+// del precio histórico de ese período. Para cualquier otro caso
+// (incluida una regularización de un período que NO es el primero),
+// el precio base es el precio histórico completo.
+export async function getExpectedBaseAmount(student_plan, period) {
+  const historicPrice = await getPlanPriceAtDate(
+    student_plan.id,
+    periodToDate(period, "end"),
+  );
+
+  if (historicPrice == null) return null;
+
+  const firstObligatedPeriod = await getFirstObligatedPeriod(student_plan);
+
+  const isFirstPeriod = period === firstObligatedPeriod;
+
+  if (isFirstPeriod && student_plan.first_payment_option === "HALF") {
+    return Math.round(historicPrice * 0.5 * 100) / 100;
+  }
+
+  return historicPrice;
 }
 
 export function periodToDate(period, position = "end") {
