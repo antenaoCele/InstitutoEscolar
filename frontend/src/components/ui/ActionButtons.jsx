@@ -15,6 +15,7 @@ import {
   ActivationIcon,
   GainsIcon,
   PaperPlaneIcon,
+  EyeIcon,
 } from "../../icons";
 
 const baseClass =
@@ -71,7 +72,7 @@ export function ActivationButton({ onClick, title = "" }) {
 export function ViewButton({ onClick, title = "" }) {
   return (
     <Button title={title} size="sm" onClick={onClick} className={baseClass}>
-      <img src={ViewIcon} alt="Ver" className="w-5 h-5 invert" />
+      <EyeIcon className="w-5 h-5" />
     </Button>
   );
 }
@@ -100,7 +101,7 @@ export function ViewButtonWeek({ onClick, title = "" }) {
         hover:scale-105
       "
     >
-      <img src={ViewIcon} alt="Ver" className="w-5 h-5 object-contain invert" />
+      <EyeIcon className="w-5 h-5 object-contain invert" />
     </Button>
   );
 }
