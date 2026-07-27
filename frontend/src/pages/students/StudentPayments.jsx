@@ -22,6 +22,8 @@ import {
   NoButton,
   EditButton,
   DeleteButton,
+  NextButton,
+  PreviousButton,
 } from "../../components/ui/ActionButtons";
 import { getTodayLocal } from "../../utils/date";
 
@@ -735,15 +737,20 @@ export default function StudentPayments() {
     <>
       {/* ---------- Navegación de mes ---------- */}
       <div className="flex justify-center items-center gap-4 mb-6">
-        <Button onClick={previousMonth}>◀</Button>
+        <PreviousButton
+          title="Mes anterior"
+          onClick={previousMonth}
+        ></PreviousButton>
 
         <h2 className="text-xl font-bold">
           {monthNames[month - 1]} {year}
         </h2>
 
-        <Button onClick={nextMonth} disabled={isCurrentMonth}>
-          ▶
-        </Button>
+        <NextButton
+          title="Mes siguiente"
+          onClick={nextMonth}
+          disabled={isCurrentMonth}
+        ></NextButton>
       </div>
 
       {/* ---------- Totales ---------- */}

@@ -12,6 +12,8 @@ import {
   NoButton,
   AddButton,
   AssignTeacherButton,
+  NextButton,
+  PreviousButton,
 } from "../../components/ui/ActionButtons";
 import { BirthdayIcon } from "../../icons";
 
@@ -333,21 +335,10 @@ export default function MonthlyCalendar() {
       {/* Encabezado */}
 
       <div className="flex justify-center items-center gap-4 mb-6">
-        <button
+        <PreviousButton
+          title="Mes anterior"
           onClick={handlePreviousMonth}
-          className="
-            cursor-pointer transition transform hover:scale-105
-            px-4
-            py-2
-            rounded-lg
-            bg-[#0cc0df]
-            text-white
-            hover:opacity-90
-            transition
-          "
-        >
-          ◀
-        </button>
+        ></PreviousButton>
 
         <h2
           className="
@@ -361,21 +352,10 @@ export default function MonthlyCalendar() {
           {monthsNames[month]} {year}
         </h2>
 
-        <button
+        <NextButton
+          title="Mes siguiente"
           onClick={handleNextMonth}
-          className="
-            cursor-pointer transition transform hover:scale-105
-            px-4
-            py-2
-            rounded-lg
-            bg-[#0cc0df]
-            text-white
-            hover:opacity-90
-            transition
-          "
-        >
-          ▶
-        </button>
+        ></NextButton>
       </div>
 
       {isAdmin() && (

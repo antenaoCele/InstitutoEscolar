@@ -4,6 +4,7 @@ import Button from "../../components/ui/Button";
 import ComponentCard from "../../components/common/ComponentCard";
 import { teacherLiquidationService } from "../../services/teacherLiquidation.service";
 import { getTodayLocal } from "../../utils/date";
+import { NextButton, PreviousButton } from "../../components/ui/ActionButtons";
 
 export default function TeacherLiquidations() {
   // ======================================================
@@ -95,11 +96,11 @@ export default function TeacherLiquidations() {
   // ======================================================
   const columns = [
     {
-      header: "Docente",
+      header: "Docentes",
       render: (row) => `${row.last_name}, ${row.first_name}`,
     },
     {
-      header: "Mes",
+      header: "Meses",
       render: () => `${monthNames[month - 1]} ${year}`,
     },
     {
@@ -108,7 +109,7 @@ export default function TeacherLiquidations() {
         `$${Number(row.total_collected).toLocaleString("es-AR")}`,
     },
     {
-      header: "Sueldo neto",
+      header: "Sueldos netos",
       render: (row) => `$${Number(row.net_salary).toLocaleString("es-AR")}`,
     },
   ];
@@ -126,15 +127,20 @@ export default function TeacherLiquidations() {
     <>
       {/* ---------- Navegación de mes ---------- */}
       <div className="flex justify-center items-center gap-4 mb-6">
-        <Button onClick={previousMonth}>◀</Button>
+        <PreviousButton
+          title="Mes anterior"
+          onClick={previousMonth}
+        ></PreviousButton>
 
         <h2 className="text-xl font-bold">
           {monthNames[month - 1]} {year}
         </h2>
 
-        <Button onClick={nextMonth} disabled={isCurrentMonth}>
-          ▶
-        </Button>
+        <NextButton
+          title="Mes siguiente"
+          onClick={nextMonth}
+          disabled={isCurrentMonth}
+        ></NextButton>
       </div>
 
       {/* ---------- Totales ---------- */}
