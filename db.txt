@@ -7,6 +7,7 @@
 /*!40101 SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='NO_AUTO_VALUE_ON_ZERO' */;
 /*!40111 SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0 */;
 
+DROP TABLE IF EXISTS `enrollments`;
 CREATE TABLE `enrollments` (
   `id` int unsigned NOT NULL AUTO_INCREMENT,
   `student_id` int unsigned NOT NULL,
@@ -19,6 +20,7 @@ CREATE TABLE `enrollments` (
   CONSTRAINT `enrollments_student_id_foreign` FOREIGN KEY (`student_id`) REFERENCES `students` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB AUTO_INCREMENT=12 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
+DROP TABLE IF EXISTS `events`;
 CREATE TABLE `events` (
   `id` int unsigned NOT NULL AUTO_INCREMENT,
   `name` varchar(255) NOT NULL,
@@ -27,20 +29,23 @@ CREATE TABLE `events` (
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=15 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
+DROP TABLE IF EXISTS `knex_migrations`;
 CREATE TABLE `knex_migrations` (
   `id` int unsigned NOT NULL AUTO_INCREMENT,
   `name` varchar(255) DEFAULT NULL,
   `batch` int DEFAULT NULL,
   `migration_time` timestamp NULL DEFAULT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=46 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=47 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
+DROP TABLE IF EXISTS `knex_migrations_lock`;
 CREATE TABLE `knex_migrations_lock` (
   `index` int unsigned NOT NULL AUTO_INCREMENT,
   `is_locked` int DEFAULT NULL,
   PRIMARY KEY (`index`)
 ) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
+DROP TABLE IF EXISTS `monthly_finances`;
 CREATE TABLE `monthly_finances` (
   `id` int unsigned NOT NULL AUTO_INCREMENT,
   `year` int NOT NULL,
@@ -55,6 +60,7 @@ CREATE TABLE `monthly_finances` (
   UNIQUE KEY `monthly_finances_year_month_unique` (`year`,`month`)
 ) ENGINE=InnoDB AUTO_INCREMENT=11 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
+DROP TABLE IF EXISTS `payments`;
 CREATE TABLE `payments` (
   `id` int unsigned NOT NULL AUTO_INCREMENT,
   `student_plan_id` int unsigned NOT NULL,
@@ -69,6 +75,7 @@ CREATE TABLE `payments` (
   CONSTRAINT `payments_student_plan_id_foreign` FOREIGN KEY (`student_plan_id`) REFERENCES `student_plans` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB AUTO_INCREMENT=15 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
+DROP TABLE IF EXISTS `plan_prices`;
 CREATE TABLE `plan_prices` (
   `id` int unsigned NOT NULL AUTO_INCREMENT,
   `plan_id` int unsigned NOT NULL,
@@ -82,6 +89,7 @@ CREATE TABLE `plan_prices` (
   CONSTRAINT `plan_prices_plan_id_foreign` FOREIGN KEY (`plan_id`) REFERENCES `plans` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB AUTO_INCREMENT=24 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
+DROP TABLE IF EXISTS `plan_subjects`;
 CREATE TABLE `plan_subjects` (
   `plan_id` int unsigned NOT NULL,
   `subject_id` int unsigned NOT NULL,
@@ -93,6 +101,7 @@ CREATE TABLE `plan_subjects` (
   CONSTRAINT `plan_subjects_subject_id_foreign` FOREIGN KEY (`subject_id`) REFERENCES `subjects` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB AUTO_INCREMENT=25 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
+DROP TABLE IF EXISTS `plans`;
 CREATE TABLE `plans` (
   `id` int unsigned NOT NULL AUTO_INCREMENT,
   `name` varchar(45) NOT NULL,
@@ -101,6 +110,7 @@ CREATE TABLE `plans` (
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=17 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
+DROP TABLE IF EXISTS `schedule_students`;
 CREATE TABLE `schedule_students` (
   `schedule_id` int unsigned NOT NULL,
   `student_id` int unsigned NOT NULL,
@@ -112,6 +122,7 @@ CREATE TABLE `schedule_students` (
   CONSTRAINT `schedule_students_student_id_foreign` FOREIGN KEY (`student_id`) REFERENCES `students` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB AUTO_INCREMENT=161 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
+DROP TABLE IF EXISTS `schedules`;
 CREATE TABLE `schedules` (
   `id` int unsigned NOT NULL AUTO_INCREMENT,
   `teacher_id` int unsigned NOT NULL,
@@ -130,6 +141,7 @@ CREATE TABLE `schedules` (
   CONSTRAINT `schedules_teacher_id_foreign` FOREIGN KEY (`teacher_id`) REFERENCES `teachers` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB AUTO_INCREMENT=23 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
+DROP TABLE IF EXISTS `student_plans`;
 CREATE TABLE `student_plans` (
   `id` int unsigned NOT NULL AUTO_INCREMENT,
   `student_id` int unsigned NOT NULL,
@@ -146,6 +158,7 @@ CREATE TABLE `student_plans` (
   CONSTRAINT `student_plans_teacher_id_foreign` FOREIGN KEY (`teacher_id`) REFERENCES `teachers` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB AUTO_INCREMENT=34 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
+DROP TABLE IF EXISTS `student_tutors`;
 CREATE TABLE `student_tutors` (
   `student_id` int unsigned NOT NULL,
   `tutor_id` int unsigned NOT NULL,
@@ -157,6 +170,7 @@ CREATE TABLE `student_tutors` (
   CONSTRAINT `student_tutors_tutor_id_foreign` FOREIGN KEY (`tutor_id`) REFERENCES `tutors` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB AUTO_INCREMENT=27 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
+DROP TABLE IF EXISTS `students`;
 CREATE TABLE `students` (
   `id` int unsigned NOT NULL AUTO_INCREMENT,
   `first_name` varchar(45) NOT NULL,
@@ -170,6 +184,7 @@ CREATE TABLE `students` (
   UNIQUE KEY `students_dni_unique` (`dni`)
 ) ENGINE=InnoDB AUTO_INCREMENT=15 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
+DROP TABLE IF EXISTS `subjects`;
 CREATE TABLE `subjects` (
   `id` int unsigned NOT NULL AUTO_INCREMENT,
   `name` varchar(100) NOT NULL,
@@ -178,6 +193,7 @@ CREATE TABLE `subjects` (
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=14 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
+DROP TABLE IF EXISTS `teacher_liquidations`;
 CREATE TABLE `teacher_liquidations` (
   `id` int unsigned NOT NULL AUTO_INCREMENT,
   `teacher_id` int unsigned NOT NULL,
@@ -190,6 +206,7 @@ CREATE TABLE `teacher_liquidations` (
   CONSTRAINT `teacher_liquidations_teacher_id_foreign` FOREIGN KEY (`teacher_id`) REFERENCES `teachers` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB AUTO_INCREMENT=11 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
+DROP TABLE IF EXISTS `teacher_plans`;
 CREATE TABLE `teacher_plans` (
   `id` int unsigned NOT NULL AUTO_INCREMENT,
   `teacher_id` int unsigned NOT NULL,
@@ -204,6 +221,7 @@ CREATE TABLE `teacher_plans` (
   CONSTRAINT `teacher_plans_teacher_id_foreign` FOREIGN KEY (`teacher_id`) REFERENCES `teachers` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB AUTO_INCREMENT=26 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
+DROP TABLE IF EXISTS `teachers`;
 CREATE TABLE `teachers` (
   `id` int unsigned NOT NULL AUTO_INCREMENT,
   `first_name` varchar(45) NOT NULL,
@@ -213,12 +231,14 @@ CREATE TABLE `teachers` (
   `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `user_id` int unsigned DEFAULT NULL,
+  `active` tinyint(1) NOT NULL DEFAULT '1',
   PRIMARY KEY (`id`),
   UNIQUE KEY `teachers_dni_unique` (`dni`),
   UNIQUE KEY `teachers_user_id_unique` (`user_id`),
   CONSTRAINT `teachers_user_id_foreign` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE SET NULL
-) ENGINE=InnoDB AUTO_INCREMENT=13 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=19 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
+DROP TABLE IF EXISTS `tutors`;
 CREATE TABLE `tutors` (
   `id` int unsigned NOT NULL AUTO_INCREMENT,
   `first_name` varchar(45) NOT NULL,
@@ -230,6 +250,7 @@ CREATE TABLE `tutors` (
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=14 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
+DROP TABLE IF EXISTS `users`;
 CREATE TABLE `users` (
   `id` int unsigned NOT NULL AUTO_INCREMENT,
   `first_name` varchar(45) NOT NULL,
@@ -241,7 +262,7 @@ CREATE TABLE `users` (
   `role` varchar(255) NOT NULL DEFAULT 'docente',
   PRIMARY KEY (`id`),
   UNIQUE KEY `users_username_unique` (`username`)
-) ENGINE=InnoDB AUTO_INCREMENT=15 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=20 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 
 

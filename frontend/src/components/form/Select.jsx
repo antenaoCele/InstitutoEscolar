@@ -7,9 +7,10 @@ export default function Select({
   disabled = false,
   className = "",
   children,
+  noMargin = false,
 }) {
   return (
-    <div className="mb-4">
+    <div className={noMargin ? "" : "mb-4"}>
       {label && (
         <label className="mb-1 block text-black dark:text-white">{label}</label>
       )}
@@ -24,8 +25,7 @@ export default function Select({
           rounded-lg
           border-2
 
-          px-3
-          py-2
+          h-11 px-3
 
           bg-white
           text-black

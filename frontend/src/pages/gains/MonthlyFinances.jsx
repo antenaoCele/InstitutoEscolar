@@ -1,6 +1,10 @@
 import { useEffect, useState } from "react";
 import BasicTable from "../../components/tables/BasicTables/BasicTablesOne";
 import Button from "../../components/ui/Button";
+import Input from "../../components/form/Input";
+import Label from "../../components/form/Label";
+import MonthlyProfitChart from "../../components/charts/monthlyProfitChart/MonthlyProfitChart";
+import Select from "../../components/form/Select";
 import ComponentCard from "../../components/common/ComponentCard";
 import { MonthlyFinanceService } from "../../services/monthlyFinances.service";
 import {
@@ -11,6 +15,8 @@ import {
   YesButton,
   NoButton,
   AddButton,
+  PreviousButton,
+  NextButton,
 } from "../../components/ui/ActionButtons";
 
 const monthNames = [
@@ -45,6 +51,11 @@ export default function MonthlyFinances() {
   const [submitting, setSubmitting] = useState(false);
   const [formError, setFormError] = useState("");
 
+  const currentDate = new Date();
+  const currentYear = currentDate.getFullYear();
+
+  const [selectedYear, setSelectedYear] = useState(currentYear);
+
   // ======================================================
   // FETCH DATOS
   // ======================================================
@@ -61,6 +72,9 @@ export default function MonthlyFinances() {
     }
   };
 
+  // ======================================================
+  // USEEFFECTS
+  // ======================================================
   useEffect(() => {
     fetchFinances();
   }, []);
@@ -108,6 +122,18 @@ export default function MonthlyFinances() {
     }
   };
 
+  const goPreviousYear = () => {
+    if (canGoPrevious) {
+      setSelectedYear(years[currentIndex - 1]);
+    }
+  };
+
+  const goNextYear = () => {
+    if (canGoNext) {
+      setSelectedYear(years[currentIndex + 1]);
+    }
+  };
+
   // ======================================================
   // TOTALES
   // ======================================================
@@ -120,20 +146,39 @@ export default function MonthlyFinances() {
     0,
   );
 
+  const annualIncome = finances
+    .filter((f) => Number(f.year) === selectedYear)
+    .reduce((acc, f) => acc + Number(f.total_income), 0);
+
+  const annualProfit = finances
+    .filter((f) => Number(f.year) === selectedYear)
+    .reduce((acc, f) => acc + Number(f.net_profit), 0);
+
+  const years = [...new Set(finances.map((f) => Number(f.year)))].sort(
+    (a, b) => a - b,
+  );
+
+  const currentIndex = years.indexOf(selectedYear);
+
+  const canGoPrevious = currentIndex > 0;
+
+  const canGoNext =
+    currentIndex < years.length - 1 && selectedYear < currentYear;
+
   // ======================================================
   // COLUMNAS DE TABLA
   // ======================================================
   const columns = [
     {
-      header: "Mes",
+      header: "Meses",
       render: (row) => `${monthNames[row.month - 1]} ${row.year}`,
     },
     {
-      header: "Total ingresos",
+      header: "Ingresos brutos",
       render: (row) => `$${Number(row.total_income).toLocaleString("es-AR")}`,
     },
     {
-      header: "Total sueldos",
+      header: "Sueldos",
       render: (row) => `$${Number(row.total_salaries).toLocaleString("es-AR")}`,
     },
     {
@@ -141,7 +186,7 @@ export default function MonthlyFinances() {
       render: (row) => `$${Number(row.other_expenses).toLocaleString("es-AR")}`,
     },
     {
-      header: "Ganancia neta",
+      header: "Ganancias",
       render: (row) => `$${Number(row.net_profit).toLocaleString("es-AR")}`,
     },
   ];
@@ -157,19 +202,47 @@ export default function MonthlyFinances() {
   // ======================================================
   return (
     <>
+      <div className="flex justify-center items-center gap-6 mb-6">
+        <PreviousButton
+          onClick={goPreviousYear}
+          disabled={!canGoPrevious}
+          title="Año anterior"
+        />
+
+        <h1 className="text-3xl font-bold">{selectedYear}</h1>
+
+        <NextButton
+          onClick={goNextYear}
+          disabled={!canGoNext}
+          title="Año siguiente"
+        />
+      </div>
+
+      <ComponentCard title="Total de ingresos netos por mes">
+        <MonthlyProfitChart finances={finances} year={selectedYear} />
+      </ComponentCard>
+
       {/* ---------- Totales ---------- */}
-      <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-6">
-        <ComponentCard title="Cierres registrados">
-          <p className="text-2xl font-bold">{finances.length}</p>
+      <div className="grid grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 mb-6 gap-4 mb-6">
+        <ComponentCard title="Total de cierres registrados en el año seleccionado">
+          <p className="text-2xl font-bold">
+            {finances.filter((f) => Number(f.year) === selectedYear).length}
+          </p>
         </ComponentCard>
 
-        <ComponentCard title="Total ingresos históricos">
+        <ComponentCard title="Total de ingresos netos en el año seleccionado">
+          <p className="text-2xl font-bold">
+            ${annualProfit.toLocaleString("es-AR")}
+          </p>
+        </ComponentCard>
+
+        <ComponentCard title="Total histórico de ingresos brutos">
           <p className="text-2xl font-bold">
             ${totalIncome.toLocaleString("es-AR")}
           </p>
         </ComponentCard>
 
-        <ComponentCard title="Ganancia neta histórica">
+        <ComponentCard title="Total histórico de ingresos netos">
           <p className="text-2xl font-bold">
             ${totalProfit.toLocaleString("es-AR")}
           </p>
@@ -178,10 +251,12 @@ export default function MonthlyFinances() {
 
       {/* ---------- Formulario nuevo cierre ---------- */}
       <ComponentCard title="Generar cierre mensual">
-        <div className="flex flex-wrap items-end gap-4">
+        <div className="flex flex-wrap items-end gap-6">
+          {" "}
           <div>
             <label className="block text-sm mb-1">Mes</label>
-            <select
+            <Select
+              noMargin
               className="border rounded px-2 py-1"
               value={newMonth}
               onChange={(e) => setNewMonth(Number(e.target.value))}
@@ -191,22 +266,24 @@ export default function MonthlyFinances() {
                   {name}
                 </option>
               ))}
-            </select>
+            </Select>
           </div>
-
           <div>
-            <label className="block text-sm mb-1">Año</label>
-            <input
+            <Label className="block text-sm mb-1">Año</Label>
+            <Input
+              noMargin
               type="number"
               className="border rounded px-2 py-1 w-24"
               value={newYear}
               onChange={(e) => setNewYear(Number(e.target.value))}
             />
           </div>
-
           <div>
-            <label className="block text-sm mb-1">Otros gastos</label>
-            <input
+            <Label noMargin className="block text-sm mb-1">
+              Otros gastos
+            </Label>
+            <Input
+              noMargin
               type="number"
               step="0.01"
               className="border rounded px-2 py-1 w-32"
@@ -215,13 +292,14 @@ export default function MonthlyFinances() {
               placeholder="0"
             />
           </div>
-
-          <Button
-            onClick={handleGenerate}
-            disabled={submitting || alreadyClosed}
-          >
-            {submitting ? "Generando..." : "Generar cierre"}
-          </Button>
+          <div className="flex items-end h-full">
+            <Button
+              onClick={handleGenerate}
+              disabled={submitting || alreadyClosed}
+            >
+              {submitting ? "Generando..." : "Generar cierre"}
+            </Button>
+          </div>
         </div>
 
         {alreadyClosed && (
