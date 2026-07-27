@@ -7,13 +7,14 @@ export default function Input({
   placeholder = "",
   error,
   className = "",
+  noMargin = false,
 }) {
   return (
-    <div className="mb-4">
+    <div className={noMargin ? "" : "mb-4"}>
+      {" "}
       {label && (
         <label className="mb-1 block text-black dark:text-white">{label}</label>
       )}
-
       <input
         type={type}
         name={name}
@@ -22,7 +23,7 @@ export default function Input({
         placeholder={placeholder}
         className={`
           w-full rounded-lg border-2
-          px-3 py-2
+          h-11 px-3
           focus:border-[#0cc0df]
           focus:ring-2 focus:ring-[#0cc0df]/30
           focus:outline-none
@@ -39,7 +40,6 @@ export default function Input({
           ${className}
         `}
       />
-
       {error && <p className="text-xs text-red-500 mt-1">{error}</p>}
     </div>
   );
