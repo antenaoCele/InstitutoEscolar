@@ -73,11 +73,15 @@ export function Teachers() {
   const [dni, setDni] = useState("");
   const [phone, setPhone] = useState("");
 
-  // Usuario asignado manualmente (solo se usa en el modal de Editar)
+  // Usuario asignado manualmente (se usa en el modal de Editar y,
+  // cuando corresponde, en el modal de Crear)
   const [userId, setUserId] = useState("");
 
-  // Generar usuario de acceso automáticamente (solo modal de Crear)
-  const [generateUser, setGenerateUser] = useState(true);
+  // Modo de usuario de acceso en el modal de Crear:
+  // "generate" -> se crea un usuario nuevo automáticamente
+  // "existing" -> se asigna un usuario ya existente (userId)
+  // "none"     -> no se asigna ningún usuario
+  const [userMode, setUserMode] = useState("generate");
 
   // ======================================================
   // ESTADO DEL COMPONENTE
@@ -157,7 +161,7 @@ export function Teachers() {
     setDni("");
     setPhone("");
     setUserId("");
-    setGenerateUser(true);
+    setUserMode("generate");
     setErrorsCreate({});
     setErrorsEdit({});
   };
@@ -213,14 +217,25 @@ export function Teachers() {
       return; // Detiene la ejecución si hay errores
     }
 
+    if (userMode === "existing" && !userId) {
+      setErrorsCreate({ user_id: "Seleccioná un usuario existente" });
+      return;
+    }
+
     try {
-      const response = await teacherService.create({
+      const payload = {
         first_name: firstName,
         last_name: lastName,
         dni,
         phone,
-        generate_user: generateUser,
-      });
+        generate_user: userMode === "generate",
+      };
+
+      if (userMode === "existing") {
+        payload.user_id = userId;
+      }
+
+      const response = await teacherService.create(payload);
 
       setOpenCreateModal(false);
       fetchTeachers();
@@ -391,7 +406,7 @@ export function Teachers() {
 
   const showCreateButtons = isAdmin();
 
-  // Usuarios disponibles para asignar manualmente en el modal de Editar:
+  // Usuarios disponibles para asignar manualmente (Crear o Editar):
   // solo administradores que no tengan un docente asociado todavía,
   // + el que ya está asignado a este docente (para no perderlo del listado).
   const assignableUsers = users.filter(
@@ -552,18 +567,56 @@ export function Teachers() {
         />
 
         <Label>Usuario de acceso</Label>
-        <div className="flex items-center justify-between gap-4 mb-1">
-          <p className="text-sm italic text-gray-500">
-            {generateUser
-              ? "Se va a generar un usuario de acceso para este docente"
-              : "No se va a generar usuario de acceso"}
-          </p>
+        <Select
+          value={userMode}
+          onChange={(e) => {
+            setUserMode(e.target.value);
+            if (e.target.value !== "existing") {
+              setUserId("");
+            }
+          }}
+          className="mb-1"
+        >
+          <option value="generate">Generar usuario nuevo</option>
+          <option value="existing">Asignar usuario existente</option>
+          <option value="none">No asignar usuario</option>
+        </Select>
 
-          <Switch
-            checked={!generateUser}
-            onChange={(checked) => setGenerateUser(!checked)}
-          />
-        </div>
+        {userMode === "generate" && (
+          <p className="text-sm italic text-gray-500 mb-1">
+            Se va a generar un usuario de acceso para este docente
+          </p>
+        )}
+
+        {userMode === "none" && (
+          <p className="text-sm italic text-gray-500 mb-1">
+            No se va a asignar ningún usuario de acceso
+          </p>
+        )}
+
+        {userMode === "existing" && (
+          <>
+            <Select
+              value={userId}
+              onChange={(e) => setUserId(e.target.value)}
+              error={errorsCreate.user_id}
+              className="mb-1"
+            >
+              <option value="">Seleccionar usuario</option>
+
+              {assignableUsers.map((u) => (
+                <option key={u.id} value={u.id}>
+                  {u.username}
+                </option>
+              ))}
+            </Select>
+            {errorsCreate.user_id && (
+              <p className="text-xs text-red-500 mb-1">
+                {errorsCreate.user_id}
+              </p>
+            )}
+          </>
+        )}
 
         <div className="flex justify-end gap-4 mt-10">
           <div className="flex justify-end gap-3">
@@ -640,7 +693,6 @@ export function Teachers() {
       </Modal>
 
       {/* DELETE MODAL */}
-      {/* DELETE MODAL */}
       <Modal isOpen={openDeleteModal} onClose={() => setOpenDeleteModal(false)}>
         <h2 className="text-lg font-semibold mb-4">¿Eliminar Docente?</h2>
 
@@ -653,6 +705,7 @@ export function Teachers() {
             <Switch
               checked={deleteUserToo}
               onChange={(checked) => setDeleteUserToo(checked)}
+              className={deleteUserToo ? "!bg-[#0cc0df]" : "!bg-gray-700"}
             />
           </div>
         )}
