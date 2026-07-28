@@ -15,3 +15,11 @@ export const isAdmin = () => {
 
   return user.role.toLowerCase() === "admin";
 };
+
+export const getCurrentUserId = () => {
+  const user = getUser();
+
+  if (!user) return null;
+
+  return user.id ?? null;
+};

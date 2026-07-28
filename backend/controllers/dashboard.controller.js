@@ -109,16 +109,17 @@ export const dashboardController = {
         `),
 
           // =====================================
-          // INSCRIPCIONES POR DOCENTE
+          // INSCRIPCIONES POR DOCENTE (solo activos)
           // =====================================
           db.execute(`
           SELECT
             CONCAT(t.last_name, ', ', t.first_name) AS teacher,
-            COUNT(sp.id) AS total
+            COUNT(DISTINCT sp.student_id) AS total
           FROM teachers t
           LEFT JOIN student_plans sp
             ON sp.teacher_id = t.id
             AND sp.end_date IS NULL
+          WHERE t.active = 1
           GROUP BY t.id
           ORDER BY total DESC
         `),

@@ -44,18 +44,23 @@ const getTotalIncome = async (startDate, endDate) => {
 };
 
 // ======================================================
-// SUELDOS: suma de liquidaciones ya generadas para el mes
-// NOTA: lee directo de teacher_liquidations. Si todavía no
-// se generaron las liquidaciones de ese mes, esto da 0.
+// SUELDOS: se calculan en el momento a partir de los pagos
+// del mes (mismo criterio que teacherLiquidationsController.getMonthly),
+// en vez de leer de teacher_liquidations, que nunca se persiste.
+// Como los pagos guardan el monto fijo al momento de pagar (y hay
+// historial de precios), este cálculo no se ve afectado por cambios
+// de precio posteriores.
 // ======================================================
-const getTotalSalaries = async (monthString) => {
+const getTotalSalaries = async (year, month) => {
   const [salaries] = await db.execute(
     `
-    SELECT COALESCE(SUM(net_salary), 0) AS total
-    FROM teacher_liquidations
-    WHERE month = ?
+    SELECT COALESCE(SUM(p.amount), 0) * 0.75 AS total
+    FROM payments p
+    JOIN student_plans sp ON sp.id = p.student_plan_id
+    WHERE MONTH(p.payment_date) = ?
+      AND YEAR(p.payment_date) = ?
     `,
-    [monthString],
+    [month, year],
   );
 
   return Number(salaries[0].total);
@@ -72,7 +77,7 @@ export const calculateMonthlyFinance = async (
   const { monthString, startDate, endDate } = getMonthBounds(year, month);
 
   const totalIncome = await getTotalIncome(startDate, endDate);
-  const totalSalaries = await getTotalSalaries(monthString);
+  const totalSalaries = await getTotalSalaries(year, month);
 
   const netProfit = totalIncome - totalSalaries - Number(otherExpenses);
 

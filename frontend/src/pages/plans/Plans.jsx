@@ -342,26 +342,25 @@ export function Plans() {
       return;
     }
 
+    // La restricción de días 1-5 aplica únicamente al precio. Si el precio
+    // no cambió respecto al que tenía el plan al abrir el modal, no
+    // llamamos a changePrice, para poder editar nombre/materias cualquier
+    // día sin chocar con esa regla.
+    const priceChanged = Number(price) !== Number(selectedPlanPrice.price);
+
     try {
-      console.log("Entró al try");
       setErrorsEdit({});
 
-      const today = getTodayDateString();
-      const yesterday = getYesterdayDateString();
-
-      console.log({
-        id: selectedPlanPrice.id,
-        start_date: selectedPlanPrice.start_date,
-        end_date: yesterday,
-      });
       // Actualizar nombre del plan si cambió
       await planService.update(selectedPlanPrice.plan_id, {
         name: selectedPlan,
       });
 
-      await PlanPriceService.changePrice(selectedPlanPrice.plan_id, {
-        price: Number(price),
-      });
+      if (priceChanged) {
+        await PlanPriceService.changePrice(selectedPlanPrice.plan_id, {
+          price: Number(price),
+        });
+      }
 
       // Lógica de sincronización de materias
       const currentPlanSubjects = allPlanSubjects.filter(
@@ -398,14 +397,15 @@ export function Plans() {
       resetForm();
 
       showFeedback(
-        "El precio del plan fue actualizado correctamente.\n\n" +
-          "Recuerde que podrá realizar correcciones únicamente durante el día de hoy. " +
-          "Desde mañana este precio quedará definitivo y las futuras actualizaciones " +
-          "solo podrán efectuarse entre los días 1 y 5 de cada mes.",
+        priceChanged
+          ? "El plan fue actualizado correctamente.\n\n" +
+              "Recuerde que podrá corregir el precio únicamente durante el día de hoy. " +
+              "Desde mañana este precio quedará definitivo y las futuras actualizaciones " +
+              "solo podrán efectuarse entre los días 1 y 5 de cada mes."
+          : "El plan fue actualizado correctamente.",
         "success",
       );
     } catch (error) {
-      console.log(JSON.stringify(error.response?.data, null, 2));
       console.error(error.response?.data || error.message);
 
       const backendErrors = error.response?.data?.errors;
@@ -744,11 +744,11 @@ export function Plans() {
           error={errorsEdit.price}
         />
         <p className="text-sm italic text-gray-500 text-justify">
-          Al guardar, el precio quedará vigente desde hoy. Podrá corregirlo
+          Si modifica el precio, quedará vigente desde hoy. Podrá corregirlo
           todas las veces que sea necesario durante el día de hoy. <br />
           <br />
           <strong>
-            A partir de mañana ya no podrá modificar este precio y las
+            A partir de mañana ya no podrá modificar el precio y las
             actualizaciones solo estarán habilitadas entre los días 1 y 5 de
             cada mes.
           </strong>

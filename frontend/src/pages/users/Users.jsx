@@ -6,7 +6,7 @@ import Input from "../../components/form/Input";
 import Select from "../../components/form/Select";
 import { Modal } from "../../components/ui/Modal";
 import { userService } from "../../services/user.service";
-import { isAdmin } from "../../utils/auth";
+import { isAdmin, getCurrentUserId } from "../../utils/auth";
 import { validateUsersForm } from "../../validators/entities/users.validator";
 import {
   ViewButton,
@@ -64,6 +64,9 @@ export function Users() {
   // CONSTANTES
   // ======================================================
   const buttonClass = "cursor-pointer transition transform hover:scale-105";
+
+  // Usuario actualmente logueado (para evitar que se elimine a sí mismo)
+  const currentUserId = getCurrentUserId();
 
   // ======================================================
   // FETCH DATOS PRINCIPALES
@@ -223,6 +226,12 @@ export function Users() {
   };
 
   const handleDelete = (user) => {
+    // Guarda extra por si el botón llega a dispararse igual (ej. sin soporte visual de disabled)
+    if (user.id === currentUserId) {
+      showFeedback("No podés eliminar tu propio usuario.", "error");
+      return;
+    }
+
     setSelectedUser(user);
     setOpenDeleteModal(true);
   };
@@ -294,16 +303,28 @@ export function Users() {
   if (showActions) {
     columns.push({
       header: "Acciones",
-      render: (row) => (
-        <div className="flex gap-2">
-          <EditButton title="Editar Tutor" onClick={() => handleEdit(row)} />
+      render: (row) => {
+        const isSelf = row.id === currentUserId;
 
-          <DeleteButton
-            title="Eliminar Tutor"
-            onClick={() => handleDelete(row)}
-          />
-        </div>
-      ),
+        return (
+          <div className="flex gap-2">
+            <EditButton title="Editar Tutor" onClick={() => handleEdit(row)} />
+
+            <DeleteButton
+              title={
+                isSelf
+                  ? "No podés eliminar tu propio usuario"
+                  : "Eliminar Tutor"
+              }
+              disabled={isSelf}
+              onClick={() => {
+                if (isSelf) return;
+                handleDelete(row);
+              }}
+            />
+          </div>
+        );
+      },
     });
   }
 

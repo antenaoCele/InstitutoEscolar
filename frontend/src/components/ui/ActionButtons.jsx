@@ -143,14 +143,15 @@ export function EditButtonMonth({ onClick, title = "" }) {
   );
 }
 
-export function DeleteButton({ onClick, title = "" }) {
+export function DeleteButton({ onClick, disabled = false, title = "" }) {
   return (
     <Button
       title={title}
       size="sm"
       variant="outline"
       onClick={onClick}
-      className={baseClass}
+      disabled={disabled}
+      className={`${baseClass} ${disabled ? disabledClass : ""}`}
     >
       <TrashBinIcon className="w-5 h-5 text-black" />
     </Button>

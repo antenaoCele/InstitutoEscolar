@@ -31,7 +31,9 @@ export default function BarChartOne({
       text: title,
       align: "left",
       style: {
-        fontSize: "16px",
+        fontSize: "12px",
+        fontWeight: 400,
+        fontFamily: "Outfit, sans-serif",
         color: textColor,
       },
     },
@@ -66,11 +68,16 @@ export default function BarChartOne({
     },
 
     yaxis: {
+      forceNiceScale: true,
+
       labels: {
         style: {
           colors: textColor,
         },
+        formatter: (value) => Math.round(value),
       },
+
+      decimalsInFloat: 0,
     },
 
     grid: {
@@ -85,7 +92,7 @@ export default function BarChartOne({
       theme: "none",
       cssClass: isDark ? "apex-tooltip-dark" : "apex-tooltip-light",
       y: {
-        formatter: (value) => value,
+        formatter: (value) => Math.round(value),
       },
     },
   };
