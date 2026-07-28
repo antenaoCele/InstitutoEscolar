@@ -1,7 +1,7 @@
 Listado de rutas de carpetas para el volumen OS
-El número de serie del volumen es 00000045 B411:4C15
+El número de serie del volumen es 00000069 B411:4C15
 C:.
-|   architecture.txt
+|   arquitectura.txt
 |   db.txt
 |   
 +---backend
@@ -90,6 +90,9 @@ C:.
 |   |           20260726160635_fix_payments_table.cjs
 |   |           20260726165210_fix_student_plans_table.cjs
 |   |           
+|   +---jobs
+|   |       closeOverduePlans.job.js
+|   |       
 |   +---middlewares
 |   |       auth.middleware.js
 |   |       
@@ -13211,24 +13214,6 @@ C:.
     |               
     +---public
     |   \---images
-    |       +---brand
-    |       |       brand-02.svg
-    |       |       brand-04.svg
-    |       |       brand-05.svg
-    |       |       brand-06.svg
-    |       |       
-    |       +---error
-    |       |       404-dark.svg
-    |       |       404.svg
-    |       |       500-dark.svg
-    |       |       500.svg
-    |       |       503-dark.svg
-    |       |       503.svg
-    |       |       maintenance-dark.svg
-    |       |       maintenance.svg
-    |       |       success-dark.svg
-    |       |       success.svg
-    |       |       
     |       \---logo
     |               logo 1.jpeg
     |               logo 10.png
@@ -13254,8 +13239,8 @@ C:.
         |   |   +---bar
         |   |   |       BarChartOne.jsx
         |   |   |       
-        |   |   \---line
-        |   |           LineChartOne.jsx
+        |   |   \---monthlyProfitChart
+        |   |           MonthlyProfitChart.jsx
         |   |           
         |   +---common
         |   |       ChartTab.jsx
@@ -13272,16 +13257,13 @@ C:.
         |   |       StatisticsChart.jsx
         |   |       
         |   +---form
-        |   |   |   Checkbox.jsx
-        |   |   |   Input.jsx
-        |   |   |   Label.jsx
-        |   |   |   Select.jsx
-        |   |   |   SubmitButton.jsx
-        |   |   |   Switch.jsx
-        |   |   |   
-        |   |   \---input
-        |   |           InputField.jsx
-        |   |           
+        |   |       Checkbox.jsx
+        |   |       Input.jsx
+        |   |       Label.jsx
+        |   |       Select.jsx
+        |   |       SubmitButton.jsx
+        |   |       Switch.jsx
+        |   |       
         |   +---header
         |   |       Header.jsx
         |   |       NotificationDropdown.jsx
@@ -13301,55 +13283,21 @@ C:.
         |   |   \---BasicTables
         |   |           BasicTablesOne.jsx
         |   |           
-        |   +---ui
-        |   |   |   ActionButtons.jsx
-        |   |   |   Alert.jsx
-        |   |   |   Button.jsx
-        |   |   |   Modal.jsx
-        |   |   |   table.jsx
-        |   |   |   
-        |   |   +---dropdown
-        |   |   |       Dropdown.jsx
-        |   |   |       DropdownItem.jsx
-        |   |   |       
-        |   |   +---images
-        |   |   |       ResponsiveImage.jsx
-        |   |   |       ThreeColumnImageGrid.jsx
-        |   |   |       TwoColumnImageGrid.jsx
-        |   |   |       
-        |   |   \---videos
-        |   |           AspectRatioVideo.jsx
-        |   |           FourIsToThree.jsx
-        |   |           OneIsToOne.jsx
-        |   |           SixteenIsToNine.jsx
-        |   |           TwentyOneIsToNine.jsx
-        |   |           
-        |   \---userProfile
-        |           UserInfoCard.jsx
-        |           
+        |   \---ui
+        |       |   ActionButtons.jsx
+        |       |   Alert.jsx
+        |       |   Button.jsx
+        |       |   Modal.jsx
+        |       |   table.jsx
+        |       |   
+        |       \---dropdown
+        |               Dropdown.jsx
+        |               DropdownItem.jsx
+        |               
         +---context
         |       Auth.jsx
         |       SidebarContext.jsx
         |       ThemeContext.jsx
-        |       
-        +---forms
-        |       EnrollmentForm.jsx
-        |       MonthlyFinanceform.jsx
-        |       PaymentForm.jsx
-        |       PlanForm.jsx
-        |       PlanPriceForm.jsx
-        |       PlanSubjectForm.jsx
-        |       ScheduleForm.jsx
-        |       ScheduleStudentForm.jsx
-        |       StudentForm.jsx
-        |       StudentPlanForm.jsx
-        |       StudentTutorForm.jsx
-        |       SubjectForm.jsx
-        |       TeacherForm.jsx
-        |       TeacherLiquidationForm.jsx
-        |       TeacherSubjectForm.jsx
-        |       TutorForm.jsx
-        |       UserForm.jsx
         |       
         +---hooks
         |       useFeedBackModal.js
@@ -13530,6 +13478,7 @@ C:.
         \---validators
             +---entities
             |       enrollments.validator.js
+            |       monthy_finances.js
             |       payments.validator.js
             |       plans.validator.js
             |       student.validator.js
