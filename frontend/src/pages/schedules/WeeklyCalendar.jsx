@@ -2,6 +2,8 @@ import { useEffect, useState } from "react";
 import { teacherService } from "../../services/teacher.service";
 import { ScheduleService } from "../../services/schedule.service";
 import Button from "../../components/ui/Button";
+import Label from "../../components/form/Label";
+import Input from "../../components/form/Input";
 import Select from "../../components/form/Select";
 import { ScheduleStudentService } from "../../services/scheduleStudent.service";
 import { studentService } from "../../services/student.service";
@@ -1056,7 +1058,7 @@ dark:text-violet-200
 
         {/* Docente */}
         <div className="flex flex-col mb-4">
-          <label className="font-semibold mb-2">Docente</label>
+          <Label>Docente</Label>
 
           <Select value={teacherId} onChange={handleTeacherChange}>
             <option value="">Seleccionar docente</option>
@@ -1077,7 +1079,7 @@ dark:text-violet-200
 
         {/* Plan */}
         <div className="flex flex-col mb-4">
-          <label className="font-semibold mb-2">Plan</label>
+          <Label>Plan</Label>
 
           <Select
             disabled={!teacherId}
@@ -1108,7 +1110,7 @@ dark:text-violet-200
 
         {/* Día */}
         <div className="flex flex-col mb-4">
-          <label className="font-semibold mb-2">Día</label>
+          <Label>Día</Label>
 
           <Select
             value={selectedDay}
@@ -1130,7 +1132,7 @@ dark:text-violet-200
 
         {/* Horario */}
         <div className="flex flex-col mb-4">
-          <label className="font-semibold mb-2">Horario</label>
+          <Label>Horario</Label>
 
           <Select
             value={selectedTime}
@@ -1154,7 +1156,7 @@ dark:text-violet-200
 
         {/* Aula */}
         <div className="flex flex-col mb-4">
-          <label className="font-semibold mb-2">Aula</label>
+          <Label>Aula</Label>
 
           <Select
             value={classroom}
@@ -1178,7 +1180,7 @@ dark:text-violet-200
 
         {/* Estudiante */}
         <div className="flex flex-col mb-2">
-          <label className="font-semibold mb-2">Estudiante</label>
+          <Label>Estudiante</Label>
 
           <div className="flex gap-2">
             <Select
@@ -1297,7 +1299,7 @@ dark:text-violet-200
 
         {/* Docente */}
         <div className="flex flex-col mb-4">
-          <label className="font-semibold mb-2">Docente</label>
+          <Label>Docente</Label>
 
           <Select value={teacherId} onChange={handleTeacherChange}>
             <option value="">Seleccionar docente</option>
@@ -1316,7 +1318,7 @@ dark:text-violet-200
 
         {/* Plan */}
         <div className="flex flex-col mb-4">
-          <label className="font-semibold mb-2">Plan</label>
+          <Label>Plan</Label>
 
           <Select
             disabled={!teacherId}
@@ -1347,7 +1349,7 @@ dark:text-violet-200
 
         {/* Día */}
         <div className="flex flex-col mb-4">
-          <label className="font-semibold mb-2">Día</label>
+          <Label>Día</Label>
 
           <Select
             value={selectedDay}
@@ -1369,7 +1371,7 @@ dark:text-violet-200
 
         {/* Horario */}
         <div className="flex flex-col mb-4">
-          <label className="font-semibold mb-2">Horario</label>
+          <Label>Horario</Label>
 
           <Select
             value={selectedTime}
@@ -1391,7 +1393,7 @@ dark:text-violet-200
 
         {/* Aula */}
         <div className="flex flex-col mb-4">
-          <label className="font-semibold mb-2">Aula</label>
+          <Label>Aula</Label>
 
           <Select
             value={classroom}
@@ -1413,7 +1415,7 @@ dark:text-violet-200
 
         {/* Estudiante */}
         <div className="flex flex-col mb-2">
-          <label className="font-semibold mb-2">Estudiante</label>
+          <Label>Estudiante</Label>
 
           <div className="flex gap-2">
             <Select
@@ -1519,8 +1521,8 @@ dark:text-violet-200
                 <div className="space-y-2 mt-2">
                   {student.plans.map((plan) => (
                     <div key={plan.id}>
-                      <label>
-                        <input
+                      <Label>
+                        <Input
                           className="cursor-pointer"
                           type="checkbox"
                           checked={student.selectedPlans.some(
@@ -1531,7 +1533,7 @@ dark:text-violet-200
                           }
                         />{" "}
                         {plan.name}
-                      </label>
+                      </Label>
                     </div>
                   ))}
                 </div>

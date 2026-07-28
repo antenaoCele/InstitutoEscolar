@@ -2,6 +2,10 @@ import React, { useEffect, useState } from "react";
 import { eventService } from "../../services/event.service";
 import { Modal } from "../../components/ui/Modal";
 import { isAdmin } from "../../utils/auth";
+import Button from "../../components/ui/Button";
+import Label from "../../components/form/Label";
+import Input from "../../components/form/Input";
+import Select from "../../components/form/Select";
 import { studentService } from "../../services/student.service";
 import {
   ViewButton,
@@ -12,6 +16,8 @@ import {
   NoButton,
   AddButton,
   AssignTeacherButton,
+  NextButton,
+  PreviousButton,
 } from "../../components/ui/ActionButtons";
 import { BirthdayIcon } from "../../icons";
 
@@ -333,21 +339,10 @@ export default function MonthlyCalendar() {
       {/* Encabezado */}
 
       <div className="flex justify-center items-center gap-4 mb-6">
-        <button
+        <PreviousButton
+          title="Mes anterior"
           onClick={handlePreviousMonth}
-          className="
-            cursor-pointer transition transform hover:scale-105
-            px-4
-            py-2
-            rounded-lg
-            bg-[#0cc0df]
-            text-white
-            hover:opacity-90
-            transition
-          "
-        >
-          ◀
-        </button>
+        ></PreviousButton>
 
         <h2
           className="
@@ -361,21 +356,10 @@ export default function MonthlyCalendar() {
           {monthsNames[month]} {year}
         </h2>
 
-        <button
+        <NextButton
+          title="Mes siguiente"
           onClick={handleNextMonth}
-          className="
-            cursor-pointer transition transform hover:scale-105
-            px-4
-            py-2
-            rounded-lg
-            bg-[#0cc0df]
-            text-white
-            hover:opacity-90
-            transition
-          "
-        >
-          ▶
-        </button>
+        ></NextButton>
       </div>
 
       {isAdmin() && (
@@ -636,9 +620,9 @@ export default function MonthlyCalendar() {
 
                                 <div
                                   className="
-text-[10px]
-text-[#8d5df4]
-"
+                                    text-[10px]
+                                    text-[#8d5df4]
+                                    "
                                 >
                                   {age} años
                                 </div>
@@ -659,18 +643,11 @@ text-[#8d5df4]
         <h2 className="text-xl font-bold mb-8 ">Crear Evento</h2>
 
         <div className="flex flex-col mb-6">
-          <label className="font-semibold mb-2">Evento</label>
+          <Label>Evento</Label>
 
-          <input
+          <Input
             value={eventName}
             onChange={(e) => setEventName(e.target.value)}
-            className="
-              border
-              border-gray-300
-              rounded
-              px-3
-              py-2
-            "
           />
 
           {errorsCreate.name && (
@@ -679,19 +656,12 @@ text-[#8d5df4]
         </div>
 
         <div className="flex flex-col mb-6">
-          <label className="font-semibold mb-2">Fecha</label>
+          <Label>Fecha</Label>
 
-          <input
+          <Input
             type="date"
             value={eventDate}
             onChange={(e) => setEventDate(e.target.value)}
-            className="
-              border
-              border-gray-300
-              rounded
-              px-3
-              py-2
-            "
           />
 
           {errorsCreate.date && (
@@ -700,19 +670,12 @@ text-[#8d5df4]
         </div>
 
         <div className="flex flex-col mb-6">
-          <label className="font-semibold mb-2">Hora</label>
+          <Label className="font-semibold mb-2">Hora</Label>
 
-          <input
+          <Input
             type="time"
             value={eventTime}
             onChange={(e) => setEventTime(e.target.value)}
-            className="
-              border
-              border-gray-300
-              rounded
-              px-3
-              py-2
-            "
           />
 
           {errorsCreate.hour && (
@@ -742,18 +705,11 @@ text-[#8d5df4]
         <h2 className="text-xl font-bold mb-8">Editar Evento</h2>
 
         <div className="flex flex-col mb-6">
-          <label className="font-semibold mb-2">Evento</label>
+          <Label>Evento</Label>
 
-          <input
+          <Input
             value={eventName}
             onChange={(e) => setEventName(e.target.value)}
-            className="
-              border
-              border-gray-300
-              rounded
-              px-3
-              py-2
-            "
           />
 
           {errorsEdit.name && (
@@ -762,19 +718,12 @@ text-[#8d5df4]
         </div>
 
         <div className="flex flex-col mb-6">
-          <label className="font-semibold mb-2">Fecha</label>
+          <Label>Fecha</Label>
 
-          <input
+          <Input
             type="date"
             value={eventDate}
             onChange={(e) => setEventDate(e.target.value)}
-            className="
-              border
-              border-gray-300
-              rounded
-              px-3
-              py-2
-            "
           />
 
           {errorsEdit.date && (
@@ -783,19 +732,12 @@ text-[#8d5df4]
         </div>
 
         <div className="flex flex-col mb-6">
-          <label className="font-semibold mb-2">Hora</label>
+          <Label>Hora</Label>
 
-          <input
+          <Input
             type="time"
             value={eventTime}
             onChange={(e) => setEventTime(e.target.value)}
-            className="
-              border
-              border-gray-300
-              rounded
-              px-3
-              py-2
-            "
           />
 
           {errorsEdit.hour && (
