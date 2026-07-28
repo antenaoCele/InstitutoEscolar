@@ -13,7 +13,7 @@ export default function EcommerceMetrics() {
   const [prevIncome, setPrevIncome] = useState(0);
 
   useEffect(() => {
-    // 🔹 estudiantes del mes actual
+    //  estudiantes del mes actual
     fetch("http://localhost:3000/students")
       .then((res) => res.json())
       .then((data) => {
@@ -21,7 +21,7 @@ export default function EcommerceMetrics() {
       })
       .catch(console.error);
 
-    // 🔹 ingresos mensuales
+    //  ingresos mensuales
     fetch("http://localhost:3000/monthly_finances")
       .then((res) => res.json())
       .then((data) => {

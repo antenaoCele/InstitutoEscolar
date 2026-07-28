@@ -70,15 +70,16 @@ const getNavItems = (isTeacherRole) => [
       </SidebarIcon>
     ),
     name: "Docentes",
-    subItems: [
-      { name: "Docentes", path: "/teachers" },
-      // "Sueldos" oculto para rol docente
-      ...(isTeacherRole
-        ? []
-        : [{ name: "Sueldos", path: "/teachers/liquidations" }]),
-    ],
+    // Docente: link directo a Docentes, sin desplegable de "Sueldos"
+    ...(isTeacherRole
+      ? { path: "/teachers" }
+      : {
+          subItems: [
+            { name: "Docentes", path: "/teachers" },
+            { name: "Sueldos", path: "/teachers/liquidations" },
+          ],
+        }),
   },
-
   {
     icon: (
       <SidebarIcon>

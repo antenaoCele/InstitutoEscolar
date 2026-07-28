@@ -207,6 +207,29 @@ async function resolveChain(student_plan) {
 }
 
 /* =========================================================
+PERÍODO INICIAL DE LA CADENA Y SU OPCIÓN DE PRIMER PAGO
+El período inicial lo define la fila más vieja de la cadena. Pero
+la opción de primer pago que rige para ese período es la de la
+ÚLTIMA fila que arranca en ese mismo mes: si en el mismo mes hubo
+una baja y una nueva asignación, vale lo que se eligió al
+reasignar, no lo que decía la inscripción anterior.
+========================================================= */
+function resolveChainOrigin(chain) {
+  const startPeriod = toPeriod(chain[0].start_date);
+
+  const sameMonthRows = chain.filter(
+    (r) => toPeriod(r.start_date) === startPeriod,
+  );
+
+  const governing = sameMonthRows[sameMonthRows.length - 1] ?? chain[0];
+
+  return {
+    startPeriod,
+    firstPaymentOption: governing.first_payment_option,
+  };
+}
+
+/* =========================================================
 ¿A QUÉ FILA DE LA CADENA LE PERTENECE UN PERÍODO DADO?
 Recorre la cadena en orden y se queda con la última fila cuyo
 start_date (en formato período) es <= al período buscado.
@@ -305,11 +328,11 @@ export async function getStudentPlanStatus(student_plan_id) {
   // qué fila puntual se originó el período vencido (importante para
   // que la regularización se cobre al docente correcto, no al actual).
   const chain = await resolveChain(plan);
-  const origin = chain[0];
 
-  const startPeriod = toPeriod(origin.start_date);
+  const { startPeriod, firstPaymentOption } = resolveChainOrigin(chain);
+
   const firstObligatedPeriod =
-    origin.first_payment_option === "NEXT_MONTH"
+    firstPaymentOption === "NEXT_MONTH"
       ? addMonths(startPeriod, 1)
       : startPeriod;
 
@@ -460,10 +483,9 @@ PRIMER PERÍODO OBLIGADO (usa la cadena real, no solo esta fila)
 ========================================================= */
 export async function getFirstObligatedPeriod(student_plan) {
   const chain = await resolveChain(student_plan);
-  const origin = chain[0];
-  const startPeriod = toPeriod(origin.start_date);
+  const { startPeriod, firstPaymentOption } = resolveChainOrigin(chain);
 
-  return origin.first_payment_option === "NEXT_MONTH"
+  return firstPaymentOption === "NEXT_MONTH"
     ? addMonths(startPeriod, 1)
     : startPeriod;
 }
@@ -473,7 +495,7 @@ export async function getFirstObligatedPeriod(student_plan) {
 // regla de "media cuota" para que nunca se desincronice entre el
 // cálculo de un pago normal, una regularización, o el "Debe" que se
 // muestra en la ficha del alumno: si el período es justo la primera
-// cuota obligada Y el alumno eligió HALF, el precio base es la mitad
+// cuota obligada Y se eligió HALF, el precio base es la mitad
 // del precio histórico de ese período. Para cualquier otro caso
 // (incluida una regularización de un período que NO es el primero),
 // el precio base es el precio histórico completo.
@@ -485,11 +507,17 @@ export async function getExpectedBaseAmount(student_plan, period) {
 
   if (historicPrice == null) return null;
 
-  const firstObligatedPeriod = await getFirstObligatedPeriod(student_plan);
+  const chain = await resolveChain(student_plan);
+  const { startPeriod, firstPaymentOption } = resolveChainOrigin(chain);
+
+  const firstObligatedPeriod =
+    firstPaymentOption === "NEXT_MONTH"
+      ? addMonths(startPeriod, 1)
+      : startPeriod;
 
   const isFirstPeriod = period === firstObligatedPeriod;
 
-  if (isFirstPeriod && student_plan.first_payment_option === "HALF") {
+  if (isFirstPeriod && firstPaymentOption === "HALF") {
     return Math.round(historicPrice * 0.5 * 100) / 100;
   }
 

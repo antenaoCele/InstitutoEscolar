@@ -226,22 +226,29 @@ export function BackButton({ onClick, title = "" }) {
   );
 }
 
-export function YesButton({ onClick, title = "" }) {
+export function YesButton({ onClick, disabled = false, title = "" }) {
   return (
-    <Button title={title} size="sm" onClick={onClick} className={baseClass}>
+    <Button
+      title={title}
+      size="sm"
+      onClick={onClick}
+      disabled={disabled}
+      className={`${baseClass} ${disabled ? disabledClass : ""}`}
+    >
       <img src={YesIcon} alt="Sí" className={imgClass} />
     </Button>
   );
 }
 
-export function NoButton({ onClick, title = "" }) {
+export function NoButton({ onClick, disabled = false, title = "" }) {
   return (
     <Button
       title={title}
       size="sm"
       variant="outline"
       onClick={onClick}
-      className={baseClass}
+      disabled={disabled}
+      className={`${baseClass} ${disabled ? disabledClass : ""}`}
     >
       <img src={NoIcon} alt="No" className="w-5 h-5 brightness-0" />
     </Button>

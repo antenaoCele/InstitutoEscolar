@@ -391,13 +391,21 @@ export const paymentsController = {
         });
       }
 
+      // Si el pago se reasigna a OTRO plan, deja de valer la excepción
+      // del "período original": ese período pertenecía al plan viejo y
+      // no dice nada sobre las obligaciones del plan nuevo. Sin esto se
+      // podía reasignar un pago a un plan que ya estaba al día y
+      // duplicarle la cuota del mes.
+      const keepsSamePlan =
+        Number(newStudentPlanId) === Number(rows[0].student_plan_id);
+
       const validTargets = [
         status.overdue_period,
         status.current_period?.period,
-        // Permitimos mantener el período que el pago ya tenía, aunque
-        // ya no figure entre los "vigentes", para no romper una edición
-        // menor (ej. cambiar método de pago) de un pago ya regularizado.
-        rows[0].payment_period,
+        // Solo mientras se siga editando el MISMO plan: permite
+        // corregir la fecha o el método de pago de un pago ya
+        // registrado, aunque su período ya no figure como pendiente.
+        keepsSamePlan ? rows[0].payment_period : null,
       ].filter(Boolean);
 
       if (!validTargets.includes(newPaymentPeriod)) {
@@ -537,6 +545,8 @@ export const paymentsController = {
         p.payment_period,
         p.payment_type,
         p.payment_method,
+
+        sp.id AS student_plan_id,
 
         s.id AS student_id,
         s.first_name,

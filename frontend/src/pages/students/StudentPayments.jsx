@@ -13,10 +13,7 @@ import { studentService } from "../../services/student.service";
 import { EnrollmentService } from "../../services/enrollment.service";
 import { useFeedbackModal } from "../../hooks/useFeedbackModal";
 import { validatePaymentForm } from "../../validators/entities/payments.validator";
-import {
-  validateEnrollmentForm,
-  validateEditEnrollmentForm,
-} from "../../validators/entities/enrollments.validator";
+import { validateEditEnrollmentForm } from "../../validators/entities/enrollments.validator";
 import {
   YesButton,
   NoButton,
@@ -118,6 +115,7 @@ export default function StudentPayments() {
   const [planStatus, setPlanStatus] = useState(null);
   const [paymentPeriod, setPaymentPeriod] = useState("");
   const [originalPaymentPeriod, setOriginalPaymentPeriod] = useState(null);
+  const [originalStudentPlanId, setOriginalStudentPlanId] = useState(null);
 
   // Fecha local (evita el corrimiento de día por UTC-3 de toISOString)
   const getLocalDateString = () => {
@@ -130,8 +128,9 @@ export default function StudentPayments() {
 
   // ======================================================
   // FORMULARIO: REGISTRAR INSCRIPCIÓN
+  // Se registra de a un estudiante por vez (usa enrollmentStudent,
+  // el mismo estado que la edición).
   // ======================================================
-  const [enrollmentStudents, setEnrollmentStudents] = useState([]);
   const [enrollmentAmount, setEnrollmentAmount] = useState("");
   const [enrollmentDate, setEnrollmentDate] = useState(getLocalDateString());
   const [errorsEnrollment, setErrorsEnrollment] = useState({});
@@ -210,6 +209,20 @@ export default function StudentPayments() {
     fetchStudents();
   }, [month, year]);
 
+  // El "período original" del pago que se está editando solo se
+  // mantiene como opción válida mientras se siga editando el MISMO
+  // plan (para poder corregir método de pago o fecha sin romper
+  // nada). Si el usuario cambia el plan, las opciones se calculan de
+  // cero para ese plan nuevo, igual que en un pago nuevo — así no se
+  // puede colar un pago repetido sobre un plan que ya está al día.
+  const isSameOriginalPlan =
+    originalStudentPlanId != null &&
+    String(selectedStudentPlan) === String(originalStudentPlanId);
+
+  const effectiveExtraPeriod = isSameOriginalPlan
+    ? originalPaymentPeriod
+    : null;
+
   // Cuando cambia el estado del plan (recién elegido, o recién
   // cargado al editar), si todavía no hay un período elegido, se
   // preselecciona el primero disponible (prioriza la deuda vieja
@@ -220,7 +233,7 @@ export default function StudentPayments() {
     setPaymentPeriod((prev) => {
       if (prev) return prev;
 
-      const options = getPeriodOptions(planStatus, originalPaymentPeriod);
+      const options = getPeriodOptions(planStatus, effectiveExtraPeriod);
       return options[0]?.value || "";
     });
   }, [planStatus]);
@@ -284,12 +297,13 @@ export default function StudentPayments() {
     setPlanStatus(null);
     setPaymentPeriod("");
     setOriginalPaymentPeriod(null);
+    setOriginalStudentPlanId(null);
     setEditingPaymentId(null);
     setErrorsEditPayment({});
   };
 
   const resetEnrollmentForm = () => {
-    setEnrollmentStudents([]);
+    setEnrollmentStudent("");
     setEnrollmentAmount("");
     setEnrollmentDate(getLocalDateString());
     setErrorsEnrollment({});
@@ -412,6 +426,7 @@ export default function StudentPayments() {
 
       setStudentPlans(data.data || []);
       setSelectedStudentPlan(payment.student_plan_id);
+      setOriginalStudentPlanId(payment.student_plan_id);
 
       const { data: statusData } = await studentPlanService.getStatus(
         payment.student_plan_id,
@@ -425,6 +440,29 @@ export default function StudentPayments() {
   };
 
   const handleUpdatePayment = async () => {
+    // Corte duro, independiente del estado del botón: el período que
+    // se está guardando tiene que ser uno de los realmente
+    // disponibles para el plan seleccionado en este momento. Esto es
+    // lo que impide reasignar un pago a un plan que ya está al día y
+    // terminar con la cuota del mes duplicada.
+    const availableOptions = getPeriodOptions(planStatus, effectiveExtraPeriod);
+
+    if (availableOptions.length === 0) {
+      showFeedback(
+        "Este alumno ya está al día con este plan. No hay ningún período pendiente al que reasignar este pago.",
+        "error",
+      );
+      return;
+    }
+
+    if (!availableOptions.some((o) => o.value === paymentPeriod)) {
+      showFeedback(
+        "El período seleccionado no corresponde a una obligación pendiente de este plan.",
+        "error",
+      );
+      return;
+    }
+
     const errors = validatePaymentForm({
       selectedStudent,
       selectedStudentPlan,
@@ -500,17 +538,9 @@ export default function StudentPayments() {
   // ======================================================
   // HANDLES: INSCRIPCIÓN (crear)
   // ======================================================
-  const toggleEnrollmentStudent = (studentId) => {
-    setEnrollmentStudents((prev) =>
-      prev.includes(studentId)
-        ? prev.filter((id) => id !== studentId)
-        : [...prev, studentId],
-    );
-  };
-
   const handleCreateEnrollment = async () => {
-    const errors = validateEnrollmentForm({
-      enrollmentStudents,
+    const errors = validateEditEnrollmentForm({
+      enrollmentStudent,
       enrollmentAmount,
       enrollmentDate,
     });
@@ -523,22 +553,18 @@ export default function StudentPayments() {
     try {
       setErrorsEnrollment({});
 
-      await Promise.all(
-        enrollmentStudents.map((studentId) =>
-          EnrollmentService.create({
-            student_id: studentId,
-            amount: enrollmentAmount,
-            payment_date: enrollmentDate,
-          }),
-        ),
-      );
+      await EnrollmentService.create({
+        student_id: enrollmentStudent,
+        amount: enrollmentAmount,
+        payment_date: enrollmentDate,
+      });
 
       await fetchEnrollments();
 
       setOpenCreateEnrollmentModal(false);
       resetEnrollmentForm();
 
-      showFeedback("Inscripción/es registrada/s correctamente.", "success");
+      showFeedback("Inscripción registrada correctamente.", "success");
     } catch (error) {
       showFeedback(
         error.response?.data?.message || "Error al registrar inscripción.",
@@ -726,7 +752,7 @@ export default function StudentPayments() {
   );
 
   const createPeriodOptions = getPeriodOptions(planStatus);
-  const editPeriodOptions = getPeriodOptions(planStatus, originalPaymentPeriod);
+  const editPeriodOptions = getPeriodOptions(planStatus, effectiveExtraPeriod);
 
   // ======================================================
   // RETURN
@@ -923,7 +949,7 @@ export default function StudentPayments() {
           ))}
         </Select>
 
-        {selectedStudentPlan && (
+        {selectedStudentPlan && editPeriodOptions.length > 0 && (
           <Select
             label="Período a pagar"
             value={paymentPeriod}
@@ -938,6 +964,13 @@ export default function StudentPayments() {
               </option>
             ))}
           </Select>
+        )}
+
+        {selectedStudentPlan && editPeriodOptions.length === 0 && (
+          <p className="text-green-600 font-medium my-2">
+            Este alumno ya está al día con este plan. No hay ningún período
+            pendiente al que reasignar este pago.
+          </p>
         )}
 
         <Input
@@ -972,7 +1005,11 @@ export default function StudentPayments() {
             }}
           />
 
-          <YesButton title="Aceptar" onClick={handleUpdatePayment} />
+          <YesButton
+            title="Aceptar"
+            onClick={handleUpdatePayment}
+            disabled={!!selectedStudentPlan && editPeriodOptions.length === 0}
+          />
         </div>
       </Modal>
 
@@ -1001,12 +1038,6 @@ export default function StudentPayments() {
             </option>
           ))}
         </Select>
-
-        {errorsEnrollment.students && (
-          <p className="text-red-500 text-sm mb-3">
-            {errorsEnrollment.students}
-          </p>
-        )}
 
         <Input
           type="number"

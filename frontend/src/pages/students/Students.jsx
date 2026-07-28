@@ -139,7 +139,7 @@ export function Students() {
               start_date: row.start_date,
               academic_status: row.academic_status,
               account_status: row.account_status,
-              overdue_periods: row.overdue_periods,
+              overdue_period: row.overdue_period,
               current_period_status: row.current_period?.status,
             });
           }
