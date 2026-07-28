@@ -17,7 +17,7 @@ export const studentsController = {
         status: filterStatus = "",
         teacher_id,
         plan_id,
-        payment_status,
+        plan_status,
       } = req.query;
 
       // Se sacó el filtro por fecha del JOIN de student_plans: ahora
@@ -182,36 +182,63 @@ export const studentsController = {
         return true;
       });
 
-      // FILTRO POR ESTADO ACADÉMICO (activo/inactivo)
-      // Se hace en JS porque ahora un mismo alumno puede tener más de
-      // una fila (una activa + una inactiva con deuda), y la condición
-      // es sobre el alumno en conjunto, no sobre una fila puntual.
+      // FILTRO POR ESTADO ACADÉMICO (activo / inactivo / suspendido)
+      // "suspendido" = tiene al menos un plan ACTIVE con account_status
+      // OVERDUE (aunque tenga otros planes al día).
+      // "activo" = tiene algún plan ACTIVE y no está suspendido.
+      // "inactivo" = no tiene ningún plan ACTIVE.
       let filteredResult = result;
 
-      if (filterStatus === "active" || filterStatus === "inactive") {
+      if (
+        filterStatus === "active" ||
+        filterStatus === "inactive" ||
+        filterStatus === "suspended"
+      ) {
         const activeStudentIds = new Set(
           result.filter((r) => r.academic_status === "ACTIVE").map((r) => r.id),
         );
 
-        filteredResult = result.filter((r) =>
-          filterStatus === "active"
-            ? activeStudentIds.has(r.id)
-            : !activeStudentIds.has(r.id),
+        const suspendedStudentIds = new Set(
+          result
+            .filter(
+              (r) =>
+                r.academic_status === "ACTIVE" &&
+                r.account_status === "OVERDUE",
+            )
+            .map((r) => r.id),
         );
+
+        filteredResult = result.filter((r) => {
+          if (filterStatus === "suspended") {
+            return suspendedStudentIds.has(r.id);
+          }
+
+          if (filterStatus === "active") {
+            return activeStudentIds.has(r.id) && !suspendedStudentIds.has(r.id);
+          }
+
+          // inactive
+          return !activeStudentIds.has(r.id);
+        });
       }
 
-      // FILTRO POR ESTADO DE PAGO DEL MES ACTUAL
-      if (payment_status === "paid") {
-        filteredResult = filteredResult.filter(
-          (student) => student.current_period?.status === "paid",
-        );
-      }
+      // FILTRO POR ESTADO DEL PLAN
+      // Replica la misma prioridad que getPlanStatusInfo del
+      // frontend, para que el filtro coincida con lo que se ve en la
+      // columna "Estado del plan".
+      if (plan_status) {
+        const getPlanStatusCode = (row) => {
+          if (row.academic_status === "INACTIVE") return "baja_deuda";
+          if (row.account_status === "OVERDUE") return "overdue";
+          if (row.current_period?.status === "pending") return "pending";
+          if (row.current_period?.status === "paid") return "paid";
+          if (row.current_period?.status === "not_due_yet")
+            return "not_due_yet";
+          return null;
+        };
 
-      if (payment_status === "pending") {
         filteredResult = filteredResult.filter(
-          (student) =>
-            student.current_period?.status === "pending" ||
-            student.account_status === "OVERDUE",
+          (student) => getPlanStatusCode(student) === plan_status,
         );
       }
 
@@ -549,6 +576,94 @@ export const studentsController = {
       res.status(500).json({
         success: false,
         message: "Error al obtener estudiantes activos",
+      });
+    }
+  },
+
+  // =====================================================
+  // ESTUDIANTES HABILITADOS PARA REGISTRAR UN PAGO
+  // A diferencia de getActiveStudents (que solo mira fechas), acá
+  // usamos el estado calculado real de cada plan (getStudentPlanStatus)
+  // para incluir a un alumno si tiene AL MENOS un plan que sea:
+  //   - ACTIVE (cubre tanto "activo" como "suspendido": un plan
+  //     ACTIVE con account_status OVERDUE sigue siendo ACTIVE a nivel
+  //     académico, solo cambia el estado de cuenta).
+  //   - INACTIVE con account_status OVERDUE ("baja con deuda").
+  // Un alumno cuyos únicos planes son INACTIVE y ya sin deuda
+  // (historial resuelto) queda afuera, porque no hay nada que
+  // cobrarle.
+  // =====================================================
+  getPayableStudents: async (req, res) => {
+    try {
+      const [studentPlanRows] = await db.execute(
+        `SELECT id, student_id FROM student_plans`,
+      );
+
+      const planIdsByStudent = new Map();
+
+      studentPlanRows.forEach((row) => {
+        if (!planIdsByStudent.has(row.student_id)) {
+          planIdsByStudent.set(row.student_id, []);
+        }
+        planIdsByStudent.get(row.student_id).push(row.id);
+      });
+
+      const payableStudentIds = new Set();
+
+      for (const [studentId, planIds] of planIdsByStudent.entries()) {
+        let payable = false;
+
+        for (const planId of planIds) {
+          const status = await getStudentPlanStatus(planId);
+          if (!status) continue;
+
+          if (status.academic_status === "ACTIVE") {
+            payable = true;
+            break;
+          }
+
+          if (
+            status.academic_status === "INACTIVE" &&
+            status.account_status === "OVERDUE"
+          ) {
+            payable = true;
+            break;
+          }
+        }
+
+        if (payable) {
+          payableStudentIds.add(studentId);
+        }
+      }
+
+      if (!payableStudentIds.size) {
+        return res.json({ success: true, total: 0, data: [] });
+      }
+
+      const ids = Array.from(payableStudentIds);
+      const placeholders = ids.map(() => "?").join(",");
+
+      const [students] = await db.execute(
+        `
+        SELECT id, first_name, last_name, dni, school, birth_date, level, grade
+        FROM students
+        WHERE id IN (${placeholders})
+        ORDER BY last_name, first_name
+        `,
+        ids,
+      );
+
+      res.json({
+        success: true,
+        total: students.length,
+        data: students,
+      });
+    } catch (error) {
+      console.error(error);
+
+      res.status(500).json({
+        success: false,
+        message: "Error al obtener estudiantes habilitados para pago",
       });
     }
   },

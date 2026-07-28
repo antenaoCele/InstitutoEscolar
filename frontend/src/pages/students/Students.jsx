@@ -43,7 +43,7 @@ export function Students() {
   const [searchFirstLastName, setSearchFirstLastName] = useState("");
   const [searchDNI, setSearchDNI] = useState("");
   const [searchSchool, setSearchSchool] = useState("");
-  const [selectedPaymentStatus, setSelectedPaymentStatus] = useState("");
+  const [selectedPlanStatus, setSelectedPlanStatus] = useState("");
 
   // ======================================================
   // MODALES
@@ -107,8 +107,8 @@ export function Students() {
         params.status = selectedStatus;
       }
 
-      if (selectedPaymentStatus) {
-        params.payment_status = selectedPaymentStatus;
+      if (selectedPlanStatus) {
+        params.plan_status = selectedPlanStatus;
       }
 
       const { data } = await studentService.getAll(params);
@@ -509,7 +509,7 @@ export function Students() {
 
   useEffect(() => {
     fetchStudents();
-  }, [selectedTeacher, selectedPlan, selectedStatus, selectedPaymentStatus]);
+  }, [selectedTeacher, selectedPlan, selectedStatus, selectedPlanStatus]);
 
   useEffect(() => {
     fetchFilters();
@@ -526,7 +526,7 @@ export function Students() {
       return { text: "Baja — con deuda", color: "text-red-700" };
     }
     if (plan.account_status === "OVERDUE") {
-      return { text: "Suspendido (debe)", color: "text-orange-600" };
+      return { text: "Debe", color: "text-orange-600" };
     }
     if (plan.current_period_status === "pending") {
       return { text: "Pendiente", color: "text-yellow-600" };
@@ -564,7 +564,7 @@ export function Students() {
     { header: "Apellidos", accessor: "last_name" },
     { header: "Nombres", accessor: "first_name" },
     {
-      header: "Estados",
+      header: "Estado",
       render: (row) => {
         const plans = row.activePlans || [];
 
@@ -599,7 +599,7 @@ export function Students() {
   ];
 
   columns.push({
-    header: "Planes",
+    header: "Plan",
     render: (row) => (
       <div className="flex flex-col gap-2">
         {row.activePlans?.length > 0 ? (
@@ -621,7 +621,7 @@ export function Students() {
   });
 
   columns.push({
-    header: "Docentes",
+    header: "Docente",
     render: (row) => (
       <div className="flex flex-col gap-2">
         {row.activePlans?.length > 0 ? (
@@ -641,7 +641,7 @@ export function Students() {
   });
 
   columns.push({
-    header: "Estados de los planes",
+    header: "Estado del plan",
     render: (row) => (
       <div className="flex flex-col gap-2">
         {row.activePlans?.length > 0 ? (
@@ -809,6 +809,7 @@ export function Students() {
           <option value="">Todos los estudiantes</option>
           <option value="active">Activos</option>
           <option value="inactive">Inactivos</option>
+          <option value="suspended">Suspendidos</option>
         </Select>
 
         <Select
@@ -849,13 +850,16 @@ export function Students() {
         </Select>
 
         <Select
-          value={selectedPaymentStatus}
-          onChange={(e) => setSelectedPaymentStatus(e.target.value)}
+          value={selectedPlanStatus}
+          onChange={(e) => setSelectedPlanStatus(e.target.value)}
           className="p-2 border border-gray-300 rounded min-w-56"
         >
-          <option value="">Todos los pagos</option>
-          <option value="paid">Pagaron este mes</option>
-          <option value="pending">Faltan pagar este mes</option>
+          <option value="">Estado del plan</option>
+          <option value="paid">Al día</option>
+          <option value="pending">Pendiente</option>
+          <option value="overdue">Debe</option>
+          <option value="baja_deuda">Baja — con deuda</option>
+          <option value="not_due_yet">Aún no corresponde</option>
         </Select>
       </div>
 

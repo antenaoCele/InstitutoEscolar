@@ -17,6 +17,12 @@ const router = express.Router();
 
 router.get("/active", authentication, studentsController.getActiveStudents);
 
+// Estudiantes habilitados para registrar un pago: activos,
+// suspendidos, y de baja PERO con deuda pendiente. Se usa en el
+// selector de la pantalla de Pagos, para no perder de vista a un
+// alumno dado de baja que todavía debe una cuota.
+router.get("/payable", authentication, studentsController.getPayableStudents);
+
 router.get("/", authentication, studentsController.getAllWithStatus);
 
 router.get(

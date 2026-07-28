@@ -15,6 +15,7 @@ export const studentService = {
         teacher_id: teacherId,
       },
     }),
+  getPayableStudents: () => api.get("/students/payable"),
 
   create: (data) => api.post("/students", data),
 

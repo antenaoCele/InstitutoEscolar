@@ -176,7 +176,11 @@ export default function StudentPayments() {
   // ======================================================
   const fetchStudents = async () => {
     try {
-      const { data } = await studentService.getActiveStudents();
+      // getPayableStudents en vez de getActiveStudents: incluye
+      // también a los alumnos dados de baja que todavía tienen una
+      // deuda pendiente (para poder cobrarles esa cuota atrasada),
+      // no solo a los que tienen un plan activo hoy.
+      const { data } = await studentService.getPayableStudents();
       setStudents(data.data || []);
     } catch (error) {
       console.error(error);
