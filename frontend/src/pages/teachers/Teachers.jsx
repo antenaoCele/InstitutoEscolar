@@ -420,7 +420,7 @@ export function Teachers() {
   ];
 
   columns.splice(2, 0, {
-    header: "Estado",
+    header: "Estados",
     render: (row) => (
       <span
         className={`font-medium ${

@@ -564,7 +564,7 @@ export function Students() {
     { header: "Apellidos", accessor: "last_name" },
     { header: "Nombres", accessor: "first_name" },
     {
-      header: "Estado",
+      header: "Estados",
       render: (row) => {
         const plans = row.activePlans || [];
 
@@ -599,7 +599,7 @@ export function Students() {
   ];
 
   columns.push({
-    header: "Plan",
+    header: "Planes",
     render: (row) => (
       <div className="flex flex-col gap-2">
         {row.activePlans?.length > 0 ? (
@@ -621,7 +621,7 @@ export function Students() {
   });
 
   columns.push({
-    header: "Docente",
+    header: "Docentes",
     render: (row) => (
       <div className="flex flex-col gap-2">
         {row.activePlans?.length > 0 ? (
@@ -641,7 +641,7 @@ export function Students() {
   });
 
   columns.push({
-    header: "Estado del plan",
+    header: "Estados delos planes",
     render: (row) => (
       <div className="flex flex-col gap-2">
         {row.activePlans?.length > 0 ? (

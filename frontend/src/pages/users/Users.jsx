@@ -283,19 +283,19 @@ export function Users() {
 
   let columns = [
     {
-      header: "Apellido",
+      header: "Apellidos",
       accessor: "last_name",
     },
     {
-      header: "Nombre",
+      header: "Nombres",
       accessor: "first_name",
     },
     {
-      header: "Usuario",
+      header: "Usuarios",
       accessor: "username",
     },
     {
-      header: "Rol",
+      header: "Roles",
       accessor: "role",
     },
   ];
