@@ -641,7 +641,7 @@ export function Students() {
   });
 
   columns.push({
-    header: "Estados delos planes",
+    header: "Estados de los planes",
     render: (row) => (
       <div className="flex flex-col gap-2">
         {row.activePlans?.length > 0 ? (

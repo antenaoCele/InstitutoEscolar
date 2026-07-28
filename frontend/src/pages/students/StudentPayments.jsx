@@ -654,23 +654,23 @@ export default function StudentPayments() {
   // ======================================================
   const columns = [
     {
-      header: "Fecha",
+      header: "Fechas",
       render: (row) => new Date(row.payment_date).toLocaleDateString("es-AR"),
     },
     {
-      header: "Estudiante",
+      header: "Estudiantes",
       render: (row) => `${row.last_name}, ${row.first_name}`,
     },
     {
-      header: "Plan",
+      header: "Planes",
       accessor: "plan_name",
     },
     {
-      header: "Período",
+      header: "Períodos",
       accessor: "payment_period",
     },
     {
-      header: "Tipo",
+      header: "Tipos",
       render: (row) => (
         <span
           className={
@@ -684,11 +684,11 @@ export default function StudentPayments() {
       ),
     },
     {
-      header: "Monto",
+      header: "Montos",
       render: (row) => `$${Number(row.amount).toLocaleString("es-AR")}`,
     },
     {
-      header: "Método",
+      header: "Métodos",
       accessor: "payment_method",
     },
     {
@@ -711,15 +711,15 @@ export default function StudentPayments() {
 
   const enrollmentColumns = [
     {
-      header: "Fecha",
+      header: "Fechas",
       render: (row) => new Date(row.payment_date).toLocaleDateString("es-AR"),
     },
     {
-      header: "Estudiante",
+      header: "Estudiantes",
       render: (row) => `${row.last_name}, ${row.first_name}`,
     },
     {
-      header: "Monto",
+      header: "Montos",
       render: (row) => `$${Number(row.amount).toLocaleString("es-AR")}`,
     },
     {
