@@ -523,7 +523,7 @@ export function Students() {
   // Estado de un plan puntual, para la columna "Estado del plan".
   const getPlanStatusInfo = (plan) => {
     if (plan.academic_status === "INACTIVE") {
-      return { text: "Baja — con deuda", color: "text-red-700" };
+      return { text: "Baja (con deuda)", color: "text-red-700" };
     }
     if (plan.account_status === "OVERDUE") {
       return { text: "Debe", color: "text-orange-600" };
@@ -858,7 +858,7 @@ export function Students() {
           <option value="paid">Al día</option>
           <option value="pending">Pendiente</option>
           <option value="overdue">Debe</option>
-          <option value="baja_deuda">Baja — con deuda</option>
+          <option value="baja_deuda">Baja (con deuda)</option>
           <option value="not_due_yet">Aún no corresponde</option>
         </Select>
       </div>

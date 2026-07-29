@@ -954,14 +954,14 @@ export default function WeeklyCalendar() {
                                     border
 
                                     bg-cyan-100
-dark:bg-cyan-900/25
+                                    dark:bg-cyan-900/25
 
-border
-border-cyan-300
-dark:border-cyan-700
+                                    border
+                                    border-cyan-300
+                                    dark:border-cyan-700
 
                                     text-cyan-800
-dark:text-cyan-200
+                                    dark:text-cyan-200
 
                                     shadow-sm
                                     hover:shadow-md
@@ -975,13 +975,13 @@ dark:text-cyan-200
                                     border
 
                                     bg-violet-100
-dark:bg-violet-900/25
+                                    dark:bg-violet-900/25
 
-border-violet-300
-dark:border-violet-700
+                                    border-violet-300
+                                    dark:border-violet-700
 
-text-violet-800
-dark:text-violet-200
+                                    text-violet-800
+                                    dark:text-violet-200
                                   `
                               }
                             >
@@ -1489,94 +1489,6 @@ dark:text-violet-200
           {errorsEdit.plans && (
             <div className="mt-4 text-sm text-red-500">{errorsEdit.plans}</div>
           )}
-
-          {selectedStudentPlans.map((student) => (
-            <div key={student.studentId}>
-              <div
-                className="
-                  border
-                  rounded-lg
-                  p-4
-                  mb-2
-                  bg-gray-50
-                  dark:bg-black
-
-                  border
-                  border-gray-200
-                  dark:border-gray-700                
-                "
-              >
-                <div className="flex justify-between items-center">
-                  <div className="font-semibold">{student.studentName}</div>
-
-                  <button
-                    type="button"
-                    className="cursor-pointer text-red-500 font-bold"
-                    onClick={() => handleRemoveStudent(student.studentId)}
-                  >
-                    ✕
-                  </button>
-                </div>
-                <div className="mt-4 font-semibold">Planes disponibles</div>
-                <div className="space-y-2 mt-2">
-                  {student.plans.map((plan) => (
-                    <div key={plan.id}>
-                      <Label>
-                        <Input
-                          className="cursor-pointer"
-                          type="checkbox"
-                          checked={student.selectedPlans.some(
-                            (p) => p.id === plan.id,
-                          )}
-                          onChange={() =>
-                            handlePlanToggle(student.studentId, plan)
-                          }
-                        />{" "}
-                        {plan.name}
-                      </Label>
-                    </div>
-                  ))}
-                </div>
-                {student.selectedPlans.length > 0 && (
-                  <div className="mt-4">
-                    <p className="font-semibold mb-2">Materias</p>
-
-                    <ul
-                      className="
-                        ml-5
-                        list-disc
-                        text-sm
-                        text-gray-600
-                        dark:text-gray-300
-                        space-y-1
-                      "
-                    >
-                      {[
-                        ...new Set(
-                          student.selectedPlans.flatMap(
-                            (plan) => plan.subjects ?? [],
-                          ),
-                        ),
-                      ].map((subject) => (
-                        <li key={subject}>{subject}</li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
-              </div>
-              {errorsEdit.studentConflict && (
-                <div className="mt-4 text-sm text-red-500">
-                  {errorsEdit.studentConflict}
-                </div>
-              )}
-              {incompatibleStudents.includes(student.studentId) && (
-                <div className="mt-4 text-sm text-red-500">
-                  {student.studentName} no posee planes compatibles con el
-                  docente seleccionado.
-                </div>
-              )}
-            </div>
-          ))}
         </div>
 
         <div className="flex justify-end gap-4 mt-10">
