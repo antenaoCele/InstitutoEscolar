@@ -5,7 +5,7 @@ import { getCurrentDateParts } from "../../utils/dateUtils.js";
 /* =========================================================
 DATE
 ========================================================= */
-export const validateDate = (field, optional = false) => [
+export const validateDate = (field, optional = false, allowFuture = false) => [
   baseField(field, optional)
     .trim()
     .isISO8601({ strict: true })
@@ -24,12 +24,16 @@ export const validateDate = (field, optional = false) => [
         throw new Error("Fecha inválida.");
       }
 
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
+      if (!allowFuture) {
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
 
-      const inputDate = new Date(year, month - 1, day);
+        const inputDate = new Date(year, month - 1, day);
 
-      if (inputDate > today) throw new Error("La fecha no puede ser futura.");
+        if (inputDate > today) {
+          throw new Error("La fecha no puede ser futura.");
+        }
+      }
 
       return true;
     }),

@@ -14,7 +14,7 @@ export const validatePlanPrices = [
   ...validateForeignId("plan_id", "plans"),
   ...validateMoney("price"),
   ...validateDate("start_date"),
-  ...validateDate("end_date", true),
+  ...validateDate("end_date", true, true),
   ...validateDateRange("start_date", "end_date"),
   ...validateFinanceOverlap("plan_prices"),
 ];
@@ -24,7 +24,7 @@ export const validateEditPlanPrices = [
   ...validateForeignId("plan_id", "plans", true),
   ...validateMoney("price", true),
   ...validateDate("start_date", true),
-  ...validateDate("end_date", true),
+  ...validateDate("end_date", true, true),
   ...validateDateRange("start_date", "end_date", true),
   ...validateFinanceOverlap("plan_prices"),
 ];
