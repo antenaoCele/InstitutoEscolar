@@ -37,8 +37,11 @@ export const plansController = {
             ON pp.plan_id = p.id
 
         WHERE
-            pp.start_date <= CURDATE()
-            AND pp.end_date IS NULL
+          pp.start_date <= CURDATE()
+          AND (
+              pp.end_date IS NULL
+              OR pp.end_date >= CURDATE()
+    )
 
         ORDER BY
             p.id,
