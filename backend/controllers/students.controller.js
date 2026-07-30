@@ -165,6 +165,17 @@ export const studentsController = {
       // planes viejos ya resueltos). Si no tiene ninguna, se deja una
       // sola fila pelada para que igual aparezca en el listado como
       // inactivo y se le pueda asignar un plan.
+      //
+      // Esas filas peladas solo tienen sentido en el listado GENERAL.
+      // Cuando hay filtro por DOCENTE o por PLAN, no: un alumno cuyas
+      // únicas filas con ese docente son historial resuelto (porque se
+      // cambió de docente) NO es alumno de ese docente. Mostrarlo
+      // pelado lo pintaba como "Inactivo" y sin plan en el listado del
+      // docente viejo, aunque hoy esté cursando con otro.
+      // Una baja con deuda real (sin sucesora) NO es historial
+      // resuelto: conserva su fila visible y sigue apareciendo.
+      const isNarrowedByRelation = Boolean(teacher_id || plan_id);
+
       const studentsWithPlan = new Set(
         rawResult.filter((r) => r.student_plan_id).map((r) => r.id),
       );
@@ -173,6 +184,8 @@ export const studentsController = {
 
       const result = rawResult.filter((r) => {
         if (r.student_plan_id) return true;
+
+        if (isNarrowedByRelation) return false;
 
         if (studentsWithPlan.has(r.id)) return false;
 

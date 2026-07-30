@@ -20,7 +20,7 @@ export const login = async (req, res) => {
     ]);
 
     if (users.length === 0) {
-      return res.status(400).json({
+      return res.status(401).json({
         success: false,
         error: "Usuario o contraseña no valido",
       });
@@ -31,7 +31,7 @@ export const login = async (req, res) => {
     const passwordMatch = await bcrypt.compare(password, user.password);
 
     if (!passwordMatch) {
-      return res.status(400).json({
+      return res.status(401).json({
         success: false,
         error: "Usuario o contraseña no valido",
       });

@@ -8,7 +8,6 @@ import Button from "../../components/ui/Button";
 import Checkbox from "../../components/form/Checkbox";
 import Input from "../../components/form/Input";
 import Select from "../../components/form/Select";
-import SubmitButton from "../../components/form/SubmitButton";
 import { Modal } from "../../components/ui/Modal";
 import { studentPlanService } from "../../services/studenPlan.service";
 import { isAdmin } from "../../utils/auth";
@@ -76,8 +75,7 @@ export function Students() {
   // start_date?, first_payment_option? }
   // first_payment_option solo se pide/usa para filas NUEVAS (sin
   // student_plan_id todavía). Una fila existente que solo cambia de
-  // docente no lo pide: se manda "FULL" fijo, porque no es un alta
-  // real (el alumno ya venía cursando).
+  // docente no lo pide: el backend copia la que ya tenía.
   // ======================================================
   const [formClasses, setFormClasses] = useState([]);
   const [removedClasses, setRemovedClasses] = useState([]);
@@ -333,8 +331,8 @@ export function Students() {
 
     // Solo las filas NUEVAS (planes recién agregados en esta edición,
     // sin student_plan_id todavía) necesitan la opción de primer pago.
-    // Un cambio de docente sobre una fila existente no la pide (se
-    // manda FULL fijo más abajo, sin preguntar).
+    // Un cambio de docente sobre una fila existente no la pide: el
+    // backend copia la que ya tenía esa inscripción.
     const missingOption = activeRows.some(
       (p) => !p.student_plan_id && !p.first_payment_option,
     );
@@ -363,21 +361,20 @@ export function Students() {
       // Actualizar o crear planes dinámicamente
       await Promise.all(
         activeRows.map(async (p) => {
-          // Si ya existía la fila y el docente cambió, cerramos el plan
-          // viejo (conserva el docente original, para no alterar pagos
-          // pasados) y abrimos uno nuevo. No es un alta real -> FULL fijo,
-          // sin preguntarle al admin. La deuda vieja (si la hay) se
-          // sigue rastreando sola contra la fila vieja.
+          // Cambio de docente: lo resuelve el backend en UNA sola
+          // transacción (cierra la fila vieja + abre la nueva copiando
+          // su first_payment_option). Antes se hacía acá con
+          // delete + create y un "FULL" fijo, y eso le pisaba la
+          // modalidad de primer pago al alumno cuando el cambio caía
+          // en el mismo mes del alta: con NEXT_MONTH pasaba de "Aún no
+          // corresponde" a "Debe", con HALF se le cobraba la primera
+          // cuota completa. Además, si el create fallaba después del
+          // delete, el alumno quedaba sin plan.
           if (p.student_plan_id && p.teacher_id !== p.original_teacher_id) {
-            await studentPlanService.delete(p.student_plan_id);
-
-            return studentPlanService.create({
-              student_id: selectedStudent.id,
-              teacher_id: p.teacher_id,
-              plan_id: p.plan_id,
-              start_date: getTodayLocal(),
-              first_payment_option: "FULL",
-            });
+            return studentPlanService.changeTeacher(
+              p.student_plan_id,
+              p.teacher_id,
+            );
           }
 
           if (p.student_plan_id) {
@@ -498,13 +495,6 @@ export function Students() {
         row.plan_id === planId ? { ...row, [field]: value } : row,
       ),
     );
-  };
-
-  const handleScroll = (e, targetId) => {
-    const target = document.getElementById(targetId);
-    if (target && target.scrollTop !== e.target.scrollTop) {
-      target.scrollTop = e.target.scrollTop;
-    }
   };
 
   useEffect(() => {
@@ -751,7 +741,8 @@ export function Students() {
 
                   {/* Solo se pide en planes NUEVOS (sin student_plan_id).
                       Un plan existente que solo cambia de docente no
-                      vuelve a preguntar esto. */}
+                      vuelve a preguntar esto: el backend copia la
+                      opción que ya tenía la inscripción. */}
                   {!row.student_plan_id && (
                     <Select
                       className="mt-2"

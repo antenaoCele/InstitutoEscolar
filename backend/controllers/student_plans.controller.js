@@ -1,6 +1,7 @@
 import { db } from "../db.js";
 import { createCrudController } from "../utils/crudFactory.js";
 import { isTeacherCompatibleWithPlan } from "../utils/student_plans.utils.js";
+import { getCurrentDateParts } from "../utils/dateUtils.js";
 import {
   getStudentPlanStatus,
   closeOverduePlansPastGracePeriod,
@@ -355,6 +356,177 @@ export const studentPlansController = {
           error.sqlMessage ||
           error.message ||
           "Error al actualizar el registro",
+      });
+    }
+  },
+
+  // =====================================================
+  // CAMBIO DE DOCENTE (transaccional)
+  //
+  // Cierra la fila actual y abre una nueva con el docente nuevo,
+  // COPIANDO su first_payment_option. No es un alta real: la
+  // modalidad de primer pago se definió en su momento y no se
+  // vuelve a elegir NI se inventa.
+  //
+  // Antes esto se hacía desde el frontend con delete + create y un
+  // "FULL" fijo. Eso rompía resolveChainOrigin() del service cuando
+  // el cambio caía en el MISMO MES del alta: la fila nueva entraba
+  // en sameMonthRows, pasaba a ser la que gobierna la cadena y le
+  // pisaba el HALF / NEXT_MONTH original. Con NEXT_MONTH el alumno
+  // pasaba de "Aún no corresponde" a "Debe" el mismo día del cambio;
+  // con HALF se le cobraba la primera cuota completa.
+  //
+  // Además va todo en una sola transacción: antes, si el create
+  // fallaba después del delete, el alumno quedaba sin plan.
+  // =====================================================
+  changeTeacher: async (req, res) => {
+    const id = Number(req.params.id);
+    const teacher_id = Number(req.body.teacher_id);
+
+    if (!id || Number.isNaN(id)) {
+      return res.status(400).json({
+        success: false,
+        message: "ID inválido",
+      });
+    }
+
+    if (!teacher_id || Number.isNaN(teacher_id)) {
+      return res.status(400).json({
+        success: false,
+        message: "Docente inválido",
+      });
+    }
+
+    try {
+      const [rows] = await db.execute(
+        `
+        SELECT
+          id,
+          student_id,
+          plan_id,
+          teacher_id,
+          start_date,
+          end_date,
+          first_payment_option
+        FROM student_plans
+        WHERE id = ?
+        `,
+        [id],
+      );
+
+      if (!rows.length) {
+        return res.status(404).json({
+          success: false,
+          message: "Inscripción no encontrada",
+        });
+      }
+
+      const current = rows[0];
+
+      if (current.end_date !== null) {
+        return res.status(400).json({
+          success: false,
+          message:
+            "La inscripción ya está dada de baja: no se le puede cambiar el docente.",
+        });
+      }
+
+      // Idempotente: si no cambió nada, no generamos una fila nueva al
+      // voleo (el front igual filtra, pero acá no dependemos de eso).
+      if (Number(current.teacher_id) === teacher_id) {
+        return res.json({
+          success: true,
+          changed: false,
+          message: "El docente ya era el asignado. No se modificó nada.",
+          data: { new_student_plan_id: current.id },
+        });
+      }
+
+      // Se valida ANTES de abrir la transacción: es una lectura de
+      // teacher_plans, no tiene nada que ver con las escrituras.
+      if (!(await isTeacherCompatibleWithPlan(teacher_id, current.plan_id))) {
+        return res.status(400).json({
+          success: false,
+          message: "El docente seleccionado no puede dictar ese plan.",
+        });
+      }
+
+      // Misma fuente de fecha que usa getStudentPlanStatus() para saber
+      // "hoy", así el que escribe y el que calcula no se contradicen.
+      const { date } = getCurrentDateParts();
+
+      const connection = await db.getConnection();
+
+      try {
+        await connection.beginTransaction();
+
+        // Sacamos al alumno de los horarios del docente que deja. El
+        // schedule en sí no se borra: puede tener otros alumnos anotados.
+        await connection.execute(
+          `DELETE ss FROM schedule_students ss
+           JOIN schedules sch ON sch.id = ss.schedule_id
+           WHERE ss.student_id = ?
+             AND sch.teacher_id = ?
+             AND sch.plan_id = ?`,
+          [current.student_id, current.teacher_id, current.plan_id],
+        );
+
+        // El "AND end_date IS NULL" protege de una baja concurrente
+        // (el cron, u otra pestaña abierta con datos viejos).
+        const [closeResult] = await connection.execute(
+          `UPDATE student_plans
+           SET end_date = ?
+           WHERE id = ? AND end_date IS NULL`,
+          [date, id],
+        );
+
+        if (!closeResult.affectedRows) {
+          await connection.rollback();
+
+          return res.status(409).json({
+            success: false,
+            message:
+              "La inscripción fue dada de baja por otro proceso. Recargá la pantalla e intentá de nuevo.",
+          });
+        }
+
+        const [insertResult] = await connection.execute(
+          `INSERT INTO student_plans
+             (student_id, plan_id, teacher_id, start_date, first_payment_option)
+           VALUES (?, ?, ?, ?, ?)`,
+          [
+            current.student_id,
+            current.plan_id,
+            teacher_id,
+            date,
+            current.first_payment_option,
+          ],
+        );
+
+        await connection.commit();
+
+        res.json({
+          success: true,
+          changed: true,
+          data: {
+            closed_student_plan_id: id,
+            new_student_plan_id: insertResult.insertId,
+            first_payment_option: current.first_payment_option,
+          },
+        });
+      } catch (error) {
+        await connection.rollback();
+        throw error;
+      } finally {
+        connection.release();
+      }
+    } catch (error) {
+      console.error(error);
+
+      res.status(500).json({
+        success: false,
+        message:
+          error.sqlMessage || error.message || "Error al cambiar el docente",
       });
     }
   },

@@ -31,8 +31,10 @@ api.interceptors.response.use(
   (response) => response,
 
   (error) => {
-    if (error.response?.status === 401) {
-      // Avisa a toda la aplicación que la sesión expiró
+    const status = error.response?.status;
+    const url = error.config?.url;
+
+    if (status === 401 && url !== "/login") {
       window.dispatchEvent(new Event("sessionExpired"));
     }
 

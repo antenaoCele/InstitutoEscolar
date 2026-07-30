@@ -61,6 +61,19 @@ router.post(
   studentPlansController.create,
 );
 
+// CAMBIO DE DOCENTE: cierra la inscripción actual y abre una nueva
+// copiando su first_payment_option, todo en una transacción. No usa
+// validateEditStudentPlans porque el body solo trae teacher_id; el
+// controller valida el tipo y la compatibilidad con el plan.
+router.put(
+  "/:id/change-teacher",
+  authentication,
+  authorization("ADMIN"),
+  ...validateID("student_plans"),
+  checkValidations,
+  studentPlansController.changeTeacher,
+);
+
 router.put(
   "/:id",
   authentication,

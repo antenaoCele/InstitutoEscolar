@@ -257,6 +257,15 @@ reasignación. En ese caso la fila vieja NO debe reclamar deuda
 propia — la obligación de ese período le corresponde a la fila
 que quedó vigente. Sin esto, el mismo período aparecería
 reclamado dos veces (una por cada fila).
+
+IMPORTANTE: la candidata a sucesora tiene que ser estrictamente
+POSTERIOR en el mismo orden que usa resolveChain (start_date ASC,
+id ASC). Con solo "start_date >= end_date" no alcanzaba: cuando el
+alta, el cambio de docente y la baja caen todos el mismo día, las
+dos filas quedan con start_date = end_date = hoy y cada una veía a
+la otra como su sucesora. Las dos se marcaban superseded, ninguna
+reclamaba la deuda y el alumno aparecía sin planes y sin deuda al
+darlo de baja.
 ========================================================= */
 async function hasSuccessor(plan) {
   if (plan.end_date === null) return false;
@@ -269,10 +278,22 @@ async function hasSuccessor(plan) {
       AND plan_id = ?
       AND id != ?
       AND start_date >= ?
-    ORDER BY start_date ASC
+      AND (
+        start_date > ?
+        OR (start_date = ? AND id > ?)
+      )
+    ORDER BY start_date ASC, id ASC
     LIMIT 1
     `,
-    [plan.student_id, plan.plan_id, plan.id, plan.end_date],
+    [
+      plan.student_id,
+      plan.plan_id,
+      plan.id,
+      plan.end_date,
+      plan.start_date,
+      plan.start_date,
+      plan.id,
+    ],
   );
 
   if (!rows.length) return false;

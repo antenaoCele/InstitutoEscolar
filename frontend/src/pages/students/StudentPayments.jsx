@@ -1,10 +1,8 @@
 import { useEffect, useState } from "react";
 import BasicTable from "../../components/tables/BasicTables/BasicTablesOne";
 import Button from "../../components/ui/Button";
-import Label from "../../components/form/Label";
 import Input from "../../components/form/Input";
 import Select from "../../components/form/Select";
-import SubmitButton from "../../components/form/SubmitButton";
 import { Modal } from "../../components/ui/Modal";
 import ComponentCard from "../../components/common/ComponentCard";
 import { PaymentService } from "../../services/payment.service";
@@ -118,6 +116,16 @@ export default function StudentPayments() {
   const [paymentPeriod, setPaymentPeriod] = useState("");
   const [originalPaymentPeriod, setOriginalPaymentPeriod] = useState(null);
   const [originalStudentPlanId, setOriginalStudentPlanId] = useState(null);
+
+  // Alumno y plan del pago que se está editando. Se guardan aparte
+  // porque las listas del formulario (getPayableStudents /
+  // getStudentActivePlans) están pensadas para un pago NUEVO y pueden
+  // no incluirlos: una vez saldada la deuda, la fila que originó una
+  // regularización deja de figurar como plan cobrable. Sin esto, los
+  // Select salían en blanco y el admin tenía que elegir otro plan,
+  // rompiendo la excepción del "período original" y comiéndose el
+  // cartel de "este alumno ya está al día".
+  const [editingPaymentContext, setEditingPaymentContext] = useState(null);
 
   // Fecha local (evita el corrimiento de día por UTC-3 de toISOString)
   const getLocalDateString = () => {
@@ -304,6 +312,7 @@ export default function StudentPayments() {
     setPaymentPeriod("");
     setOriginalPaymentPeriod(null);
     setOriginalStudentPlanId(null);
+    setEditingPaymentContext(null);
     setEditingPaymentId(null);
     setErrorsEditPayment({});
   };
@@ -426,6 +435,21 @@ export default function StudentPayments() {
     setPaymentPeriod(payment.payment_period);
     setOriginalPaymentPeriod(payment.payment_period);
     setErrorsEditPayment({});
+
+    // Guardamos alumno y plan del pago para poder inyectarlos en los
+    // Select si las listas del formulario no los traen (ver
+    // editStudentOptions / editStudentPlanOptions más abajo).
+    setEditingPaymentContext({
+      student: {
+        id: payment.student_id,
+        first_name: payment.first_name,
+        last_name: payment.last_name,
+      },
+      plan: {
+        student_plan_id: payment.student_plan_id,
+        plan_name: payment.plan_name,
+      },
+    });
 
     try {
       const { data } = await PaymentService.getStudentPlans(payment.student_id);
@@ -761,6 +785,46 @@ export default function StudentPayments() {
   const editPeriodOptions = getPeriodOptions(planStatus, effectiveExtraPeriod);
 
   // ======================================================
+  // OPCIONES DEL FORMULARIO DE EDICIÓN
+  // Inyectan el alumno / plan del pago que se está editando si las
+  // listas del formulario no los traen. No alteran el orden ni
+  // duplican nada: solo agregan lo que falta.
+  // ======================================================
+  const editStudentOptions = (() => {
+    const ctx = editingPaymentContext?.student;
+    if (!ctx) return students;
+
+    const exists = students.some((s) => String(s.id) === String(ctx.id));
+
+    return exists ? students : [...students, ctx];
+  })();
+
+  const editStudentPlanOptions = (() => {
+    const ctx = editingPaymentContext;
+    if (!ctx) return studentPlans;
+
+    // Si el usuario cambió de alumno, el plan del pago original ya no
+    // aplica: se muestran solo los planes del alumno nuevo.
+    if (String(selectedStudent) !== String(ctx.student.id)) {
+      return studentPlans;
+    }
+
+    const exists = studentPlans.some(
+      (p) => String(p.student_plan_id) === String(ctx.plan.student_plan_id),
+    );
+
+    return exists
+      ? studentPlans
+      : [
+          ...studentPlans,
+          {
+            student_plan_id: ctx.plan.student_plan_id,
+            plan_name: `${ctx.plan.plan_name} (plan de este pago)`,
+          },
+        ];
+  })();
+
+  // ======================================================
   // RETURN
   // ======================================================
   return (
@@ -938,7 +1002,7 @@ export default function StudentPayments() {
         >
           <option value="">Seleccione un estudiante</option>
 
-          {students.map((student) => (
+          {editStudentOptions.map((student) => (
             <option key={student.id} value={student.id}>
               {student.last_name}, {student.first_name}
             </option>
@@ -953,7 +1017,7 @@ export default function StudentPayments() {
         >
           <option value="">Seleccione un plan</option>
 
-          {studentPlans.map((plan) => (
+          {editStudentPlanOptions.map((plan) => (
             <option key={plan.student_plan_id} value={plan.student_plan_id}>
               {plan.plan_name}
             </option>

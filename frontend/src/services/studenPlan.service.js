@@ -6,6 +6,8 @@ export const studentPlanService = {
   create: (data) => api.post("/student_plans", data),
   update: (id, data) => api.put(`/student_plans/${id}`, data),
   delete: (id) => api.delete(`/student_plans/${id}`),
+  changeTeacher: (id, teacher_id) =>
+    api.put(`/student_plans/${id}/change-teacher`, { teacher_id }),
 
   // Estado de un plan puntual (académico + de cuenta + período a pagar).
   // Lo usa el formulario de pagos para saber si corresponde NORMAL o

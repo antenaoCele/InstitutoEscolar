@@ -399,6 +399,8 @@ export const paymentsController = {
       const keepsSamePlan =
         Number(newStudentPlanId) === Number(rows[0].student_plan_id);
 
+      const keepsSamePeriod = newPaymentPeriod === rows[0].payment_period;
+
       const validTargets = [
         status.overdue_period,
         status.current_period?.period,
@@ -416,12 +418,26 @@ export const paymentsController = {
         });
       }
 
-      const isRegularization = newPaymentPeriod === status.overdue_period;
+      // El tipo NO se puede deducir solo de status.overdue_period: cuando
+      // se edita una regularización, esa deuda YA está paga (la pagó este
+      // mismo pago), así que overdue_period vuelve null y el pago se
+      // degradaba silenciosamente a NORMAL, perdiendo el 15% de recargo.
+      // Cambiar la fecha de un pago le borraba el interés, alteraba el
+      // total recaudado del mes y la comisión del docente.
+      // Si no cambió ni el plan ni el período, se conserva el tipo original.
+      const isRegularization =
+        newPaymentPeriod === status.overdue_period ||
+        (keepsSamePlan &&
+          keepsSamePeriod &&
+          rows[0].payment_type === "REGULARIZATION");
 
       // Mismo criterio que en create(): la regularización se ata a la
       // fila que generó la deuda, no a la que se mandó desde el form.
+      // En una regularización PRESERVADA ya no hay overdue_student_plan_id
+      // (la deuda está saldada), así que se mantiene la fila a la que el
+      // pago ya apuntaba. Sin el ?? se escribía student_plan_id = NULL.
       const effectiveStudentPlanId = isRegularization
-        ? status.overdue_student_plan_id
+        ? (status.overdue_student_plan_id ?? newStudentPlanId)
         : newStudentPlanId;
 
       let planPrice;
