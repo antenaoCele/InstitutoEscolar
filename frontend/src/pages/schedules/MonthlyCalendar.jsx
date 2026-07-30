@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import axios from "axios";
 import { eventService } from "../../services/event.service";
 import { Modal } from "../../components/ui/Modal";
 import { isAdmin } from "../../utils/auth";
@@ -20,6 +21,8 @@ import {
   PreviousButton,
 } from "../../components/ui/ActionButtons";
 import { BirthdayIcon } from "../../icons";
+import { validateMonthlyCalendarForm } from "../../validators/entities/monthly_calendar.validator";
+import { useFeedbackModal } from "../../hooks/useFeedbackModal";
 
 export default function MonthlyCalendar() {
   // ======================================================
@@ -40,6 +43,7 @@ export default function MonthlyCalendar() {
   const [openCreateModal, setOpenCreateModal] = useState(false);
   const [openEditModal, setOpenEditModal] = useState(false);
   const [openDeleteModal, setOpenDeleteModal] = useState(false);
+  const { feedbackModal, showFeedback, closeFeedback } = useFeedbackModal();
 
   // ======================================================
   // EVENTO SELECCIONADO
@@ -88,8 +92,6 @@ export default function MonthlyCalendar() {
     try {
       const response = await eventService.getAll();
 
-      console.log(response.data.data);
-
       const normalizedEvents = (response.data.data || []).map((event) => ({
         ...event,
         date: event.date?.slice(0, 10),
@@ -103,11 +105,9 @@ export default function MonthlyCalendar() {
 
   const fetchHolidays = async () => {
     try {
-      const response = await fetch(
+      const { data } = await axios.get(
         `https://api.argentinadatos.com/v1/feriados/${year}`,
       );
-
-      const data = await response.json();
 
       setHolidays(data || []);
     } catch (error) {
@@ -160,17 +160,12 @@ export default function MonthlyCalendar() {
     try {
       setErrorsCreate({});
 
-      const newErrors = {};
+      const newErrors = validateMonthlyCalendarForm({
+        name: eventName,
+        date: eventDate,
+        hour: eventTime,
+      });
 
-      if (!eventName.trim()) {
-        newErrors.name = "Campo obligatorio.";
-      }
-      if (!eventDate) {
-        newErrors.date = "Campo obligatorio.";
-      }
-      if (!eventTime) {
-        newErrors.hour = "Campo obligatorio.";
-      }
       if (Object.keys(newErrors).length > 0) {
         setErrorsCreate(newErrors);
         return;
@@ -182,22 +177,23 @@ export default function MonthlyCalendar() {
         hour: eventTime,
       });
 
-      console.log(eventRes.data);
-
       setOpenCreateModal(false);
 
       resetForm();
 
       fetchEvents();
+
+      showFeedback("Evento creado correctamente.", "success");
     } catch (error) {
       const backendErrors = error.response?.data?.errors;
 
-      console.log("BACKEND ERROR:");
-
-      console.log(error.response?.data);
-
       if (backendErrors) {
         setErrorsCreate(mapErrors(backendErrors));
+      } else {
+        showFeedback(
+          error.response?.data?.message || "Error al crear el evento.",
+          "error",
+        );
       }
     }
   };
@@ -217,22 +213,16 @@ export default function MonthlyCalendar() {
     try {
       setErrorsEdit({});
 
-      const newErrors = {};
+      const newErrors = validateMonthlyCalendarForm({
+        name: eventName,
+        date: eventDate,
+        hour: eventTime,
+      });
 
-      if (!eventName.trim()) {
-        newErrors.name = "Campo obligatorio.";
-      }
-      if (!eventDate) {
-        newErrors.date = "Campo obligatorio.";
-      }
-      if (!eventTime) {
-        newErrors.hour = "Campo obligatorio.";
-      }
       if (Object.keys(newErrors).length > 0) {
         setErrorsEdit(newErrors);
         return;
       }
-
       await eventService.update(selectedEvent.id, {
         name: eventName,
         date: eventDate,
@@ -244,17 +234,19 @@ export default function MonthlyCalendar() {
       resetForm();
 
       fetchEvents();
+
+      showFeedback("Evento actualizado correctamente.", "success");
     } catch (error) {
       const backendErrors = error.response?.data?.errors;
 
-      console.log("UPDATE ERROR:");
-
       if (backendErrors) {
         setErrorsEdit(mapErrors(backendErrors));
+      } else {
+        showFeedback(
+          error.response?.data?.message || "Error al actualizar el evento.",
+          "error",
+        );
       }
-
-      console.log(error.response?.data);
-
       console.error(error);
     }
   };
@@ -271,12 +263,17 @@ export default function MonthlyCalendar() {
       setOpenDeleteModal(false);
 
       fetchEvents();
+
+      showFeedback("Evento eliminado correctamente.", "success");
     } catch (error) {
-      console.log("DELETE ERROR:");
-
-      console.log(error.response?.data);
-
       console.error(error);
+
+      setOpenDeleteModal(false);
+
+      showFeedback(
+        error.response?.data?.message || "Error al eliminar el evento.",
+        "error",
+      );
     }
   };
 
@@ -309,14 +306,20 @@ export default function MonthlyCalendar() {
   // ======================================================
   // DATOS DERIVADOS
   // ======================================================
+
+  // Obtenenemos la cantidad de días del mes
   const daysInMonth = new Date(year, month + 1, 0).getDate();
 
+  // Sabemos  en qué día de la semana comienza el mes
   const firstDayIndex = (new Date(year, month, 1).getDay() + 6) % 7;
 
+  // Creamos las celdas vacías
   const blanks = Array(firstDayIndex).fill(null);
 
+  // Creamos todos los días del mes
   const days = Array.from({ length: daysInMonth }, (_, i) => i + 1);
 
+  // Construimos la grilla del calendario
   const gridCells = [...blanks, ...days];
 
   // ======================================================
@@ -763,6 +766,18 @@ export default function MonthlyCalendar() {
 
           <YesButton title="Aceptar" onClick={confirmDelete} />
         </div>
+      </Modal>
+
+      <Modal isOpen={feedbackModal.open} onClose={closeFeedback}>
+        <h2
+          className={`text-lg font-semibold mb-4 ${
+            feedbackModal.type === "error" ? "text-red-600" : "text-green-600"
+          }`}
+        >
+          {feedbackModal.type === "error" ? "Error" : "Listo"}
+        </h2>
+
+        <p className="text-gray-600">{feedbackModal.message}</p>
       </Modal>
     </div>
   );
