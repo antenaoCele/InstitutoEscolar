@@ -372,6 +372,29 @@ export const validateName = (field, optional = false) => [
 ];
 
 /* =========================================================
+SUBJECT NAME
+========================================================= */
+export const validateSubjectName = (field, optional = false) => [
+  baseField(field, optional)
+    .trim()
+    .notEmpty()
+    .withMessage("Campo obligatorio.")
+    .bail()
+    .matches(/^[a-zA-Z0-9ñÑáéíóúÁÉÍÓÚ\s°º().,+\-/#]+$/)
+    .withMessage("Este campo no puede contener caracteres no válidos.")
+    .bail()
+    .isLength({ min: 3 })
+    .withMessage("Este campo debe superar los 3 caracteres.")
+    .bail()
+    .isLength({ max: 45 })
+    .withMessage("Este campo no puede superar los 45 caracteres.")
+    .bail()
+    .matches(/(?:.*[a-zA-ZñÑáéíóúÁÉÍÓÚ]){3,}/)
+    .withMessage("Este campo debe contener al menos 3 letras.")
+    .escape(),
+];
+
+/* =========================================================
 PASSWORD
 ========================================================= */
 export const validatePassword = (field, optional = false) => [
