@@ -225,3 +225,17 @@ export const isCurrentYearPastOrCurrentMonth = (month, year) => {
 
   return y === currentYear && m <= currentMonth;
 };
+
+/* =========================================================
+Materias
+========================================================= */
+
+export const isValidSubjectName = (value) => {
+  const text = value?.toString().trim() || "";
+
+  const validChars = /^[a-zA-Z0-9ñÑáéíóúÁÉÍÓÚ\s°º().,+\-/#]{3,45}$/;
+
+  const letters = text.match(/[a-zA-ZñÑáéíóúÁÉÍÓÚ]/g) || [];
+
+  return validChars.test(text) && letters.length >= 3;
+};
