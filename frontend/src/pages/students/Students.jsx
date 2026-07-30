@@ -1161,15 +1161,37 @@ export function Students() {
                     <h4 className="font-semibold">Debe</h4>
                     <p
                       className={
-                        plan.debt > 0
+                        plan.total_debt > 0
                           ? "text-red-600 font-semibold"
                           : "text-gray-500"
                       }
                     >
-                      {plan.debt > 0
-                        ? `$${Number(plan.debt).toLocaleString("es-AR")}`
+                      {plan.total_debt > 0
+                        ? `$${Number(plan.total_debt).toLocaleString("es-AR")}`
                         : "Al día"}
                     </p>
+
+                    {/* Desglose del total: el período vencido lleva el
+                        15% de recargo, el mes en curso no. Se cobran
+                        por separado, de a uno, empezando por el
+                        vencido. */}
+                    {plan.total_debt > 0 && (
+                      <div className="text-xs text-gray-500 mt-1">
+                        {plan.debt > 0 && (
+                          <span className="block">
+                            {plan.overdue_period} (vencido, +15%): $
+                            {Number(plan.debt).toLocaleString("es-AR")}
+                          </span>
+                        )}
+
+                        {plan.current_debt > 0 && (
+                          <span className="block">
+                            {plan.current_debt_period}: $
+                            {Number(plan.current_debt).toLocaleString("es-AR")}
+                          </span>
+                        )}
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>

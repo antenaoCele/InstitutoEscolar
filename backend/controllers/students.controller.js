@@ -347,12 +347,21 @@ export const studentsController = {
         [studentId],
       );
 
-      // Cuánto debe cada plan: su período vencido, calculado con el
-      // precio histórico de ESE período (nunca el actual) + 15%. Si
-      // ese período era la primera cuota y el alumno eligió media
-      // cuota, el 15% se aplica sobre la mitad, no sobre el total
-      // (getExpectedBaseAmount centraliza esa regla). Si no debe
-      // nada, 0.
+      // Cuánto debe cada plan:
+      //  - debt: el período VENCIDO, calculado con el precio histórico
+      //    de ESE período (nunca el actual) + 15%. Si ese período era
+      //    la primera cuota y el alumno eligió media cuota, el 15% se
+      //    aplica sobre la mitad (getExpectedBaseAmount centraliza esa
+      //    regla).
+      //  - current_debt: la cuota del mes en curso, SIN recargo, y solo
+      //    cuando además hay una deuda vieja adelante (status
+      //    "on_hold"). Si el alumno no arrastra nada, el mes en curso
+      //    todavía está en plazo y no cuenta como deuda: la ficha sigue
+      //    diciendo "Al día".
+      //  - total_debt: la suma. Es el número grande de la ficha, para
+      //    que a simple vista no parezca que la deuda vieja se perdió.
+      // Se cobran por separado y de a uno (el formulario de pago ofrece
+      // el vencido primero), pero acá se muestran juntos.
       const plansWithDebtRaw = await Promise.all(
         allPlans.map(async (plan) => {
           const status = await getStudentPlanStatus(plan.id);
@@ -366,17 +375,21 @@ export const studentsController = {
             return null;
           }
 
+          // Fila "cruda" del plan, que es lo que espera
+          // getExpectedBaseAmount para resolver la cadena.
+          const planRef = {
+            id: plan.id,
+            student_id: studentId,
+            plan_id: plan.plan_id,
+            start_date: plan.start_date,
+            first_payment_option: plan.first_payment_option,
+          };
+
           let debt = 0;
 
           if (status.overdue_period) {
             const baseAmount = await getExpectedBaseAmount(
-              {
-                id: plan.id,
-                student_id: studentId,
-                plan_id: plan.plan_id,
-                start_date: plan.start_date,
-                first_payment_option: plan.first_payment_option,
-              },
+              planRef,
               status.overdue_period,
             );
 
@@ -384,6 +397,44 @@ export const studentsController = {
               debt = Math.round(baseAmount * 1.15 * 100) / 100;
             }
           }
+
+          // Suma el mes en curso cuando hay algo que cobrar por él:
+          //   - "pending": no está pagado y no hay deuda vieja adelante.
+          //   - "on_hold": no está pagado y además arrastra una deuda.
+          // Sin recargo en los dos casos: el 15% es solo del período
+          // vencido.
+          // Quedan afuera "paid" (ya cobrado) y "not_due_yet" (eligió
+          // empezar el mes siguiente y todavía no corresponde), así
+          // que "Al día" significa que no hay nada que cobrar hoy.
+          // Un plan de baja no tiene current_period y tampoco suma.
+          //
+          // OJO: pasado el día 20, scanEndPeriod incluye el mes actual,
+          // así que overdue_period puede SER el mes en curso. En ese
+          // caso es una sola obligación, no dos: ya está contada arriba
+          // (con el 15%) y no se vuelve a sumar acá.
+          let currentDebt = 0;
+          const currentStatus = status.current_period?.status;
+          const currentPeriodName = status.current_period?.period;
+
+          const alreadyCountedAsOverdue =
+            currentPeriodName != null &&
+            currentPeriodName === status.overdue_period;
+
+          if (
+            !alreadyCountedAsOverdue &&
+            (currentStatus === "pending" || currentStatus === "on_hold")
+          ) {
+            const baseAmount = await getExpectedBaseAmount(
+              planRef,
+              status.current_period.period,
+            );
+
+            if (baseAmount != null) {
+              currentDebt = Math.round(baseAmount * 100) / 100;
+            }
+          }
+
+          const totalDebt = Math.round((debt + currentDebt) * 100) / 100;
 
           return {
             id: plan.id,
@@ -393,7 +444,10 @@ export const studentsController = {
             start_date: plan.start_date,
             academic_status: status.academic_status,
             debt,
+            current_debt: currentDebt,
+            total_debt: totalDebt,
             overdue_period: status.overdue_period,
+            current_debt_period: status.current_period?.period ?? null,
           };
         }),
       );
