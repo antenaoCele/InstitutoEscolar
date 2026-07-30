@@ -283,3 +283,38 @@ export function CopyButton({ onClick, disabled = false, title = "" }) {
     </Button>
   );
 }
+
+export function ViewButtonWeekWhite({ onClick, title = "" }) {
+  return (
+    <Button
+      title={title}
+      size="sm"
+      onClick={onClick}
+      className="
+        cursor-pointer
+        w-10
+        h-10
+        rounded-lg
+
+        flex
+        items-center
+        justify-center
+
+        bg-cyan-500
+        hover:bg-cyan-600
+
+        transition-all
+        duration-200
+        hover:scale-105
+      "
+    >
+      <EyeIcon
+        style={{
+          width: 20,
+          height: 20,
+          color: "white",
+        }}
+      />
+    </Button>
+  );
+}
