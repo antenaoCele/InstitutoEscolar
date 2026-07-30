@@ -24,7 +24,8 @@ export const validateUserForm = ({ first_name, last_name, username }) => {
   if (isRequired(username)) {
     errors.username = "Campo obligatorio.";
   } else if (!isValidUsername(username)) {
-    errors.username = "El usuario debe ser alfanumérico (3-45 caracteres).";
+    errors.username =
+      "El nombre de usuario solo debe contener letras o números (3 a 45 caracteres).";
   }
 
   return errors;
