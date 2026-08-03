@@ -17,6 +17,8 @@ import { sortByProperty } from "../../utils/sort";
 import { mapErrors } from "../../validators/helpers/errorHelpers";
 import { useFeedbackModal } from "../../hooks/useFeedbackModal";
 import { validateSubjectForm } from "../../validators/entities/subjects.validator";
+import Pagination from "../../components/ui/Pagination";
+import { usePagination } from "../../hooks/usePagination";
 
 export function Subjects() {
   // ======================================================
@@ -215,6 +217,17 @@ export function Subjects() {
 
   const showCreateButtons = isAdmin();
 
+  const {
+    currentPage,
+    totalPages,
+    currentData: currentSubjects,
+    setCurrentPage,
+  } = usePagination({
+    data: filteredSubjects,
+    itemsPerPage: 3,
+    dependencies: [searchName, subjects],
+  });
+
   let columns = [
     {
       header: "Materias",
@@ -287,19 +300,13 @@ export function Subjects() {
         />
       </div>
 
-      <BasicTable
-        title={tableTitle}
-        columns={columns}
-        data={filteredSubjects}
-      />
+      <BasicTable title={tableTitle} columns={columns} data={currentSubjects} />
 
-      {showCreateButtons && (
-        <div className="mt-8">
-          <Button onClick={openCreate} className={buttonClass}>
-            Crear Materia
-          </Button>
-        </div>
-      )}
+      <Pagination
+        currentPage={currentPage}
+        totalPages={totalPages}
+        onPageChange={setCurrentPage}
+      />
 
       <Modal
         isOpen={openCreateModal}
