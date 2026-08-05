@@ -12,16 +12,23 @@ export const scheduleStudentsController = {
         SELECT
           ss.id,
           ss.schedule_id,
+          ss.plan_id,
+          p.name AS plan_name,
           st.id AS student_id,
           st.first_name,
           st.last_name
         FROM schedule_students ss
         JOIN students st
           ON st.id = ss.student_id
+        JOIN plans p
+          ON p.id = ss.plan_id
       `);
 
       res.json({ success: true, total: rows.length, data: rows });
     } catch (error) {
+      console.log("ERROR EN GETALL SCHEDULE_STUDENTS");
+      console.log(error);
+
       res.status(500).json({
         success: false,
         message: "Error al obtener los registros",
@@ -35,12 +42,23 @@ export const scheduleStudentsController = {
 
       const [rows] = await db.execute(
         `
-        SELECT ss.id, ss.schedule_id, ss.student_id, 
-        st.first_name AS student_first_name, st.last_name AS student_last_name,
-        sc.start_time, sc.end_time
+        SELECT
+          ss.id,
+          ss.schedule_id,
+          ss.student_id,
+          ss.plan_id,
+          p.name AS plan_name,
+          st.first_name AS student_first_name,
+          st.last_name AS student_last_name,
+          sc.start_time,
+          sc.end_time
         FROM schedule_students ss
-        JOIN schedules sc ON ss.schedule_id = sc.id
-        JOIN students st ON ss.student_id = st.id
+        JOIN schedules sc
+          ON ss.schedule_id = sc.id
+        JOIN students st
+          ON ss.student_id = st.id
+        JOIN plans p
+          ON p.id = ss.plan_id
         WHERE ss.id = ?
       `,
         [id],

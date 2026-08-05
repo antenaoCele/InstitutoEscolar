@@ -12,8 +12,6 @@ export const schedulesController = {
       SELECT
           s.id,
           s.teacher_id,
-          s.plan_id,
-          p.name AS plan_name,
           t.first_name,
           t.last_name,
           s.start_time,
@@ -23,8 +21,6 @@ export const schedulesController = {
       FROM schedules s
       JOIN teachers t
           ON t.id = s.teacher_id
-      LEFT JOIN plans p
-          ON p.id = s.plan_id
       ORDER BY s.day, s.start_time
     `);
 
@@ -53,7 +49,6 @@ export const schedulesController = {
         SELECT
           s.id,
           s.teacher_id,
-          s.plan_id AS plan_name,
           t.first_name,
           t.last_name,
           s.start_time,
@@ -88,9 +83,6 @@ export const schedulesController = {
   },
 
   getInfo: async (req, res) => {
-    console.log("ENTRÓ A GETINFO");
-    console.log(req.params.id);
-
     try {
       const id = Number(req.params.id);
 
@@ -111,12 +103,12 @@ export const schedulesController = {
         FROM schedules s
         JOIN teachers t
             ON t.id = s.teacher_id
-        JOIN plans p
-            ON p.id = s.plan_id
         LEFT JOIN schedule_students ss
             ON ss.schedule_id = s.id
         LEFT JOIN students st
             ON st.id = ss.student_id
+        LEFT JOIN plans p
+            ON p.id = ss.plan_id
         LEFT JOIN plan_subjects ps
             ON ps.plan_id = p.id
         LEFT JOIN subjects sub
@@ -128,8 +120,6 @@ export const schedulesController = {
         `,
         [id],
       );
-
-      console.log(rows);
 
       if (!rows.length) {
         return res.status(404).json({
@@ -218,38 +208,37 @@ export const schedulesController = {
 
       await connection.beginTransaction();
 
-      const { teacher_id, plan_id, start_time, day, classroom, students } =
-        req.body;
+      const { teacher_id, start_time, day, classroom, students } = req.body;
 
       const [result] = await connection.execute(
         `
         INSERT INTO schedules
         (
         teacher_id,
-        plan_id,
         start_time,
         end_time,
         day,
         classroom
         )
-        VALUES (?,?, ?, ADDTIME(?, '01:30:00'), ?, ?)
+        VALUES (?, ?, ADDTIME(?, '01:30:00'), ?, ?)
         `,
-        [teacher_id, plan_id, start_time, start_time, day, classroom],
+        [teacher_id, start_time, start_time, day, classroom],
       );
 
       const scheduleId = result.insertId;
 
-      for (const student_id of students) {
+      for (const student of students) {
         await connection.execute(
           `
           INSERT INTO schedule_students
           (
             schedule_id,
-            student_id
+            student_id,
+            plan_id
           )
-          VALUES (?, ?)
+          VALUES (?, ?, ?)
           `,
-          [scheduleId, student_id],
+          [scheduleId, student.id, student.plan_id],
         );
       }
 
@@ -258,7 +247,6 @@ export const schedulesController = {
         SELECT
           id,
           teacher_id,
-          plan_id,
           start_time,
           end_time,
           day,
@@ -285,6 +273,9 @@ export const schedulesController = {
         await connection.rollback();
       }
 
+      console.log("ERROR EN CREATE SCHEDULE");
+      console.log(error);
+
       res.status(500).json({
         error: error.message,
       });
@@ -305,8 +296,7 @@ export const schedulesController = {
 
       const id = Number(req.params.id);
 
-      const { teacher_id, plan_id, start_time, day, classroom, students } =
-        req.body;
+      const { teacher_id, start_time, day, classroom, students } = req.body;
 
       const [rows] = await connection.execute(
         "SELECT * FROM schedules WHERE id = ?",
@@ -316,7 +306,6 @@ export const schedulesController = {
       const current = rows[0];
 
       const newTeacherId = teacher_id ?? current.teacher_id;
-      const newPlanId = plan_id ?? current.plan_id;
       const newStartTime = start_time ?? current.start_time;
       const newDay = day ?? current.day;
       const newClassroom = classroom ?? current.classroom;
@@ -325,22 +314,13 @@ export const schedulesController = {
         `
         UPDATE schedules
         SET teacher_id = ?,
-            plan_id = ?,
             start_time = ?,
             end_time = ADDTIME(?, '01:30:00'),
             day = ?,
             classroom = ?
         WHERE id = ?
         `,
-        [
-          newTeacherId,
-          newPlanId,
-          newStartTime,
-          newStartTime,
-          newDay,
-          newClassroom,
-          id,
-        ],
+        [newTeacherId, newStartTime, newStartTime, newDay, newClassroom, id],
       );
 
       await connection.execute(
@@ -351,17 +331,18 @@ export const schedulesController = {
         [id],
       );
 
-      for (const student_id of students) {
+      for (const student of students) {
         await connection.execute(
           `
           INSERT INTO schedule_students
           (
             schedule_id,
-            student_id
+            student_id,
+            plan_id
           )
-          VALUES (?, ?)
+          VALUES (?, ?, ?)
           `,
-          [id, student_id],
+          [id, student.id, student.plan_id],
         );
       }
 
@@ -370,7 +351,6 @@ export const schedulesController = {
         SELECT
           id,
           teacher_id,
-          plan_id,
           start_time,
           end_time,
           day,

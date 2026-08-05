@@ -53,7 +53,7 @@ export default function WeeklyCalendar() {
   // FORMULARIO DEL HORARIO
   // ======================================================
   const [teacherId, setTeacherId] = useState("");
-  const [selectedPlan, setSelectedPlan] = useState("");
+  const [selectedPlan, setSelectedPlan] = useState(""); // Filtro, no se guarda
   const [selectedDay, setSelectedDay] = useState("");
   const [selectedTime, setSelectedTime] = useState("");
   const [classroom, setClassroom] = useState("");
@@ -276,6 +276,35 @@ export default function WeeklyCalendar() {
     return formatted;
   };
 
+  // Valida el formulario y agrega el chequeo de plan por alumno
+  const validateForm = () => {
+    const newErrors = validateWeeklyCalendarForm({
+      teacherId,
+      selectedPlan,
+      selectedDay,
+      selectedTime,
+      classroom,
+      selectedStudents,
+    });
+
+    // El plan dejó de ser un campo del horario: es solo un filtro
+    delete newErrors.plan_id;
+
+    if (selectedStudents.some((s) => !s.plan_id)) {
+      newErrors.students =
+        "Hay estudiantes sin plan asignado. Quitalos y volvé a agregarlos.";
+    }
+
+    return newErrors;
+  };
+
+  // Devuelve el payload de estudiantes: [{ id, plan_id }]
+  const buildStudentsPayload = () =>
+    selectedStudents.map((student) => ({
+      id: student.id,
+      plan_id: student.plan_id,
+    }));
+
   // ======================================================
   // HANDLES CRUD
   // ======================================================
@@ -288,14 +317,7 @@ export default function WeeklyCalendar() {
   };
 
   const handleCreate = async () => {
-    const newErrors = validateWeeklyCalendarForm({
-      teacherId,
-      selectedPlan,
-      selectedDay,
-      selectedTime,
-      classroom,
-      selectedStudents,
-    });
+    const newErrors = validateForm();
 
     if (Object.keys(newErrors).length > 0) {
       setErrorsCreate(newErrors);
@@ -307,11 +329,10 @@ export default function WeeklyCalendar() {
 
       await ScheduleService.create({
         teacher_id: teacherId,
-        plan_id: selectedPlan,
         start_time: selectedTime,
         day: selectedDay,
         classroom,
-        students: selectedStudents.map((student) => student.id),
+        students: buildStudentsPayload(),
       });
 
       setOpenCreateModal(false);
@@ -346,9 +367,12 @@ export default function WeeklyCalendar() {
     setSelectedSchedule(schedule);
 
     setTeacherId(schedule.teacher_id);
-    setSelectedPlan(schedule.plan_id || "");
+
+    // El plan es solo un filtro: arranca vacío
+    setSelectedPlan("");
 
     await fetchAvailablePlans(schedule.teacher_id);
+
     setSelectedDay(schedule.day);
     setSelectedTime(schedule.start_time.slice(0, 5));
     setClassroom(schedule.classroom);
@@ -362,12 +386,14 @@ export default function WeeklyCalendar() {
         id: student.student_id,
         first_name: student.first_name,
         last_name: student.last_name,
+        plan_id: student.plan_id,
+        plan_name: student.plan_name,
       })),
     );
 
     setIncompatibleStudents([]);
 
-    await fetchAvailableStudents(schedule.teacher_id, schedule.plan_id);
+    await fetchAvailableStudents(schedule.teacher_id, "");
 
     setOpenEditModal(true);
   };
@@ -383,14 +409,7 @@ export default function WeeklyCalendar() {
       return;
     }
 
-    const newErrors = validateWeeklyCalendarForm({
-      teacherId,
-      selectedPlan,
-      selectedDay,
-      selectedTime,
-      classroom,
-      selectedStudents,
-    });
+    const newErrors = validateForm();
 
     if (Object.keys(newErrors).length > 0) {
       setErrorsEdit(newErrors);
@@ -402,11 +421,10 @@ export default function WeeklyCalendar() {
 
       await ScheduleService.update(selectedSchedule.id, {
         teacher_id: teacherId,
-        plan_id: selectedPlan,
         start_time: selectedTime,
         day: selectedDay,
         classroom,
-        students: selectedStudents.map((student) => student.id),
+        students: buildStudentsPayload(),
         schedule_id: selectedSchedule.id,
       });
 
@@ -497,20 +515,34 @@ export default function WeeklyCalendar() {
 
     if (exists) return;
 
+    const setErrors = isEdit ? setErrorsEdit : setErrorsCreate;
+
     const { data } = await studentService.getPlans(student.id, teacherId);
 
-    if (data.data.length === 0) {
-      if (isEdit) {
-        setErrorsEdit((prev) => ({
-          ...prev,
-          plans: `${student.last_name}, ${student.first_name} no posee planes compatibles con el docente seleccionado.`,
-        }));
-      } else {
-        setErrorsCreate((prev) => ({
-          ...prev,
-          plans: `${student.last_name}, ${student.first_name} no posee planes compatibles con el docente seleccionado.`,
-        }));
-      }
+    const plans = data.data || [];
+
+    if (plans.length === 0) {
+      setErrors((prev) => ({
+        ...prev,
+        plans: `${student.last_name}, ${student.first_name} no posee planes compatibles con el docente seleccionado.`,
+      }));
+
+      setSelectedStudentId("");
+
+      return;
+    }
+
+    // Si hay filtro de plan, se usa ese. Si no, solo se resuelve
+    // automáticamente cuando el estudiante tiene un único plan.
+    const matchedPlan =
+      plans.find((p) => String(p.id) === String(selectedPlan)) ??
+      (plans.length === 1 ? plans[0] : null);
+
+    if (!matchedPlan) {
+      setErrors((prev) => ({
+        ...prev,
+        plans: `${student.last_name}, ${student.first_name} tiene más de un plan con este docente. Elegí el plan en el filtro antes de agregarlo.`,
+      }));
 
       setSelectedStudentId("");
 
@@ -518,22 +550,22 @@ export default function WeeklyCalendar() {
     }
 
     // Limpiar el mensaje de error
-    if (isEdit) {
-      setErrorsEdit((prev) => ({
-        ...prev,
-        plans: "",
-        studentConflict: "",
-      }));
-    } else {
-      setErrorsCreate((prev) => ({
-        ...prev,
-        plans: "",
-        studentConflict: "",
-      }));
-    }
+    setErrors((prev) => ({
+      ...prev,
+      plans: "",
+      students: "",
+      studentConflict: "",
+    }));
 
-    // Agregar estudiante
-    setSelectedStudents((prev) => [...prev, student]);
+    // Agregar estudiante con su plan
+    setSelectedStudents((prev) => [
+      ...prev,
+      {
+        ...student,
+        plan_id: matchedPlan.id,
+        plan_name: matchedPlan.name,
+      },
+    ]);
 
     setSelectedStudentId("");
   };
@@ -543,17 +575,21 @@ export default function WeeklyCalendar() {
       prev.filter((student) => student.id !== studentId),
     );
 
+    setIncompatibleStudents((prev) => prev.filter((id) => id !== studentId));
+
     await fetchAvailableStudents(teacherId, selectedPlan);
 
     setErrorsCreate((prev) => ({
       ...prev,
       plans: "",
+      students: "",
       studentConflict: "",
     }));
 
     setErrorsEdit((prev) => ({
       ...prev,
       plans: "",
+      students: "",
       studentConflict: "",
     }));
   };
@@ -605,6 +641,8 @@ export default function WeeklyCalendar() {
     fetchStudents();
   }, []);
 
+  // Al cambiar de docente en edición, verifica que el plan con el
+  // que quedó cargado cada estudiante siga siendo válido.
   useEffect(() => {
     if (!isEditing || !teacherId || selectedStudents.length === 0) return;
 
@@ -614,7 +652,13 @@ export default function WeeklyCalendar() {
       for (const student of selectedStudents) {
         const response = await studentService.getPlans(student.id, teacherId);
 
-        if (response.data.data.length === 0) {
+        const plans = response.data.data || [];
+
+        const stillValid = plans.some(
+          (p) => String(p.id) === String(student.plan_id),
+        );
+
+        if (!stillValid) {
           incompatible.push(student.id);
         }
       }
@@ -991,37 +1035,6 @@ export default function WeeklyCalendar() {
           )}
         </div>
 
-        {/* Plan */}
-        <div className="flex flex-col mb-4">
-          <Label>Plan</Label>
-
-          <Select
-            disabled={!teacherId}
-            value={selectedPlan}
-            onChange={async (e) => {
-              const plan = e.target.value;
-
-              setSelectedPlan(plan);
-
-              await fetchAvailableStudents(teacherId, plan);
-            }}
-          >
-            <option value="">
-              {teacherId ? "Seleccionar plan" : "Seleccione primero un docente"}
-            </option>
-
-            {availablePlans.map((plan) => (
-              <option key={plan.id} value={plan.id}>
-                {plan.name}
-              </option>
-            ))}
-          </Select>
-
-          {errorsCreate.plan_id && (
-            <p className="text-red-500 text-sm mt-1">{errorsCreate.plan_id}</p>
-          )}
-        </div>
-
         {/* Día */}
         <div className="flex flex-col mb-4">
           <Label>Día</Label>
@@ -1092,6 +1105,38 @@ export default function WeeklyCalendar() {
           )}
         </div>
 
+        {/* Plan (filtro) */}
+        <div className="flex flex-col mb-4">
+          <Label>Filtrar por plan (opcional)</Label>
+
+          <Select
+            disabled={!teacherId}
+            value={selectedPlan}
+            onChange={async (e) => {
+              const plan = e.target.value;
+
+              setSelectedPlan(plan);
+
+              await fetchAvailableStudents(teacherId, plan);
+            }}
+          >
+            <option value="">
+              {teacherId ? "Todos los planes" : "Seleccione primero un docente"}
+            </option>
+
+            {availablePlans.map((plan) => (
+              <option key={plan.id} value={plan.id}>
+                {plan.name}
+              </option>
+            ))}
+          </Select>
+
+          <p className="text-xs text-gray-500 mt-1">
+            El plan queda registrado por estudiante. Podés cambiar el filtro y
+            seguir agregando alumnos de otros planes.
+          </p>
+        </div>
+
         {/* Estudiante */}
         <div className="flex flex-col mb-2">
           <Label>Estudiante</Label>
@@ -1149,6 +1194,9 @@ export default function WeeklyCalendar() {
             >
               <span>
                 {student.last_name}, {student.first_name}
+                <span className="ml-2 text-xs text-gray-500">
+                  {student.plan_name}
+                </span>
               </span>
 
               <button
@@ -1171,21 +1219,11 @@ export default function WeeklyCalendar() {
             </div>
           )}
 
-          {selectedStudents.map((student) => (
-            <div key={student.id}>
-              {errorsCreate.studentConflict && (
-                <div className="mt-4 text-sm text-red-500">
-                  {errorsCreate.studentConflict}
-                </div>
-              )}
-              {incompatibleStudents.includes(student.id) && (
-                <div className="mt-4 text-sm text-red-500">
-                  {`${student.last_name}, ${student.first_name}`} no posee
-                  planes compatibles con el docente seleccionado.
-                </div>
-              )}
+          {errorsCreate.studentConflict && (
+            <div className="mt-4 text-sm text-red-500">
+              {errorsCreate.studentConflict}
             </div>
-          ))}
+          )}
         </div>
 
         <div className="flex justify-end gap-4 mt-10">
@@ -1227,37 +1265,6 @@ export default function WeeklyCalendar() {
 
           {errorsEdit.teacher_id && (
             <p className="mt-1 text-sm text-red-500">{errorsEdit.teacher_id}</p>
-          )}
-        </div>
-
-        {/* Plan */}
-        <div className="flex flex-col mb-4">
-          <Label>Plan</Label>
-
-          <Select
-            disabled={!teacherId}
-            value={selectedPlan}
-            onChange={async (e) => {
-              const plan = e.target.value;
-
-              setSelectedPlan(plan);
-
-              await fetchAvailableStudents(teacherId, plan);
-            }}
-          >
-            <option value="">
-              {teacherId ? "Seleccionar plan" : "Seleccione primero un docente"}
-            </option>
-
-            {availablePlans.map((plan) => (
-              <option key={plan.id} value={plan.id}>
-                {plan.name}
-              </option>
-            ))}
-          </Select>
-
-          {errorsEdit.plan_id && (
-            <p className="text-red-500 text-sm mt-1">{errorsEdit.plan_id}</p>
           )}
         </div>
 
@@ -1327,6 +1334,38 @@ export default function WeeklyCalendar() {
           )}
         </div>
 
+        {/* Plan (filtro) */}
+        <div className="flex flex-col mb-4">
+          <Label>Filtrar por plan (opcional)</Label>
+
+          <Select
+            disabled={!teacherId}
+            value={selectedPlan}
+            onChange={async (e) => {
+              const plan = e.target.value;
+
+              setSelectedPlan(plan);
+
+              await fetchAvailableStudents(teacherId, plan);
+            }}
+          >
+            <option value="">
+              {teacherId ? "Todos los planes" : "Seleccione primero un docente"}
+            </option>
+
+            {availablePlans.map((plan) => (
+              <option key={plan.id} value={plan.id}>
+                {plan.name}
+              </option>
+            ))}
+          </Select>
+
+          <p className="text-xs text-gray-500 mt-1">
+            El plan queda registrado por estudiante. Podés cambiar el filtro y
+            seguir agregando alumnos de otros planes.
+          </p>
+        </div>
+
         {/* Estudiante */}
         <div className="flex flex-col mb-2">
           <Label>Estudiante</Label>
@@ -1370,38 +1409,55 @@ export default function WeeklyCalendar() {
         {/* Lista */}
         <div className="space-y-2 mt-4">
           {selectedStudents.map((student) => (
-            <div
-              key={student.id}
-              className="
-                flex
-                justify-between
-                items-center
-                border
-                rounded
-                px-3
-                py-2
-              "
-            >
-              <span>
-                {student.last_name}, {student.first_name}
-              </span>
-
-              <button
-                type="button"
-                onClick={() => handleRemoveStudent(student.id)}
+            <div key={student.id}>
+              <div
                 className="
-                  cursor-pointer
-                  text-red-500
-                  font-bold
+                  flex
+                  justify-between
+                  items-center
+                  border
+                  rounded
+                  px-3
+                  py-2
                 "
               >
-                ✕
-              </button>
+                <span>
+                  {student.last_name}, {student.first_name}
+                  <span className="ml-2 text-xs text-gray-500">
+                    {student.plan_name}
+                  </span>
+                </span>
+
+                <button
+                  type="button"
+                  onClick={() => handleRemoveStudent(student.id)}
+                  className="
+                    cursor-pointer
+                    text-red-500
+                    font-bold
+                  "
+                >
+                  ✕
+                </button>
+              </div>
+
+              {incompatibleStudents.includes(student.id) && (
+                <div className="mt-1 text-sm text-red-500">
+                  {`${student.last_name}, ${student.first_name}`} no tiene ese
+                  plan con el docente seleccionado.
+                </div>
+              )}
             </div>
           ))}
 
           {errorsEdit.plans && (
             <div className="mt-4 text-sm text-red-500">{errorsEdit.plans}</div>
+          )}
+
+          {errorsEdit.studentConflict && (
+            <div className="mt-4 text-sm text-red-500">
+              {errorsEdit.studentConflict}
+            </div>
           )}
         </div>
 
