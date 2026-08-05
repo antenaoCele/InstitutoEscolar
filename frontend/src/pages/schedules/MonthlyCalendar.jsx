@@ -22,7 +22,7 @@ import {
 } from "../../components/ui/ActionButtons";
 import { BirthdayIcon } from "../../icons";
 import { validateMonthlyCalendarForm } from "../../validators/entities/monthly_calendar.validator";
-import { useFeedbackModal } from "../../hooks/useFeedbackModal";
+import { useFeedbackModal } from "../../hooks/shared/useFeedBackModal";
 
 export default function MonthlyCalendar() {
   // ======================================================

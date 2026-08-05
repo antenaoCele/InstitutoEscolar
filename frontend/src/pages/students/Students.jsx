@@ -20,7 +20,7 @@ import {
   NoButton,
 } from "../../components/ui/ActionButtons";
 import { sortByProperty, sortByPersonName } from "../../utils/sort";
-import { useFeedbackModal } from "../../hooks/useFeedbackModal";
+import { useFeedbackModal } from "../../hooks/shared/useFeedBackModal";
 import { mapErrors } from "../../validators/helpers/errorHelpers";
 import { validateStudentForm } from "../../validators/entities/student.validator";
 import { getTodayLocal } from "../../utils/date.js";

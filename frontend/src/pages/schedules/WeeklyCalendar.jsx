@@ -16,7 +16,7 @@ import {
   ViewButtonWeekWhite,
 } from "../../components/ui/ActionButtons";
 import { validateWeeklyCalendarForm } from "../../validators/entities/weeklyCalendar.validator";
-import { useFeedbackModal } from "../../hooks/useFeedbackModal";
+import { useFeedbackModal } from "../../hooks/shared/useFeedBackModal";
 
 export default function WeeklyCalendar() {
   // ======================================================

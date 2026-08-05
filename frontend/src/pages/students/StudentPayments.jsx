@@ -9,7 +9,7 @@ import { PaymentService } from "../../services/payment.service";
 import { studentPlanService } from "../../services/studenPlan.service";
 import { studentService } from "../../services/student.service";
 import { EnrollmentService } from "../../services/enrollment.service";
-import { useFeedbackModal } from "../../hooks/useFeedbackModal";
+import { useFeedbackModal } from "../../hooks/shared/useFeedBackModal";
 import { validatePaymentForm } from "../../validators/entities/payments.validator";
 import { validateEditEnrollmentForm } from "../../validators/entities/enrollments.validator";
 import {

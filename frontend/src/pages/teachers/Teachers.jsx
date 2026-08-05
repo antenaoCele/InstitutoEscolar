@@ -24,7 +24,7 @@ import {
 } from "../../components/ui/ActionButtons";
 import { sortByPersonName } from "../../utils/sort";
 import { validateTeacher } from "../../validators/entities/teachers.validator";
-import { useFeedbackModal } from "../../hooks/useFeedbackModal";
+import { useFeedbackModal } from "../../hooks/shared/useFeedBackModal";
 
 export function Teachers() {
   // ======================================================

@@ -21,7 +21,7 @@ import {
 import { sortByProperty, sortByPersonName } from "../../utils/sort";
 import { mapErrors } from "../../validators/helpers/errorHelpers";
 import { validateTutorForm } from "../../validators/entities/tutors.validator";
-import { useFeedbackModal } from "../../hooks/useFeedbackModal";
+import { useFeedbackModal } from "../../hooks/shared/useFeedBackModal";
 
 export function Tutors() {
   // ======================================================

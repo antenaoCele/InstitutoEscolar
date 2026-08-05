@@ -18,7 +18,7 @@ import {
 } from "../../components/ui/ActionButtons";
 import { sortByProperty, sortByPersonName } from "../../utils/sort";
 import { mapErrors } from "../../validators/helpers/errorHelpers";
-import { useFeedbackModal } from "../../hooks/useFeedbackModal";
+import { useFeedbackModal } from "../../hooks/shared/useFeedBackModal";
 
 export function Users() {
   // ======================================================

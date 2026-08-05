@@ -9,7 +9,7 @@ import ComponentCard from "../../components/common/ComponentCard";
 import { Modal } from "../../components/ui/Modal";
 import { MonthlyFinanceService } from "../../services/monthlyFinances.service";
 import { validateMonthlyFinanceForm } from "../../validators/entities/monthy_finances";
-import { useFeedbackModal } from "../../hooks/useFeedbackModal";
+import { useFeedbackModal } from "../../hooks/shared/useFeedbackModal";
 import {
   ViewButton,
   EditButton,

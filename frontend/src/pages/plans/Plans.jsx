@@ -25,7 +25,7 @@ import {
 import { sortByProperty, sortByPersonName } from "../../utils/sort";
 import { mapErrors } from "../../validators/helpers/errorHelpers";
 import { validatePlanForm } from "../../validators/entities/plans.validator";
-import { useFeedbackModal } from "../../hooks/useFeedbackModal";
+import { useFeedbackModal } from "../../hooks/shared/useFeedBackModal";
 import Checkbox from "../../components/form/Checkbox";
 
 export function Plans() {
