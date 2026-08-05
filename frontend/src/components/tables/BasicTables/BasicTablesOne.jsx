@@ -4,7 +4,7 @@ import {
   TableCell,
   TableHeader,
   TableRow,
-} from "../../ui/table";
+} from "../../ui/Table";
 
 export default function BasicTable({ title, columns, data }) {
   return (
