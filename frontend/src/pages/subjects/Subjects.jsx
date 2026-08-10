@@ -24,8 +24,14 @@ import { sortByProperty } from "../../utils/sort";
 import { isAdmin } from "../../utils/auth";
 
 export function Subjects() {
+  // ======================================================
+  // FILTROS
+  // ======================================================
   const [searchName, setSearchName] = useState("");
 
+  // ======================================================
+  // HOOK
+  // ======================================================
   const {
     subjects,
 
@@ -57,6 +63,9 @@ export function Subjects() {
     confirmDelete,
   } = useSubjects();
 
+  // ======================================================
+  // DATOS DERIVADOS
+  // ======================================================
   const filteredSubjects = [...subjects]
     .filter((s) => {
       return (
@@ -65,6 +74,9 @@ export function Subjects() {
     })
     .sort(sortByProperty("name"));
 
+  // ======================================================
+  // TABLA
+  // ======================================================
   const showCreateButtons = isAdmin();
 
   const {
@@ -95,15 +107,21 @@ export function Subjects() {
     />
   );
 
+  // ======================================================
+  // RETURN
+  // ======================================================
   return (
     <>
       <SubjectFilters searchName={searchName} onSearchChange={setSearchName} />
+
       <BasicTable title={tableTitle} columns={columns} data={currentSubjects} />
+
       <Pagination
         currentPage={currentPage}
         totalPages={totalPages}
         onPageChange={setCurrentPage}
       />
+
       <SubjectCreateModal
         isOpen={openCreateModal}
         onClose={closeCreateModal}
@@ -112,6 +130,7 @@ export function Subjects() {
         errors={errorsCreate}
         onConfirm={handleCreate}
       />
+
       <SubjectEditModal
         isOpen={openEditModal}
         onClose={closeEditModal}
@@ -120,11 +139,13 @@ export function Subjects() {
         errors={errorsEdit}
         onConfirm={handleUpdate}
       />
+
       <SubjectDeleteModal
         isOpen={openDeleteModal}
         onClose={closeDeleteModal}
         onConfirm={confirmDelete}
       />
+
       <FeedbackModal feedback={feedbackModal} onClose={closeFeedback} />
     </>
   );
