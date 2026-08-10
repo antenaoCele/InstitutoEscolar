@@ -133,7 +133,9 @@ export const validateScheduleConflict = (table = "schedules") => [
 ];
 
 /* =========================================================
-SCHEDULES_STUDEMTS CONFLICT
+SCHEDULES_STUDENTS CONFLICT
+
+"students" ahora llega como [{ id, plan_id }], no como [1, 2, 3].
 ========================================================= */
 export const validateStudentScheduleConflict = () => [
   body("students").custom(async (students, { req }) => {
@@ -154,7 +156,7 @@ export const validateStudentScheduleConflict = () => [
 
     const newEndTime = end_time[0][0].end_time;
 
-    for (const student_id of students) {
+    for (const student of students) {
       const [rows] = await db.execute(
         `
     SELECT ss.id
@@ -171,12 +173,76 @@ export const validateStudentScheduleConflict = () => [
       AND ? > s.start_time
     )
     `,
-        [student_id, day, scheduleId, scheduleId, start_time, newEndTime],
+        [student.id, day, scheduleId, scheduleId, start_time, newEndTime],
       );
 
       if (rows.length) {
         throw new Error(
           "El estudiante ya está inscripto en otra clase en ese mismo horario.",
+        );
+      }
+    }
+
+    return true;
+  }),
+];
+
+/* =========================================================
+STUDENT PLANS (por alumno dentro del horario)
+
+Valida que cada estudiante venga con un plan, que ese plan
+sea suyo y esté activo, y que el docente seleccionado lo
+dicte. También controla el máximo de estudiantes por clase.
+========================================================= */
+export const validateStudentPlans = (max = 5) => [
+  body("students").custom(async (students, { req }) => {
+    if (!Array.isArray(students) || students.length === 0) return true;
+
+    if (students.length > max) {
+      throw new Error(`La clase ya alcanzó el máximo de ${max} estudiantes.`);
+    }
+
+    const ids = students.map((s) => s?.id);
+
+    if (new Set(ids).size !== ids.length) {
+      throw new Error("Hay estudiantes repetidos en la clase.");
+    }
+
+    let teacher_id = req.body.teacher_id;
+
+    if (!teacher_id && req.params?.id) {
+      const [current] = await db.execute(
+        "SELECT teacher_id FROM schedules WHERE id = ?",
+        [req.params.id],
+      );
+
+      teacher_id = current[0]?.teacher_id;
+    }
+
+    if (!teacher_id) return true;
+
+    for (const student of students) {
+      if (!student?.id || !student?.plan_id) {
+        throw new Error("Cada estudiante debe tener un plan asignado.");
+      }
+
+      const [rows] = await db.execute(
+        `
+        SELECT sp.id
+        FROM student_plans sp
+        JOIN teacher_plans tp
+          ON tp.plan_id = sp.plan_id
+          AND tp.teacher_id = ?
+        WHERE sp.student_id = ?
+          AND sp.plan_id = ?
+          AND sp.end_date IS NULL
+        `,
+        [teacher_id, student.id, student.plan_id],
+      );
+
+      if (!rows.length) {
+        throw new Error(
+          "Uno de los estudiantes no tiene ese plan activo con el docente seleccionado.",
         );
       }
     }

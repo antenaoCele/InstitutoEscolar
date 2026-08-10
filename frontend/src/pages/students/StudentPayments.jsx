@@ -12,6 +12,7 @@ import { EnrollmentService } from "../../services/enrollment.service";
 import { useFeedbackModal } from "../../hooks/shared/useFeedBackModal";
 import { validatePaymentForm } from "../../validators/entities/payments.validator";
 import { validateEditEnrollmentForm } from "../../validators/entities/enrollments.validator";
+import SearchableSelect from "../../components/form/SearchableSelect";
 import {
   YesButton,
   NoButton,
@@ -888,20 +889,19 @@ export default function StudentPayments() {
       >
         <h2 className="text-xl font-bold mb-6">Registrar pago</h2>
 
-        <Select
+        <SearchableSelect
           label="Estudiante"
           value={selectedStudent}
           onChange={(e) => handleStudentChange(e.target.value)}
           error={errorsPayment.student}
         >
           <option value="">Seleccione un estudiante</option>
-
           {students.map((student) => (
             <option key={student.id} value={student.id}>
               {student.last_name}, {student.first_name}
             </option>
           ))}
-        </Select>
+        </SearchableSelect>
 
         <Select
           label="Plan"
@@ -994,7 +994,7 @@ export default function StudentPayments() {
       >
         <h2 className="text-xl font-bold mb-6">Editar pago</h2>
 
-        <Select
+        <SearchableSelect
           label="Estudiante"
           value={selectedStudent}
           onChange={(e) => handleStudentChange(e.target.value)}
@@ -1007,7 +1007,7 @@ export default function StudentPayments() {
               {student.last_name}, {student.first_name}
             </option>
           ))}
-        </Select>
+        </SearchableSelect>
 
         <Select
           label="Plan"
@@ -1099,7 +1099,7 @@ export default function StudentPayments() {
         }}
       >
         <h2 className="text-xl font-bold mb-6">Registrar inscripción</h2>
-        <Select
+        <SearchableSelect
           label="Estudiante"
           value={enrollmentStudent}
           onChange={(e) => setEnrollmentStudent(e.target.value)}
@@ -1112,7 +1112,7 @@ export default function StudentPayments() {
               {student.last_name}, {student.first_name}
             </option>
           ))}
-        </Select>
+        </SearchableSelect>
 
         <Input
           type="number"
@@ -1155,8 +1155,7 @@ export default function StudentPayments() {
         }}
       >
         <h2 className="text-xl font-bold mb-6">Editar inscripción</h2>
-
-        <Select
+        <SearchableSelect
           label="Estudiante"
           value={enrollmentStudent}
           onChange={(e) => setEnrollmentStudent(e.target.value)}
@@ -1169,7 +1168,7 @@ export default function StudentPayments() {
               {student.last_name}, {student.first_name}
             </option>
           ))}
-        </Select>
+        </SearchableSelect>
 
         <Input
           type="number"

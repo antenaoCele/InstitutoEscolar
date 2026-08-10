@@ -11,6 +11,8 @@ export const validateScheduleStudents = [
   ...validateForeignId("student_id", "students"),
   ...validateFKFormat("schedule_id"),
   ...validateForeignId("schedule_id", "schedules"),
+  ...validateFKFormat("plan_id"),
+  ...validateForeignId("plan_id", "plans"),
   ...validateUniqueCombination("schedule_students", [
     "student_id",
     "schedule_id",
@@ -24,6 +26,8 @@ export const validateEditScheduleStudents = [
   ...validateForeignId("student_id", "students", true),
   ...validateFKFormat("schedule_id", true),
   ...validateForeignId("schedule_id", "schedules", true),
+  ...validateFKFormat("plan_id", true),
+  ...validateForeignId("plan_id", "plans", true),
   ...validateUniqueCombination("schedule_students", [
     "student_id",
     "schedule_id",
