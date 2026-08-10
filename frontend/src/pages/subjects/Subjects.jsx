@@ -6,7 +6,7 @@ import { useSubjects } from "../../hooks/pages/useSubjects";
 import { usePagination } from "../../hooks/shared/usePagination";
 
 // Componentes de la página
-import { getSubjectsColumns } from "../../components/page-subjects/subjectColumns";
+import { getSubjectsColumns } from "../../components/page-subjects/SubjectColumns";
 import SubjectCreateModal from "../../components/page-subjects/SubjectCreateModal";
 import SubjectDeleteModal from "../../components/page-subjects/SubjectDeleteModal";
 import SubjectEditModal from "../../components/page-subjects/SubjectEditModal";
