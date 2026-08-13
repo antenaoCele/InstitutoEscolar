@@ -1,7 +1,13 @@
 import { useEffect, useState } from "react";
+
+// Services
 import { subjectService } from "../../services/subject.service";
+
+// Validaciones
 import { mapErrors } from "../../validators/helpers/errorHelpers";
 import { validateSubjectForm } from "../../validators/entities/subjects.validator";
+
+// Hooks compartidos
 import { useFeedbackModal } from "../shared/useFeedBackModal";
 
 export function useSubjects() {
