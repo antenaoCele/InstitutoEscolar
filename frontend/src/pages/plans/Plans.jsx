@@ -106,6 +106,11 @@ export function Plans() {
     })
     .sort(sortByProperty("name"));
 
+  // ======================================================
+  // TABLA
+  // ======================================================
+  const showCreateButtons = isAdmin();
+
   const {
     currentPage,
     totalPages,
@@ -113,14 +118,9 @@ export function Plans() {
     setCurrentPage,
   } = usePagination({
     data: filteredCurrentPlans,
-    itemsPerPage: 4,
+    itemsPerPage: 3,
     dependencies: [searchName, currentPlans],
   });
-
-  // ======================================================
-  // TABLA
-  // ======================================================
-  const showCreateButtons = isAdmin();
 
   const columns = getPlansColumns({
     isAdmin: showCreateButtons,
