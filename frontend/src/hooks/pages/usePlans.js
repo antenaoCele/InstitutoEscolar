@@ -1,12 +1,18 @@
 import { useEffect, useState } from "react";
+
+// Services
 import { planService } from "../../services/plan.service";
 import { PlanPriceService } from "../../services/PlanPrice.service";
 import { PlanSubjectService } from "../../services/PlanSubject.service";
 import { subjectService } from "../../services/subject.service";
 import { teacherService } from "../../services/teacher.service";
+import { teacherPlansService } from "../../services/teacherPlans.service";
+
+// Validaciones
 import { mapErrors } from "../../validators/helpers/errorHelpers";
 import { validatePlanForm } from "../../validators/entities/plans.validator";
-import { teacherPlansService } from "../../services/teacherPlans.service";
+
+// Hooks compartidos
 import { useFeedbackModal } from "../shared/useFeedBackModal";
 
 export function usePlans() {
@@ -15,7 +21,6 @@ export function usePlans() {
   // ======================================================
   const [planPrices, setPlanPrices] = useState([]);
   const [currentPlans, setCurrentPlans] = useState([]);
-  const [plans, setPlans] = useState([]);
   const [subjects, setSubjects] = useState([]);
   const [teachers, setTeachers] = useState([]);
   const [allPlanSubjects, setAllPlanSubjects] = useState([]);
@@ -38,17 +43,20 @@ export function usePlans() {
   const [endDate, setEndDate] = useState("");
 
   // ======================================================
-  // ASIGNACIÓN DE DOCENTES
-  // ======================================================
-  const [selectedPlanTeachers, setSelectedPlanTeachers] = useState(null);
-  const [selectedTeacherIds, setSelectedTeacherIds] = useState([]);
-
-  // ======================================================
-  // PLAN SELECCIONADO
+  // PLAN SELECCIONADO PARA EDICIÓN
   // ======================================================
   const [selectedPlanPrice, setSelectedPlanPrice] = useState(null);
 
+  // ======================================================
+  // PLAN SELECCIONADO PARA HISTORIAL
+  // ======================================================
   const [selectedPlanForHistory, setSelectedPlanForHistory] = useState(null);
+
+  // ======================================================
+  // PLAN SELECCIONADO PARA DOCENTES
+  // ======================================================
+  const [selectedPlanTeachers, setSelectedPlanTeachers] = useState(null);
+  const [selectedTeacherIds, setSelectedTeacherIds] = useState([]);
 
   // ======================================================
   // ERRORES
@@ -66,65 +74,73 @@ export function usePlans() {
   // ======================================================
   const fetchPlanPrices = async () => {
     try {
-      const { data } = await PlanPriceService.getAll();
-      setPlanPrices(data?.data || []);
-    } catch {
+      const response = await PlanPriceService.getAll();
+
+      setPlanPrices(response.data.data || []);
+    } catch (error) {
+      console.error(error);
       setPlanPrices([]);
     }
   };
 
   const fetchCurrentPlans = async () => {
     try {
-      const { data } = await planService.getCurrent();
-      setCurrentPlans(data?.data || []);
-    } catch {
+      const response = await planService.getCurrent();
+
+      setCurrentPlans(response.data.data || []);
+    } catch (error) {
+      console.error(error);
       setCurrentPlans([]);
     }
   };
 
-  const refreshAll = async () => {
-    await Promise.all([fetchPlanPrices(), fetchCurrentPlans()]);
+  const fetchSubjects = async () => {
+    try {
+      const response = await subjectService.getAll();
 
-    const [plansRes, planSubjectsRes] = await Promise.all([
-      planService.getAll(),
-      PlanSubjectService.getAll(),
-    ]);
-
-    setPlans(plansRes.data.data || []);
-    setAllPlanSubjects(planSubjectsRes.data.data || []);
+      setSubjects(response.data.data || []);
+    } catch (error) {
+      console.error(error);
+      setSubjects([]);
+    }
   };
 
-  // ======================================================
-  // USEEFFECT
-  // ======================================================
-  useEffect(() => {
-    fetchCurrentPlans();
-    fetchPlanPrices();
-  }, []);
+  const fetchTeachers = async () => {
+    try {
+      const response = await teacherService.getAll({
+        active: true,
+      });
+
+      setTeachers(response.data.data || []);
+    } catch (error) {
+      console.error(error);
+      setTeachers([]);
+    }
+  };
+
+  const fetchAllPlanSubjects = async () => {
+    try {
+      const response = await PlanSubjectService.getAll();
+
+      setAllPlanSubjects(response.data.data || []);
+    } catch (error) {
+      console.error(error);
+      setAllPlanSubjects([]);
+    }
+  };
+
+  const refreshAll = async () => {
+    await Promise.all([
+      fetchPlanPrices(),
+      fetchCurrentPlans(),
+      fetchSubjects(),
+      fetchTeachers(),
+      fetchAllPlanSubjects(),
+    ]);
+  };
 
   useEffect(() => {
-    const fetchFilters = async () => {
-      try {
-        const plansRes = await planService.getAll();
-        setPlans(plansRes.data.data || []);
-
-        const subjectsRes = await subjectService.getAll();
-        setSubjects(subjectsRes.data.data || []);
-
-        const planSubjectsRes = await PlanSubjectService.getAll();
-        setAllPlanSubjects(planSubjectsRes.data.data || []);
-
-        const teachersRes = await teacherService.getAll({
-          active: true,
-        });
-
-        setTeachers(teachersRes.data.data || []);
-      } catch (error) {
-        console.error(error);
-      }
-    };
-
-    fetchFilters();
+    refreshAll();
   }, []);
 
   // ======================================================
@@ -132,31 +148,20 @@ export function usePlans() {
   // ======================================================
   const getActivePlanPrice = (planId) => {
     const pricesForPlan = planPrices.filter((pp) => pp.plan_id === planId);
-    if (pricesForPlan.length === 0) return null;
+
+    if (pricesForPlan.length === 0) {
+      return null;
+    }
 
     const activeWithoutEndDate = pricesForPlan.find((pp) => !pp.end_date);
-    if (activeWithoutEndDate) return activeWithoutEndDate;
+
+    if (activeWithoutEndDate) {
+      return activeWithoutEndDate;
+    }
 
     return [...pricesForPlan].sort(
       (a, b) => new Date(b.start_date) - new Date(a.start_date),
     )[0];
-  };
-
-  const getTodayDateString = () => {
-    const today = new Date();
-    const year = today.getFullYear();
-    const month = String(today.getMonth() + 1).padStart(2, "0");
-    const day = String(today.getDate()).padStart(2, "0");
-    return `${year}-${month}-${day}`;
-  };
-
-  const getYesterdayDateString = () => {
-    const yesterday = new Date();
-    yesterday.setDate(yesterday.getDate() - 1);
-    const year = yesterday.getFullYear();
-    const month = String(yesterday.getMonth() + 1).padStart(2, "0");
-    const day = String(yesterday.getDate()).padStart(2, "0");
-    return `${year}-${month}-${day}`;
   };
 
   // ======================================================
@@ -175,10 +180,12 @@ export function usePlans() {
   // ======================================================
   const resetForm = () => {
     setSelectedPlan("");
+    setSelectedSubjects([]);
     setPrice("");
     setStartDate("");
     setEndDate("");
-    setSelectedSubjects([]);
+
+    setSelectedPlanPrice(null);
 
     setErrorsCreate({});
     setErrorsEdit({});
@@ -199,6 +206,7 @@ export function usePlans() {
 
   const closeHistoryModal = () => {
     setOpenHistoryModal(false);
+    setSelectedPlanForHistory(null);
   };
 
   const closeTeachersModal = () => {
@@ -238,8 +246,9 @@ export function usePlans() {
 
       const newPlanId = planResponse.data.data?.id || planResponse.data.id;
 
-      if (!newPlanId)
+      if (!newPlanId) {
         throw new Error("No se pudo obtener el ID del nuevo plan");
+      }
 
       for (const subjectId of selectedSubjects) {
         await PlanSubjectService.create({
@@ -295,6 +304,20 @@ export function usePlans() {
     setOpenEditModal(true);
   };
 
+  const handleEditPlan = (planRow) => {
+    const activePrice = getActivePlanPrice(planRow.id);
+
+    if (!activePrice) {
+      alert("Este plan no tiene un precio activo registrado.");
+      return;
+    }
+
+    handleEdit({
+      ...activePrice,
+      plan_name: activePrice.plan_name || planRow.name,
+    });
+  };
+
   const handleUpdate = async () => {
     const errors = validatePlanForm({
       plan: selectedPlan,
@@ -312,31 +335,38 @@ export function usePlans() {
     try {
       setErrorsEdit({});
 
-      // Actualizar nombre del plan si cambió
+      // Actualizar nombre del plan
       await planService.update(selectedPlanPrice.plan_id, {
         name: selectedPlan,
       });
 
+      // Actualizar precio si cambió
       if (priceChanged) {
         await PlanPriceService.changePrice(selectedPlanPrice.plan_id, {
           price: Number(price),
         });
       }
 
+      // Materias actuales del plan
       const currentPlanSubjects = allPlanSubjects.filter(
         (ps) => ps.plan_id === selectedPlanPrice.plan_id,
       );
+
       const currentSubjectIds = currentPlanSubjects.map((ps) => ps.subject_id);
 
+      // Materias nuevas
       const subjectsToAdd = selectedSubjects.filter(
         (subjectId) => !currentSubjectIds.includes(subjectId),
       );
 
+      // Materias eliminadas
       const currentSelectedSubjectIds = new Set(selectedSubjects);
+
       const subjectsToRemove = currentSubjectIds.filter(
         (subjectId) => !currentSelectedSubjectIds.has(subjectId),
       );
 
+      // Agregar materias
       for (const subjectId of subjectsToAdd) {
         await PlanSubjectService.create({
           plan_id: selectedPlanPrice.plan_id,
@@ -344,12 +374,15 @@ export function usePlans() {
         });
       }
 
+      // Eliminar materias
       for (const subjectId of subjectsToRemove) {
         const planSubjectRelation = currentPlanSubjects.find(
           (ps) => ps.subject_id === subjectId,
         );
-        if (planSubjectRelation)
+
+        if (planSubjectRelation) {
           await PlanSubjectService.delete(planSubjectRelation.id);
+        }
       }
 
       closeEditModal();
@@ -379,20 +412,6 @@ export function usePlans() {
         );
       }
     }
-  };
-
-  const handleEditPlan = (planRow) => {
-    const activePrice = getActivePlanPrice(planRow.id);
-
-    if (!activePrice) {
-      alert("Este plan no tiene un precio activo registrado.");
-      return;
-    }
-
-    handleEdit({
-      ...activePrice,
-      plan_name: activePrice.plan_name || planRow.name,
-    });
   };
 
   // ======================================================
@@ -451,7 +470,7 @@ export function usePlans() {
     : [];
 
   // ======================================================
-  // HANDLES FORMULARIO
+  // HANDLES DEL FORMULARIO
   // ======================================================
   const handlePlanChange = (value) => {
     setSelectedPlan(value);
@@ -469,12 +488,17 @@ export function usePlans() {
     setEndDate(value);
   };
 
+  // ======================================================
+  // RETURN
+  // ======================================================
   return {
+    // Datos
     currentPlans,
     subjects,
     teachers,
     allPlanSubjects,
 
+    // Formulario
     selectedPlan,
     handlePlanChange,
 
@@ -490,14 +514,19 @@ export function usePlans() {
     endDate,
     handleEndDateChange,
 
+    // Historial
     selectedPlanForHistory,
+    historyForSelectedPlan,
 
+    // Docentes
     selectedPlanTeachers,
     selectedTeacherIds,
 
+    // Errores
     errorsCreate,
     errorsEdit,
 
+    // Modales
     openCreateModal,
     openEditModal,
     openHistoryModal,
@@ -508,20 +537,27 @@ export function usePlans() {
     closeHistoryModal,
     closeTeachersModal,
 
+    // Feedback
     feedbackModal,
     closeFeedback,
 
+    // Crear
     openCreate,
     handleCreate,
 
+    // Editar
     handleEditPlan,
     handleUpdate,
 
+    // Docentes
     handleManageTeachers,
     handleTeacherCheckbox,
     handleSaveTeachers,
 
+    // Historial
     handleOpenHistory,
-    historyForSelectedPlan,
+
+    // General
+    resetForm,
   };
 }
