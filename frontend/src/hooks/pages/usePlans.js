@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 // Services
 import { planService } from "../../services/plan.service";
@@ -72,7 +72,8 @@ export function usePlans() {
   // ======================================================
   // FETCH
   // ======================================================
-  const fetchPlanPrices = async () => {
+
+  const fetchPlanPrices = useCallback(async () => {
     try {
       const response = await PlanPriceService.getAll();
 
@@ -81,9 +82,9 @@ export function usePlans() {
       console.error(error);
       setPlanPrices([]);
     }
-  };
+  }, []);
 
-  const fetchCurrentPlans = async () => {
+  const fetchCurrentPlans = useCallback(async () => {
     try {
       const response = await planService.getCurrent();
 
@@ -92,9 +93,9 @@ export function usePlans() {
       console.error(error);
       setCurrentPlans([]);
     }
-  };
+  }, []);
 
-  const fetchSubjects = async () => {
+  const fetchSubjects = useCallback(async () => {
     try {
       const response = await subjectService.getAll();
 
@@ -103,9 +104,9 @@ export function usePlans() {
       console.error(error);
       setSubjects([]);
     }
-  };
+  }, []);
 
-  const fetchTeachers = async () => {
+  const fetchTeachers = useCallback(async () => {
     try {
       const response = await teacherService.getAll({
         active: true,
@@ -116,9 +117,9 @@ export function usePlans() {
       console.error(error);
       setTeachers([]);
     }
-  };
+  }, []);
 
-  const fetchAllPlanSubjects = async () => {
+  const fetchAllPlanSubjects = useCallback(async () => {
     try {
       const response = await PlanSubjectService.getAll();
 
@@ -127,9 +128,9 @@ export function usePlans() {
       console.error(error);
       setAllPlanSubjects([]);
     }
-  };
+  }, []);
 
-  const refreshAll = async () => {
+  const refreshAll = useCallback(async () => {
     await Promise.all([
       fetchPlanPrices(),
       fetchCurrentPlans(),
@@ -137,11 +138,17 @@ export function usePlans() {
       fetchTeachers(),
       fetchAllPlanSubjects(),
     ]);
-  };
+  }, [
+    fetchPlanPrices,
+    fetchCurrentPlans,
+    fetchSubjects,
+    fetchTeachers,
+    fetchAllPlanSubjects,
+  ]);
 
   useEffect(() => {
     refreshAll();
-  }, []);
+  }, [refreshAll]);
 
   // ======================================================
   // FUNCIONES AUXILIARES
