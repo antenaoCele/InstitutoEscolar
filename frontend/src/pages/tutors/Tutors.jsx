@@ -1,446 +1,119 @@
-import { useEffect, useState } from "react";
+// Hooks
+import { useTutors } from "../../hooks/pages/useTutors";
+import { usePagination } from "../../hooks/shared/usePagination";
+
+// Componentes de la página
+import { getTutorsColumns } from "../../components/page-tutors/TutorColumns";
+import TutorCreateModal from "../../components/page-tutors/TutorCreateModal";
+import TutorDeleteModal from "../../components/page-tutors/TutorDeleteModal";
+import TutorEditModal from "../../components/page-tutors/TutorEditModal";
+import TutorFilters from "../../components/page-tutors/TutorFilters";
+
+// Componentes compartidos
 import BasicTable from "../../components/tables/BasicTables/BasicTablesOne";
-import { tutorService } from "../../services/tutor.service";
-import { studentService } from "../../services/student.service";
-import { studentTutorService } from "../../services/studentTutor.service";
-import Button from "../../components/ui/Button";
-import Label from "../../components/form/Label";
-import Input from "../../components/form/Input";
-import Select from "../../components/form/Select";
-import Checkbox from "../../components/form/Checkbox";
-import { Modal } from "../../components/ui/Modal";
+import { PlusButton } from "../../components/ui/ActionButtons";
+import FeedbackModal from "../../components/ui/FeedbackModal";
+import Pagination from "../../components/ui/Pagination";
+import TableTitle from "../../components/ui/TableTitle";
+
+// Utilidades
 import { isAdmin } from "../../utils/auth";
-import {
-  ViewButton,
-  EditButton,
-  DeleteButton,
-  PlusButton,
-  YesButton,
-  NoButton,
-} from "../../components/ui/ActionButtons";
-import { sortByProperty, sortByPersonName } from "../../utils/sort";
-import { mapErrors } from "../../validators/helpers/errorHelpers";
-import { validateTutorForm } from "../../validators/entities/tutors.validator";
-import { useFeedbackModal } from "../../hooks/shared/useFeedBackModal";
 
 export function Tutors() {
   // ======================================================
-  // DATOS
+  // HOOK
   // ======================================================
-  const [tutors, setTutors] = useState([]);
-  const [students, setStudents] = useState([]);
+  const {
+    students,
+    filteredTutors,
 
-  // ======================================================
-  // FILTROS
-  // ======================================================
-  const [filterStudentId, setFilterStudentId] = useState("");
-  const [searchFirstLastName, setSearchFirstLastName] = useState("");
-  const [searchDNI, setSearchDNI] = useState("");
+    filterStudentId,
+    setFilterStudentId,
 
-  // ======================================================
-  // MODALES
-  // ======================================================
-  const [openCreateModal, setOpenCreateModal] = useState(false);
-  const [openEditModal, setOpenEditModal] = useState(false);
-  const [openDeleteModal, setOpenDeleteModal] = useState(false);
-  const { feedbackModal, showFeedback, closeFeedback } = useFeedbackModal();
+    searchFirstLastName,
+    setSearchFirstLastName,
 
-  // ======================================================
-  // TUTOR SELECCIONADO
-  // ======================================================
-  const [selectedTutor, setSelectedTutor] = useState(null);
+    searchDNI,
+    setSearchDNI,
 
-  // ======================================================
-  // FORMULARIO DEL TUTOR
-  // ======================================================
-  const [firstName, setFirstName] = useState("");
-  const [lastName, setLastName] = useState("");
-  const [dni, setDni] = useState("");
-  const [phone, setPhone] = useState("");
-  const [selectedStudentIds, setSelectedStudentIds] = useState([]);
+    firstName,
+    setFirstName,
 
-  // ======================================================
-  // ERRORES
-  // ======================================================
-  const [errorsCreate, setErrorsCreate] = useState({});
-  const [errorsEdit, setErrorsEdit] = useState({});
+    lastName,
+    setLastName,
 
-  // ======================================================
-  // CONSTANTES
-  // ======================================================
-  const buttonClass = "cursor-pointer transition transform hover:scale-105";
+    dni,
+    setDni,
 
-  // ======================================================
-  // FETCH DATOS PRINCIPALES
-  // ======================================================
-  const fetchTutors = async () => {
-    try {
-      const [tutorsRes, studentTutorsRes] = await Promise.all([
-        tutorService.getAll(),
-        studentTutorService.getAll(),
-      ]);
+    phone,
+    setPhone,
 
-      const tutorsData = tutorsRes.data.data || [];
-      const relations = studentTutorsRes.data.data || [];
+    selectedStudentIds,
 
-      const merged = tutorsData.map((tutor) => {
-        const tutorRelations = relations.filter(
-          (r) => r.tutor_id === tutor.id && r.student_tutor_id !== null,
-        );
+    errorsCreate,
+    errorsEdit,
 
-        return {
-          ...tutor,
+    openCreateModal,
+    openEditModal,
+    openDeleteModal,
 
-          student_relations: tutorRelations,
+    selectedTutor,
 
-          student_ids: tutorRelations
-            .filter((r) => r.student_id)
-            .map((r) => r.student_id),
+    feedbackModal,
+    closeFeedback,
 
-          student_names: tutorRelations
-            .filter((r) => r.student_name)
-            .map((r) => r.student_name),
-        };
-      });
+    closeCreateModal,
+    closeEditModal,
+    closeDeleteModal,
 
-      let filtered = merged;
+    openCreate,
 
-      if (filterStudentId) {
-        filtered = merged.filter((tutor) =>
-          tutor.student_ids?.includes(Number(filterStudentId)),
-        );
-      }
+    handleCreate,
+    handleEdit,
+    handleUpdate,
 
-      setTutors(filtered);
-    } catch (error) {
-      setTutors([]);
-    }
-  };
+    handleDelete,
+    confirmDelete,
+
+    handleStudentCheckbox,
+  } = useTutors();
 
   // ======================================================
-  // FETCH AUXILIARES
+  // TABLA
   // ======================================================
-  const fetchStudents = async () => {
-    try {
-      const res = await studentService.getAll();
-
-      const uniqueStudents = Array.from(
-        new Map((res.data.data || []).map((s) => [s.id, s])).values(),
-      );
-
-      setStudents([...uniqueStudents].sort(sortByPersonName));
-    } catch (error) {
-      console.error(error);
-    }
-  };
-
-  // ======================================================
-  // RESETEO
-  // ======================================================
-  const resetForm = () => {
-    setFirstName("");
-    setLastName("");
-    setDni("");
-    setPhone("");
-    setSelectedStudentIds([]);
-    setErrorsCreate({});
-    setErrorsEdit({});
-  };
-
-  // ======================================================
-  // HANDLES CRUD
-  // ======================================================
-  const openCreate = () => {
-    resetForm();
-    setOpenCreateModal(true);
-  };
-
-  const handleCreate = async () => {
-    const errors = validateTutorForm({
-      firstName,
-      lastName,
-      dni,
-      phone,
-    });
-
-    if (Object.keys(errors).length > 0) {
-      setErrorsCreate(errors);
-      return;
-    }
-
-    try {
-      setErrorsCreate({});
-
-      const tutorRes = await tutorService.create({
-        first_name: firstName,
-        last_name: lastName,
-        dni,
-        phone,
-      });
-
-      if (selectedStudentIds.length > 0) {
-        await Promise.all(
-          selectedStudentIds.map((studentId) =>
-            studentTutorService.create({
-              student_id: studentId,
-              tutor_id: tutorRes.data.data.id,
-            }),
-          ),
-        );
-      }
-
-      setOpenCreateModal(false);
-      fetchTutors();
-      resetForm();
-
-      showFeedback("Tutor creado correctamente.", "success");
-    } catch (error) {
-      console.error("Error al crear:", error.response?.data || error.message);
-
-      const backendErrors = error.response?.data?.errors;
-
-      if (backendErrors) {
-        setErrorsCreate(mapErrors(backendErrors));
-      } else {
-        showFeedback(
-          error.response?.data?.message || "Error al crear el tutor.",
-          "error",
-        );
-      }
-    }
-  };
-
-  const handleEdit = async (tutor) => {
-    setSelectedTutor(tutor);
-
-    setFirstName(tutor.first_name || "");
-    setLastName(tutor.last_name || "");
-    setDni(tutor.dni || "");
-    setPhone(tutor.phone || "");
-
-    setSelectedStudentIds(tutor.student_ids || []);
-
-    setErrorsEdit({});
-    setOpenEditModal(true);
-  };
-
-  const handleUpdate = async () => {
-    const errors = validateTutorForm({
-      firstName,
-      lastName,
-      dni,
-      phone,
-    });
-
-    if (Object.keys(errors).length > 0) {
-      setErrorsEdit(errors);
-      return;
-    }
-
-    try {
-      setErrorsEdit({});
-
-      await tutorService.update(selectedTutor.id, {
-        first_name: firstName,
-        last_name: lastName,
-        dni,
-        phone,
-      });
-
-      const currentRelations = selectedTutor.student_relations || [];
-
-      await Promise.all(
-        currentRelations.map((relation) =>
-          studentTutorService.delete(relation.student_tutor_id),
-        ),
-      );
-
-      await Promise.all(
-        selectedStudentIds.map((studentId) =>
-          studentTutorService.create({
-            student_id: studentId,
-            tutor_id: selectedTutor.id,
-          }),
-        ),
-      );
-
-      setOpenEditModal(false);
-      fetchTutors();
-      resetForm();
-
-      showFeedback("Tutor actualizado correctamente.", "success");
-    } catch (error) {
-      console.error(error.response?.data || error.message);
-
-      const backendErrors = error.response?.data?.errors;
-
-      if (backendErrors) {
-        setErrorsEdit(mapErrors(backendErrors));
-      } else {
-        showFeedback(
-          error.response?.data?.message || "Error al editar el tutor.",
-          "error",
-        );
-      }
-    }
-  };
-
-  const handleDelete = (tutor) => {
-    setSelectedTutor(tutor);
-    setOpenDeleteModal(true);
-  };
-
-  const confirmDelete = async () => {
-    try {
-      await tutorService.delete(selectedTutor.id);
-
-      setOpenDeleteModal(false);
-      fetchTutors();
-
-      showFeedback("Tutor eliminado correctamente.", "success");
-    } catch (error) {
-      console.error(error.response?.data || error.message);
-
-      setOpenDeleteModal(false);
-
-      showFeedback(
-        error.response?.data?.message || "Error al eliminar el tutor.",
-        "error",
-      );
-    }
-  };
-
-  const handleStudentCheckbox = (studentId, checked) => {
-    if (checked) {
-      setSelectedStudentIds((prev) => [...prev, studentId]);
-    } else {
-      setSelectedStudentIds((prev) => prev.filter((id) => id !== studentId));
-    }
-  };
-
-  // ======================================================
-  // USEEFFECTS
-  // ======================================================
-  useEffect(() => {
-    fetchTutors();
-  }, [filterStudentId]);
-
-  useEffect(() => {
-    fetchStudents();
-  }, []);
-
-  // ======================================================
-  // DATOS DERIVADOS
-  // ======================================================
-  const filteredTutors = [...tutors]
-    .filter((t) => {
-      const textName = searchFirstLastName.toLowerCase();
-
-      const matchName =
-        !textName ||
-        t.first_name?.toLowerCase().includes(textName) ||
-        t.last_name?.toLowerCase().includes(textName);
-
-      const textDNI = searchDNI;
-
-      const matchDNI = !textDNI || t.dni?.toString().includes(textDNI);
-
-      return matchName && matchDNI;
-    })
-    .sort(sortByPersonName);
-
   const showCreateButtons = isAdmin();
 
+  const {
+    currentPage,
+    totalPages,
+    currentData: currentTutors,
+    setCurrentPage,
+  } = usePagination({
+    data: filteredTutors,
+    itemsPerPage: 3,
+    dependencies: [
+      searchFirstLastName,
+      searchDNI,
+      filterStudentId,
+      filteredTutors.length,
+    ],
+  });
+
+  const columns = getTutorsColumns({
+    isAdmin: showCreateButtons,
+    handleEdit,
+    handleDelete,
+  });
+
   const tableTitle = (
-    <div className="flex justify-between items-center">
-      <span>Tutores</span>
-
-      {showCreateButtons && (
-        <PlusButton title="Crear Tutor" onClick={openCreate} />
-      )}
-    </div>
-  );
-
-  const mapErrors = (errors) => {
-    const formatted = {};
-
-    errors.forEach((e) => {
-      formatted[e.path] = e.msg;
-    });
-    return formatted;
-  };
-
-  let columns = [
-    { header: "Apellidos", accessor: "last_name" },
-    { header: "Nombres", accessor: "first_name" },
-    { header: "Teléfonos", accessor: "phone" },
-    {
-      header: "Estudiantes",
-      render: (row) => {
-        const hasScroll = (row.student_names?.length || 0) > 3;
-
-        return (
-          <div
-            className={`
-            h-20
-            overflow-y-auto
-            flex
-            flex-col
-            ${hasScroll ? "justify-start" : "justify-center"}
-          `}
-          >
-            <div className="flex flex-col gap-1">
-              {row.student_names?.length ? (
-                row.student_names.map((name, index) => (
-                  <span key={index}>{name}</span>
-                ))
-              ) : (
-                <div className="text-sm italic text-gray-500">
-                  Sin estudiantes
-                </div>
-              )}
-            </div>
-          </div>
-        );
-      },
-    },
-  ];
-
-  if (isAdmin()) {
-    columns.splice(3, 0, { header: "DNI", accessor: "dni" });
-  }
-
-  if (isAdmin()) {
-    columns.push({
-      header: "Acciones",
-      render: (row) => (
-        <div className="flex gap-2">
-          <EditButton title="Editar Tutor" onClick={() => handleEdit(row)} />
-
-          <DeleteButton
-            title="Eliminar Tutor"
-            onClick={() => handleDelete(row)}
-          />
-        </div>
-      ),
-    });
-  }
-
-  const renderStudentCheckboxes = (errors) => (
-    <>
-      <Label>Estudiantes</Label>
-      {students.map((student) => (
-        <Checkbox
-          key={student.id}
-          label={`${student.last_name}, ${student.first_name}`}
-          checked={selectedStudentIds.includes(student.id)}
-          onChange={(checked) => handleStudentCheckbox(student.id, checked)}
-        />
-      ))}
-      {errors.student_id && (
-        <p className="text-red-500 text-sm mt-1">{errors.student_id}</p>
-      )}
-    </>
+    <TableTitle
+      title="Tutores"
+      action={
+        showCreateButtons && (
+          <PlusButton title="Crear Tutor" onClick={openCreate} />
+        )
+      }
+    />
   );
 
   // ======================================================
@@ -448,171 +121,68 @@ export function Tutors() {
   // ======================================================
   return (
     <>
-      <div className="flex gap-3 mb-4 flex-wrap">
-        <Input
-          placeholder=" Buscar por nombre o apellido"
-          value={searchFirstLastName}
-          onChange={(e) => setSearchFirstLastName(e.target.value)}
-          className="p-2 border border-gray-300 rounded w-60"
-        />
+      <TutorFilters
+        searchFirstLastName={searchFirstLastName}
+        onSearchFirstLastNameChange={setSearchFirstLastName}
+        searchDNI={searchDNI}
+        onSearchDNIChange={setSearchDNI}
+        filterStudentId={filterStudentId}
+        onStudentChange={setFilterStudentId}
+        students={students}
+      />
 
-        <Input
-          placeholder="Buscar por DNI"
-          value={searchDNI}
-          onChange={(e) => setSearchDNI(e.target.value)}
-          className="p-2 border border-gray-300 rounded w-40"
-        />
+      <BasicTable title={tableTitle} columns={columns} data={currentTutors} />
 
-        <Select
-          value={filterStudentId}
-          onChange={(e) => setFilterStudentId(e.target.value)}
-          className="p-2 border border-gray-300 rounded w-60"
-        >
-          <option value="">Todos los estudiantes</option>
+      <Pagination
+        currentPage={currentPage}
+        totalPages={totalPages}
+        onPageChange={setCurrentPage}
+      />
 
-          {students.map((student) => (
-            <option key={student.id} value={student.id}>
-              {student.last_name}, {student.first_name}
-            </option>
-          ))}
-        </Select>
-      </div>
-
-      <BasicTable title={tableTitle} columns={columns} data={filteredTutors} />
-
-      {showCreateButtons && (
-        <div className="mt-8">
-          <Button onClick={openCreate} className={buttonClass}>
-            Crear Tutor
-          </Button>
-        </div>
-      )}
-
-      <Modal
+      <TutorCreateModal
         isOpen={openCreateModal}
-        onClose={() => {
-          setOpenCreateModal(false);
-          resetForm();
-        }}
-      >
-        <h2 className="text-xl font-bold mb-8">Crear Tutor</h2>
+        onClose={closeCreateModal}
+        firstName={firstName}
+        onFirstNameChange={setFirstName}
+        lastName={lastName}
+        onLastNameChange={setLastName}
+        dni={dni}
+        onDniChange={setDni}
+        phone={phone}
+        onPhoneChange={setPhone}
+        students={students}
+        selectedStudentIds={selectedStudentIds}
+        onStudentChange={handleStudentCheckbox}
+        errors={errorsCreate}
+        onConfirm={handleCreate}
+      />
 
-        <Label>Nombre</Label>
-        <Input
-          value={firstName}
-          onChange={(e) => setFirstName(e.target.value)}
-          error={errorsCreate.first_name}
-        />
-
-        <Label>Apellido</Label>
-        <Input
-          value={lastName}
-          onChange={(e) => setLastName(e.target.value)}
-          error={errorsCreate.last_name}
-        />
-
-        <Label>DNI</Label>
-        <Input
-          type="number"
-          value={dni}
-          onChange={(e) => setDni(e.target.value)}
-          error={errorsCreate.dni}
-        />
-
-        <Label>Teléfono</Label>
-        <Input
-          type="number"
-          value={phone}
-          onChange={(e) => setPhone(e.target.value)}
-          error={errorsCreate.phone}
-        />
-
-        {renderStudentCheckboxes(errorsCreate)}
-
-        <div className="flex justify-end gap-4 mt-10">
-          <div className="flex justify-end gap-3">
-            <NoButton
-              title="Cancelar"
-              onClick={() => setOpenCreateModal(false)}
-            />
-
-            <YesButton title="Aceptar" onClick={handleCreate} />
-          </div>
-        </div>
-      </Modal>
-
-      <Modal
+      <TutorEditModal
         isOpen={openEditModal}
-        onClose={() => {
-          setOpenEditModal(false);
-          resetForm();
-        }}
-      >
-        <h2 className="text-xl font-bold mb-8">Editar Tutor</h2>
+        onClose={closeEditModal}
+        firstName={firstName}
+        onFirstNameChange={setFirstName}
+        lastName={lastName}
+        onLastNameChange={setLastName}
+        dni={dni}
+        onDniChange={setDni}
+        phone={phone}
+        onPhoneChange={setPhone}
+        students={students}
+        selectedStudentIds={selectedStudentIds}
+        onStudentChange={handleStudentCheckbox}
+        errors={errorsEdit}
+        onConfirm={handleUpdate}
+      />
 
-        <Label>Nombre</Label>
-        <Input
-          value={firstName}
-          onChange={(e) => setFirstName(e.target.value)}
-          error={errorsEdit.first_name}
-        />
+      <TutorDeleteModal
+        isOpen={openDeleteModal}
+        onClose={closeDeleteModal}
+        tutor={selectedTutor}
+        onConfirm={confirmDelete}
+      />
 
-        <Label>Apellido</Label>
-        <Input
-          value={lastName}
-          onChange={(e) => setLastName(e.target.value)}
-          error={errorsEdit.last_name}
-        />
-
-        <Label>DNI</Label>
-        <Input
-          type="number"
-          value={dni}
-          onChange={(e) => setDni(e.target.value)}
-          error={errorsEdit.dni}
-        />
-
-        <Label>Teléfono</Label>
-        <Input
-          type="number"
-          value={phone}
-          onChange={(e) => setPhone(e.target.value)}
-          error={errorsEdit.phone}
-        />
-
-        {renderStudentCheckboxes(errorsEdit)}
-
-        <div className="flex justify-end gap-4 mt-10">
-          <NoButton title="Cancelar" onClick={() => setOpenEditModal(false)} />
-
-          <YesButton title="Aceptar" onClick={handleUpdate} />
-        </div>
-      </Modal>
-
-      <Modal isOpen={openDeleteModal} onClose={() => setOpenDeleteModal(false)}>
-        <h2 className="text-lg font-semibold mb-4">¿Eliminar Tutor?</h2>
-
-        <div className="flex justify-end gap-2">
-          <NoButton
-            title="Cancelar"
-            onClick={() => setOpenDeleteModal(false)}
-          />
-
-          <YesButton title="Aceptar" onClick={confirmDelete} />
-        </div>
-      </Modal>
-
-      <Modal isOpen={feedbackModal.open} onClose={closeFeedback}>
-        <h2
-          className={`text-lg font-semibold mb-4 ${
-            feedbackModal.type === "error" ? "text-red-600" : "text-green-600"
-          }`}
-        >
-          {feedbackModal.type === "error" ? "Error" : "Listo"}
-        </h2>
-
-        <p className="text-gray-600">{feedbackModal.message}</p>
-      </Modal>
+      <FeedbackModal feedback={feedbackModal} onClose={closeFeedback} />
     </>
   );
 }
