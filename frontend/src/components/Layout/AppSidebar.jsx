@@ -45,6 +45,21 @@ const getNavItems = (isTeacherRole) => [
     path: "/",
   },
 
+  // "Ganancias" oculto para rol docente
+  ...(isTeacherRole
+    ? []
+    : [
+        {
+          icon: (
+            <SidebarIcon>
+              <DollarBagIcon className="w-5 h-5" />
+            </SidebarIcon>
+          ),
+          name: "Ganancias",
+          path: "/gains",
+        },
+      ]),
+
   {
     icon: (
       <SidebarIcon>
@@ -132,21 +147,6 @@ const getNavItems = (isTeacherRole) => [
     name: "Usuarios",
     path: "/users",
   },
-
-  // "Ganancias" oculto para rol docente
-  ...(isTeacherRole
-    ? []
-    : [
-        {
-          icon: (
-            <SidebarIcon>
-              <DollarBagIcon className="w-5 h-5" />
-            </SidebarIcon>
-          ),
-          name: "Ganancias",
-          path: "/gains",
-        },
-      ]),
 ];
 
 const AppSidebar = () => {
