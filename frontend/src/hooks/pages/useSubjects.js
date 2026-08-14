@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 // Services
 import { subjectService } from "../../services/subject.service";
@@ -47,7 +47,7 @@ export function useSubjects() {
   // ======================================================
   // FETCH
   // ======================================================
-  const fetchSubjects = async () => {
+  const fetchSubjects = useCallback(async () => {
     try {
       const response = await subjectService.getAll();
 
@@ -56,11 +56,11 @@ export function useSubjects() {
       console.error(error);
       setSubjects([]);
     }
-  };
+  }, []);
 
   useEffect(() => {
     fetchSubjects();
-  }, []);
+  }, [fetchSubjects]);
 
   // ======================================================
   // RESET
@@ -205,6 +205,9 @@ export function useSubjects() {
     }
   };
 
+  // ======================================================
+  // RETURN
+  // ======================================================
   return {
     subjects,
 
