@@ -70,43 +70,40 @@ export function getPlansColumns({
       header: "Precios Actuales",
       accessor: "current_price",
     },
-
-    ...(isAdmin
-      ? [
-          {
-            header: "Acciones",
-            render: (row) => {
-              const hasSubjects = allPlanSubjects.some(
-                (ps) => ps.plan_id === row.id,
-              );
-
-              return (
-                <div className="flex gap-2">
-                  <ViewButton
-                    title="Ver Historial"
-                    onClick={() => handleOpenHistory(row)}
-                  />
-
-                  <EditButton
-                    title="Editar Plan"
-                    onClick={() => handleEditPlan(row)}
-                  />
-
-                  <AssignTeacherButton
-                    disabled={!hasSubjects}
-                    title={
-                      hasSubjects
-                        ? "Asignar Docente"
-                        : "Primero agregue una o más materias al plan"
-                    }
-                    onClick={() => handleManageTeachers(row)}
-                  />
-                </div>
-              );
-            },
-          },
-        ]
-      : []),
   ];
+
+  if (isAdmin) {
+    columns.push({
+      header: "Acciones",
+      render: (row) => {
+        const hasSubjects = allPlanSubjects.some((ps) => ps.plan_id === row.id);
+
+        return (
+          <div className="flex gap-2">
+            <ViewButton
+              title="Ver Historial"
+              onClick={() => handleOpenHistory(row)}
+            />
+
+            <EditButton
+              title="Editar Plan"
+              onClick={() => handleEditPlan(row)}
+            />
+
+            <AssignTeacherButton
+              disabled={!hasSubjects}
+              title={
+                hasSubjects
+                  ? "Asignar Docente"
+                  : "Primero agregue una o más materias al plan"
+              }
+              onClick={() => handleManageTeachers(row)}
+            />
+          </div>
+        );
+      },
+    });
+  }
+
   return columns;
 }
