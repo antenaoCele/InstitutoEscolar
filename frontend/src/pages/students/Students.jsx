@@ -129,7 +129,6 @@ export function Students() {
       selectedPlan,
       selectedStatus,
       selectedPlanStatus,
-      filteredStudents,
     ],
   });
 
