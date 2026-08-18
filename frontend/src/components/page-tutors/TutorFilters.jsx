@@ -1,5 +1,5 @@
 import Input from "../form/Input";
-import Select from "../form/Select";
+import SearchableSelect from "../form/SearchableSelect";
 
 export default function TutorFilters({
   searchFirstLastName,
@@ -26,10 +26,12 @@ export default function TutorFilters({
         className="p-2 border border-gray-300 rounded w-60"
       />
 
-      <Select
+      <SearchableSelect
         value={filterStudentId}
         onChange={(e) => onStudentChange(e.target.value)}
-        className="p-2 border border-gray-300 rounded w-60"
+        className="w-60"
+        searchPlaceholder="Buscar alumno..."
+        emptyMessage="No se encontraron alumnos"
       >
         <option value="">Todos los alumnos</option>
 
@@ -38,7 +40,7 @@ export default function TutorFilters({
             {student.last_name}, {student.first_name}
           </option>
         ))}
-      </Select>
+      </SearchableSelect>
     </div>
   );
 }
