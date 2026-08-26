@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import BasicTable from "../../components/tables/BasicTables/BasicTablesOne";
 import Button from "../../components/ui/Button";
 import Input from "../../components/form/Input";
@@ -24,6 +24,32 @@ import {
 import { getTodayLocal } from "../../utils/date";
 
 // ======================================================
+// Recargo por mora. El backend es la AUTORIDAD sobre este número
+// (valida el monto recibido contra su propio rango y rechaza lo
+// que se salga). Acá se usa solo para reconstruir el "monto a
+// abonar" de un pago YA registrado que se está editando, cuando
+// su período dejó de figurar como pendiente y el estado del plan
+// no lo trae. Si algún día cambia, se cambia en el service.
+// ======================================================
+const SURCHARGE_RATE = 0.15;
+const MAX_NOTE_LENGTH = 200;
+
+const round2 = (value) => Math.round(value * 100) / 100;
+
+const formatMoney = (value) =>
+  `$${Number(value).toLocaleString("es-AR", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  })}`;
+
+// Normaliza para buscar sin importar mayúsculas ni tildes
+const normalize = (value) =>
+  String(value ?? "")
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "");
+
+// ======================================================
 // Arma las opciones de período que se le pueden ofrecer al admin
 // para un student_plan puntual, a partir del estado que devuelve
 // studentPlanService.getStatus(). extraPeriod es el período que ya
@@ -41,9 +67,13 @@ function getPeriodOptions(status, extraPeriod = null) {
   const options = [];
 
   if (status?.overdue_period) {
+    const amount = status.overdue_expected_amount;
+
     options.push({
       value: status.overdue_period,
-      label: `Regularizar ${status.overdue_period} (+15%)`,
+      label: `Regularizar ${status.overdue_period} (+15%)${
+        amount != null ? ` — ${formatMoney(amount)}` : ""
+      }`,
     });
   }
 
@@ -60,9 +90,13 @@ function getPeriodOptions(status, extraPeriod = null) {
       STATUS_LABELS[status.current_period.status] ||
       status.current_period.status;
 
+    const amount = status.current_period.expected_amount;
+
     options.push({
       value: status.current_period.period,
-      label: `${status.current_period.period} — ${label}`,
+      label: `${status.current_period.period} — ${label}${
+        amount != null ? ` — ${formatMoney(amount)}` : ""
+      }`,
     });
   }
 
@@ -76,6 +110,41 @@ function getPeriodOptions(status, extraPeriod = null) {
   return options;
 }
 
+// ======================================================
+// Montos del período elegido: base (piso, sin recargo) y esperado
+// (techo, lo que le corresponde abonar). Salen del estado que
+// calcula el backend — el front NO calcula el recargo.
+//
+// fallback cubre el caso del "período original" al editar: ese
+// período ya no está pendiente, así que el estado no trae sus
+// montos y se reconstruyen desde el pago guardado (plan_price
+// congelado + payment_type), que es la misma derivación que hace
+// el backend.
+// ======================================================
+function getPeriodAmounts(status, period, fallback = null) {
+  if (!status || !period) return null;
+
+  if (period === status.overdue_period) {
+    return {
+      base: status.overdue_base_amount,
+      expected: status.overdue_expected_amount,
+    };
+  }
+
+  if (status.current_period?.period === period) {
+    return {
+      base: status.current_period.base_amount ?? null,
+      expected: status.current_period.expected_amount ?? null,
+    };
+  }
+
+  if (fallback && fallback.period === period) {
+    return { base: fallback.base, expected: fallback.expected };
+  }
+
+  return null;
+}
+
 export default function StudentPayments() {
   // ======================================================
   // DATOS
@@ -84,6 +153,11 @@ export default function StudentPayments() {
   const [students, setStudents] = useState([]);
   const [studentPlans, setStudentPlans] = useState([]);
   const [enrollments, setEnrollments] = useState([]);
+
+  // ======================================================
+  // BUSCADOR DE ALUMNOS (filtra las tablas del mes)
+  // ======================================================
+  const [search, setSearch] = useState("");
 
   // ======================================================
   // MODALES
@@ -117,6 +191,16 @@ export default function StudentPayments() {
   const [paymentPeriod, setPaymentPeriod] = useState("");
   const [originalPaymentPeriod, setOriginalPaymentPeriod] = useState(null);
   const [originalStudentPlanId, setOriginalStudentPlanId] = useState(null);
+
+  // Monto realmente cobrado + motivo si difiere del esperado.
+  // amountToCharge es string porque viene de un input.
+  const [amountToCharge, setAmountToCharge] = useState("");
+  const [paymentNote, setPaymentNote] = useState("");
+
+  // Evita que el prefill automático del monto pise lo que se cargó
+  // al abrir el modal de edición. Guarda la clave plan:período que
+  // ya fue prellenada.
+  const prefilledKeyRef = useRef(null);
 
   // Alumno y plan del pago que se está editando. Se guardan aparte
   // porque las listas del formulario (getPayableStudents /
@@ -238,6 +322,32 @@ export default function StudentPayments() {
     ? originalPaymentPeriod
     : null;
 
+  const amountFallback = isSameOriginalPlan
+    ? (editingPaymentContext?.amounts ?? null)
+    : null;
+
+  const currentAmounts = getPeriodAmounts(
+    planStatus,
+    paymentPeriod,
+    amountFallback,
+  );
+
+  // Si base y esperado coinciden, no hay recargo que perdonar: no
+  // tiene sentido dejar editar el monto.
+  const canEditAmount =
+    currentAmounts?.base != null &&
+    currentAmounts?.expected != null &&
+    round2(currentAmounts.base) !== round2(currentAmounts.expected);
+
+  const parsedAmount =
+    amountToCharge === "" ? null : round2(Number(amountToCharge));
+
+  const amountDiffers =
+    parsedAmount != null &&
+    Number.isFinite(parsedAmount) &&
+    currentAmounts?.expected != null &&
+    parsedAmount !== round2(currentAmounts.expected);
+
   // Cuando cambia el estado del plan (recién elegido, o recién
   // cargado al editar), si todavía no hay un período elegido, se
   // preselecciona el primero disponible (prioriza la deuda vieja
@@ -252,6 +362,26 @@ export default function StudentPayments() {
       return options[0]?.value || "";
     });
   }, [planStatus]);
+
+  // Prefill del monto a cobrar con el monto esperado del período.
+  // Se salta si esa combinación plan:período ya fue prellenada (es
+  // el caso de la edición, donde el monto real lo carga
+  // handleEditPayment y no se debe pisar).
+  useEffect(() => {
+    if (!planStatus || !paymentPeriod) return;
+
+    const key = `${selectedStudentPlan}:${paymentPeriod}`;
+    if (prefilledKeyRef.current === key) return;
+
+    prefilledKeyRef.current = key;
+
+    const amounts = getPeriodAmounts(planStatus, paymentPeriod, amountFallback);
+
+    setAmountToCharge(
+      amounts?.expected != null ? String(amounts.expected) : "",
+    );
+    setPaymentNote("");
+  }, [planStatus, paymentPeriod, selectedStudentPlan]);
 
   // ======================================================
   // NAVEGACIÓN DE MES
@@ -275,7 +405,28 @@ export default function StudentPayments() {
   };
 
   // ======================================================
-  // TOTALES
+  // FILTRADO POR BUSCADOR
+  // Filtra SOLO las filas visibles. Los totales de arriba siguen
+  // siendo los del mes completo: son cifras contables y no deben
+  // cambiar según lo que se esté buscando.
+  // ======================================================
+  const matchesSearch = (row) => {
+    const query = normalize(search).trim();
+    if (!query) return true;
+
+    const full = normalize(`${row.first_name} ${row.last_name}`);
+    const inverted = normalize(`${row.last_name} ${row.first_name}`);
+
+    return full.includes(query) || inverted.includes(query);
+  };
+
+  const filteredPayments = payments.filter(matchesSearch);
+  const filteredEnrollments = enrollments.filter(matchesSearch);
+
+  const isSearching = search.trim().length > 0;
+
+  // ======================================================
+  // TOTALES (siempre del mes completo, sin filtrar)
   // ======================================================
   const totalPayments = payments.reduce(
     (acc, payment) => acc + Number(payment.amount),
@@ -300,6 +451,9 @@ export default function StudentPayments() {
     setPlanStatus(null);
     setPaymentPeriod("");
     setOriginalPaymentPeriod(null);
+    setAmountToCharge("");
+    setPaymentNote("");
+    prefilledKeyRef.current = null;
     setErrorsPayment({});
   };
 
@@ -315,6 +469,9 @@ export default function StudentPayments() {
     setOriginalStudentPlanId(null);
     setEditingPaymentContext(null);
     setEditingPaymentId(null);
+    setAmountToCharge("");
+    setPaymentNote("");
+    prefilledKeyRef.current = null;
     setErrorsEditPayment({});
   };
 
@@ -334,6 +491,45 @@ export default function StudentPayments() {
   };
 
   // ======================================================
+  // VALIDACIÓN DEL MONTO A COBRAR
+  // Espeja la del backend (resolveAmountAndNote). Acá es solo para
+  // dar feedback inmediato: la que MANDA es la del backend.
+  // ======================================================
+  const validateAmountAndNote = () => {
+    const errors = {};
+
+    if (!currentAmounts || currentAmounts.expected == null) {
+      errors.amount = "No se pudo determinar el monto de este período.";
+      return errors;
+    }
+
+    if (amountToCharge === "" || !Number.isFinite(Number(amountToCharge))) {
+      errors.amount = "Ingrese un monto válido.";
+      return errors;
+    }
+
+    const base = round2(currentAmounts.base);
+    const expected = round2(currentAmounts.expected);
+    const value = round2(Number(amountToCharge));
+
+    if (value < base) {
+      errors.amount = `No puede ser menor al precio del plan (${formatMoney(base)}).`;
+      return errors;
+    }
+
+    if (value > expected) {
+      errors.amount = `No puede ser mayor al monto a abonar (${formatMoney(expected)}).`;
+      return errors;
+    }
+
+    if (value !== expected && !paymentNote.trim()) {
+      errors.note = "Indique el motivo de la diferencia.";
+    }
+
+    return errors;
+  };
+
+  // ======================================================
   // HANDLES: PAGO
   // ======================================================
   const handleStudentChange = async (studentId) => {
@@ -341,6 +537,9 @@ export default function StudentPayments() {
     setSelectedStudentPlan("");
     setPlanStatus(null);
     setPaymentPeriod("");
+    setAmountToCharge("");
+    setPaymentNote("");
+    prefilledKeyRef.current = null;
 
     try {
       const { data } = await PaymentService.getStudentPlans(studentId);
@@ -358,6 +557,9 @@ export default function StudentPayments() {
     setSelectedStudentPlan(studentPlanId);
     setPaymentPeriod("");
     setPlanStatus(null);
+    setAmountToCharge("");
+    setPaymentNote("");
+    prefilledKeyRef.current = null;
 
     if (!studentPlanId) return;
 
@@ -370,13 +572,16 @@ export default function StudentPayments() {
   };
 
   const handleCreatePayment = async () => {
-    const errors = validatePaymentForm({
-      selectedStudent,
-      selectedStudentPlan,
-      paymentDate,
-      paymentPeriod,
-      paymentMethod,
-    });
+    const errors = {
+      ...validatePaymentForm({
+        selectedStudent,
+        selectedStudentPlan,
+        paymentDate,
+        paymentPeriod,
+        paymentMethod,
+      }),
+      ...validateAmountAndNote(),
+    };
 
     if (Object.keys(errors).length > 0) {
       setErrorsPayment(errors);
@@ -405,6 +610,8 @@ export default function StudentPayments() {
         payment_date: paymentDate,
         payment_period: paymentPeriod,
         payment_method: paymentMethod,
+        amount: round2(Number(amountToCharge)),
+        note: amountDiffers ? paymentNote.trim() : null,
       });
 
       await fetchPayments();
@@ -437,9 +644,20 @@ export default function StudentPayments() {
     setOriginalPaymentPeriod(payment.payment_period);
     setErrorsEditPayment({});
 
+    // El monto y la nota REALES del pago, no los esperados. El
+    // prefill automático se saltea marcando la clave como ya
+    // prellenada (ver prefilledKeyRef).
+    prefilledKeyRef.current = `${payment.student_plan_id}:${payment.payment_period}`;
+    setAmountToCharge(String(round2(Number(payment.amount))));
+    setPaymentNote(payment.note ?? "");
+
     // Guardamos alumno y plan del pago para poder inyectarlos en los
     // Select si las listas del formulario no los traen (ver
     // editStudentOptions / editStudentPlanOptions más abajo).
+    // amounts reconstruye el rango válido de ESTE pago para el caso
+    // en que su período ya no figure como pendiente.
+    const base = round2(Number(payment.plan_price));
+
     setEditingPaymentContext({
       student: {
         id: payment.student_id,
@@ -449,6 +667,14 @@ export default function StudentPayments() {
       plan: {
         student_plan_id: payment.student_plan_id,
         plan_name: payment.plan_name,
+      },
+      amounts: {
+        period: payment.payment_period,
+        base,
+        expected:
+          payment.payment_type === "REGULARIZATION"
+            ? round2(base * (1 + SURCHARGE_RATE))
+            : base,
       },
     });
 
@@ -494,13 +720,16 @@ export default function StudentPayments() {
       return;
     }
 
-    const errors = validatePaymentForm({
-      selectedStudent,
-      selectedStudentPlan,
-      paymentDate,
-      paymentPeriod,
-      paymentMethod,
-    });
+    const errors = {
+      ...validatePaymentForm({
+        selectedStudent,
+        selectedStudentPlan,
+        paymentDate,
+        paymentPeriod,
+        paymentMethod,
+      }),
+      ...validateAmountAndNote(),
+    };
 
     if (Object.keys(errors).length > 0) {
       setErrorsEditPayment(errors);
@@ -528,6 +757,8 @@ export default function StudentPayments() {
         payment_date: paymentDate,
         payment_period: paymentPeriod,
         payment_method: paymentMethod,
+        amount: round2(Number(amountToCharge)),
+        note: amountDiffers ? paymentNote.trim() : null,
       });
 
       await fetchPayments();
@@ -710,7 +941,20 @@ export default function StudentPayments() {
     },
     {
       header: "Montos",
-      render: (row) => `$${Number(row.amount).toLocaleString("es-AR")}`,
+      render: (row) => (
+        <div className="flex items-center gap-2">
+          <span>{formatMoney(row.amount)}</span>
+
+          {row.note && (
+            <span
+              title={row.note}
+              className="text-xs text-amber-600 border border-amber-300 rounded px-1 cursor-help"
+            >
+              nota
+            </span>
+          )}
+        </div>
+      ),
     },
     {
       header: "Métodos",
@@ -745,7 +989,7 @@ export default function StudentPayments() {
     },
     {
       header: "Montos",
-      render: (row) => `$${Number(row.amount).toLocaleString("es-AR")}`,
+      render: (row) => formatMoney(row.amount),
     },
     {
       header: "Acciones",
@@ -768,14 +1012,28 @@ export default function StudentPayments() {
   // Títulos de tabla con el botón correspondiente arriba de cada una
   const paymentsTableTitle = (
     <div className="flex justify-between items-center">
-      <span>Pagos de estudiantes</span>
+      <span>
+        Pagos de estudiantes
+        {isSearching && (
+          <span className="ml-2 text-sm font-normal text-gray-500">
+            (mostrando {filteredPayments.length} de {payments.length})
+          </span>
+        )}
+      </span>
       <Button onClick={() => setOpenCreateModal(true)}>Registrar cuota</Button>
     </div>
   );
 
   const enrollmentsTableTitle = (
     <div className="flex justify-between items-center">
-      <span>Inscripciones</span>
+      <span>
+        Inscripciones
+        {isSearching && (
+          <span className="ml-2 text-sm font-normal text-gray-500">
+            (mostrando {filteredEnrollments.length} de {enrollments.length})
+          </span>
+        )}
+      </span>
       <Button onClick={() => setOpenCreateEnrollmentModal(true)}>
         Registrar inscripción
       </Button>
@@ -826,12 +1084,96 @@ export default function StudentPayments() {
   })();
 
   // ======================================================
+  // BLOQUE DE MONTOS (compartido por crear y editar)
+  // ======================================================
+  const renderAmountFields = (errors) => {
+    if (!paymentPeriod || !currentAmounts || currentAmounts.expected == null) {
+      return null;
+    }
+
+    const base = round2(currentAmounts.base);
+    const expected = round2(currentAmounts.expected);
+    const surcharge = round2(expected - base);
+
+    return (
+      <div className="my-4 rounded-lg border border-gray-200 p-4">
+        <div className="flex justify-between text-sm text-gray-600">
+          <span>Precio del plan</span>
+          <span>{formatMoney(base)}</span>
+        </div>
+
+        {surcharge > 0 && (
+          <div className="flex justify-between text-sm text-amber-600 mt-1">
+            <span>Recargo por mora (15%)</span>
+            <span>{formatMoney(surcharge)}</span>
+          </div>
+        )}
+
+        <div className="flex justify-between font-semibold border-t border-gray-200 mt-2 pt-2">
+          <span>Monto a abonar</span>
+          <span>{formatMoney(expected)}</span>
+        </div>
+
+        <div className="mt-4">
+          {canEditAmount ? (
+            <>
+              <Input
+                type="number"
+                step="0.01"
+                label="Monto a cobrar"
+                value={amountToCharge}
+                onChange={(e) => setAmountToCharge(e.target.value)}
+                error={errors.amount}
+              />
+
+              <p className="text-xs text-gray-500 -mt-1">
+                Editable entre {formatMoney(base)} y {formatMoney(expected)}. Se
+                puede cobrar sin recargo si corresponde.
+              </p>
+            </>
+          ) : (
+            <div className="flex justify-between items-center">
+              <span className="text-sm text-gray-600">Monto a cobrar</span>
+              <span className="font-semibold">{formatMoney(expected)}</span>
+            </div>
+          )}
+
+          {!canEditAmount && (
+            <p className="text-xs text-gray-500 mt-1">
+              Este período no tiene recargo aplicado, así que no hay monto que
+              ajustar.
+            </p>
+          )}
+        </div>
+
+        {amountDiffers && (
+          <div className="mt-4">
+            <Input
+              type="text"
+              label="Motivo de la diferencia"
+              value={paymentNote}
+              onChange={(e) =>
+                setPaymentNote(e.target.value.slice(0, MAX_NOTE_LENGTH))
+              }
+              error={errors.note}
+            />
+
+            <p className="text-xs text-gray-500 -mt-1 text-right">
+              {paymentNote.length}/{MAX_NOTE_LENGTH}
+            </p>
+          </div>
+        )}
+      </div>
+    );
+  };
+
+  // ======================================================
   // RETURN
   // ======================================================
   return (
     <>
       {/* ---------- Navegación de mes ---------- */}
-      <div className="flex justify-center items-center gap-4 mb-6">
+      <div className="flex justify-center items-center gap-4 mb-4">
         <PreviousButton
           title="Mes anterior"
           onClick={previousMonth}
@@ -848,7 +1190,32 @@ export default function StudentPayments() {
         ></NextButton>
       </div>
 
-      {/* ---------- Totales ---------- */}
+      {/* ---------- Buscador de alumnos ---------- */}
+      <div className="mb-6 max-w-md mx-auto relative">
+        <input
+          type="text"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          placeholder="Buscar alumno en este mes..."
+          className="w-full rounded-lg border border-gray-300 px-4 py-2 pr-10
+                     text-sm focus:outline-none focus:ring-2 focus:ring-brand-500
+                     dark:bg-black dark:border-gray-700 dark:text-white"
+        />
+
+        {isSearching && (
+          <button
+            type="button"
+            onClick={() => setSearch("")}
+            title="Limpiar búsqueda"
+            className="absolute right-3 top-1/2 -translate-y-1/2
+                       text-gray-400 hover:text-gray-600"
+          >
+            ✕
+          </button>
+        )}
+      </div>
+
+      {/* ---------- Totales (del mes completo, sin filtrar) ---------- */}
       <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
         <ComponentCard title="Cuotas">
           <p className="text-2xl font-bold">{payments.length}</p>
@@ -941,6 +1308,8 @@ export default function StudentPayments() {
             pendiente de pago.
           </p>
         )}
+
+        {renderAmountFields(errorsPayment)}
 
         <Input
           type="date"
@@ -1047,6 +1416,8 @@ export default function StudentPayments() {
             pendiente al que reasignar este pago.
           </p>
         )}
+
+        {renderAmountFields(errorsEditPayment)}
 
         <Input
           type="date"
@@ -1223,14 +1594,14 @@ export default function StudentPayments() {
       <BasicTable
         title={paymentsTableTitle}
         columns={columns}
-        data={payments}
+        data={filteredPayments}
       />
 
       <div className="mt-8">
         <BasicTable
           title={enrollmentsTableTitle}
           columns={enrollmentColumns}
-          data={enrollments}
+          data={filteredEnrollments}
         />
       </div>
     </>

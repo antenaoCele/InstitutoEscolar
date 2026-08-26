@@ -5,13 +5,93 @@ import {
   existingRegularization,
   getStudentPlanStatus,
   getExpectedBaseAmount,
+  SURCHARGE_RATE,
 } from "../services/payments.service.js";
 import { needsEnrollment } from "../services/enrollments.service.js";
 
 const baseController = createCrudController("payments");
 
+const MAX_NOTE_LENGTH = 200;
+
 function round2(value) {
   return Math.round(value * 100) / 100;
+}
+
+// =====================================================
+// MONTO A COBRAR + NOTA
+//
+// El monto efectivamente cobrado puede ser menor al esperado
+// (perdonar el recargo por mora es una decisión real del negocio),
+// pero dentro de una ventana cerrada:
+//
+//   base <= amount <= base * (1 + recargo)
+//
+// El piso evita cobrar de menos "sin querer" y el techo evita
+// cobrar de más, que no tiene ninguna justificación y ensuciaría
+// la liquidación docente (que se calcula sobre lo cobrado).
+//
+// Si el monto difiere del esperado, la nota es OBLIGATORIA: es la
+// única traza de por qué esa cuota se cobró distinto. Y si NO
+// difiere, la nota se fuerza a null para que nunca quede una
+// explicación colgada de una diferencia inexistente.
+//
+// OJO: esto NO cambia el payment_type. Una regularización cobrada
+// sin recargo sigue siendo REGULARIZATION — el tipo describe
+// CUÁNDO se pagó (fuera de término), no cuánto se cobró. Si se
+// degradara a NORMAL se rompería existingRegularization().
+// =====================================================
+function resolveAmountAndNote({
+  rawAmount,
+  rawNote,
+  baseAmount,
+  expectedAmount,
+}) {
+  const base = round2(baseAmount);
+  const expected = round2(expectedAmount);
+
+  let amount;
+
+  if (rawAmount === undefined || rawAmount === null || rawAmount === "") {
+    // Sin monto explícito: se cobra lo que corresponde.
+    amount = expected;
+  } else {
+    amount = Number(rawAmount);
+  }
+
+  if (!Number.isFinite(amount)) {
+    return { error: "El monto a cobrar no es un número válido." };
+  }
+
+  amount = round2(amount);
+
+  if (amount < base) {
+    return {
+      error: `El monto a cobrar no puede ser menor al precio del plan ($${base}).`,
+    };
+  }
+
+  if (amount > expected) {
+    return {
+      error: `El monto a cobrar no puede ser mayor al monto a abonar ($${expected}).`,
+    };
+  }
+
+  const differs = amount !== expected;
+  const note = String(rawNote ?? "").trim();
+
+  if (differs && !note) {
+    return {
+      error: "Debe indicar el motivo de la diferencia de monto.",
+    };
+  }
+
+  if (note.length > MAX_NOTE_LENGTH) {
+    return {
+      error: `El motivo no puede superar los ${MAX_NOTE_LENGTH} caracteres.`,
+    };
+  }
+
+  return { amount, note: differs ? note : null };
 }
 
 export const paymentsController = {
@@ -31,7 +111,8 @@ export const paymentsController = {
           p.payment_date,
           p.payment_period,
           p.payment_type,
-          p.payment_method
+          p.payment_method,
+          p.note
         FROM payments p
         JOIN student_plans sp ON p.student_plan_id = sp.id
         ORDER BY p.id DESC
@@ -68,7 +149,8 @@ export const paymentsController = {
           p.payment_date,
           p.payment_period,
           p.payment_type,
-          p.payment_method
+          p.payment_method,
+          p.note
         FROM payments p
         JOIN student_plans sp ON p.student_plan_id = sp.id
         WHERE p.id = ?
@@ -111,6 +193,7 @@ export const paymentsController = {
           p.payment_date,
           p.payment_period,
           p.payment_type,
+          p.note,
           sp.id AS student_plan_id,
           sp.plan_id,
           sp.teacher_id
@@ -170,8 +253,14 @@ export const paymentsController = {
 
   create: async (req, res) => {
     try {
-      const { student_plan_id, payment_date, payment_period, payment_method } =
-        req.body;
+      const {
+        student_plan_id,
+        payment_date,
+        payment_period,
+        payment_method,
+        amount: rawAmount,
+        note: rawNote,
+      } = req.body;
 
       // Obtener el student_plan completo
       const [spRows] = await db.execute(
@@ -238,8 +327,19 @@ export const paymentsController = {
         ? status.overdue_student_plan_id
         : student_plan_id;
 
-      let planPrice;
-      let amount;
+      const baseAmount = await getExpectedBaseAmount(
+        studentPlan,
+        payment_period,
+      );
+
+      if (baseAmount == null) {
+        return res.status(400).json({
+          success: false,
+          message: isRegularization
+            ? "No existe un precio histórico para ese período."
+            : "No existe un precio para ese período.",
+        });
+      }
 
       if (isRegularization) {
         // Una regularización por período: bloqueo real, no advertencia.
@@ -252,37 +352,31 @@ export const paymentsController = {
               "Ya existe una regularización registrada para ese período.",
           });
         }
-
-        const baseAmount = await getExpectedBaseAmount(
-          studentPlan,
-          payment_period,
-        );
-
-        if (baseAmount == null) {
-          return res.status(400).json({
-            success: false,
-            message: "No existe un precio histórico para ese período.",
-          });
-        }
-
-        planPrice = baseAmount;
-        amount = round2(baseAmount * 1.15);
-      } else {
-        const baseAmount = await getExpectedBaseAmount(
-          studentPlan,
-          payment_period,
-        );
-
-        if (baseAmount == null) {
-          return res.status(400).json({
-            success: false,
-            message: "No existe un precio para ese período.",
-          });
-        }
-
-        planPrice = baseAmount;
-        amount = baseAmount;
       }
+
+      // Lo que le CORRESPONDE abonar. El monto realmente cobrado sale
+      // de resolveAmountAndNote() y puede ser menor (nunca mayor).
+      const expectedAmount = isRegularization
+        ? round2(baseAmount * (1 + SURCHARGE_RATE))
+        : baseAmount;
+
+      const resolved = resolveAmountAndNote({
+        rawAmount,
+        rawNote,
+        baseAmount,
+        expectedAmount,
+      });
+
+      if (resolved.error) {
+        return res.status(400).json({
+          success: false,
+          message: resolved.error,
+        });
+      }
+
+      const planPrice = baseAmount;
+      const amount = resolved.amount;
+      const note = resolved.note;
 
       const paymentType = isRegularization ? "REGULARIZATION" : "NORMAL";
 
@@ -302,9 +396,10 @@ export const paymentsController = {
           payment_date,
           payment_period,
           payment_type,
-          payment_method
+          payment_method,
+          note
         )
-        VALUES (?, ?, ?, ?, ?, ?, ?)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
         `,
         [
           effectiveStudentPlanId,
@@ -314,6 +409,7 @@ export const paymentsController = {
           payment_period,
           paymentType,
           payment_method,
+          note,
         ],
       );
 
@@ -325,11 +421,13 @@ export const paymentsController = {
           student_plan_id: effectiveStudentPlanId,
           amount,
           plan_price: planPrice,
+          expected_amount: expectedAmount,
           interest: round2(amount - planPrice),
           payment_date,
           payment_period,
           payment_type: paymentType,
           payment_method,
+          note,
         },
       });
     } catch (error) {
@@ -345,8 +443,14 @@ export const paymentsController = {
   update: async (req, res) => {
     try {
       const id = Number(req.params.id);
-      const { student_plan_id, payment_date, payment_period, payment_method } =
-        req.body;
+      const {
+        student_plan_id,
+        payment_date,
+        payment_period,
+        payment_method,
+        amount: rawAmount,
+        note: rawNote,
+      } = req.body;
 
       const [rows] = await db.execute("SELECT * FROM payments WHERE id = ?", [
         id,
@@ -440,8 +544,19 @@ export const paymentsController = {
         ? (status.overdue_student_plan_id ?? newStudentPlanId)
         : newStudentPlanId;
 
-      let planPrice;
-      let amount;
+      const baseAmount = await getExpectedBaseAmount(
+        studentPlan,
+        newPaymentPeriod,
+      );
+
+      if (baseAmount == null) {
+        return res.status(400).json({
+          success: false,
+          message: isRegularization
+            ? "No existe un precio histórico para ese período."
+            : "No existe un precio para ese período.",
+        });
+      }
 
       if (isRegularization) {
         if (
@@ -457,37 +572,46 @@ export const paymentsController = {
               "Ya existe una regularización registrada para ese período.",
           });
         }
-
-        const baseAmount = await getExpectedBaseAmount(
-          studentPlan,
-          newPaymentPeriod,
-        );
-
-        if (baseAmount == null) {
-          return res.status(400).json({
-            success: false,
-            message: "No existe un precio histórico para ese período.",
-          });
-        }
-
-        planPrice = baseAmount;
-        amount = round2(baseAmount * 1.15);
-      } else {
-        const baseAmount = await getExpectedBaseAmount(
-          studentPlan,
-          newPaymentPeriod,
-        );
-
-        if (baseAmount == null) {
-          return res.status(400).json({
-            success: false,
-            message: "No existe un precio para ese período.",
-          });
-        }
-
-        planPrice = baseAmount;
-        amount = baseAmount;
       }
+
+      const expectedAmount = isRegularization
+        ? round2(baseAmount * (1 + SURCHARGE_RATE))
+        : baseAmount;
+
+      // Si el front no manda amount/note (ej. una edición parcial desde
+      // otra pantalla), se conservan los del pago existente en vez de
+      // recalcularlos: sin esto, entrar a corregir la FECHA de un pago
+      // al que se le perdonó el recargo se lo volvía a sumar solo.
+      // Si el período cambió, lo de antes ya no aplica y se recalcula.
+      const keepsAmountContext = keepsSamePlan && keepsSamePeriod;
+
+      const resolved = resolveAmountAndNote({
+        rawAmount:
+          rawAmount !== undefined
+            ? rawAmount
+            : keepsAmountContext
+              ? rows[0].amount
+              : undefined,
+        rawNote:
+          rawNote !== undefined
+            ? rawNote
+            : keepsAmountContext
+              ? rows[0].note
+              : undefined,
+        baseAmount,
+        expectedAmount,
+      });
+
+      if (resolved.error) {
+        return res.status(400).json({
+          success: false,
+          message: resolved.error,
+        });
+      }
+
+      const planPrice = baseAmount;
+      const amount = resolved.amount;
+      const note = resolved.note;
 
       const paymentType = isRegularization ? "REGULARIZATION" : "NORMAL";
 
@@ -506,7 +630,8 @@ export const paymentsController = {
           payment_date = ?,
           payment_period = ?,
           payment_type = ?,
-          payment_method = ?
+          payment_method = ?,
+          note = ?
         WHERE id = ?
         `,
         [
@@ -517,6 +642,7 @@ export const paymentsController = {
           newPaymentPeriod,
           paymentType,
           newPaymentMethod,
+          note,
           id,
         ],
       );
@@ -529,11 +655,13 @@ export const paymentsController = {
           student_plan_id: effectiveStudentPlanId,
           amount,
           plan_price: planPrice,
+          expected_amount: expectedAmount,
           interest: round2(amount - planPrice),
           payment_date: newPaymentDate,
           payment_period: newPaymentPeriod,
           payment_type: paymentType,
           payment_method: newPaymentMethod,
+          note,
         },
       });
     } catch (error) {
@@ -561,6 +689,7 @@ export const paymentsController = {
         p.payment_period,
         p.payment_type,
         p.payment_method,
+        p.note,
 
         sp.id AS student_plan_id,
 

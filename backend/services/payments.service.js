@@ -2,6 +2,26 @@ import { db } from "../db.js";
 import { getCurrentDateParts } from "../utils/dateUtils.js";
 
 /* =========================================================
+CONSTANTES DE NEGOCIO
+========================================================= */
+// Día de vencimiento de la cuota del mes. Hasta el 15 inclusive se
+// paga sin recargo; a partir del 16 el período pasa a estar vencido
+// y se cobra con el recargo.
+const PAYMENT_DUE_DAY = 15;
+
+// Día límite del mes SIGUIENTE al que quedó vencido para regularizar
+// antes de que se dé la baja automática. Fijo, no configurable.
+const GRACE_PERIOD_DAY = 5;
+
+// Recargo por regularización. Vive acá y en ningún otro lado: el
+// controller y el front lo consumen desde este módulo.
+export const SURCHARGE_RATE = 0.15;
+
+function round2(value) {
+  return Math.round(value * 100) / 100;
+}
+
+/* =========================================================
 HELPERS DE PERÍODO (YYYY-MM), sin Date/toISOString para
 evitar corrimientos de zona horaria.
 ========================================================= */
@@ -35,7 +55,7 @@ function periodLTE(a, b) {
 }
 
 /* =========================================================
-PRECIO VIGENTE EN UNA FECHA (sin cambios)
+PRECIO VIGENTE EN UNA FECHA
 ========================================================= */
 export async function getPlanPriceAtDate(student_plan_id, date) {
   const [rows] = await db.execute(
@@ -56,7 +76,10 @@ export async function getPlanPriceAtDate(student_plan_id, date) {
     return null;
   }
 
-  return rows[0].price;
+  // MySQL devuelve DECIMAL como string. Ahora que el monto a cobrar
+  // se COMPARA contra este valor (piso y techo), tiene que ser
+  // número sí o sí: "55" < 50 da true por comparación de strings.
+  return Number(rows[0].price);
 }
 
 /* =========================================================
@@ -305,13 +328,27 @@ async function hasSuccessor(plan) {
 }
 
 /* =========================================================
-ESTADO COMPLETO DE UN student_plan
-(cuota vencida congelada + estado del período actual)
+REGLA DE PRIMERA CUOTA (media cuota si se eligió HALF)
+Aislada para poder aplicarla con una cadena ya resuelta y no
+repetir la consulta en cada cálculo de monto.
 ========================================================= */
-// Día límite del mes SIGUIENTE al que quedó vencido para regularizar
-// antes de que se dé la baja automática. Fijo, no configurable.
-const GRACE_PERIOD_DAY = 5;
+function applyFirstPaymentRule(
+  historicPrice,
+  period,
+  firstObligatedPeriod,
+  firstPaymentOption,
+) {
+  if (period === firstObligatedPeriod && firstPaymentOption === "HALF") {
+    return round2(historicPrice * 0.5);
+  }
 
+  return round2(historicPrice);
+}
+
+/* =========================================================
+ESTADO COMPLETO DE UN student_plan
+(cuota vencida congelada + estado del período actual + montos)
+========================================================= */
 export async function getStudentPlanStatus(student_plan_id) {
   const [rows] = await db.execute(
     `
@@ -339,6 +376,8 @@ export async function getStudentPlanStatus(student_plan_id) {
       account_status: "CURRENT",
       overdue_period: null,
       overdue_student_plan_id: null,
+      overdue_base_amount: null,
+      overdue_expected_amount: null,
       current_period: null,
       superseded: true,
     };
@@ -359,14 +398,14 @@ export async function getStudentPlanStatus(student_plan_id) {
 
   // Hasta qué período se escanea buscando deuda:
   // - INACTIVE: se congela en el mes de la baja, nunca avanza más.
-  // - ACTIVE, día <= 20: hasta el mes ANTERIOR al actual (el actual
+  // - ACTIVE, día <= 15: hasta el mes ANTERIOR al actual (el actual
   //   todavía está en su plazo normal, se evalúa aparte).
-  // - ACTIVE, día 21+: incluye también el mes actual, porque ya pasó
+  // - ACTIVE, día 16+: incluye también el mes actual, porque ya pasó
   //   su fecha límite.
   let scanEndPeriod;
   if (!isActive) {
     scanEndPeriod = toPeriod(plan.end_date);
-  } else if (day > 20) {
+  } else if (day > PAYMENT_DUE_DAY) {
     scanEndPeriod = currentPeriod;
   } else {
     scanEndPeriod = addMonths(currentPeriod, -1);
@@ -404,6 +443,28 @@ export async function getStudentPlanStatus(student_plan_id) {
     }
   }
 
+  // Montos del período vencido. Se calculan acá y no en el front
+  // para que el recargo viva en un solo lugar. Reutilizamos la
+  // cadena ya resuelta arriba en vez de volver a llamar a
+  // getExpectedBaseAmount(), que la resolvería de nuevo.
+  let overdueBaseAmount = null;
+
+  if (overduePeriod) {
+    const price = await getPlanPriceAtDate(
+      plan.id,
+      periodToDate(overduePeriod, "end"),
+    );
+
+    if (price != null) {
+      overdueBaseAmount = applyFirstPaymentRule(
+        price,
+        overduePeriod,
+        firstObligatedPeriod,
+        firstPaymentOption,
+      );
+    }
+  }
+
   const result = {
     student_plan_id: plan.id,
     academic_status: isActive ? "ACTIVE" : "INACTIVE",
@@ -415,6 +476,13 @@ export async function getStudentPlanStatus(student_plan_id) {
     overdue_student_plan_id: overduePeriod
       ? findOwnerId(chain, overduePeriod)
       : null,
+    // base = precio del plan sin recargo (piso del monto a cobrar)
+    // expected = lo que le corresponde abonar (techo del monto)
+    overdue_base_amount: overdueBaseAmount,
+    overdue_expected_amount:
+      overdueBaseAmount == null
+        ? null
+        : round2(overdueBaseAmount * (1 + SURCHARGE_RATE)),
     current_period: null,
   };
 
@@ -431,6 +499,29 @@ export async function getStudentPlanStatus(student_plan_id) {
       result.current_period = { period: currentPeriod, status: "paid" };
     } else {
       result.current_period = { period: currentPeriod, status: "pending" };
+    }
+
+    // Un período NO vencido nunca lleva recargo: base y esperado
+    // coinciden. Si todavía no corresponde pagarlo, no hay monto
+    // que mostrar.
+    if (result.current_period.status !== "not_due_yet") {
+      const price = await getPlanPriceAtDate(
+        plan.id,
+        periodToDate(currentPeriod, "end"),
+      );
+
+      const base =
+        price == null
+          ? null
+          : applyFirstPaymentRule(
+              price,
+              currentPeriod,
+              firstObligatedPeriod,
+              firstPaymentOption,
+            );
+
+      result.current_period.base_amount = base;
+      result.current_period.expected_amount = base;
     }
   }
 
@@ -512,7 +603,7 @@ export async function getFirstObligatedPeriod(student_plan) {
 }
 
 // Precio BASE esperado para un período de un student_plan, antes de
-// aplicar el 15% de regularización si corresponde. Centraliza la
+// aplicar el recargo de regularización si corresponde. Centraliza la
 // regla de "media cuota" para que nunca se desincronice entre el
 // cálculo de un pago normal, una regularización, o el "Debe" que se
 // muestra en la ficha del alumno: si el período es justo la primera
@@ -536,13 +627,12 @@ export async function getExpectedBaseAmount(student_plan, period) {
       ? addMonths(startPeriod, 1)
       : startPeriod;
 
-  const isFirstPeriod = period === firstObligatedPeriod;
-
-  if (isFirstPeriod && firstPaymentOption === "HALF") {
-    return Math.round(historicPrice * 0.5 * 100) / 100;
-  }
-
-  return historicPrice;
+  return applyFirstPaymentRule(
+    historicPrice,
+    period,
+    firstObligatedPeriod,
+    firstPaymentOption,
+  );
 }
 
 export function periodToDate(period, position = "end") {
