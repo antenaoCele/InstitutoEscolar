@@ -1,4 +1,6 @@
 import { Modal } from "../ui/Modal";
+import { formatDate } from "../../utils/dateFormat";
+import { formatPrice } from "../../utils/priceFormat";
 
 export default function PlanHistoryModal({
   isOpen,
@@ -31,15 +33,11 @@ export default function PlanHistoryModal({
             <tbody>
               {history.map((price) => (
                 <tr key={price.id} className="border-b border-gray-100">
-                  <td className="py-2 pr-2">{price.price}</td>
+                  <td className="py-2 pr-2">{formatPrice(price.price)}</td>
 
-                  <td className="py-2 pr-2">
-                    {price.start_date?.split("T")[0] || "-"}
-                  </td>
+                  <td className="py-2 pr-2">{formatDate(price.start_date)}</td>
 
-                  <td className="py-2 pr-2">
-                    {price.end_date?.split("T")[0] || "-"}
-                  </td>
+                  <td className="py-2 pr-2">{formatDate(price.end_date)}</td>
                 </tr>
               ))}
             </tbody>

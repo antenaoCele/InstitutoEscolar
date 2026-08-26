@@ -1,5 +1,6 @@
 import { Modal } from "../ui/Modal";
 import { NoButton } from "../ui/ActionButtons";
+import { formatDate } from "../../utils/dateFormat";
 
 export default function StudentViewModal({ isOpen, onClose, student }) {
   if (!student) return null;
@@ -10,22 +11,6 @@ export default function StudentViewModal({ isOpen, onClose, student }) {
   // PLANES
   // ======================================================
   const plans = student.plans || student.activePlans || [];
-
-  const formatDate = (date) => {
-    if (!date) return "-";
-
-    const parsedDate = new Date(date);
-
-    if (Number.isNaN(parsedDate.getTime())) {
-      return "-";
-    }
-
-    const day = String(parsedDate.getUTCDate()).padStart(2, "0");
-    const month = String(parsedDate.getUTCMonth() + 1).padStart(2, "0");
-    const year = parsedDate.getUTCFullYear();
-
-    return `${day}-${month}-${year}`;
-  };
 
   return (
     <Modal isOpen={isOpen} onClose={onClose}>
@@ -52,9 +37,8 @@ export default function StudentViewModal({ isOpen, onClose, student }) {
 
         <div>
           <p className="text-sm text-gray-500">Fecha de nacimiento</p>
-          <p className="font-medium">
-            {formatDate(studentData.birth_date)}
-          </p>{" "}
+
+          <p className="font-medium">{formatDate(studentData.birth_date)}</p>
         </div>
 
         <div>
@@ -113,10 +97,6 @@ export default function StudentViewModal({ isOpen, onClose, student }) {
         ) : (
           <p className="text-sm italic text-gray-500">Sin planes asignados.</p>
         )}
-      </div>
-
-      <div className="flex justify-end mt-10">
-        <NoButton title="Cerrar" onClick={onClose} />
       </div>
     </Modal>
   );
