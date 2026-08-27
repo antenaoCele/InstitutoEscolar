@@ -48,7 +48,12 @@ export function getTeachersColumns({
 
     columns.push({
       header: "Usuarios",
-      render: (row) => (row.has_user ? row.username : "Sin usuario"),
+      render: (row) =>
+        row.has_user ? (
+          row.username
+        ) : (
+          <span className="text-gray-400 italic">Sin usuario</span>
+        ),
     });
 
     columns.push({
