@@ -13,7 +13,7 @@ export default function SessionExpiredModal({ isOpen, onConfirm }) {
         <h2 className="text-xl font-bold mb-4">Sesión expirada</h2>
 
         <p className="mb-6">
-          Tu sesión ha expirado por seguridad. Por favor, inicia sesión
+          Su sesión ha expirado por seguridad. Por favor, inicie sesión
           nuevamente.
         </p>
 
