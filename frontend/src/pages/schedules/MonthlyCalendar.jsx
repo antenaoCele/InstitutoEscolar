@@ -13,7 +13,7 @@ import MonthlyCalendarCreateModal from "../../components/page-schedules/page-mon
 import MonthlyCalendarEditModal from "../../components/page-schedules/page-monthlyCalendar/MonthlyCalendarEditModal";
 import MonthlyCalendarDeleteModal from "../../components/page-schedules/page-monthlyCalendar/MonthlyCalendarDeleteModal";
 
-import { useMonthlyCalendar } from "../../hooks/pages/useMonthlyCalendar";
+import { useMonthlyCalendar } from "../../hooks/pages/schedules/useMonthlyCalendar";
 
 export default function MonthlyCalendar() {
   const {

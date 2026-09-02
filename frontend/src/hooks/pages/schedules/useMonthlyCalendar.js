@@ -1,12 +1,12 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
 
-import { eventService } from "../../services/event.service";
-import { studentService } from "../../services/student.service";
+import { eventService } from "../../../services/event.service";
+import { studentService } from "../../../services/student.service";
 
-import { validateMonthlyCalendarForm } from "../../validators/entities/monthly_calendar.validator";
+import { validateMonthlyCalendarForm } from "../../../validators/entities/monthly_calendar.validator";
 
-import { useFeedbackModal } from "../shared/useFeedBackModal";
+import { useFeedbackModal } from "../../shared/useFeedBackModal";
 
 export function useMonthlyCalendar() {
   // ======================================================
