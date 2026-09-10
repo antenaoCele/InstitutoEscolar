@@ -1,6 +1,6 @@
-import Input from "../form/Input";
-import Select from "../form/Select";
-import SearchableSelect from "../form/SearchableSelect";
+import Input from "../../form/Input";
+import Select from "../../form/Select";
+import SearchableSelect from "../../form/SearchableSelect";
 
 export default function StudentFilters({
   searchFirstLastName,

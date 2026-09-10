@@ -1,4 +1,4 @@
-import { ViewButton, EditButton, DeleteButton } from "../ui/ActionButtons";
+import { ViewButton, EditButton, DeleteButton } from "../../ui/ActionButtons";
 
 export function getStudentsColumns({
   isAdmin,

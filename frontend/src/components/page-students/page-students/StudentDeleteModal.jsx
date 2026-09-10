@@ -1,5 +1,5 @@
-import { Modal } from "../ui/Modal";
-import { YesButton, NoButton } from "../ui/ActionButtons";
+import { Modal } from "../../ui/Modal";
+import { YesButton, NoButton } from "../../ui/ActionButtons";
 
 export default function StudentDeleteModal({ isOpen, onClose, onConfirm }) {
   return (

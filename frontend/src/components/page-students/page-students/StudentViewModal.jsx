@@ -1,6 +1,6 @@
-import { Modal } from "../ui/Modal";
-import { NoButton } from "../ui/ActionButtons";
-import { formatDate } from "../../utils/dateFormat";
+import { Modal } from "../../ui/Modal";
+import { NoButton } from "../../ui/ActionButtons";
+import { formatDate } from "../../../utils/dateFormat";
 
 export default function StudentViewModal({ isOpen, onClose, student }) {
   if (!student) return null;
