@@ -1,8 +1,8 @@
-import Checkbox from "../form/Checkbox";
-import Select from "../form/Select";
+import Checkbox from "../../form/Checkbox";
+import Select from "../../form/Select";
 
 // Utilidades
-import { sortByProperty } from "../../utils/sort";
+import { sortByProperty } from "../../../utils/sort";
 
 export default function StudentPlansSelector({
   plans,

@@ -5,16 +5,29 @@ import { useEffect, useMemo, useRef, useState, Children } from "react";
 // array de fragmentos (ej: {apellido}, {nombre}).
 // ======================================================
 function getNodeText(node) {
-  if (node === null || node === undefined || typeof node === "boolean")
+  if (node === null || node === undefined || typeof node === "boolean") {
     return "";
-  if (typeof node === "string" || typeof node === "number") return String(node);
-  if (Array.isArray(node)) return node.map(getNodeText).join("");
-  if (node.props?.children) return getNodeText(node.props.children);
+  }
+
+  if (typeof node === "string" || typeof node === "number") {
+    return String(node);
+  }
+
+  if (Array.isArray(node)) {
+    return node.map(getNodeText).join("");
+  }
+
+  if (node.props?.children) {
+    return getNodeText(node.props.children);
+  }
+
   return "";
 }
 
-// Saca acentos y pasa a minúscula para que "Rodriguez" encuentre
-// "Rodríguez" y viceversa.
+// ======================================================
+// Normaliza texto para búsquedas.
+// Permite encontrar "Rodriguez" buscando "Rodríguez".
+// ======================================================
 function normalize(text) {
   return String(text)
     .toLowerCase()
@@ -45,8 +58,9 @@ export default function SearchableSelect({
 
   // ======================================================
   // Convierte los <option> hijos en datos manejables.
-  // El option de value="" se usa como placeholder del botón,
-  // no como una fila más de la lista.
+  //
+  // El option con value="" se conserva como opción especial
+  // para poder volver a "Todos".
   // ======================================================
   const { options, placeholder } = useMemo(() => {
     const parsed = [];
@@ -58,28 +72,59 @@ export default function SearchableSelect({
       const optValue = child.props.value ?? "";
       const optLabel = getNodeText(child.props.children).trim();
 
+      // -----------------------------------------------
+      // Opción "Todos" / valor vacío
+      // -----------------------------------------------
       if (String(optValue) === "") {
-        if (optLabel) ph = optLabel;
+        if (optLabel) {
+          ph = optLabel;
+        }
+
+        parsed.push({
+          value: "",
+          label: optLabel || "Todos",
+          disabled: !!child.props.disabled,
+          isAllOption: true,
+        });
+
         return;
       }
 
+      // -----------------------------------------------
+      // Opción normal
+      // -----------------------------------------------
       parsed.push({
         value: optValue,
         label: optLabel,
         disabled: !!child.props.disabled,
+        isAllOption: false,
       });
     });
 
-    return { options: parsed, placeholder: ph };
+    return {
+      options: parsed,
+      placeholder: ph,
+    };
   }, [children]);
 
-  const selected = options.find((o) => String(o.value) === String(value ?? ""));
+  // ======================================================
+  // Opción seleccionada
+  // ======================================================
+  const selected = options.find(
+    (option) => String(option.value) === String(value ?? ""),
+  );
 
+  // ======================================================
+  // Filtrado de opciones
+  // ======================================================
   const filtered = useMemo(() => {
-    if (!search.trim()) return options;
+    if (!search.trim()) {
+      return options;
+    }
 
     const term = normalize(search);
-    return options.filter((o) => normalize(o.label).includes(term));
+
+    return options.filter((option) => normalize(option.label).includes(term));
   }, [options, search]);
 
   // ======================================================
@@ -96,72 +141,144 @@ export default function SearchableSelect({
     };
 
     document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
   }, [open]);
 
+  // ======================================================
   // Foco automático en el buscador al abrir
+  // ======================================================
   useEffect(() => {
-    if (open) inputRef.current?.focus();
+    if (open) {
+      inputRef.current?.focus();
+    }
   }, [open]);
 
-  // El resaltado vuelve al principio cada vez que cambia el filtro
+  // ======================================================
+  // El resaltado vuelve al principio cuando cambia
+  // la búsqueda o se abre/cierra el componente.
+  // ======================================================
   useEffect(() => {
     setHighlighted(0);
   }, [search, open]);
 
-  // Mantiene visible la opción resaltada al navegar con flechas
+  // ======================================================
+  // Mantiene visible la opción resaltada
+  // al navegar con las flechas.
+  // ======================================================
   useEffect(() => {
     if (!open || !listRef.current) return;
 
     const node = listRef.current.children[highlighted];
-    node?.scrollIntoView({ block: "nearest" });
+
+    node?.scrollIntoView({
+      block: "nearest",
+    });
   }, [highlighted, open]);
 
   // ======================================================
   // Selección
-  // Se emite un evento con la misma forma que el <select>
-  // nativo para no romper los onChange existentes.
+  //
+  // Se emite un evento con la misma forma que un <select>
+  // nativo para mantener compatibles los onChange actuales.
   // ======================================================
   const selectOption = (option) => {
     if (option.disabled) return;
 
-    onChange?.({ target: { name, value: option.value } });
+    onChange?.({
+      target: {
+        name,
+        value: option.value,
+      },
+    });
 
     setOpen(false);
     setSearch("");
   };
 
+  // ======================================================
+  // Abrir / cerrar
+  // ======================================================
   const toggleOpen = () => {
     if (disabled) return;
+
     setOpen((prev) => !prev);
     setSearch("");
   };
 
+  // ======================================================
+  // Teclado
+  // ======================================================
   const handleKeyDown = (e) => {
     if (disabled) return;
 
+    // -----------------------------------------------
+    // Select cerrado
+    // -----------------------------------------------
     if (!open) {
       if (["Enter", " ", "ArrowDown"].includes(e.key)) {
         e.preventDefault();
         setOpen(true);
       }
+
       return;
     }
 
+    // -----------------------------------------------
+    // Flecha abajo
+    // -----------------------------------------------
     if (e.key === "ArrowDown") {
       e.preventDefault();
-      setHighlighted((prev) => Math.min(prev + 1, filtered.length - 1));
-    } else if (e.key === "ArrowUp") {
+
+      setHighlighted((prev) =>
+        Math.min(prev + 1, Math.max(filtered.length - 1, 0)),
+      );
+
+      return;
+    }
+
+    // -----------------------------------------------
+    // Flecha arriba
+    // -----------------------------------------------
+    if (e.key === "ArrowUp") {
       e.preventDefault();
+
       setHighlighted((prev) => Math.max(prev - 1, 0));
-    } else if (e.key === "Enter") {
+
+      return;
+    }
+
+    // -----------------------------------------------
+    // Enter
+    // -----------------------------------------------
+    if (e.key === "Enter") {
       e.preventDefault();
-      if (filtered[highlighted]) selectOption(filtered[highlighted]);
-    } else if (e.key === "Escape") {
+
+      if (filtered[highlighted]) {
+        selectOption(filtered[highlighted]);
+      }
+
+      return;
+    }
+
+    // -----------------------------------------------
+    // Escape
+    // -----------------------------------------------
+    if (e.key === "Escape") {
       e.preventDefault();
+
       setOpen(false);
       setSearch("");
-    } else if (e.key === "Tab") {
+
+      return;
+    }
+
+    // -----------------------------------------------
+    // Tab
+    // -----------------------------------------------
+    if (e.key === "Tab") {
       setOpen(false);
       setSearch("");
     }
@@ -169,12 +286,17 @@ export default function SearchableSelect({
 
   return (
     <div className={noMargin ? "" : "mb-4"}>
+      {/* ==================================================
+          LABEL
+          ================================================== */}
       {label && (
         <label className="mb-1 block text-black dark:text-white">{label}</label>
       )}
 
       <div ref={containerRef} className="relative">
-        {/* ---------- Disparador (imita al <select>) ---------- */}
+        {/* ==================================================
+            DISPARADOR
+            ================================================== */}
         <button
           type="button"
           name={name}
@@ -221,7 +343,9 @@ export default function SearchableSelect({
         >
           <span
             className={`truncate ${
-              selected ? "" : "text-gray-400 dark:text-gray-500"
+              selected?.isAllOption || !selected
+                ? "text-gray-400 dark:text-gray-500"
+                : ""
             }`}
           >
             {selected ? selected.label : placeholder}
@@ -245,7 +369,9 @@ export default function SearchableSelect({
           </svg>
         </button>
 
-        {/* ---------- Panel desplegable ---------- */}
+        {/* ==================================================
+            PANEL DESPLEGABLE
+            ================================================== */}
         {open && (
           <div
             className="
@@ -255,6 +381,9 @@ export default function SearchableSelect({
               dark:border-gray-600 dark:bg-black
             "
           >
+            {/* ==================================================
+                BUSCADOR
+                ================================================== */}
             <div className="p-2">
               <input
                 ref={inputRef}
@@ -276,6 +405,9 @@ export default function SearchableSelect({
               />
             </div>
 
+            {/* ==================================================
+                OPCIONES
+                ================================================== */}
             <ul
               ref={listRef}
               role="listbox"
@@ -289,11 +421,12 @@ export default function SearchableSelect({
 
               {filtered.map((option, index) => {
                 const isSelected = String(option.value) === String(value ?? "");
+
                 const isHighlighted = index === highlighted;
 
                 return (
                   <li
-                    key={option.value}
+                    key={`${option.value}-${index}`}
                     role="option"
                     aria-selected={isSelected}
                     onMouseEnter={() => setHighlighted(index)}
@@ -301,8 +434,11 @@ export default function SearchableSelect({
                     className={`
                       cursor-pointer px-3 py-2
                       text-black dark:text-white
+
                       ${isHighlighted ? "bg-[#0cc0df]/15" : ""}
+
                       ${isSelected ? "font-medium text-[#0cc0df]" : ""}
+
                       ${
                         option.disabled
                           ? "cursor-not-allowed text-gray-400 dark:text-gray-600"
@@ -319,6 +455,9 @@ export default function SearchableSelect({
         )}
       </div>
 
+      {/* ==================================================
+          ERROR
+          ================================================== */}
       {error && <p className="mt-1 text-xs text-red-500">{error}</p>}
     </div>
   );

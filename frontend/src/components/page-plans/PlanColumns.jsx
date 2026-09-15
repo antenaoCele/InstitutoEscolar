@@ -4,6 +4,25 @@ import {
   AssignTeacherButton,
 } from "../ui/ActionButtons";
 
+import { formatPrice } from "../../utils/priceFormat";
+
+// const formatPrice = (value) => {
+//   if (value === null || value === undefined || value === "") {
+//     return "-";
+//   }
+
+//   const number = Number(value);
+
+//   if (Number.isNaN(number)) {
+//     return "-";
+//   }
+
+//   return `$${number.toLocaleString("es-AR", {
+//     minimumFractionDigits: 2,
+//     maximumFractionDigits: 2,
+//   })}`;
+// };
+
 export function getPlansColumns({
   isAdmin,
   allPlanSubjects,
@@ -16,6 +35,7 @@ export function getPlansColumns({
       header: "Planes",
       accessor: "name",
     },
+
     {
       header: "Materias",
       render: (row) => {
@@ -41,6 +61,7 @@ export function getPlansColumns({
         );
       },
     },
+
     {
       header: "Docentes",
       render: (row) => {
@@ -66,9 +87,10 @@ export function getPlansColumns({
         );
       },
     },
+
     {
       header: "Precios Actuales",
-      accessor: "current_price",
+      render: (row) => formatPrice(row.current_price),
     },
   ];
 

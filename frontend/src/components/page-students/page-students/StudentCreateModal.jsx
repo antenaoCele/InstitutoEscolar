@@ -1,12 +1,11 @@
-import { Modal } from "../ui/Modal";
-import Label from "../form/Label";
-import Input from "../form/Input";
-import Select from "../form/Select";
-import { YesButton, NoButton } from "../ui/ActionButtons";
-
+import { Modal } from "../../ui/Modal";
+import Label from "../../form/Label";
+import Input from "../../form/Input";
+import Select from "../../form/Select";
+import { YesButton, NoButton } from "../../ui/ActionButtons";
 import StudentPlansSelector from "./StudentPlansSelector";
 
-export default function StudentEditModal({
+export default function StudentCreateModal({
   isOpen,
   onClose,
 
@@ -42,7 +41,7 @@ export default function StudentEditModal({
 }) {
   return (
     <Modal isOpen={isOpen} onClose={onClose}>
-      <h2 className="text-xl font-bold mb-8">Editar Estudiante</h2>
+      <h2 className="text-xl font-bold mb-8">Crear Estudiante</h2>
 
       <Label>Nombre</Label>
 
