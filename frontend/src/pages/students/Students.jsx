@@ -3,12 +3,12 @@ import { useStudents } from "../../hooks/pages/useStudents";
 import { usePagination } from "../../hooks/shared/usePagination";
 
 // Componentes de la página
-import { getStudentsColumns } from "../../components/page-students/StudentColumns";
-import StudentCreateModal from "../../components/page-students/StudentCreateModal";
-import StudentDeleteModal from "../../components/page-students/StudentDeleteModal";
-import StudentEditModal from "../../components/page-students/StudentEditModal";
-import StudentFilters from "../../components/page-students/StudentFilters";
-import StudentViewModal from "../../components/page-students/StudentViewModal";
+import { getStudentsColumns } from "../../components/page-students/page-students/StudentColumns";
+import StudentCreateModal from "../../components/page-students/page-students/StudentCreateModal";
+import StudentDeleteModal from "../../components/page-students/page-students/StudentDeleteModal";
+import StudentEditModal from "../../components/page-students/page-students/StudentEditModal";
+import StudentFilters from "../../components/page-students/page-students/StudentFilters";
+import StudentViewModal from "../../components/page-students/page-students/StudentViewModal";
 
 // Componentes compartidos
 import BasicTable from "../../components/tables/BasicTables/BasicTablesOne";
