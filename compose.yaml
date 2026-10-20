@@ -4,17 +4,18 @@ x-backend: &backend
     context: .
     dockerfile: docker/backend.Dockerfile
   environment: &backend-env
-    DB_HOST: db
+    DB_HOST: matecitos-db
     DB_PORT: 3306
     DB_NAME: ${DB_NAME:-matecitos}
     DB_USER: ${DB_USER:-matecitos}
     DB_PASS: ${DB_PASS:?Copiá .env.example a .env y configurá DB_PASS}
+    CORS_ORIGIN: ${CORS_ORIGIN:-http://localhost:8080}
     JWT_SECRET: ${JWT_SECRET:?Configurá JWT_SECRET en .env}
     PORT: 3000
     TZ: ${TZ:-America/Argentina/La_Rioja}
 
 services:
-  db:
+  matecitos-db:
     image: mysql:8.4
     environment:
       MYSQL_DATABASE: ${DB_NAME:-matecitos}
@@ -32,18 +33,18 @@ services:
       start_period: 30s
     restart: unless-stopped
 
-  migrate:
+  matecitos-migrate:
     <<: *backend
     command: [pnpm, db:migrate]
     depends_on:
-      db:
+      matecitos-db:
         condition: service_healthy
 
-  backend:
+  matecitos-api:
     <<: *backend
     init: true
     depends_on:
-      migrate:
+      matecitos-migrate:
         condition: service_completed_successfully
     healthcheck:
       test: [CMD, node, -e, "fetch('http://localhost:3000/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
@@ -56,10 +57,12 @@ services:
     build:
       context: .
       dockerfile: docker/frontend.Dockerfile
+      args:
+        VITE_API_URL: ${VITE_API_URL:-/api}
     ports:
       - "127.0.0.1:${APP_PORT:-8080}:80"
     depends_on:
-      backend:
+      matecitos-api:
         condition: service_healthy
     restart: unless-stopped
 
