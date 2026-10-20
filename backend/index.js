@@ -36,7 +36,7 @@ await connectDB();
 configurePassport();
 app.use(passport.initialize());
 
-app.use(cors());
+app.use(cors({ origin: process.env.CORS_ORIGIN || "http://localhost:5173" }));
 app.use(express.json());
 
 app.get("/health", async (_req, res) => {
