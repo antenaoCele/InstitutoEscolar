@@ -1,23 +1,22 @@
 import bcrypt from "bcrypt";
-import { db } from "./db.js";
+import { connectDB, db } from "./db.js";
 
-async function seedAdmin() {
-  const [admins] = await db.execute(
-    "SELECT * FROM users WHERE rol = 'ADMIN'"
-  );
-
-  if (admins.length === 0) {
-    const hashedPassword = await bcrypt.hash("admin123", 10);
-
-    await db.execute(
-      "INSERT INTO users (username, password, first_name, rol) VALUES (?, ?, ?, 'ADMIN')",
-      ["admin", hashedPassword, "Admin"]
-    );
-
-    console.log("Admin creado correctamente");
-  } else {
-    console.log("Ya existe un admin");
-  }
+if (!process.env.ADMIN_USERNAME || !process.env.ADMIN_PASSWORD) {
+  throw new Error("Definí ADMIN_USERNAME y ADMIN_PASSWORD para crear el administrador");
 }
-
-seedAdmin();
+try {
+  await connectDB();
+  const [admins] = await db.execute("SELECT id FROM users WHERE role = ? LIMIT 1", ["ADMIN"]);
+  if (admins.length) {
+    console.log("Ya existe un administrador");
+  } else {
+    const hash = await bcrypt.hash(process.env.ADMIN_PASSWORD, 10);
+    await db.execute(
+      "INSERT INTO users (username, password, first_name, last_name, role) VALUES (?, ?, ?, ?, ?)",
+      [process.env.ADMIN_USERNAME, hash, "Admin", "Sistema", "ADMIN"],
+    );
+    console.log("Administrador creado");
+  }
+} finally {
+  if (db) await db.end();
+}

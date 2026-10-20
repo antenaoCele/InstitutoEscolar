@@ -1,0 +1,2346 @@
+{
+  "advisories": {
+    "1113161": {
+      "findings": [
+        {
+          "version": "6.14.1",
+          "paths": [
+            "backend>express>body-parser>qs",
+            "backend>express>qs"
+          ],
+          "dev": false,
+          "optional": false,
+          "bundled": false
+        }
+      ],
+      "id": 1113161,
+      "title": "qs's arrayLimit bypass in comma parsing allows denial of service",
+      "module_name": "qs",
+      "vulnerable_versions": ">=6.7.0 <=6.14.1",
+      "patched_versions": ">=6.14.2",
+      "severity": "low",
+      "cwe": "CWE-20",
+      "github_advisory_id": "GHSA-w7fw-mjwx-w883",
+      "url": "https://github.com/advisories/GHSA-w7fw-mjwx-w883"
+    },
+    "1113459": {
+      "findings": [
+        {
+          "version": "3.1.2",
+          "paths": [
+            "frontend>eslint>@eslint/config-array>minimatch",
+            "frontend>eslint>@eslint/eslintrc>minimatch",
+            "frontend>eslint>minimatch",
+            "frontend>eslint-plugin-react-hooks>eslint>@eslint/config-array>minimatch",
+            "frontend>eslint-plugin-react-hooks>eslint>@eslint/eslintrc>minimatch",
+            "frontend>eslint-plugin-react-hooks>eslint>minimatch",
+            "frontend>eslint-plugin-react-refresh>eslint>@eslint/config-array>minimatch",
+            "frontend>eslint-plugin-react-refresh>eslint>@eslint/eslintrc>minimatch",
+            "frontend>eslint-plugin-react-refresh>eslint>minimatch"
+          ],
+          "dev": true,
+          "optional": false,
+          "bundled": false
+        }
+      ],
+      "id": 1113459,
+      "title": "minimatch has a ReDoS via repeated wildcards with non-matching literal in pattern",
+      "module_name": "minimatch",
+      "vulnerable_versions": "<3.1.3",
+      "patched_versions": ">=3.1.3",
+      "severity": "high",
+      "cwe": "CWE-1333",
+      "github_advisory_id": "GHSA-3ppc-4f35-3m26",
+      "url": "https://github.com/advisories/GHSA-3ppc-4f35-3m26"
+    },
+    "1113515": {
+      "findings": [
+        {
+          "version": "4.54.0",
+          "paths": [
+            "frontend>@vitejs/plugin-react>vite>rollup",
+            "frontend>vite>rollup",
+            "frontend>vite-plugin-svgr>@rollup/pluginutils>rollup",
+            "frontend>vite-plugin-svgr>vite>rollup"
+          ],
+          "dev": true,
+          "optional": false,
+          "bundled": false
+        }
+      ],
+      "id": 1113515,
+      "title": "Rollup 4 has Arbitrary File Write via Path Traversal",
+      "module_name": "rollup",
+      "vulnerable_versions": ">=4.0.0 <4.59.0",
+      "patched_versions": ">=4.59.0",
+      "severity": "high",
+      "cwe": "CWE-22",
+      "github_advisory_id": "GHSA-mw96-cpmx-2vgc",
+      "url": "https://github.com/advisories/GHSA-mw96-cpmx-2vgc"
+    },
+    "1113538": {
+      "findings": [
+        {
+          "version": "3.1.2",
+          "paths": [
+            "frontend>eslint>@eslint/config-array>minimatch",
+            "frontend>eslint>@eslint/eslintrc>minimatch",
+            "frontend>eslint>minimatch",
+            "frontend>eslint-plugin-react-hooks>eslint>@eslint/config-array>minimatch",
+            "frontend>eslint-plugin-react-hooks>eslint>@eslint/eslintrc>minimatch",
+            "frontend>eslint-plugin-react-hooks>eslint>minimatch",
+            "frontend>eslint-plugin-react-refresh>eslint>@eslint/config-array>minimatch",
+            "frontend>eslint-plugin-react-refresh>eslint>@eslint/eslintrc>minimatch",
+            "frontend>eslint-plugin-react-refresh>eslint>minimatch"
+          ],
+          "dev": true,
+          "optional": false,
+          "bundled": false
+        }
+      ],
+      "id": 1113538,
+      "title": "minimatch has ReDoS: matchOne() combinatorial backtracking via multiple non-adjacent GLOBSTAR segments",
+      "module_name": "minimatch",
+      "vulnerable_versions": "<3.1.3",
+      "patched_versions": ">=3.1.3",
+      "severity": "high",
+      "cwe": "CWE-407",
+      "github_advisory_id": "GHSA-7r86-cg39-jmmj",
+      "url": "https://github.com/advisories/GHSA-7r86-cg39-jmmj"
+    },
+    "1113546": {
+      "findings": [
+        {
+          "version": "3.1.2",
+          "paths": [
+            "frontend>eslint>@eslint/config-array>minimatch",
+            "frontend>eslint>@eslint/eslintrc>minimatch",
+            "frontend>eslint>minimatch",
+            "frontend>eslint-plugin-react-hooks>eslint>@eslint/config-array>minimatch",
+            "frontend>eslint-plugin-react-hooks>eslint>@eslint/eslintrc>minimatch",
+            "frontend>eslint-plugin-react-hooks>eslint>minimatch",
+            "frontend>eslint-plugin-react-refresh>eslint>@eslint/config-array>minimatch",
+            "frontend>eslint-plugin-react-refresh>eslint>@eslint/eslintrc>minimatch",
+            "frontend>eslint-plugin-react-refresh>eslint>minimatch"
+          ],
+          "dev": true,
+          "optional": false,
+          "bundled": false
+        }
+      ],
+      "id": 1113546,
+      "title": "minimatch ReDoS: nested *() extglobs generate catastrophically backtracking regular expressions",
+      "module_name": "minimatch",
+      "vulnerable_versions": "<3.1.4",
+      "patched_versions": ">=3.1.4",
+      "severity": "high",
+      "cwe": "CWE-1333",
+      "github_advisory_id": "GHSA-23c5-xmqv-rm74",
+      "url": "https://github.com/advisories/GHSA-23c5-xmqv-rm74"
+    },
+    "1113714": {
+      "findings": [
+        {
+          "version": "6.12.6",
+          "paths": [
+            "frontend>eslint>@eslint/eslintrc>ajv",
+            "frontend>eslint>ajv",
+            "frontend>eslint-plugin-react-hooks>eslint>@eslint/eslintrc>ajv",
+            "frontend>eslint-plugin-react-hooks>eslint>ajv",
+            "frontend>eslint-plugin-react-refresh>eslint>@eslint/eslintrc>ajv",
+            "frontend>eslint-plugin-react-refresh>eslint>ajv"
+          ],
+          "dev": true,
+          "optional": false,
+          "bundled": false
+        }
+      ],
+      "id": 1113714,
+      "title": "ajv has ReDoS when using `$data` option",
+      "module_name": "ajv",
+      "vulnerable_versions": "<6.14.0",
+      "patched_versions": ">=6.14.0",
+      "severity": "moderate",
+      "cwe": "CWE-400, CWE-1333",
+      "github_advisory_id": "GHSA-2g4f-4pwh-qvx6",
+      "url": "https://github.com/advisories/GHSA-2g4f-4pwh-qvx6"
+    },
+    "1114526": {
+      "findings": [
+        {
+          "version": "3.3.3",
+          "paths": [
+            "frontend>eslint>file-entry-cache>flat-cache>flatted",
+            "frontend>eslint-plugin-react-hooks>eslint>file-entry-cache>flat-cache>flatted",
+            "frontend>eslint-plugin-react-refresh>eslint>file-entry-cache>flat-cache>flatted"
+          ],
+          "dev": true,
+          "optional": false,
+          "bundled": false
+        }
+      ],
+      "id": 1114526,
+      "title": "flatted vulnerable to unbounded recursion DoS in parse() revive phase",
+      "module_name": "flatted",
+      "vulnerable_versions": "<3.4.0",
+      "patched_versions": ">=3.4.0",
+      "severity": "high",
+      "cwe": "CWE-674",
+      "github_advisory_id": "GHSA-25h7-pfq9-p65f",
+      "url": "https://github.com/advisories/GHSA-25h7-pfq9-p65f"
+    },
+    "1115540": {
+      "findings": [
+        {
+          "version": "1.1.12",
+          "paths": [
+            "frontend>eslint>@eslint/config-array>minimatch>brace-expansion",
+            "frontend>eslint>@eslint/eslintrc>minimatch>brace-expansion",
+            "frontend>eslint>minimatch>brace-expansion",
+            "frontend>eslint-plugin-react-hooks>eslint>@eslint/config-array>minimatch>brace-expansion",
+            "frontend>eslint-plugin-react-hooks>eslint>@eslint/eslintrc>minimatch>brace-expansion",
+            "frontend>eslint-plugin-react-hooks>eslint>minimatch>brace-expansion",
+            "frontend>eslint-plugin-react-refresh>eslint>@eslint/config-array>minimatch>brace-expansion",
+            "frontend>eslint-plugin-react-refresh>eslint>@eslint/eslintrc>minimatch>brace-expansion",
+            "frontend>eslint-plugin-react-refresh>eslint>minimatch>brace-expansion"
+          ],
+          "dev": true,
+          "optional": false,
+          "bundled": false
+        }
+      ],
+      "id": 1115540,
+      "title": "brace-expansion: Zero-step sequence causes process hang and memory exhaustion",
+      "module_name": "brace-expansion",
+      "vulnerable_versions": "<1.1.13",
+      "patched_versions": ">=1.1.13",
+      "severity": "moderate",
+      "cwe": "CWE-400",
+      "github_advisory_id": "GHSA-f886-m6hf-6m8v",
+      "url": "https://github.com/advisories/GHSA-f886-m6hf-6m8v"
+    },
+    "1115551": {
+      "findings": [
+        {
+          "version": "4.0.3",
+          "paths": [
+            "frontend>@vitejs/plugin-react>vite>fdir>picomatch",
+            "frontend>@vitejs/plugin-react>vite>picomatch",
+            "frontend>@vitejs/plugin-react>vite>tinyglobby>fdir>picomatch",
+            "frontend>@vitejs/plugin-react>vite>tinyglobby>picomatch",
+            "frontend>vite>fdir>picomatch",
+            "frontend>vite>picomatch",
+            "frontend>vite>tinyglobby>fdir>picomatch",
+            "frontend>vite>tinyglobby>picomatch",
+            "frontend>vite-plugin-svgr>@rollup/pluginutils>picomatch",
+            "frontend>vite-plugin-svgr>vite>fdir>picomatch",
+            "frontend>vite-plugin-svgr>vite>picomatch",
+            "frontend>vite-plugin-svgr>vite>tinyglobby>fdir>picomatch",
+            "frontend>vite-plugin-svgr>vite>tinyglobby>picomatch"
+          ],
+          "dev": true,
+          "optional": false,
+          "bundled": false
+        }
+      ],
+      "id": 1115551,
+      "title": "Picomatch: Method Injection in POSIX Character Classes causes incorrect Glob Matching",
+      "module_name": "picomatch",
+      "vulnerable_versions": ">=4.0.0 <4.0.4",
+      "patched_versions": ">=4.0.4",
+      "severity": "moderate",
+      "cwe": "CWE-1321",
+      "github_advisory_id": "GHSA-3v7f-55p6-f55p",
+      "url": "https://github.com/advisories/GHSA-3v7f-55p6-f55p"
+    },
+    "1115554": {
+      "findings": [
+        {
+          "version": "4.0.3",
+          "paths": [
+            "frontend>@vitejs/plugin-react>vite>fdir>picomatch",
+            "frontend>@vitejs/plugin-react>vite>picomatch",
+            "frontend>@vitejs/plugin-react>vite>tinyglobby>fdir>picomatch",
+            "frontend>@vitejs/plugin-react>vite>tinyglobby>picomatch",
+            "frontend>vite>fdir>picomatch",
+            "frontend>vite>picomatch",
+            "frontend>vite>tinyglobby>fdir>picomatch",
+            "frontend>vite>tinyglobby>picomatch",
+            "frontend>vite-plugin-svgr>@rollup/pluginutils>picomatch",
+            "frontend>vite-plugin-svgr>vite>fdir>picomatch",
+            "frontend>vite-plugin-svgr>vite>picomatch",
+            "frontend>vite-plugin-svgr>vite>tinyglobby>fdir>picomatch",
+            "frontend>vite-plugin-svgr>vite>tinyglobby>picomatch"
+          ],
+          "dev": true,
+          "optional": false,
+          "bundled": false
+        }
+      ],
+      "id": 1115554,
+      "title": "Picomatch has a ReDoS vulnerability via extglob quantifiers",
+      "module_name": "picomatch",
+      "vulnerable_versions": ">=4.0.0 <4.0.4",
+      "patched_versions": ">=4.0.4",
+      "severity": "high",
+      "cwe": "CWE-1333",
+      "github_advisory_id": "GHSA-c2c7-rcm5-vvqj",
+      "url": "https://github.com/advisories/GHSA-c2c7-rcm5-vvqj"
+    },
+    "1115573": {
+      "findings": [
+        {
+          "version": "8.3.0",
+          "paths": [
+            "backend>express>router>path-to-regexp"
+          ],
+          "dev": false,
+          "optional": false,
+          "bundled": false
+        }
+      ],
+      "id": 1115573,
+      "title": "path-to-regexp vulnerable to Denial of Service via sequential optional groups",
+      "module_name": "path-to-regexp",
+      "vulnerable_versions": ">=8.0.0 <8.4.0",
+      "patched_versions": ">=8.4.0",
+      "severity": "high",
+      "cwe": "CWE-400, CWE-1333",
+      "github_advisory_id": "GHSA-j3q9-mxjg-w52f",
+      "url": "https://github.com/advisories/GHSA-j3q9-mxjg-w52f"
+    },
+    "1115582": {
+      "findings": [
+        {
+          "version": "8.3.0",
+          "paths": [
+            "backend>express>router>path-to-regexp"
+          ],
+          "dev": false,
+          "optional": false,
+          "bundled": false
+        }
+      ],
+      "id": 1115582,
+      "title": "path-to-regexp vulnerable to Regular Expression Denial of Service via multiple wildcards",
+      "module_name": "path-to-regexp",
+      "vulnerable_versions": ">=8.0.0 <8.4.0",
+      "patched_versions": ">=8.4.0",
+      "severity": "moderate",
+      "cwe": "CWE-1333",
+      "github_advisory_id": "GHSA-27v5-c462-wpq7",
+      "url": "https://github.com/advisories/GHSA-27v5-c462-wpq7"
+    },
+    "1115806": {
+      "findings": [
+        {
+          "version": "4.17.21",
+          "paths": [
+            "backend>express-validator>lodash",
+            "backend>knex>lodash"
+          ],
+          "dev": false,
+          "optional": false,
+          "bundled": false
+        }
+      ],
+      "id": 1115806,
+      "title": "lodash vulnerable to Code Injection via `_.template` imports key names",
+      "module_name": "lodash",
+      "vulnerable_versions": ">=4.0.0 <=4.17.23",
+      "patched_versions": ">=4.17.24",
+      "severity": "high",
+      "cwe": "CWE-94",
+      "github_advisory_id": "GHSA-r5fr-rjxr-66jc",
+      "url": "https://github.com/advisories/GHSA-r5fr-rjxr-66jc"
+    },
+    "1115810": {
+      "findings": [
+        {
+          "version": "4.17.21",
+          "paths": [
+            "backend>express-validator>lodash",
+            "backend>knex>lodash"
+          ],
+          "dev": false,
+          "optional": false,
+          "bundled": false
+        }
+      ],
+      "id": 1115810,
+      "title": "lodash vulnerable to Prototype Pollution via array path bypass in `_.unset` and `_.omit`",
+      "module_name": "lodash",
+      "vulnerable_versions": "<=4.17.23",
+      "patched_versions": ">=4.17.24",
+      "severity": "moderate",
+      "cwe": "CWE-1321",
+      "github_advisory_id": "GHSA-f23m-r3pf-42rh",
+      "url": "https://github.com/advisories/GHSA-f23m-r3pf-42rh"
+    },
+    "1116230": {
+      "findings": [
+        {
+          "version": "7.3.0",
+          "paths": [
+            "frontend>@vitejs/plugin-react>vite",
+            "frontend>vite",
+            "frontend>vite-plugin-svgr>vite"
+          ],
+          "dev": true,
+          "optional": false,
+          "bundled": false
+        }
+      ],
+      "id": 1116230,
+      "title": "Vite Vulnerable to Path Traversal in Optimized Deps `.map` Handling",
+      "module_name": "vite",
+      "vulnerable_versions": ">=7.0.0 <=7.3.1",
+      "patched_versions": ">=7.3.2",
+      "severity": "moderate",
+      "cwe": "CWE-22, CWE-200",
+      "github_advisory_id": "GHSA-4w7w-66w2-5vf9",
+      "url": "https://github.com/advisories/GHSA-4w7w-66w2-5vf9"
+    },
+    "1116232": {
+      "findings": [
+        {
+          "version": "7.3.0",
+          "paths": [
+            "frontend>@vitejs/plugin-react>vite",
+            "frontend>vite",
+            "frontend>vite-plugin-svgr>vite"
+          ],
+          "dev": true,
+          "optional": false,
+          "bundled": false
+        }
+      ],
+      "id": 1116232,
+      "title": "Vite: `server.fs.deny` bypassed with queries",
+      "module_name": "vite",
+      "vulnerable_versions": ">=7.1.0 <=7.3.1",
+      "patched_versions": ">=7.3.2",
+      "severity": "high",
+      "cwe": "CWE-180, CWE-284",
+      "github_advisory_id": "GHSA-v2wj-q39q-566r",
+      "url": "https://github.com/advisories/GHSA-v2wj-q39q-566r"
+    },
+    "1116235": {
+      "findings": [
+        {
+          "version": "7.3.0",
+          "paths": [
+            "frontend>@vitejs/plugin-react>vite",
+            "frontend>vite",
+            "frontend>vite-plugin-svgr>vite"
+          ],
+          "dev": true,
+          "optional": false,
+          "bundled": false
+        }
+      ],
+      "id": 1116235,
+      "title": "Vite Vulnerable to Arbitrary File Read via Vite Dev Server WebSocket",
+      "module_name": "vite",
+      "vulnerable_versions": ">=7.0.0 <=7.3.1",
+      "patched_versions": ">=7.3.2",
+      "severity": "high",
+      "cwe": "CWE-200, CWE-306",
+      "github_advisory_id": "GHSA-p9ff-h696-f583",
+      "url": "https://github.com/advisories/GHSA-p9ff-h696-f583"
+    },
+    "1117015": {
+      "findings": [
+        {
+          "version": "8.5.8",
+          "paths": [
+            "frontend>@tailwindcss/postcss>postcss",
+            "frontend>@vitejs/plugin-react>vite>postcss",
+            "frontend>autoprefixer>postcss",
+            "frontend>postcss",
+            "frontend>vite>postcss",
+            "frontend>vite-plugin-svgr>vite>postcss"
+          ],
+          "dev": true,
+          "optional": false,
+          "bundled": false
+        }
+      ],
+      "id": 1117015,
+      "title": "PostCSS has XSS via Unescaped </style> in its CSS Stringify Output",
+      "module_name": "postcss",
+      "vulnerable_versions": "<8.5.10",
+      "patched_versions": ">=8.5.10",
+      "severity": "moderate",
+      "cwe": "CWE-79",
+      "github_advisory_id": "GHSA-qx2v-qp2m-jg93",
+      "url": "https://github.com/advisories/GHSA-qx2v-qp2m-jg93"
+    },
+    "1119502": {
+      "findings": [
+        {
+          "version": "6.14.1",
+          "paths": [
+            "backend>express>body-parser>qs",
+            "backend>express>qs"
+          ],
+          "dev": false,
+          "optional": false,
+          "bundled": false
+        }
+      ],
+      "id": 1119502,
+      "title": "qs has a remotely triggerable DoS: qs.stringify crashes with TypeError on null/undefined entries in comma-format arrays when encodeValuesOnly is set",
+      "module_name": "qs",
+      "vulnerable_versions": ">=6.11.1 <=6.15.1",
+      "patched_versions": ">=6.15.2",
+      "severity": "moderate",
+      "cwe": "CWE-476",
+      "github_advisory_id": "GHSA-q8mj-m7cp-5q26",
+      "url": "https://github.com/advisories/GHSA-q8mj-m7cp-5q26"
+    },
+    "1120063": {
+      "findings": [
+        {
+          "version": "7.13.1",
+          "paths": [
+            "frontend>react-router-dom>react-router"
+          ],
+          "dev": false,
+          "optional": false,
+          "bundled": false
+        }
+      ],
+      "id": 1120063,
+      "title": "React Router's vendored turbo-stream v2 allows arbitrary constructor invocation via TYPE_ERROR deserialization leading to Unauth RCE",
+      "module_name": "react-router",
+      "vulnerable_versions": ">=7.0.0 <=7.14.1",
+      "patched_versions": ">=7.14.2",
+      "severity": "high",
+      "cwe": "CWE-502",
+      "github_advisory_id": "GHSA-49rj-9fvp-4h2h",
+      "url": "https://github.com/advisories/GHSA-49rj-9fvp-4h2h"
+    },
+    "1120066": {
+      "findings": [
+        {
+          "version": "7.13.1",
+          "paths": [
+            "frontend>react-router-dom>react-router"
+          ],
+          "dev": false,
+          "optional": false,
+          "bundled": false
+        }
+      ],
+      "id": 1120066,
+      "title": "React Router vulnerable to XSS in unstable RSC redirect handling via javascript: redirect targets",
+      "module_name": "react-router",
+      "vulnerable_versions": ">=7.7.0 <7.13.2",
+      "patched_versions": ">=7.13.2",
+      "severity": "high",
+      "cwe": "CWE-79",
+      "github_advisory_id": "GHSA-8646-j5j9-6r62",
+      "url": "https://github.com/advisories/GHSA-8646-j5j9-6r62"
+    },
+    "1120069": {
+      "findings": [
+        {
+          "version": "7.13.1",
+          "paths": [
+            "frontend>react-router-dom>react-router"
+          ],
+          "dev": false,
+          "optional": false,
+          "bundled": false
+        }
+      ],
+      "id": 1120069,
+      "title": "React Router vulnerable to DoS via unbounded path expansion in __manifest endpoint",
+      "module_name": "react-router",
+      "vulnerable_versions": ">=7.0.0 <7.15.0",
+      "patched_versions": ">=7.15.0",
+      "severity": "high",
+      "cwe": "CWE-400",
+      "github_advisory_id": "GHSA-8x6r-g9mw-2r78",
+      "url": "https://github.com/advisories/GHSA-8x6r-g9mw-2r78"
+    },
+    "1120081": {
+      "findings": [
+        {
+          "version": "7.13.1",
+          "paths": [
+            "frontend>react-router-dom>react-router"
+          ],
+          "dev": false,
+          "optional": false,
+          "bundled": false
+        }
+      ],
+      "id": 1120081,
+      "title": "React Router vulnerable to Denial of Service via reflected user input in single-fetch",
+      "module_name": "react-router",
+      "vulnerable_versions": ">=7.0.0 <7.14.0",
+      "patched_versions": ">=7.14.0",
+      "severity": "high",
+      "cwe": "CWE-770",
+      "github_advisory_id": "GHSA-rxv8-25v2-qmq8",
+      "url": "https://github.com/advisories/GHSA-rxv8-25v2-qmq8"
+    },
+    "1120370": {
+      "findings": [
+        {
+          "version": "4.17.21",
+          "paths": [
+            "backend>express-validator>lodash",
+            "backend>knex>lodash"
+          ],
+          "dev": false,
+          "optional": false,
+          "bundled": false
+        }
+      ],
+      "id": 1120370,
+      "title": "Lodash has Prototype Pollution Vulnerability in `_.unset` and `_.omit` functions",
+      "module_name": "lodash",
+      "vulnerable_versions": ">=4.0.0 <=4.17.22",
+      "patched_versions": ">=4.17.23",
+      "severity": "moderate",
+      "cwe": "CWE-1321",
+      "github_advisory_id": "GHSA-xxjr-mmjv-4gpg",
+      "url": "https://github.com/advisories/GHSA-xxjr-mmjv-4gpg"
+    },
+    "1120547": {
+      "findings": [
+        {
+          "version": "1.15.2",
+          "paths": [
+            "frontend>axios"
+          ],
+          "dev": false,
+          "optional": false,
+          "bundled": false
+        }
+      ],
+      "id": 1120547,
+      "title": "Axios: Regular Expression Denial of Service (ReDoS) via Cookie Name Injection",
+      "module_name": "axios",
+      "vulnerable_versions": ">=1.0.0 <1.16.0",
+      "patched_versions": ">=1.16.0",
+      "severity": "high",
+      "cwe": "CWE-400, CWE-1333",
+      "github_advisory_id": "GHSA-hfxv-24rg-xrqf",
+      "url": "https://github.com/advisories/GHSA-hfxv-24rg-xrqf"
+    },
+    "1120643": {
+      "findings": [
+        {
+          "version": "1.15.2",
+          "paths": [
+            "frontend>axios"
+          ],
+          "dev": false,
+          "optional": false,
+          "bundled": false
+        }
+      ],
+      "id": 1120643,
+      "title": "Allocation of Resources Without Limits or Throttling in Axios",
+      "module_name": "axios",
+      "vulnerable_versions": ">=1.7.0 <1.16.0",
+      "patched_versions": ">=1.16.0",
+      "severity": "high",
+      "cwe": "CWE-770",
+      "github_advisory_id": "GHSA-777c-7fjr-54vf",
+      "url": "https://github.com/advisories/GHSA-777c-7fjr-54vf"
+    },
+    "1120645": {
+      "findings": [
+        {
+          "version": "1.15.2",
+          "paths": [
+            "frontend>axios"
+          ],
+          "dev": false,
+          "optional": false,
+          "bundled": false
+        }
+      ],
+      "id": 1120645,
+      "title": "Axios: Proxy-Authorization Credential Leak to Origin Server Across HTTP-to-HTTPS Redirect in Axios Node.js HTTP Adapter",
+      "module_name": "axios",
+      "vulnerable_versions": ">=1.0.0 <1.16.0",
+      "patched_versions": ">=1.16.0",
+      "severity": "high",
+      "cwe": "CWE-201",
+      "github_advisory_id": "GHSA-p92q-9vqr-4j8v",
+      "url": "https://github.com/advisories/GHSA-p92q-9vqr-4j8v"
+    },
+    "1120647": {
+      "findings": [
+        {
+          "version": "1.15.2",
+          "paths": [
+            "frontend>axios"
+          ],
+          "dev": false,
+          "optional": false,
+          "bundled": false
+        }
+      ],
+      "id": 1120647,
+      "title": "Axios: Proxy-Authorization header leaks to redirect target when proxy is re-evaluated to direct connection",
+      "module_name": "axios",
+      "vulnerable_versions": ">=1.0.0 <1.16.0",
+      "patched_versions": ">=1.16.0",
+      "severity": "high",
+      "cwe": "CWE-200",
+      "github_advisory_id": "GHSA-j5f8-grm9-p9fc",
+      "url": "https://github.com/advisories/GHSA-j5f8-grm9-p9fc"
+    },
+    "1120650": {
+      "findings": [
+        {
+          "version": "1.15.2",
+          "paths": [
+            "frontend>axios"
+          ],
+          "dev": false,
+          "optional": false,
+          "bundled": false
+        }
+      ],
+      "id": 1120650,
+      "title": "axios Vulnerable to Full Man-in-the-Middle via Prototype Pollution Gadget in `config.proxy`",
+      "module_name": "axios",
+      "vulnerable_versions": ">=1.0.0 <1.16.0",
+      "patched_versions": ">=1.16.0",
+      "severity": "high",
+      "cwe": "CWE-441, CWE-1321",
+      "github_advisory_id": "GHSA-35jp-ww65-95wh",
+      "url": "https://github.com/advisories/GHSA-35jp-ww65-95wh"
+    },
+    "1120652": {
+      "findings": [
+        {
+          "version": "1.15.2",
+          "paths": [
+            "frontend>axios"
+          ],
+          "dev": false,
+          "optional": false,
+          "bundled": false
+        }
+      ],
+      "id": 1120652,
+      "title": "axios has DoS & Header Injection via Prototype Pollution Read-Side Gadgets in axios merge functions",
+      "module_name": "axios",
+      "vulnerable_versions": ">=1.0.0 <1.16.0",
+      "patched_versions": ">=1.16.0",
+      "severity": "moderate",
+      "cwe": "CWE-1321",
+      "github_advisory_id": "GHSA-898c-q2cr-xwhg",
+      "url": "https://github.com/advisories/GHSA-898c-q2cr-xwhg"
+    },
+    "1120653": {
+      "findings": [
+        {
+          "version": "1.15.2",
+          "paths": [
+            "frontend>axios"
+          ],
+          "dev": false,
+          "optional": false,
+          "bundled": false
+        }
+      ],
+      "id": 1120653,
+      "title": "Axios has a Patch Bypass: Proxy-Authorization Header Injection via Prototype Pollution \u2014 Incomplete Null-Prototype Fix",
+      "module_name": "axios",
+      "vulnerable_versions": "=1.15.2",
+      "severity": "low",
+      "cwe": "CWE-113, CWE-1321",
+      "github_advisory_id": "GHSA-654m-c8p4-x5fp",
+      "url": "https://github.com/advisories/GHSA-654m-c8p4-x5fp"
+    },
+    "1120743": {
+      "findings": [
+        {
+          "version": "4.0.5",
+          "paths": [
+            "frontend>axios>form-data"
+          ],
+          "dev": false,
+          "optional": false,
+          "bundled": false
+        }
+      ],
+      "id": 1120743,
+      "title": "form-data: CRLF injection in form-data via unescaped multipart field names and filenames",
+      "module_name": "form-data",
+      "vulnerable_versions": ">=4.0.0 <4.0.6",
+      "patched_versions": ">=4.0.6",
+      "severity": "high",
+      "cwe": "CWE-93",
+      "github_advisory_id": "GHSA-hmw2-7cc7-3qxx",
+      "url": "https://github.com/advisories/GHSA-hmw2-7cc7-3qxx"
+    },
+    "1120785": {
+      "findings": [
+        {
+          "version": "7.3.0",
+          "paths": [
+            "frontend>@vitejs/plugin-react>vite",
+            "frontend>vite",
+            "frontend>vite-plugin-svgr>vite"
+          ],
+          "dev": true,
+          "optional": false,
+          "bundled": false
+        }
+      ],
+      "id": 1120785,
+      "title": "launch-editor: NTLMv2 hash disclosure via UNC path handling on Windows",
+      "module_name": "vite",
+      "vulnerable_versions": ">=7.0.0 <=7.3.4",
+      "patched_versions": ">=7.3.5",
+      "severity": "moderate",
+      "cwe": "CWE-73, CWE-522",
+      "github_advisory_id": "GHSA-v6wh-96g9-6wx3",
+      "url": "https://github.com/advisories/GHSA-v6wh-96g9-6wx3"
+    },
+    "1120807": {
+      "findings": [
+        {
+          "version": "7.13.1",
+          "paths": [
+            "frontend>react-router-dom>react-router"
+          ],
+          "dev": false,
+          "optional": false,
+          "bundled": false
+        }
+      ],
+      "id": 1120807,
+      "title": "React Router: Potential CSRF via PUT/PATCH/DELETE document requests",
+      "module_name": "react-router",
+      "vulnerable_versions": ">=7.12.0 <7.15.1",
+      "patched_versions": ">=7.15.1",
+      "severity": "low",
+      "cwe": "CWE-352",
+      "github_advisory_id": "GHSA-84g9-w2xq-vcv6",
+      "url": "https://github.com/advisories/GHSA-84g9-w2xq-vcv6"
+    },
+    "1121860": {
+      "findings": [
+        {
+          "version": "4.1.1",
+          "paths": [
+            "frontend>eslint>@eslint/eslintrc>js-yaml",
+            "frontend>eslint-plugin-react-hooks>eslint>@eslint/eslintrc>js-yaml",
+            "frontend>eslint-plugin-react-refresh>eslint>@eslint/eslintrc>js-yaml",
+            "frontend>vite-plugin-svgr>@svgr/core>cosmiconfig>js-yaml",
+            "frontend>vite-plugin-svgr>@svgr/plugin-jsx>@svgr/core>cosmiconfig>js-yaml"
+          ],
+          "dev": true,
+          "optional": false,
+          "bundled": false
+        }
+      ],
+      "id": 1121860,
+      "title": "JS-YAML: Quadratic-complexity DoS in merge key handling via repeated aliases",
+      "module_name": "js-yaml",
+      "vulnerable_versions": ">=4.0.0 <=4.1.1",
+      "patched_versions": ">=4.1.2",
+      "severity": "moderate",
+      "cwe": "CWE-407",
+      "github_advisory_id": "GHSA-h67p-54hq-rp68",
+      "url": "https://github.com/advisories/GHSA-h67p-54hq-rp68"
+    },
+    "1123526": {
+      "findings": [
+        {
+          "version": "7.3.0",
+          "paths": [
+            "frontend>@vitejs/plugin-react>vite",
+            "frontend>vite",
+            "frontend>vite-plugin-svgr>vite"
+          ],
+          "dev": true,
+          "optional": false,
+          "bundled": false
+        }
+      ],
+      "id": 1123526,
+      "title": "vite: `server.fs.deny` bypass on Windows alternate paths",
+      "module_name": "vite",
+      "vulnerable_versions": ">=7.0.0 <=7.3.4",
+      "patched_versions": ">=7.3.5",
+      "severity": "high",
+      "cwe": "CWE-22, CWE-200",
+      "github_advisory_id": "GHSA-fx2h-pf6j-xcff",
+      "url": "https://github.com/advisories/GHSA-fx2h-pf6j-xcff"
+    },
+    "1123528": {
+      "findings": [
+        {
+          "version": "7.28.5",
+          "paths": [
+            "frontend>@vitejs/plugin-react>@babel/core",
+            "frontend>@vitejs/plugin-react>@babel/plugin-transform-react-jsx-self>@babel/core",
+            "frontend>@vitejs/plugin-react>@babel/plugin-transform-react-jsx-source>@babel/core",
+            "frontend>eslint-plugin-react-hooks>@babel/core",
+            "frontend>vite-plugin-svgr>@svgr/core>@babel/core",
+            "frontend>vite-plugin-svgr>@svgr/core>@svgr/babel-preset>@babel/core",
+            "frontend>vite-plugin-svgr>@svgr/core>@svgr/babel-preset>@svgr/babel-plugin-add-jsx-attribute>@babel/core",
+            "frontend>vite-plugin-svgr>@svgr/core>@svgr/babel-preset>@svgr/babel-plugin-remove-jsx-attribute>@babel/core",
+            "frontend>vite-plugin-svgr>@svgr/core>@svgr/babel-preset>@svgr/babel-plugin-remove-jsx-empty-expression>@babel/core",
+            "frontend>vite-plugin-svgr>@svgr/core>@svgr/babel-preset>@svgr/babel-plugin-replace-jsx-attribute-value>@babel/core",
+            "frontend>vite-plugin-svgr>@svgr/core>@svgr/babel-preset>@svgr/babel-plugin-svg-dynamic-title>@babel/core",
+            "frontend>vite-plugin-svgr>@svgr/core>@svgr/babel-preset>@svgr/babel-plugin-svg-em-dimensions>@babel/core",
+            "frontend>vite-plugin-svgr>@svgr/core>@svgr/babel-preset>@svgr/babel-plugin-transform-react-native-svg>@babel/core",
+            "frontend>vite-plugin-svgr>@svgr/core>@svgr/babel-preset>@svgr/babel-plugin-transform-svg-component>@babel/core",
+            "frontend>vite-plugin-svgr>@svgr/plugin-jsx>@babel/core",
+            "frontend>vite-plugin-svgr>@svgr/plugin-jsx>@svgr/babel-preset>@babel/core",
+            "frontend>vite-plugin-svgr>@svgr/plugin-jsx>@svgr/babel-preset>@svgr/babel-plugin-add-jsx-attribute>@babel/core",
+            "frontend>vite-plugin-svgr>@svgr/plugin-jsx>@svgr/babel-preset>@svgr/babel-plugin-remove-jsx-attribute>@babel/core",
+            "frontend>vite-plugin-svgr>@svgr/plugin-jsx>@svgr/babel-preset>@svgr/babel-plugin-remove-jsx-empty-expression>@babel/core",
+            "frontend>vite-plugin-svgr>@svgr/plugin-jsx>@svgr/babel-preset>@svgr/babel-plugin-replace-jsx-attribute-value>@babel/core",
+            "frontend>vite-plugin-svgr>@svgr/plugin-jsx>@svgr/babel-preset>@svgr/babel-plugin-svg-dynamic-title>@babel/core",
+            "frontend>vite-plugin-svgr>@svgr/plugin-jsx>@svgr/babel-preset>@svgr/babel-plugin-svg-em-dimensions>@babel/core",
+            "frontend>vite-plugin-svgr>@svgr/plugin-jsx>@svgr/babel-preset>@svgr/babel-plugin-transform-react-native-svg>@babel/core",
+            "frontend>vite-plugin-svgr>@svgr/plugin-jsx>@svgr/babel-preset>@svgr/babel-plugin-transform-svg-component>@babel/core",
+            "frontend>vite-plugin-svgr>@svgr/plugin-jsx>@svgr/core>@babel/core",
+            "frontend>vite-plugin-svgr>@svgr/plugin-jsx>@svgr/core>@svgr/babel-preset>@babel/core",
+            "frontend>vite-plugin-svgr>@svgr/plugin-jsx>@svgr/core>@svgr/babel-preset>@svgr/babel-plugin-add-jsx-attribute>@babel/core",
+            "frontend>vite-plugin-svgr>@svgr/plugin-jsx>@svgr/core>@svgr/babel-preset>@svgr/babel-plugin-remove-jsx-attribute>@babel/core",
+            "frontend>vite-plugin-svgr>@svgr/plugin-jsx>@svgr/core>@svgr/babel-preset>@svgr/babel-plugin-remove-jsx-empty-expression>@babel/core",
+            "frontend>vite-plugin-svgr>@svgr/plugin-jsx>@svgr/core>@svgr/babel-preset>@svgr/babel-plugin-replace-jsx-attribute-value>@babel/core",
+            "frontend>vite-plugin-svgr>@svgr/plugin-jsx>@svgr/core>@svgr/babel-preset>@svgr/babel-plugin-svg-dynamic-title>@babel/core",
+            "frontend>vite-plugin-svgr>@svgr/plugin-jsx>@svgr/core>@svgr/babel-preset>@svgr/babel-plugin-svg-em-dimensions>@babel/core",
+            "frontend>vite-plugin-svgr>@svgr/plugin-jsx>@svgr/core>@svgr/babel-preset>@svgr/babel-plugin-transform-react-native-svg>@babel/core",
+            "frontend>vite-plugin-svgr>@svgr/plugin-jsx>@svgr/core>@svgr/babel-preset>@svgr/babel-plugin-transform-svg-component>@babel/core"
+          ],
+          "dev": true,
+          "optional": false,
+          "bundled": false
+        }
+      ],
+      "id": 1123528,
+      "title": "@babel/core: Arbitrary File Read via sourceMappingURL Comment",
+      "module_name": "@babel/core",
+      "vulnerable_versions": "<=7.29.0",
+      "patched_versions": ">=7.29.1",
+      "severity": "low",
+      "cwe": "CWE-22, CWE-200",
+      "github_advisory_id": "GHSA-4x5r-pxfx-6jf8",
+      "url": "https://github.com/advisories/GHSA-4x5r-pxfx-6jf8"
+    },
+    "1123824": {
+      "findings": [
+        {
+          "version": "1.15.2",
+          "paths": [
+            "frontend>axios"
+          ],
+          "dev": false,
+          "optional": false,
+          "bundled": false
+        }
+      ],
+      "id": 1123824,
+      "title": "axios's shouldBypassProxy does not recognize IPv4-mapped IPv6 addresses, allowing NO_PROXY bypass (incomplete fix for CVE-2025-62718)",
+      "module_name": "axios",
+      "vulnerable_versions": ">=1.15.0 <1.16.0",
+      "patched_versions": ">=1.16.0",
+      "severity": "high",
+      "cwe": "CWE-289, CWE-918",
+      "github_advisory_id": "GHSA-pjwm-pj3p-43mv",
+      "url": "https://github.com/advisories/GHSA-pjwm-pj3p-43mv"
+    },
+    "1123897": {
+      "findings": [
+        {
+          "version": "1.1.12",
+          "paths": [
+            "frontend>eslint>@eslint/config-array>minimatch>brace-expansion",
+            "frontend>eslint>@eslint/eslintrc>minimatch>brace-expansion",
+            "frontend>eslint>minimatch>brace-expansion",
+            "frontend>eslint-plugin-react-hooks>eslint>@eslint/config-array>minimatch>brace-expansion",
+            "frontend>eslint-plugin-react-hooks>eslint>@eslint/eslintrc>minimatch>brace-expansion",
+            "frontend>eslint-plugin-react-hooks>eslint>minimatch>brace-expansion",
+            "frontend>eslint-plugin-react-refresh>eslint>@eslint/config-array>minimatch>brace-expansion",
+            "frontend>eslint-plugin-react-refresh>eslint>@eslint/eslintrc>minimatch>brace-expansion",
+            "frontend>eslint-plugin-react-refresh>eslint>minimatch>brace-expansion"
+          ],
+          "dev": true,
+          "optional": false,
+          "bundled": false
+        }
+      ],
+      "id": 1123897,
+      "title": "brace-expansion: DoS via exponential-time expansion of consecutive non-expanding {} groups",
+      "module_name": "brace-expansion",
+      "vulnerable_versions": "<1.1.16",
+      "patched_versions": ">=1.1.16",
+      "severity": "high",
+      "cwe": "CWE-400, CWE-407",
+      "github_advisory_id": "GHSA-3jxr-9vmj-r5cp",
+      "url": "https://github.com/advisories/GHSA-3jxr-9vmj-r5cp"
+    },
+    "1123911": {
+      "findings": [
+        {
+          "version": "4.1.1",
+          "paths": [
+            "frontend>eslint>@eslint/eslintrc>js-yaml",
+            "frontend>eslint-plugin-react-hooks>eslint>@eslint/eslintrc>js-yaml",
+            "frontend>eslint-plugin-react-refresh>eslint>@eslint/eslintrc>js-yaml",
+            "frontend>vite-plugin-svgr>@svgr/core>cosmiconfig>js-yaml",
+            "frontend>vite-plugin-svgr>@svgr/plugin-jsx>@svgr/core>cosmiconfig>js-yaml"
+          ],
+          "dev": true,
+          "optional": false,
+          "bundled": false
+        }
+      ],
+      "id": 1123911,
+      "title": "js-yaml: YAML merge-key chains can force quadratic CPU consumption",
+      "module_name": "js-yaml",
+      "vulnerable_versions": ">=4.0.0 <4.3.0",
+      "patched_versions": ">=4.3.0",
+      "severity": "high",
+      "cwe": "CWE-400, CWE-407",
+      "github_advisory_id": "GHSA-52cp-r559-cp3m",
+      "url": "https://github.com/advisories/GHSA-52cp-r559-cp3m"
+    },
+    "1123976": {
+      "findings": [
+        {
+          "version": "2.2.1",
+          "paths": [
+            "backend>express>body-parser"
+          ],
+          "dev": false,
+          "optional": false,
+          "bundled": false
+        }
+      ],
+      "id": 1123976,
+      "title": "body-parser vulnerable to denial of service when invalid limit value silently disables size enforcement",
+      "module_name": "body-parser",
+      "vulnerable_versions": ">=2.0.0 <2.3.0",
+      "patched_versions": ">=2.3.0",
+      "severity": "low",
+      "cwe": "CWE-770",
+      "github_advisory_id": "GHSA-v422-hmwv-36x6",
+      "url": "https://github.com/advisories/GHSA-v422-hmwv-36x6"
+    },
+    "1124252": {
+      "findings": [
+        {
+          "version": "8.5.8",
+          "paths": [
+            "frontend>@tailwindcss/postcss>postcss",
+            "frontend>@vitejs/plugin-react>vite>postcss",
+            "frontend>autoprefixer>postcss",
+            "frontend>postcss",
+            "frontend>vite>postcss",
+            "frontend>vite-plugin-svgr>vite>postcss"
+          ],
+          "dev": true,
+          "optional": false,
+          "bundled": false
+        }
+      ],
+      "id": 1124252,
+      "title": "PostCSS: Arbitrary file read and information disclosure via attacker-controlled sourceMappingURL in CSS comments",
+      "module_name": "postcss",
+      "vulnerable_versions": "<=8.5.11",
+      "patched_versions": ">=8.5.12",
+      "severity": "high",
+      "cwe": "CWE-22, CWE-200",
+      "github_advisory_id": "GHSA-6g55-p6wh-862q",
+      "url": "https://github.com/advisories/GHSA-6g55-p6wh-862q"
+    },
+    "1124268": {
+      "findings": [
+        {
+          "version": "7.13.1",
+          "paths": [
+            "frontend>react-router-dom>react-router"
+          ],
+          "dev": false,
+          "optional": false,
+          "bundled": false
+        }
+      ],
+      "id": 1124268,
+      "title": "React Router: Open redirect via backslash in <Link> and useNavigate (CVE-2025-68470 bypass)",
+      "module_name": "react-router",
+      "vulnerable_versions": ">=6.0.0 <7.18.0",
+      "patched_versions": ">=7.18.0",
+      "severity": "moderate",
+      "cwe": "CWE-601",
+      "github_advisory_id": "GHSA-wrjc-x8rr-h8h6",
+      "url": "https://github.com/advisories/GHSA-wrjc-x8rr-h8h6"
+    },
+    "1124271": {
+      "findings": [
+        {
+          "version": "7.13.1",
+          "paths": [
+            "frontend>react-router-dom>react-router"
+          ],
+          "dev": false,
+          "optional": false,
+          "bundled": false
+        }
+      ],
+      "id": 1124271,
+      "title": "React Router: RSCErrorHandler Missing Protocol Validation (XSS)",
+      "module_name": "react-router",
+      "vulnerable_versions": ">=7.11.0 <7.18.0",
+      "patched_versions": ">=7.18.0",
+      "severity": "moderate",
+      "cwe": "CWE-79",
+      "github_advisory_id": "GHSA-h8fp-f39c-q6mh",
+      "url": "https://github.com/advisories/GHSA-h8fp-f39c-q6mh"
+    },
+    "1124272": {
+      "findings": [
+        {
+          "version": "7.13.1",
+          "paths": [
+            "frontend>react-router-dom>react-router"
+          ],
+          "dev": false,
+          "optional": false,
+          "bundled": false
+        }
+      ],
+      "id": 1124272,
+      "title": "React Router: Arbitrary Constructor Injection via deserializeErrors() in React Router SSR Hydration",
+      "module_name": "react-router",
+      "vulnerable_versions": ">=6.4.0 <7.18.0",
+      "patched_versions": ">=7.18.0",
+      "severity": "moderate",
+      "cwe": "CWE-470",
+      "github_advisory_id": "GHSA-337j-9hxr-rhxg",
+      "url": "https://github.com/advisories/GHSA-337j-9hxr-rhxg"
+    },
+    "1124276": {
+      "findings": [
+        {
+          "version": "7.13.1",
+          "paths": [
+            "frontend>react-router-dom>react-router"
+          ],
+          "dev": false,
+          "optional": false,
+          "bundled": false
+        }
+      ],
+      "id": 1124276,
+      "title": "React Router: Unauthenticated Denial of Service via Inefficient Route Matching",
+      "module_name": "react-router",
+      "vulnerable_versions": ">=7.0.0 <7.18.0",
+      "patched_versions": ">=7.18.0",
+      "severity": "high",
+      "cwe": "CWE-400, CWE-407",
+      "github_advisory_id": "GHSA-chx6-hx7r-mcp5",
+      "url": "https://github.com/advisories/GHSA-chx6-hx7r-mcp5"
+    },
+    "1130588": {
+      "findings": [
+        {
+          "version": "1.1.12",
+          "paths": [
+            "frontend>eslint>@eslint/config-array>minimatch>brace-expansion",
+            "frontend>eslint>@eslint/eslintrc>minimatch>brace-expansion",
+            "frontend>eslint>minimatch>brace-expansion",
+            "frontend>eslint-plugin-react-hooks>eslint>@eslint/config-array>minimatch>brace-expansion",
+            "frontend>eslint-plugin-react-hooks>eslint>@eslint/eslintrc>minimatch>brace-expansion",
+            "frontend>eslint-plugin-react-hooks>eslint>minimatch>brace-expansion",
+            "frontend>eslint-plugin-react-refresh>eslint>@eslint/config-array>minimatch>brace-expansion",
+            "frontend>eslint-plugin-react-refresh>eslint>@eslint/eslintrc>minimatch>brace-expansion",
+            "frontend>eslint-plugin-react-refresh>eslint>minimatch>brace-expansion"
+          ],
+          "dev": true,
+          "optional": false,
+          "bundled": false
+        }
+      ],
+      "id": 1130588,
+      "title": "brace-expansion: DoS via unbounded expansion length causing an out-of-memory process crash",
+      "module_name": "brace-expansion",
+      "vulnerable_versions": "<1.1.17",
+      "patched_versions": ">=1.1.17",
+      "severity": "high",
+      "cwe": "CWE-400, CWE-770",
+      "github_advisory_id": "GHSA-mh99-v99m-4gvg",
+      "url": "https://github.com/advisories/GHSA-mh99-v99m-4gvg"
+    },
+    "1130709": {
+      "findings": [
+        {
+          "version": "8.5.8",
+          "paths": [
+            "frontend>@tailwindcss/postcss>postcss",
+            "frontend>@vitejs/plugin-react>vite>postcss",
+            "frontend>autoprefixer>postcss",
+            "frontend>postcss",
+            "frontend>vite>postcss",
+            "frontend>vite-plugin-svgr>vite>postcss"
+          ],
+          "dev": true,
+          "optional": false,
+          "bundled": false
+        }
+      ],
+      "id": 1130709,
+      "title": "PostCSS: incomplete fix of GHSA-6g55-p6wh-862q \u2014 attacker-controlled sourceMappingURL reads arbitrary .map files when `from` is unset",
+      "module_name": "postcss",
+      "vulnerable_versions": "<=8.5.22",
+      "patched_versions": ">=8.5.23",
+      "severity": "moderate",
+      "cwe": "CWE-22, CWE-200",
+      "github_advisory_id": "GHSA-fxqj-rqcc-2cmp",
+      "url": "https://github.com/advisories/GHSA-fxqj-rqcc-2cmp"
+    },
+    "1130737": {
+      "findings": [
+        {
+          "version": "1.1.12",
+          "paths": [
+            "frontend>eslint>@eslint/config-array>minimatch>brace-expansion",
+            "frontend>eslint>@eslint/eslintrc>minimatch>brace-expansion",
+            "frontend>eslint>minimatch>brace-expansion",
+            "frontend>eslint-plugin-react-hooks>eslint>@eslint/config-array>minimatch>brace-expansion",
+            "frontend>eslint-plugin-react-hooks>eslint>@eslint/eslintrc>minimatch>brace-expansion",
+            "frontend>eslint-plugin-react-hooks>eslint>minimatch>brace-expansion",
+            "frontend>eslint-plugin-react-refresh>eslint>@eslint/config-array>minimatch>brace-expansion",
+            "frontend>eslint-plugin-react-refresh>eslint>@eslint/eslintrc>minimatch>brace-expansion",
+            "frontend>eslint-plugin-react-refresh>eslint>minimatch>brace-expansion"
+          ],
+          "dev": true,
+          "optional": false,
+          "bundled": false
+        }
+      ],
+      "id": 1130737,
+      "title": "brace-expansion: DoS via unbounded intermediate arrays, bypassing the CVE-2026-14257 mitigation",
+      "module_name": "brace-expansion",
+      "vulnerable_versions": "<1.1.18",
+      "patched_versions": ">=1.1.18",
+      "severity": "high",
+      "cwe": "CWE-400, CWE-770",
+      "github_advisory_id": "GHSA-rgw5-rvv9-x895",
+      "url": "https://github.com/advisories/GHSA-rgw5-rvv9-x895"
+    },
+    "1136304": {
+      "findings": [
+        {
+          "version": "7.13.1",
+          "paths": [
+            "frontend>react-router-dom>react-router"
+          ],
+          "dev": false,
+          "optional": false,
+          "bundled": false
+        }
+      ],
+      "id": 1136304,
+      "title": "React Router's same-origin redirect with path starting // causes open redirect via protocol-relative URL reinterpretation",
+      "module_name": "react-router",
+      "vulnerable_versions": ">=7.0.0 <7.14.1",
+      "patched_versions": ">=7.14.1",
+      "severity": "moderate",
+      "cwe": "CWE-601",
+      "github_advisory_id": "GHSA-2j2x-hqr9-3h42",
+      "url": "https://github.com/advisories/GHSA-2j2x-hqr9-3h42"
+    },
+    "1138115": {
+      "findings": [
+        {
+          "version": "4.1.1",
+          "paths": [
+            "frontend>eslint>@eslint/eslintrc>js-yaml",
+            "frontend>eslint-plugin-react-hooks>eslint>@eslint/eslintrc>js-yaml",
+            "frontend>eslint-plugin-react-refresh>eslint>@eslint/eslintrc>js-yaml",
+            "frontend>vite-plugin-svgr>@svgr/core>cosmiconfig>js-yaml",
+            "frontend>vite-plugin-svgr>@svgr/plugin-jsx>@svgr/core>cosmiconfig>js-yaml"
+          ],
+          "dev": true,
+          "optional": false,
+          "bundled": false
+        }
+      ],
+      "id": 1138115,
+      "title": "JS-YAML: Quadratic CPU consumption in !!omap resolution (3.x and 4.x) \u2014 CVE-2026-59870 fix not backported",
+      "module_name": "js-yaml",
+      "vulnerable_versions": ">=4.0.0 <4.3.1",
+      "patched_versions": ">=4.3.1",
+      "severity": "high",
+      "cwe": "CWE-407",
+      "github_advisory_id": "GHSA-5p4m-2wfm-xmqj",
+      "url": "https://github.com/advisories/GHSA-5p4m-2wfm-xmqj"
+    },
+    "1138749": {
+      "findings": [
+        {
+          "version": "1.15.2",
+          "paths": [
+            "frontend>axios"
+          ],
+          "dev": false,
+          "optional": false,
+          "bundled": false
+        }
+      ],
+      "id": 1138749,
+      "title": "Axios: Prototype pollution auth subfields can inject Basic auth",
+      "module_name": "axios",
+      "vulnerable_versions": ">=1.15.2 <1.18.0",
+      "patched_versions": ">=1.18.0",
+      "severity": "moderate",
+      "cwe": "CWE-1321",
+      "github_advisory_id": "GHSA-xj6q-8x83-jv6g",
+      "url": "https://github.com/advisories/GHSA-xj6q-8x83-jv6g"
+    },
+    "1138769": {
+      "findings": [
+        {
+          "version": "7.13.1",
+          "paths": [
+            "frontend>react-router-dom>react-router"
+          ],
+          "dev": false,
+          "optional": false,
+          "bundled": false
+        }
+      ],
+      "id": 1138769,
+      "title": "React Router: RSC Mode CSRF Bypass Allows Action Execution Before 400 Response",
+      "module_name": "react-router",
+      "vulnerable_versions": ">=7.12.0 <7.18.2",
+      "patched_versions": ">=7.18.2",
+      "severity": "high",
+      "cwe": "CWE-352",
+      "github_advisory_id": "GHSA-qwww-vcr4-c8h2",
+      "url": "https://github.com/advisories/GHSA-qwww-vcr4-c8h2"
+    },
+    "1138811": {
+      "findings": [
+        {
+          "version": "3.3.11",
+          "paths": [
+            "frontend>@tailwindcss/postcss>postcss>nanoid",
+            "frontend>@vitejs/plugin-react>vite>postcss>nanoid",
+            "frontend>autoprefixer>postcss>nanoid",
+            "frontend>postcss>nanoid",
+            "frontend>vite>postcss>nanoid",
+            "frontend>vite-plugin-svgr>vite>postcss>nanoid"
+          ],
+          "dev": true,
+          "optional": false,
+          "bundled": false
+        }
+      ],
+      "id": 1138811,
+      "title": "nanoid: non-secure generators can loop indefinitely with negative size",
+      "module_name": "nanoid",
+      "vulnerable_versions": "<3.3.16",
+      "patched_versions": ">=3.3.16",
+      "severity": "high",
+      "cwe": "CWE-835",
+      "github_advisory_id": "GHSA-28wg-ghj8-5hjv",
+      "url": "https://github.com/advisories/GHSA-28wg-ghj8-5hjv"
+    },
+    "1139427": {
+      "findings": [
+        {
+          "version": "3.3.11",
+          "paths": [
+            "frontend>@tailwindcss/postcss>postcss>nanoid",
+            "frontend>@vitejs/plugin-react>vite>postcss>nanoid",
+            "frontend>autoprefixer>postcss>nanoid",
+            "frontend>postcss>nanoid",
+            "frontend>vite>postcss>nanoid",
+            "frontend>vite-plugin-svgr>vite>postcss>nanoid"
+          ],
+          "dev": true,
+          "optional": false,
+          "bundled": false
+        }
+      ],
+      "id": 1139427,
+      "title": "nanoid: custom generators can loop indefinitely when size is zero",
+      "module_name": "nanoid",
+      "vulnerable_versions": "<3.3.18",
+      "patched_versions": ">=3.3.18",
+      "severity": "high",
+      "cwe": "CWE-835",
+      "github_advisory_id": "GHSA-2v37-7h3g-55p8",
+      "url": "https://github.com/advisories/GHSA-2v37-7h3g-55p8"
+    },
+    "1139510": {
+      "findings": [
+        {
+          "version": "8.5.8",
+          "paths": [
+            "frontend>@tailwindcss/postcss>postcss",
+            "frontend>@vitejs/plugin-react>vite>postcss",
+            "frontend>autoprefixer>postcss",
+            "frontend>postcss",
+            "frontend>vite>postcss",
+            "frontend>vite-plugin-svgr>vite>postcss"
+          ],
+          "dev": true,
+          "optional": false,
+          "bundled": false
+        }
+      ],
+      "id": 1139510,
+      "title": "PostCSS: Path Traversal in Previous Source Map Auto-Loading (sourceMappingURL) leads to Arbitrary .map File Disclosure",
+      "module_name": "postcss",
+      "vulnerable_versions": "<=8.5.17",
+      "patched_versions": ">=8.5.18",
+      "severity": "high",
+      "cwe": "CWE-22",
+      "github_advisory_id": "GHSA-r28c-9q8g-f849",
+      "url": "https://github.com/advisories/GHSA-r28c-9q8g-f849"
+    },
+    "1147949": {
+      "findings": [
+        {
+          "version": "1.15.2",
+          "paths": [
+            "frontend>axios"
+          ],
+          "dev": false,
+          "optional": false,
+          "bundled": false
+        }
+      ],
+      "id": 1147949,
+      "title": "Axios: Prototype pollution gadgets can alter axios request construction",
+      "module_name": "axios",
+      "vulnerable_versions": ">=1.0.0 <1.18.0",
+      "patched_versions": ">=1.18.0",
+      "severity": "moderate",
+      "cwe": "CWE-1321",
+      "github_advisory_id": "GHSA-mmx7-hfxf-jppx",
+      "url": "https://github.com/advisories/GHSA-mmx7-hfxf-jppx"
+    },
+    "1147950": {
+      "findings": [
+        {
+          "version": "1.15.2",
+          "paths": [
+            "frontend>axios"
+          ],
+          "dev": false,
+          "optional": false,
+          "bundled": false
+        }
+      ],
+      "id": 1147950,
+      "title": "Axios: Deep formToJSON Key Recursion Can Cause Denial of Service",
+      "module_name": "axios",
+      "vulnerable_versions": ">=1.0.0 <1.18.0",
+      "patched_versions": ">=1.18.0",
+      "severity": "moderate",
+      "cwe": "CWE-400, CWE-770",
+      "github_advisory_id": "GHSA-pmv8-rq9r-6j72",
+      "url": "https://github.com/advisories/GHSA-pmv8-rq9r-6j72"
+    },
+    "1153171": {
+      "findings": [
+        {
+          "version": "4.28.1",
+          "paths": [
+            "frontend>@vitejs/plugin-react>@babel/core>@babel/helper-compilation-targets>browserslist",
+            "frontend>@vitejs/plugin-react>@babel/plugin-transform-react-jsx-self>@babel/core>@babel/helper-compilation-targets>browserslist",
+            "frontend>@vitejs/plugin-react>@babel/plugin-transform-react-jsx-source>@babel/core>@babel/helper-compilation-targets>browserslist",
+            "frontend>autoprefixer>browserslist",
+            "frontend>eslint-plugin-react-hooks>@babel/core>@babel/helper-compilation-targets>browserslist",
+            "frontend>vite-plugin-svgr>@svgr/core>@babel/core>@babel/helper-compilation-targets>browserslist",
+            "frontend>vite-plugin-svgr>@svgr/core>@svgr/babel-preset>@babel/core>@babel/helper-compilation-targets>browserslist",
+            "frontend>vite-plugin-svgr>@svgr/core>@svgr/babel-preset>@svgr/babel-plugin-add-jsx-attribute>@babel/core>@babel/helper-compilation-targets>browserslist",
+            "frontend>vite-plugin-svgr>@svgr/core>@svgr/babel-preset>@svgr/babel-plugin-remove-jsx-attribute>@babel/core>@babel/helper-compilation-targets>browserslist",
+            "frontend>vite-plugin-svgr>@svgr/core>@svgr/babel-preset>@svgr/babel-plugin-remove-jsx-empty-expression>@babel/core>@babel/helper-compilation-targets>browserslist",
+            "frontend>vite-plugin-svgr>@svgr/core>@svgr/babel-preset>@svgr/babel-plugin-replace-jsx-attribute-value>@babel/core>@babel/helper-compilation-targets>browserslist",
+            "frontend>vite-plugin-svgr>@svgr/core>@svgr/babel-preset>@svgr/babel-plugin-svg-dynamic-title>@babel/core>@babel/helper-compilation-targets>browserslist",
+            "frontend>vite-plugin-svgr>@svgr/core>@svgr/babel-preset>@svgr/babel-plugin-svg-em-dimensions>@babel/core>@babel/helper-compilation-targets>browserslist",
+            "frontend>vite-plugin-svgr>@svgr/core>@svgr/babel-preset>@svgr/babel-plugin-transform-react-native-svg>@babel/core>@babel/helper-compilation-targets>browserslist",
+            "frontend>vite-plugin-svgr>@svgr/core>@svgr/babel-preset>@svgr/babel-plugin-transform-svg-component>@babel/core>@babel/helper-compilation-targets>browserslist",
+            "frontend>vite-plugin-svgr>@svgr/plugin-jsx>@babel/core>@babel/helper-compilation-targets>browserslist",
+            "frontend>vite-plugin-svgr>@svgr/plugin-jsx>@svgr/babel-preset>@babel/core>@babel/helper-compilation-targets>browserslist",
+            "frontend>vite-plugin-svgr>@svgr/plugin-jsx>@svgr/babel-preset>@svgr/babel-plugin-add-jsx-attribute>@babel/core>@babel/helper-compilation-targets>browserslist",
+            "frontend>vite-plugin-svgr>@svgr/plugin-jsx>@svgr/babel-preset>@svgr/babel-plugin-remove-jsx-attribute>@babel/core>@babel/helper-compilation-targets>browserslist",
+            "frontend>vite-plugin-svgr>@svgr/plugin-jsx>@svgr/babel-preset>@svgr/babel-plugin-remove-jsx-empty-expression>@babel/core>@babel/helper-compilation-targets>browserslist",
+            "frontend>vite-plugin-svgr>@svgr/plugin-jsx>@svgr/babel-preset>@svgr/babel-plugin-replace-jsx-attribute-value>@babel/core>@babel/helper-compilation-targets>browserslist",
+            "frontend>vite-plugin-svgr>@svgr/plugin-jsx>@svgr/babel-preset>@svgr/babel-plugin-svg-dynamic-title>@babel/core>@babel/helper-compilation-targets>browserslist",
+            "frontend>vite-plugin-svgr>@svgr/plugin-jsx>@svgr/babel-preset>@svgr/babel-plugin-svg-em-dimensions>@babel/core>@babel/helper-compilation-targets>browserslist",
+            "frontend>vite-plugin-svgr>@svgr/plugin-jsx>@svgr/babel-preset>@svgr/babel-plugin-transform-react-native-svg>@babel/core>@babel/helper-compilation-targets>browserslist",
+            "frontend>vite-plugin-svgr>@svgr/plugin-jsx>@svgr/babel-preset>@svgr/babel-plugin-transform-svg-component>@babel/core>@babel/helper-compilation-targets>browserslist",
+            "frontend>vite-plugin-svgr>@svgr/plugin-jsx>@svgr/core>@babel/core>@babel/helper-compilation-targets>browserslist",
+            "frontend>vite-plugin-svgr>@svgr/plugin-jsx>@svgr/core>@svgr/babel-preset>@babel/core>@babel/helper-compilation-targets>browserslist",
+            "frontend>vite-plugin-svgr>@svgr/plugin-jsx>@svgr/core>@svgr/babel-preset>@svgr/babel-plugin-add-jsx-attribute>@babel/core>@babel/helper-compilation-targets>browserslist",
+            "frontend>vite-plugin-svgr>@svgr/plugin-jsx>@svgr/core>@svgr/babel-preset>@svgr/babel-plugin-remove-jsx-attribute>@babel/core>@babel/helper-compilation-targets>browserslist",
+            "frontend>vite-plugin-svgr>@svgr/plugin-jsx>@svgr/core>@svgr/babel-preset>@svgr/babel-plugin-remove-jsx-empty-expression>@babel/core>@babel/helper-compilation-targets>browserslist",
+            "frontend>vite-plugin-svgr>@svgr/plugin-jsx>@svgr/core>@svgr/babel-preset>@svgr/babel-plugin-replace-jsx-attribute-value>@babel/core>@babel/helper-compilation-targets>browserslist",
+            "frontend>vite-plugin-svgr>@svgr/plugin-jsx>@svgr/core>@svgr/babel-preset>@svgr/babel-plugin-svg-dynamic-title>@babel/core>@babel/helper-compilation-targets>browserslist",
+            "frontend>vite-plugin-svgr>@svgr/plugin-jsx>@svgr/core>@svgr/babel-preset>@svgr/babel-plugin-svg-em-dimensions>@babel/core>@babel/helper-compilation-targets>browserslist",
+            "frontend>vite-plugin-svgr>@svgr/plugin-jsx>@svgr/core>@svgr/babel-preset>@svgr/babel-plugin-transform-react-native-svg>@babel/core>@babel/helper-compilation-targets>browserslist",
+            "frontend>vite-plugin-svgr>@svgr/plugin-jsx>@svgr/core>@svgr/babel-preset>@svgr/babel-plugin-transform-svg-component>@babel/core>@babel/helper-compilation-targets>browserslist"
+          ],
+          "dev": true,
+          "optional": false,
+          "bundled": false
+        }
+      ],
+      "id": 1153171,
+      "title": "Browserslist: Unbounded memory growth (no cache eviction) via distinct query results, leading to eventual OOM",
+      "module_name": "browserslist",
+      "vulnerable_versions": "<=4.28.6",
+      "patched_versions": ">=4.28.7",
+      "severity": "high",
+      "cwe": "CWE-770",
+      "github_advisory_id": "GHSA-c83g-rgw3-j3cx",
+      "url": "https://github.com/advisories/GHSA-c83g-rgw3-j3cx"
+    },
+    "1153172": {
+      "findings": [
+        {
+          "version": "4.28.1",
+          "paths": [
+            "frontend>@vitejs/plugin-react>@babel/core>@babel/helper-compilation-targets>browserslist",
+            "frontend>@vitejs/plugin-react>@babel/plugin-transform-react-jsx-self>@babel/core>@babel/helper-compilation-targets>browserslist",
+            "frontend>@vitejs/plugin-react>@babel/plugin-transform-react-jsx-source>@babel/core>@babel/helper-compilation-targets>browserslist",
+            "frontend>autoprefixer>browserslist",
+            "frontend>eslint-plugin-react-hooks>@babel/core>@babel/helper-compilation-targets>browserslist",
+            "frontend>vite-plugin-svgr>@svgr/core>@babel/core>@babel/helper-compilation-targets>browserslist",
+            "frontend>vite-plugin-svgr>@svgr/core>@svgr/babel-preset>@babel/core>@babel/helper-compilation-targets>browserslist",
+            "frontend>vite-plugin-svgr>@svgr/core>@svgr/babel-preset>@svgr/babel-plugin-add-jsx-attribute>@babel/core>@babel/helper-compilation-targets>browserslist",
+            "frontend>vite-plugin-svgr>@svgr/core>@svgr/babel-preset>@svgr/babel-plugin-remove-jsx-attribute>@babel/core>@babel/helper-compilation-targets>browserslist",
+            "frontend>vite-plugin-svgr>@svgr/core>@svgr/babel-preset>@svgr/babel-plugin-remove-jsx-empty-expression>@babel/core>@babel/helper-compilation-targets>browserslist",
+            "frontend>vite-plugin-svgr>@svgr/core>@svgr/babel-preset>@svgr/babel-plugin-replace-jsx-attribute-value>@babel/core>@babel/helper-compilation-targets>browserslist",
+            "frontend>vite-plugin-svgr>@svgr/core>@svgr/babel-preset>@svgr/babel-plugin-svg-dynamic-title>@babel/core>@babel/helper-compilation-targets>browserslist",
+            "frontend>vite-plugin-svgr>@svgr/core>@svgr/babel-preset>@svgr/babel-plugin-svg-em-dimensions>@babel/core>@babel/helper-compilation-targets>browserslist",
+            "frontend>vite-plugin-svgr>@svgr/core>@svgr/babel-preset>@svgr/babel-plugin-transform-react-native-svg>@babel/core>@babel/helper-compilation-targets>browserslist",
+            "frontend>vite-plugin-svgr>@svgr/core>@svgr/babel-preset>@svgr/babel-plugin-transform-svg-component>@babel/core>@babel/helper-compilation-targets>browserslist",
+            "frontend>vite-plugin-svgr>@svgr/plugin-jsx>@babel/core>@babel/helper-compilation-targets>browserslist",
+            "frontend>vite-plugin-svgr>@svgr/plugin-jsx>@svgr/babel-preset>@babel/core>@babel/helper-compilation-targets>browserslist",
+            "frontend>vite-plugin-svgr>@svgr/plugin-jsx>@svgr/babel-preset>@svgr/babel-plugin-add-jsx-attribute>@babel/core>@babel/helper-compilation-targets>browserslist",
+            "frontend>vite-plugin-svgr>@svgr/plugin-jsx>@svgr/babel-preset>@svgr/babel-plugin-remove-jsx-attribute>@babel/core>@babel/helper-compilation-targets>browserslist",
+            "frontend>vite-plugin-svgr>@svgr/plugin-jsx>@svgr/babel-preset>@svgr/babel-plugin-remove-jsx-empty-expression>@babel/core>@babel/helper-compilation-targets>browserslist",
+            "frontend>vite-plugin-svgr>@svgr/plugin-jsx>@svgr/babel-preset>@svgr/babel-plugin-replace-jsx-attribute-value>@babel/core>@babel/helper-compilation-targets>browserslist",
+            "frontend>vite-plugin-svgr>@svgr/plugin-jsx>@svgr/babel-preset>@svgr/babel-plugin-svg-dynamic-title>@babel/core>@babel/helper-compilation-targets>browserslist",
+            "frontend>vite-plugin-svgr>@svgr/plugin-jsx>@svgr/babel-preset>@svgr/babel-plugin-svg-em-dimensions>@babel/core>@babel/helper-compilation-targets>browserslist",
+            "frontend>vite-plugin-svgr>@svgr/plugin-jsx>@svgr/babel-preset>@svgr/babel-plugin-transform-react-native-svg>@babel/core>@babel/helper-compilation-targets>browserslist",
+            "frontend>vite-plugin-svgr>@svgr/plugin-jsx>@svgr/babel-preset>@svgr/babel-plugin-transform-svg-component>@babel/core>@babel/helper-compilation-targets>browserslist",
+            "frontend>vite-plugin-svgr>@svgr/plugin-jsx>@svgr/core>@babel/core>@babel/helper-compilation-targets>browserslist",
+            "frontend>vite-plugin-svgr>@svgr/plugin-jsx>@svgr/core>@svgr/babel-preset>@babel/core>@babel/helper-compilation-targets>browserslist",
+            "frontend>vite-plugin-svgr>@svgr/plugin-jsx>@svgr/core>@svgr/babel-preset>@svgr/babel-plugin-add-jsx-attribute>@babel/core>@babel/helper-compilation-targets>browserslist",
+            "frontend>vite-plugin-svgr>@svgr/plugin-jsx>@svgr/core>@svgr/babel-preset>@svgr/babel-plugin-remove-jsx-attribute>@babel/core>@babel/helper-compilation-targets>browserslist",
+            "frontend>vite-plugin-svgr>@svgr/plugin-jsx>@svgr/core>@svgr/babel-preset>@svgr/babel-plugin-remove-jsx-empty-expression>@babel/core>@babel/helper-compilation-targets>browserslist",
+            "frontend>vite-plugin-svgr>@svgr/plugin-jsx>@svgr/core>@svgr/babel-preset>@svgr/babel-plugin-replace-jsx-attribute-value>@babel/core>@babel/helper-compilation-targets>browserslist",
+            "frontend>vite-plugin-svgr>@svgr/plugin-jsx>@svgr/core>@svgr/babel-preset>@svgr/babel-plugin-svg-dynamic-title>@babel/core>@babel/helper-compilation-targets>browserslist",
+            "frontend>vite-plugin-svgr>@svgr/plugin-jsx>@svgr/core>@svgr/babel-preset>@svgr/babel-plugin-svg-em-dimensions>@babel/core>@babel/helper-compilation-targets>browserslist",
+            "frontend>vite-plugin-svgr>@svgr/plugin-jsx>@svgr/core>@svgr/babel-preset>@svgr/babel-plugin-transform-react-native-svg>@babel/core>@babel/helper-compilation-targets>browserslist",
+            "frontend>vite-plugin-svgr>@svgr/plugin-jsx>@svgr/core>@svgr/babel-preset>@svgr/babel-plugin-transform-svg-component>@babel/core>@babel/helper-compilation-targets>browserslist"
+          ],
+          "dev": true,
+          "optional": false,
+          "bundled": false
+        }
+      ],
+      "id": 1153172,
+      "title": "Browserslist: Uncaught crash / prototype write via untrusted browserslist-stats.json custom stats (normalizeStats)",
+      "module_name": "browserslist",
+      "vulnerable_versions": "<=4.28.6",
+      "patched_versions": ">=4.28.7",
+      "severity": "high",
+      "cwe": "CWE-248, CWE-1321",
+      "github_advisory_id": "GHSA-73wf-gq98-2v4g",
+      "url": "https://github.com/advisories/GHSA-73wf-gq98-2v4g"
+    },
+    "1153173": {
+      "findings": [
+        {
+          "version": "3.16.0",
+          "paths": [
+            "backend>knex>mysql2",
+            "backend>mysql2"
+          ],
+          "dev": false,
+          "optional": false,
+          "bundled": false
+        }
+      ],
+      "id": 1153173,
+      "title": "MySQL2: Auth Plugin Downgrade to mysql_clear_password Leaks Plaintext Credentials",
+      "module_name": "mysql2",
+      "vulnerable_versions": "<3.22.0",
+      "patched_versions": ">=3.22.0",
+      "severity": "high",
+      "cwe": "CWE-522",
+      "github_advisory_id": "GHSA-3f6p-5ww8-9rcr",
+      "url": "https://github.com/advisories/GHSA-3f6p-5ww8-9rcr"
+    },
+    "1153175": {
+      "findings": [
+        {
+          "version": "1.15.2",
+          "paths": [
+            "frontend>axios"
+          ],
+          "dev": false,
+          "optional": false,
+          "bundled": false
+        }
+      ],
+      "id": 1153175,
+      "title": "Axios: HTTP/2 streamed uploads bypass `maxBodyLength`",
+      "module_name": "axios",
+      "vulnerable_versions": ">=1.13.0 <1.18.0",
+      "patched_versions": ">=1.18.0",
+      "severity": "moderate",
+      "cwe": "CWE-400",
+      "github_advisory_id": "GHSA-mwf2-3pr3-8698",
+      "url": "https://github.com/advisories/GHSA-mwf2-3pr3-8698"
+    },
+    "1153178": {
+      "findings": [
+        {
+          "version": "1.15.2",
+          "paths": [
+            "frontend>axios"
+          ],
+          "dev": false,
+          "optional": false,
+          "bundled": false
+        }
+      ],
+      "id": 1153178,
+      "title": "Axios Node HTTP adapter can use an inherited proxy after interceptor config cloning",
+      "module_name": "axios",
+      "vulnerable_versions": ">=1.15.2 <1.18.0",
+      "patched_versions": ">=1.18.0",
+      "severity": "high",
+      "cwe": "CWE-200, CWE-1321",
+      "github_advisory_id": "GHSA-gcfj-64vw-6mp9",
+      "url": "https://github.com/advisories/GHSA-gcfj-64vw-6mp9"
+    },
+    "1153180": {
+      "findings": [
+        {
+          "version": "1.15.2",
+          "paths": [
+            "frontend>axios"
+          ],
+          "dev": false,
+          "optional": false,
+          "bundled": false
+        }
+      ],
+      "id": 1153180,
+      "title": "Axios: Nested axios option objects can consume polluted prototype values",
+      "module_name": "axios",
+      "vulnerable_versions": ">=1.0.0 <1.18.0",
+      "patched_versions": ">=1.18.0",
+      "severity": "moderate",
+      "cwe": "CWE-1321",
+      "github_advisory_id": "GHSA-7q8q-rj6j-mhjq",
+      "url": "https://github.com/advisories/GHSA-7q8q-rj6j-mhjq"
+    },
+    "1153182": {
+      "findings": [
+        {
+          "version": "1.15.2",
+          "paths": [
+            "frontend>axios"
+          ],
+          "dev": false,
+          "optional": false,
+          "bundled": false
+        }
+      ],
+      "id": 1153182,
+      "title": "Axios: Fetch adapter `ReadableStream` uploads bypass `maxBodyLength`",
+      "module_name": "axios",
+      "vulnerable_versions": ">=1.7.0 <1.18.0",
+      "patched_versions": ">=1.18.0",
+      "severity": "moderate",
+      "cwe": "CWE-770",
+      "github_advisory_id": "GHSA-jqh4-m9w3-8hp9",
+      "url": "https://github.com/advisories/GHSA-jqh4-m9w3-8hp9"
+    },
+    "1153184": {
+      "findings": [
+        {
+          "version": "1.15.2",
+          "paths": [
+            "frontend>axios"
+          ],
+          "dev": false,
+          "optional": false,
+          "bundled": false
+        }
+      ],
+      "id": 1153184,
+      "title": "Axios: NO_PROXY bypass for 0.0.0.0 local addresses in axios",
+      "module_name": "axios",
+      "vulnerable_versions": ">=1.15.0 <1.18.0",
+      "patched_versions": ">=1.18.0",
+      "severity": "moderate",
+      "cwe": "CWE-183, CWE-918",
+      "github_advisory_id": "GHSA-f4gw-2p7v-4548",
+      "url": "https://github.com/advisories/GHSA-f4gw-2p7v-4548"
+    },
+    "1153185": {
+      "findings": [
+        {
+          "version": "1.15.2",
+          "paths": [
+            "frontend>axios"
+          ],
+          "dev": false,
+          "optional": false,
+          "bundled": false
+        }
+      ],
+      "id": 1153185,
+      "title": "Axios: Excessive recursion in formDataToJSON can cause denial of service",
+      "module_name": "axios",
+      "vulnerable_versions": ">=1.0.0 <1.18.0",
+      "patched_versions": ">=1.18.0",
+      "severity": "moderate",
+      "cwe": "CWE-400, CWE-674",
+      "github_advisory_id": "GHSA-42h9-826w-cgv3",
+      "url": "https://github.com/advisories/GHSA-42h9-826w-cgv3"
+    },
+    "1153189": {
+      "findings": [
+        {
+          "version": "3.3.11",
+          "paths": [
+            "frontend>@tailwindcss/postcss>postcss>nanoid",
+            "frontend>@vitejs/plugin-react>vite>postcss>nanoid",
+            "frontend>autoprefixer>postcss>nanoid",
+            "frontend>postcss>nanoid",
+            "frontend>vite>postcss>nanoid",
+            "frontend>vite-plugin-svgr>vite>postcss>nanoid"
+          ],
+          "dev": true,
+          "optional": false,
+          "bundled": false
+        }
+      ],
+      "id": 1153189,
+      "title": "nanoid: Integer Overflow or Wraparound",
+      "module_name": "nanoid",
+      "vulnerable_versions": "<3.3.12",
+      "patched_versions": ">=3.3.12",
+      "severity": "high",
+      "cwe": "CWE-190",
+      "github_advisory_id": "GHSA-xwg4-73v4-xw9w",
+      "url": "https://github.com/advisories/GHSA-xwg4-73v4-xw9w"
+    },
+    "1158499": {
+      "findings": [
+        {
+          "version": "0.16.7",
+          "paths": [
+            "frontend>eslint>@humanfs/node",
+            "frontend>eslint-plugin-react-hooks>eslint>@humanfs/node",
+            "frontend>eslint-plugin-react-refresh>eslint>@humanfs/node"
+          ],
+          "dev": true,
+          "optional": false,
+          "bundled": false
+        }
+      ],
+      "id": 1158499,
+      "title": "humanfs: Recursive copy follows symlinked files and copies data from outside the source tree",
+      "module_name": "@humanfs/node",
+      "vulnerable_versions": "<0.16.8",
+      "patched_versions": ">=0.16.8",
+      "severity": "moderate",
+      "cwe": "CWE-22",
+      "github_advisory_id": "GHSA-p498-v437-472g",
+      "url": "https://github.com/advisories/GHSA-p498-v437-472g"
+    },
+    "1158507": {
+      "findings": [
+        {
+          "version": "6.14.1",
+          "paths": [
+            "backend>express>body-parser>qs",
+            "backend>express>qs"
+          ],
+          "dev": false,
+          "optional": false,
+          "bundled": false
+        }
+      ],
+      "id": 1158507,
+      "title": "qs: Denial of Service via Attacker Controlled isBuffer",
+      "module_name": "qs",
+      "vulnerable_versions": ">=2.2.5 <6.16.0",
+      "patched_versions": ">=6.16.0",
+      "severity": "moderate",
+      "cwe": "CWE-248, CWE-703",
+      "github_advisory_id": "GHSA-4mjr-xmp4-gh2g",
+      "url": "https://github.com/advisories/GHSA-4mjr-xmp4-gh2g"
+    },
+    "1158532": {
+      "findings": [
+        {
+          "version": "3.16.0",
+          "paths": [
+            "backend>knex>mysql2",
+            "backend>mysql2"
+          ],
+          "dev": false,
+          "optional": false,
+          "bundled": false
+        }
+      ],
+      "id": 1158532,
+      "title": "MySQL2: Unbounded zlib inflate in compressed MySQL protocol handler allows decompression-bomb DoS",
+      "module_name": "mysql2",
+      "vulnerable_versions": "<=3.23.0",
+      "patched_versions": ">=3.23.1",
+      "severity": "moderate",
+      "cwe": "CWE-409",
+      "github_advisory_id": "GHSA-rgwj-5xj2-c3m3",
+      "url": "https://github.com/advisories/GHSA-rgwj-5xj2-c3m3"
+    },
+    "1193653": {
+      "findings": [
+        {
+          "version": "7.13.1",
+          "paths": [
+            "frontend>react-router-dom>react-router"
+          ],
+          "dev": false,
+          "optional": false,
+          "bundled": false
+        }
+      ],
+      "id": 1193653,
+      "title": "React Router has stored XSS via unescaped Location header in prerendered redirect HTML",
+      "module_name": "react-router",
+      "vulnerable_versions": ">=7.5.1 <7.13.2",
+      "patched_versions": ">=7.13.2",
+      "severity": "moderate",
+      "cwe": "CWE-79",
+      "github_advisory_id": "GHSA-f22v-gfqf-p8f3",
+      "url": "https://github.com/advisories/GHSA-f22v-gfqf-p8f3"
+    },
+    "1193664": {
+      "findings": [
+        {
+          "version": "1.15.2",
+          "paths": [
+            "frontend>axios"
+          ],
+          "dev": false,
+          "optional": false,
+          "bundled": false
+        }
+      ],
+      "id": 1193664,
+      "title": "Axios form serializer maxDepth bypass via {} metatoken",
+      "module_name": "axios",
+      "vulnerable_versions": ">=1.15.1 <1.18.0",
+      "patched_versions": ">=1.18.0",
+      "severity": "moderate",
+      "cwe": "CWE-674",
+      "github_advisory_id": "GHSA-hcpx-6fm6-wx23",
+      "url": "https://github.com/advisories/GHSA-hcpx-6fm6-wx23"
+    },
+    "1193686": {
+      "findings": [
+        {
+          "version": "2.9.11",
+          "paths": [
+            "frontend>@vitejs/plugin-react>@babel/core>@babel/helper-compilation-targets>browserslist>baseline-browser-mapping",
+            "frontend>@vitejs/plugin-react>@babel/plugin-transform-react-jsx-self>@babel/core>@babel/helper-compilation-targets>browserslist>baseline-browser-mapping",
+            "frontend>@vitejs/plugin-react>@babel/plugin-transform-react-jsx-source>@babel/core>@babel/helper-compilation-targets>browserslist>baseline-browser-mapping",
+            "frontend>autoprefixer>browserslist>baseline-browser-mapping",
+            "frontend>eslint-plugin-react-hooks>@babel/core>@babel/helper-compilation-targets>browserslist>baseline-browser-mapping",
+            "frontend>vite-plugin-svgr>@svgr/core>@babel/core>@babel/helper-compilation-targets>browserslist>baseline-browser-mapping",
+            "frontend>vite-plugin-svgr>@svgr/core>@svgr/babel-preset>@babel/core>@babel/helper-compilation-targets>browserslist>baseline-browser-mapping",
+            "frontend>vite-plugin-svgr>@svgr/core>@svgr/babel-preset>@svgr/babel-plugin-add-jsx-attribute>@babel/core>@babel/helper-compilation-targets>browserslist>baseline-browser-mapping",
+            "frontend>vite-plugin-svgr>@svgr/core>@svgr/babel-preset>@svgr/babel-plugin-remove-jsx-attribute>@babel/core>@babel/helper-compilation-targets>browserslist>baseline-browser-mapping",
+            "frontend>vite-plugin-svgr>@svgr/core>@svgr/babel-preset>@svgr/babel-plugin-remove-jsx-empty-expression>@babel/core>@babel/helper-compilation-targets>browserslist>baseline-browser-mapping",
+            "frontend>vite-plugin-svgr>@svgr/core>@svgr/babel-preset>@svgr/babel-plugin-replace-jsx-attribute-value>@babel/core>@babel/helper-compilation-targets>browserslist>baseline-browser-mapping",
+            "frontend>vite-plugin-svgr>@svgr/core>@svgr/babel-preset>@svgr/babel-plugin-svg-dynamic-title>@babel/core>@babel/helper-compilation-targets>browserslist>baseline-browser-mapping",
+            "frontend>vite-plugin-svgr>@svgr/core>@svgr/babel-preset>@svgr/babel-plugin-svg-em-dimensions>@babel/core>@babel/helper-compilation-targets>browserslist>baseline-browser-mapping",
+            "frontend>vite-plugin-svgr>@svgr/core>@svgr/babel-preset>@svgr/babel-plugin-transform-react-native-svg>@babel/core>@babel/helper-compilation-targets>browserslist>baseline-browser-mapping",
+            "frontend>vite-plugin-svgr>@svgr/core>@svgr/babel-preset>@svgr/babel-plugin-transform-svg-component>@babel/core>@babel/helper-compilation-targets>browserslist>baseline-browser-mapping",
+            "frontend>vite-plugin-svgr>@svgr/plugin-jsx>@babel/core>@babel/helper-compilation-targets>browserslist>baseline-browser-mapping",
+            "frontend>vite-plugin-svgr>@svgr/plugin-jsx>@svgr/babel-preset>@babel/core>@babel/helper-compilation-targets>browserslist>baseline-browser-mapping",
+            "frontend>vite-plugin-svgr>@svgr/plugin-jsx>@svgr/babel-preset>@svgr/babel-plugin-add-jsx-attribute>@babel/core>@babel/helper-compilation-targets>browserslist>baseline-browser-mapping",
+            "frontend>vite-plugin-svgr>@svgr/plugin-jsx>@svgr/babel-preset>@svgr/babel-plugin-remove-jsx-attribute>@babel/core>@babel/helper-compilation-targets>browserslist>baseline-browser-mapping",
+            "frontend>vite-plugin-svgr>@svgr/plugin-jsx>@svgr/babel-preset>@svgr/babel-plugin-remove-jsx-empty-expression>@babel/core>@babel/helper-compilation-targets>browserslist>baseline-browser-mapping",
+            "frontend>vite-plugin-svgr>@svgr/plugin-jsx>@svgr/babel-preset>@svgr/babel-plugin-replace-jsx-attribute-value>@babel/core>@babel/helper-compilation-targets>browserslist>baseline-browser-mapping",
+            "frontend>vite-plugin-svgr>@svgr/plugin-jsx>@svgr/babel-preset>@svgr/babel-plugin-svg-dynamic-title>@babel/core>@babel/helper-compilation-targets>browserslist>baseline-browser-mapping",
+            "frontend>vite-plugin-svgr>@svgr/plugin-jsx>@svgr/babel-preset>@svgr/babel-plugin-svg-em-dimensions>@babel/core>@babel/helper-compilation-targets>browserslist>baseline-browser-mapping",
+            "frontend>vite-plugin-svgr>@svgr/plugin-jsx>@svgr/babel-preset>@svgr/babel-plugin-transform-react-native-svg>@babel/core>@babel/helper-compilation-targets>browserslist>baseline-browser-mapping",
+            "frontend>vite-plugin-svgr>@svgr/plugin-jsx>@svgr/babel-preset>@svgr/babel-plugin-transform-svg-component>@babel/core>@babel/helper-compilation-targets>browserslist>baseline-browser-mapping",
+            "frontend>vite-plugin-svgr>@svgr/plugin-jsx>@svgr/core>@babel/core>@babel/helper-compilation-targets>browserslist>baseline-browser-mapping",
+            "frontend>vite-plugin-svgr>@svgr/plugin-jsx>@svgr/core>@svgr/babel-preset>@babel/core>@babel/helper-compilation-targets>browserslist>baseline-browser-mapping",
+            "frontend>vite-plugin-svgr>@svgr/plugin-jsx>@svgr/core>@svgr/babel-preset>@svgr/babel-plugin-add-jsx-attribute>@babel/core>@babel/helper-compilation-targets>browserslist>baseline-browser-mapping",
+            "frontend>vite-plugin-svgr>@svgr/plugin-jsx>@svgr/core>@svgr/babel-preset>@svgr/babel-plugin-remove-jsx-attribute>@babel/core>@babel/helper-compilation-targets>browserslist>baseline-browser-mapping",
+            "frontend>vite-plugin-svgr>@svgr/plugin-jsx>@svgr/core>@svgr/babel-preset>@svgr/babel-plugin-remove-jsx-empty-expression>@babel/core>@babel/helper-compilation-targets>browserslist>baseline-browser-mapping",
+            "frontend>vite-plugin-svgr>@svgr/plugin-jsx>@svgr/core>@svgr/babel-preset>@svgr/babel-plugin-replace-jsx-attribute-value>@babel/core>@babel/helper-compilation-targets>browserslist>baseline-browser-mapping",
+            "frontend>vite-plugin-svgr>@svgr/plugin-jsx>@svgr/core>@svgr/babel-preset>@svgr/babel-plugin-svg-dynamic-title>@babel/core>@babel/helper-compilation-targets>browserslist>baseline-browser-mapping",
+            "frontend>vite-plugin-svgr>@svgr/plugin-jsx>@svgr/core>@svgr/babel-preset>@svgr/babel-plugin-svg-em-dimensions>@babel/core>@babel/helper-compilation-targets>browserslist>baseline-browser-mapping",
+            "frontend>vite-plugin-svgr>@svgr/plugin-jsx>@svgr/core>@svgr/babel-preset>@svgr/babel-plugin-transform-react-native-svg>@babel/core>@babel/helper-compilation-targets>browserslist>baseline-browser-mapping",
+            "frontend>vite-plugin-svgr>@svgr/plugin-jsx>@svgr/core>@svgr/babel-preset>@svgr/babel-plugin-transform-svg-component>@babel/core>@babel/helper-compilation-targets>browserslist>baseline-browser-mapping"
+          ],
+          "dev": true,
+          "optional": false,
+          "bundled": false
+        }
+      ],
+      "id": 1193686,
+      "title": "baseline-browser-mapping process termination on invalid input causes denial of service",
+      "module_name": "baseline-browser-mapping",
+      "vulnerable_versions": ">=2.0.0 <2.11.0",
+      "patched_versions": ">=2.11.0",
+      "severity": "moderate",
+      "cwe": "CWE-705",
+      "github_advisory_id": "GHSA-w5vr-8v7q-w6rv",
+      "url": "https://github.com/advisories/GHSA-w5vr-8v7q-w6rv"
+    },
+    "1193727": {
+      "findings": [
+        {
+          "version": "4.1.1",
+          "paths": [
+            "frontend>eslint>@eslint/eslintrc>js-yaml",
+            "frontend>eslint-plugin-react-hooks>eslint>@eslint/eslintrc>js-yaml",
+            "frontend>eslint-plugin-react-refresh>eslint>@eslint/eslintrc>js-yaml",
+            "frontend>vite-plugin-svgr>@svgr/core>cosmiconfig>js-yaml",
+            "frontend>vite-plugin-svgr>@svgr/plugin-jsx>@svgr/core>cosmiconfig>js-yaml"
+          ],
+          "dev": true,
+          "optional": false,
+          "bundled": false
+        }
+      ],
+      "id": 1193727,
+      "title": "js-yaml: maxTotalMergeKeys does not limit CPU use for empty merge sources",
+      "module_name": "js-yaml",
+      "vulnerable_versions": ">=4.0.0 <4.3.2",
+      "patched_versions": ">=4.3.2",
+      "severity": "high",
+      "cwe": "CWE-400, CWE-407",
+      "github_advisory_id": "GHSA-2883-xcg3-v3hh",
+      "url": "https://github.com/advisories/GHSA-2883-xcg3-v3hh"
+    },
+    "1240100": {
+      "findings": [
+        {
+          "version": "1.1.12",
+          "paths": [
+            "frontend>eslint>@eslint/config-array>minimatch>brace-expansion",
+            "frontend>eslint>@eslint/eslintrc>minimatch>brace-expansion",
+            "frontend>eslint>minimatch>brace-expansion",
+            "frontend>eslint-plugin-react-hooks>eslint>@eslint/config-array>minimatch>brace-expansion",
+            "frontend>eslint-plugin-react-hooks>eslint>@eslint/eslintrc>minimatch>brace-expansion",
+            "frontend>eslint-plugin-react-hooks>eslint>minimatch>brace-expansion",
+            "frontend>eslint-plugin-react-refresh>eslint>@eslint/config-array>minimatch>brace-expansion",
+            "frontend>eslint-plugin-react-refresh>eslint>@eslint/eslintrc>minimatch>brace-expansion",
+            "frontend>eslint-plugin-react-refresh>eslint>minimatch>brace-expansion"
+          ],
+          "dev": true,
+          "optional": false,
+          "bundled": false
+        }
+      ],
+      "id": 1240100,
+      "title": "brace-expansion: Quadratic-time expansion of the `{a},b}` rewrite causes CPU denial of service",
+      "module_name": "brace-expansion",
+      "vulnerable_versions": "<1.1.21",
+      "patched_versions": ">=1.1.21",
+      "severity": "moderate",
+      "cwe": "CWE-400, CWE-407",
+      "github_advisory_id": "GHSA-q2hr-2g5m-vwhr",
+      "url": "https://github.com/advisories/GHSA-q2hr-2g5m-vwhr"
+    },
+    "1240104": {
+      "findings": [
+        {
+          "version": "1.1.12",
+          "paths": [
+            "frontend>eslint>@eslint/config-array>minimatch>brace-expansion",
+            "frontend>eslint>@eslint/eslintrc>minimatch>brace-expansion",
+            "frontend>eslint>minimatch>brace-expansion",
+            "frontend>eslint-plugin-react-hooks>eslint>@eslint/config-array>minimatch>brace-expansion",
+            "frontend>eslint-plugin-react-hooks>eslint>@eslint/eslintrc>minimatch>brace-expansion",
+            "frontend>eslint-plugin-react-hooks>eslint>minimatch>brace-expansion",
+            "frontend>eslint-plugin-react-refresh>eslint>@eslint/config-array>minimatch>brace-expansion",
+            "frontend>eslint-plugin-react-refresh>eslint>@eslint/eslintrc>minimatch>brace-expansion",
+            "frontend>eslint-plugin-react-refresh>eslint>minimatch>brace-expansion"
+          ],
+          "dev": true,
+          "optional": false,
+          "bundled": false
+        }
+      ],
+      "id": 1240104,
+      "title": "brace-expansion: DoS via uncontrolled recursion on nested brace groups causing stack exhaustion",
+      "module_name": "brace-expansion",
+      "vulnerable_versions": "<1.1.20",
+      "patched_versions": ">=1.1.20",
+      "severity": "high",
+      "cwe": "CWE-400, CWE-674",
+      "github_advisory_id": "GHSA-qhr7-859c-m2p7",
+      "url": "https://github.com/advisories/GHSA-qhr7-859c-m2p7"
+    },
+    "1240108": {
+      "findings": [
+        {
+          "version": "1.1.12",
+          "paths": [
+            "frontend>eslint>@eslint/config-array>minimatch>brace-expansion",
+            "frontend>eslint>@eslint/eslintrc>minimatch>brace-expansion",
+            "frontend>eslint>minimatch>brace-expansion",
+            "frontend>eslint-plugin-react-hooks>eslint>@eslint/config-array>minimatch>brace-expansion",
+            "frontend>eslint-plugin-react-hooks>eslint>@eslint/eslintrc>minimatch>brace-expansion",
+            "frontend>eslint-plugin-react-hooks>eslint>minimatch>brace-expansion",
+            "frontend>eslint-plugin-react-refresh>eslint>@eslint/config-array>minimatch>brace-expansion",
+            "frontend>eslint-plugin-react-refresh>eslint>@eslint/eslintrc>minimatch>brace-expansion",
+            "frontend>eslint-plugin-react-refresh>eslint>minimatch>brace-expansion"
+          ],
+          "dev": true,
+          "optional": false,
+          "bundled": false
+        }
+      ],
+      "id": 1240108,
+      "title": "brace-expansion: DoS via uncontrolled recursion in parseCommaParts causing stack exhaustion",
+      "module_name": "brace-expansion",
+      "vulnerable_versions": "<1.1.19",
+      "patched_versions": ">=1.1.19",
+      "severity": "high",
+      "cwe": "CWE-400, CWE-674",
+      "github_advisory_id": "GHSA-6j4f-fj2g-mc7p",
+      "url": "https://github.com/advisories/GHSA-6j4f-fj2g-mc7p"
+    },
+    "1240600": {
+      "findings": [
+        {
+          "version": "1.15.2",
+          "paths": [
+            "frontend>axios"
+          ],
+          "dev": false,
+          "optional": false,
+          "bundled": false
+        }
+      ],
+      "id": 1240600,
+      "title": "Axios: Prototype pollution gadget in fetch adapter can alter outbound requests",
+      "module_name": "axios",
+      "vulnerable_versions": ">=1.7.0 <1.20.0",
+      "patched_versions": ">=1.20.0",
+      "severity": "moderate",
+      "cwe": "CWE-1321",
+      "github_advisory_id": "GHSA-vh66-26gq-q6x8",
+      "url": "https://github.com/advisories/GHSA-vh66-26gq-q6x8"
+    },
+    "1240601": {
+      "findings": [
+        {
+          "version": "1.15.2",
+          "paths": [
+            "frontend>axios"
+          ],
+          "dev": false,
+          "optional": false,
+          "bundled": false
+        }
+      ],
+      "id": 1240601,
+      "title": "Axios: Prototype-Pollution Gadget in the Default Instance Allows Inherited Object.prototype.method to Override HTTP Method",
+      "module_name": "axios",
+      "vulnerable_versions": ">=1.0.0 <1.20.0",
+      "patched_versions": ">=1.20.0",
+      "severity": "moderate",
+      "cwe": "CWE-1321",
+      "github_advisory_id": "GHSA-9fr6-4gfg-395g",
+      "url": "https://github.com/advisories/GHSA-9fr6-4gfg-395g"
+    },
+    "1240604": {
+      "findings": [
+        {
+          "version": "1.15.2",
+          "paths": [
+            "frontend>axios"
+          ],
+          "dev": false,
+          "optional": false,
+          "bundled": false
+        }
+      ],
+      "id": 1240604,
+      "title": "Axios: ReDoS (O(N\u00b2)) in shouldBypassProxy host normalization, reachable via untrusted redirect Location",
+      "module_name": "axios",
+      "vulnerable_versions": ">=1.15.0 <1.20.0",
+      "patched_versions": ">=1.20.0",
+      "severity": "high",
+      "cwe": "CWE-400, CWE-1333",
+      "github_advisory_id": "GHSA-mghh-pgcx-3jjj",
+      "url": "https://github.com/advisories/GHSA-mghh-pgcx-3jjj"
+    },
+    "1240605": {
+      "findings": [
+        {
+          "version": "1.15.2",
+          "paths": [
+            "frontend>axios"
+          ],
+          "dev": false,
+          "optional": false,
+          "bundled": false
+        }
+      ],
+      "id": 1240605,
+      "title": "Axios: Prototype Pollution Gadget in axios toFormData Options",
+      "module_name": "axios",
+      "vulnerable_versions": ">=1.15.1 <1.20.0",
+      "patched_versions": ">=1.20.0",
+      "severity": "high",
+      "cwe": "CWE-1321",
+      "github_advisory_id": "GHSA-x97p-jq2g-jp4f",
+      "url": "https://github.com/advisories/GHSA-x97p-jq2g-jp4f"
+    },
+    "1240607": {
+      "findings": [
+        {
+          "version": "1.15.2",
+          "paths": [
+            "frontend>axios"
+          ],
+          "dev": false,
+          "optional": false,
+          "bundled": false
+        }
+      ],
+      "id": 1240607,
+      "title": "Axios: HTTP/2 adapter bypasses configured DNS lookup and proxy controls",
+      "module_name": "axios",
+      "vulnerable_versions": ">=1.13.0 <1.20.0",
+      "patched_versions": ">=1.20.0",
+      "severity": "high",
+      "cwe": "CWE-918",
+      "github_advisory_id": "GHSA-3pq3-5fj3-cg6v",
+      "url": "https://github.com/advisories/GHSA-3pq3-5fj3-cg6v"
+    },
+    "1240608": {
+      "findings": [
+        {
+          "version": "1.15.2",
+          "paths": [
+            "frontend>axios"
+          ],
+          "dev": false,
+          "optional": false,
+          "bundled": false
+        }
+      ],
+      "id": 1240608,
+      "title": "Axios: Denial of Service via Unhandled 'error' Event in HTTP/2 ClientHttp2Session Initialization",
+      "module_name": "axios",
+      "vulnerable_versions": ">=1.13.0 <1.20.0",
+      "patched_versions": ">=1.20.0",
+      "severity": "high",
+      "cwe": "CWE-400",
+      "github_advisory_id": "GHSA-542g-h47m-68v8",
+      "url": "https://github.com/advisories/GHSA-542g-h47m-68v8"
+    },
+    "1240626": {
+      "findings": [
+        {
+          "version": "1.15.2",
+          "paths": [
+            "frontend>axios"
+          ],
+          "dev": false,
+          "optional": false,
+          "bundled": false
+        }
+      ],
+      "id": 1240626,
+      "title": "Axios: Header Injection via Inherited headers After Minimal Interceptor",
+      "module_name": "axios",
+      "vulnerable_versions": ">=1.0.0 <1.20.0",
+      "patched_versions": ">=1.20.0",
+      "severity": "moderate",
+      "cwe": "CWE-74, CWE-1321",
+      "github_advisory_id": "GHSA-j8rh-479h-cp32",
+      "url": "https://github.com/advisories/GHSA-j8rh-479h-cp32"
+    },
+    "1240627": {
+      "findings": [
+        {
+          "version": "1.15.2",
+          "paths": [
+            "frontend>axios"
+          ],
+          "dev": false,
+          "optional": false,
+          "bundled": false
+        }
+      ],
+      "id": 1240627,
+      "title": "Axios: Fetch Adapter Header Injection via Inherited FormData getHeaders",
+      "module_name": "axios",
+      "vulnerable_versions": ">=1.12.0 <1.20.0",
+      "patched_versions": ">=1.20.0",
+      "severity": "moderate",
+      "cwe": "CWE-74, CWE-693, CWE-1321",
+      "github_advisory_id": "GHSA-4hqw-qxg8-jxx2",
+      "url": "https://github.com/advisories/GHSA-4hqw-qxg8-jxx2"
+    },
+    "1240628": {
+      "findings": [
+        {
+          "version": "1.15.2",
+          "paths": [
+            "frontend>axios"
+          ],
+          "dev": false,
+          "optional": false,
+          "bundled": false
+        }
+      ],
+      "id": 1240628,
+      "title": "Axios: Node HTTP adapter prototype-pollution gadget allows request socket hijack via inherited createConnection",
+      "module_name": "axios",
+      "vulnerable_versions": ">=1.15.2 <1.20.0",
+      "patched_versions": ">=1.20.0",
+      "severity": "high",
+      "cwe": "CWE-441, CWE-1321",
+      "github_advisory_id": "GHSA-m8m8-qj5v-23w3",
+      "url": "https://github.com/advisories/GHSA-m8m8-qj5v-23w3"
+    },
+    "1240629": {
+      "findings": [
+        {
+          "version": "1.15.2",
+          "paths": [
+            "frontend>axios"
+          ],
+          "dev": false,
+          "optional": false,
+          "bundled": false
+        }
+      ],
+      "id": 1240629,
+      "title": "Axios: CIDR-form NO_PROXY entries are ignored, causing proxy exclusion bypass for internal IP ranges",
+      "module_name": "axios",
+      "vulnerable_versions": ">=1.15.0 <1.20.0",
+      "patched_versions": ">=1.20.0",
+      "severity": "moderate",
+      "cwe": "CWE-693",
+      "github_advisory_id": "GHSA-44g4-m2mj-wpvx",
+      "url": "https://github.com/advisories/GHSA-44g4-m2mj-wpvx"
+    },
+    "1241196": {
+      "findings": [
+        {
+          "version": "3.3.3",
+          "paths": [
+            "frontend>eslint>file-entry-cache>flat-cache>flatted",
+            "frontend>eslint-plugin-react-hooks>eslint>file-entry-cache>flat-cache>flatted",
+            "frontend>eslint-plugin-react-refresh>eslint>file-entry-cache>flat-cache>flatted"
+          ],
+          "dev": true,
+          "optional": false,
+          "bundled": false
+        }
+      ],
+      "id": 1241196,
+      "title": "Prototype Pollution via parse() in NodeJS flatted",
+      "module_name": "flatted",
+      "vulnerable_versions": "<=3.4.1",
+      "patched_versions": ">=3.4.2",
+      "severity": "high",
+      "cwe": "CWE-915, CWE-1321",
+      "github_advisory_id": "GHSA-rf6f-7fwh-wjgh",
+      "url": "https://github.com/advisories/GHSA-rf6f-7fwh-wjgh"
+    },
+    "1241209": {
+      "findings": [
+        {
+          "version": "1.2.1",
+          "paths": [
+            "frontend>@tailwindcss/postcss>@tailwindcss/node>source-map-js",
+            "frontend>@tailwindcss/postcss>postcss>source-map-js",
+            "frontend>@vitejs/plugin-react>vite>postcss>source-map-js",
+            "frontend>autoprefixer>postcss>source-map-js",
+            "frontend>postcss>source-map-js",
+            "frontend>vite>postcss>source-map-js",
+            "frontend>vite-plugin-svgr>vite>postcss>source-map-js"
+          ],
+          "dev": true,
+          "optional": false,
+          "bundled": false
+        }
+      ],
+      "id": 1241209,
+      "title": "source-map-js allows event-loop denial of service through indexed source-map section offsets",
+      "module_name": "source-map-js",
+      "vulnerable_versions": ">=1.0.0 <1.2.2",
+      "patched_versions": ">=1.2.2",
+      "severity": "high",
+      "cwe": "CWE-1284",
+      "github_advisory_id": "GHSA-68fv-2mgg-jv7q",
+      "url": "https://github.com/advisories/GHSA-68fv-2mgg-jv7q"
+    },
+    "1241210": {
+      "findings": [
+        {
+          "version": "2.0.7",
+          "paths": [
+            "backend>express>proxy-addr"
+          ],
+          "dev": false,
+          "optional": false,
+          "bundled": false
+        }
+      ],
+      "id": 1241210,
+      "title": "proxy-addr vulnerable to IP spoofing via IPv4-mapped IPv6 trust subnet",
+      "module_name": "proxy-addr",
+      "vulnerable_versions": ">=1.1.0 <2.0.8",
+      "patched_versions": ">=2.0.8",
+      "severity": "critical",
+      "cwe": "CWE-290, CWE-348, CWE-697",
+      "github_advisory_id": "GHSA-jqcg-44mw-7w3h",
+      "url": "https://github.com/advisories/GHSA-jqcg-44mw-7w3h"
+    }
+  },
+  "metadata": {
+    "vulnerabilities": {
+      "info": 0,
+      "low": 5,
+      "moderate": 37,
+      "high": 48,
+      "critical": 1
+    },
+    "dependencies": 171,
+    "devDependencies": 262,
+    "optionalDependencies": 72,
+    "totalDependencies": 433
+  }
+}

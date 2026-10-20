@@ -7,9 +7,9 @@ import MonthlyProfitChart from "../../components/charts/monthlyProfitChart/Month
 import Select from "../../components/form/Select";
 import ComponentCard from "../../components/common/ComponentCard";
 import { Modal } from "../../components/ui/Modal";
-import { MonthlyFinanceService } from "../../services/monthlyFinances.service";
+import { MonthlyFinanceService } from "../../services/MonthlyFinances.service";
 import { validateMonthlyFinanceForm } from "../../validators/entities/monthy_finances";
-import { useFeedbackModal } from "../../hooks/shared/useFeedbackModal";
+import { useFeedbackModal } from "../../hooks/shared/useFeedBackModal";
 import {
   ViewButton,
   EditButton,

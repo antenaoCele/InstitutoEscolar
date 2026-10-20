@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { profileService } from "../../services/profile.service";
-import { UserIcon } from "../../icons";
+import { UserIcon } from "../../icons/index.js";
 import {
   validateUserForm,
   validateChangePasswordForm,

@@ -1,12 +1,14 @@
 {
   "name": "backend",
   "version": "1.0.0",
-  "packageManager": "pnpm@11.22.0",
   "description": "",
   "main": "index.js",
   "type": "module",
   "scripts": {
-    "dev": "node --env-file=.env --watch index.js"
+    "dev": "node --env-file-if-exists=.env --watch index.js",
+    "start": "node index.js",
+    "db:migrate": "knex --knexfile ./knexfile.cjs migrate:latest --env development",
+    "db:seed-admin": "node --env-file-if-exists=.env seedadmin.js"
   },
   "keywords": [],
   "author": "",

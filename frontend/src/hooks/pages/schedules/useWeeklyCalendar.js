@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
 
 import { teacherService } from "../../../services/teacher.service";
-import { ScheduleService } from "../../../services/schedule.service";
-import { ScheduleStudentService } from "../../../services/scheduleStudent.service";
+import { ScheduleService } from "../../../services/Schedule.service";
+import { ScheduleStudentService } from "../../../services/ScheduleStudent.service";
 import { studentService } from "../../../services/student.service";
 
 import { validateWeeklyCalendarForm } from "../../../validators/entities/weeklyCalendar.validator";

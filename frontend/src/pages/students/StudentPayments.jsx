@@ -5,14 +5,14 @@ import Input from "../../components/form/Input";
 import Select from "../../components/form/Select";
 import { Modal } from "../../components/ui/Modal";
 import ComponentCard from "../../components/common/ComponentCard";
-import { PaymentService } from "../../services/payment.service";
+import { PaymentService } from "../../services/Payment.service";
 import { studentPlanService } from "../../services/studenPlan.service";
 import { studentService } from "../../services/student.service";
-import { EnrollmentService } from "../../services/enrollment.service";
+import { EnrollmentService } from "../../services/Enrollment.service";
 import { useFeedbackModal } from "../../hooks/shared/useFeedBackModal";
 import { validatePaymentForm } from "../../validators/entities/payments.validator";
 import { validateEditEnrollmentForm } from "../../validators/entities/enrollments.validator";
-import SearchableSelect from "../../components/form/SearchableSelect";
+import SearchableSelect from "../../components/form/Searchableselect";
 import {
   YesButton,
   NoButton,

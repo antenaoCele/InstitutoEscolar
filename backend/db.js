@@ -5,6 +5,7 @@ export let db;
 export async function connectDB() {
   db = mysql.createPool({
     host: process.env.DB_HOST,
+    port: Number(process.env.DB_PORT || 3306),
     user: process.env.DB_USER,
     password: process.env.DB_PASS,
     database: process.env.DB_NAME,
@@ -13,4 +14,5 @@ export async function connectDB() {
     connectionLimit: 10,
     queueLimit: 0,
   });
+  await db.query("SELECT 1");
 }
