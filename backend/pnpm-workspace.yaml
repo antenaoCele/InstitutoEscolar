@@ -1,5 +1,0 @@
-minimumReleaseAge: 4320
-blockExoticSubdeps: true
-
-allowBuilds:
-  bcrypt: true

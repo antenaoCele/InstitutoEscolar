@@ -3,7 +3,7 @@ import express from "express";
 import passport from "passport";
 
 import { configurePassport } from "./config/passport.js";
-import { connectDB } from "./db.js";
+import { connectDB, db } from "./db.js";
 import { scheduleCloseOverduePlans } from "./jobs/closeOverduePlans.job.js";
 
 import loginRouter from "./routes/login.routes.js";
@@ -29,7 +29,7 @@ import usersRouter from "./routes/users.routes.js";
 import dashboardRoutes from "./routes/dashboard.routes.js";
 
 const app = express();
-const port = 3000;
+const port = Number(process.env.PORT || 3000);
 
 await connectDB();
 
@@ -38,6 +38,15 @@ app.use(passport.initialize());
 
 app.use(cors());
 app.use(express.json());
+
+app.get("/health", async (_req, res) => {
+  try {
+    await db.query("SELECT 1");
+    res.json({ status: "ok" });
+  } catch {
+    res.status(503).json({ status: "unavailable" });
+  }
+});
 
 app.use("/login", loginRouter);
 

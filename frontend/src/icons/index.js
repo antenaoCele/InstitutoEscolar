@@ -63,7 +63,7 @@ import { ReactComponent as SunIcon } from "./sun.svg?react";
 import { ReactComponent as MoonIcon } from "./moon.svg?react";
 import { ReactComponent as SunFatIcon } from "./sun2.svg?react";
 // import { ReactComponent as ActivationIcon } from "./activation.svg?react";
-import { ReactComponent as MenuIcon } from "./Menu.svg?react";
+import { ReactComponent as MenuIcon } from "./menu.svg?react";
 import { ReactComponent as ChevronIcon } from "./chevron.svg?react";
 import { ReactComponent as ActivationIcon } from "./activeInactive.svg?react";
 import SaveIcon from "./icons8-guardar-32.png";

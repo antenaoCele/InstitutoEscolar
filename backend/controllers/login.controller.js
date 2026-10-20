@@ -6,7 +6,6 @@ export const login = async (req, res) => {
   try {
     const { username, password } = req.body;
 
-    console.log("Datos recibidos en login:", { username, password });
 
     if (!username || !password) {
       return res.status(400).json({
