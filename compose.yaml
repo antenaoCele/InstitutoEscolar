@@ -17,6 +17,8 @@ x-backend: &backend
 services:
   matecitos-db:
     image: mysql:8.4
+    ports:
+      - "127.0.0.1:3307:3306"
     environment:
       MYSQL_DATABASE: ${DB_NAME:-matecitos}
       MYSQL_USER: ${DB_USER:-matecitos}
