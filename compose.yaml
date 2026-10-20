@@ -35,7 +35,7 @@ services:
 
   matecitos-migrate:
     <<: *backend
-    command: [pnpm, db:migrate]
+    command: [node, node_modules/knex/bin/cli.js, --knexfile, ./knexfile.cjs, migrate:latest, --env, development]
     depends_on:
       matecitos-db:
         condition: service_healthy
