@@ -26,7 +26,7 @@ Los valores de `.env.example` son ejemplos locales; reemplazalos en `.env`.
 Creá el primer administrador explícitamente (usá tus propias credenciales):
 
 ```sh
-docker compose run --rm -e ADMIN_USERNAME=admin -e ADMIN_PASSWORD='elegir-una-clave-propia' matecitos-api pnpm db:seed-admin
+docker compose run --rm -e ADMIN_USERNAME=admin -e ADMIN_PASSWORD='elegir-una-clave-propia' matecitos-api node seedadmin.js
 ```
 
 ```sh
