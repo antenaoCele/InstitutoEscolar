@@ -462,12 +462,14 @@ export const studentPlansController = {
 
         // Sacamos al alumno de los horarios del docente que deja. El
         // schedule en sí no se borra: puede tener otros alumnos anotados.
+        // El plan ahora vive en schedule_students (ss.plan_id), no en
+        // schedules.
         await connection.execute(
           `DELETE ss FROM schedule_students ss
            JOIN schedules sch ON sch.id = ss.schedule_id
            WHERE ss.student_id = ?
              AND sch.teacher_id = ?
-             AND sch.plan_id = ?`,
+             AND ss.plan_id = ?`,
           [current.student_id, current.teacher_id, current.plan_id],
         );
 
@@ -558,12 +560,14 @@ export const studentPlansController = {
       // Sacamos al alumno de los horarios correspondientes a
       // este plan/docente puntual. No borramos el schedule en
       // sí, porque puede tener otros alumnos anotados.
+      // El plan ahora vive en schedule_students (ss.plan_id), no en
+      // schedules.
       await connection.execute(
         `DELETE ss FROM schedule_students ss
          JOIN schedules sch ON sch.id = ss.schedule_id
          WHERE ss.student_id = ?
          AND sch.teacher_id = ?
-         AND sch.plan_id = ?`,
+         AND ss.plan_id = ?`,
         [student_id, teacher_id, plan_id],
       );
 
