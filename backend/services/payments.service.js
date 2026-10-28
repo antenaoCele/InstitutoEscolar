@@ -181,7 +181,7 @@ Devuelve un array ordenado de la fila más vieja a la más nueva
 async function resolveChain(student_plan) {
   const [allRows] = await db.execute(
     `
-    SELECT id, start_date, end_date, first_payment_option
+    SELECT id, start_date, end_date, first_payment_option, debt_forgiven_at
     FROM student_plans
     WHERE student_id = ?
       AND plan_id = ?
@@ -201,6 +201,7 @@ async function resolveChain(student_plan) {
         start_date: student_plan.start_date,
         end_date: student_plan.end_date ?? null,
         first_payment_option: student_plan.first_payment_option,
+        debt_forgiven_at: student_plan.debt_forgiven_at ?? null,
       },
     ];
   }
@@ -250,6 +251,26 @@ function resolveChainOrigin(chain) {
     startPeriod,
     firstPaymentOption: governing.first_payment_option,
   };
+}
+
+/* =========================================================
+HASTA QUÉ PERÍODO SE "OLVIDÓ" LA DEUDA EN UNA CADENA
+Cuando un admin usa "olvidar deuda" sobre una inscripción dada de
+baja (típicamente porque el plan se cargó mal), esa fila queda
+marcada con debt_forgiven_at. Todos los períodos hasta el mes de
+su baja (inclusive) dejan de reclamarse como deuda. Si hay varias
+filas olvidadas en la cadena, rige la que llega más lejos.
+Devuelve null si ninguna fila de la cadena fue olvidada.
+========================================================= */
+function resolveForgivenUpTo(chain) {
+  const forgivenPeriods = chain
+    .filter((r) => r.debt_forgiven_at && r.end_date)
+    .map((r) => toPeriod(r.end_date))
+    .sort();
+
+  return forgivenPeriods.length
+    ? forgivenPeriods[forgivenPeriods.length - 1]
+    : null;
 }
 
 /* =========================================================
@@ -352,7 +373,7 @@ ESTADO COMPLETO DE UN student_plan
 export async function getStudentPlanStatus(student_plan_id) {
   const [rows] = await db.execute(
     `
-    SELECT id, student_id, plan_id, start_date, end_date, first_payment_option
+    SELECT id, student_id, plan_id, start_date, end_date, first_payment_option, debt_forgiven_at
     FROM student_plans
     WHERE id = ?
     `,
@@ -390,6 +411,10 @@ export async function getStudentPlanStatus(student_plan_id) {
   const chain = await resolveChain(plan);
 
   const { startPeriod, firstPaymentOption } = resolveChainOrigin(chain);
+
+  // Períodos que un admin decidió "olvidar" (ver resolveForgivenUpTo):
+  // no se reclaman aunque no tengan pago.
+  const forgivenUpTo = resolveForgivenUpTo(chain);
 
   const firstObligatedPeriod =
     firstPaymentOption === "NEXT_MONTH"
@@ -431,11 +456,15 @@ export async function getStudentPlanStatus(student_plan_id) {
   // de gracia, nunca debería acumularse más de uno mientras el plan
   // sigue ACTIVE (si igual apareciera más de uno, por ejemplo porque
   // el cron todavía no corrió, nos quedamos con el más viejo).
+  // Un período olvidado cuenta como cubierto, igual que uno pagado.
   let overduePeriod = null;
   if (periodLTE(firstObligatedPeriod, scanEndPeriod)) {
     let cursor = firstObligatedPeriod;
     while (periodLTE(cursor, scanEndPeriod)) {
-      if (!paidPeriods.has(cursor)) {
+      const isForgiven =
+        forgivenUpTo != null && periodLTE(cursor, forgivenUpTo);
+
+      if (!paidPeriods.has(cursor) && !isForgiven) {
         overduePeriod = cursor;
         break;
       }

@@ -533,6 +533,110 @@ export const studentPlansController = {
     }
   },
 
+  // =====================================================
+  // OLVIDAR DEUDA de una inscripción dada de baja
+  //
+  // Sirve para el caso en que el plan se cargó mal y se dio de baja
+  // por error: la baja queda como "baja con deuda" y el alumno
+  // figura debiendo un plan que nunca cursó. Marca la fila con
+  // debt_forgiven_at y getStudentPlanStatus deja de reclamar los
+  // períodos hasta el mes de su baja.
+  //
+  // No borra nada ni toca pagos: la fila sigue existiendo y se puede
+  // revertir poniendo debt_forgiven_at en NULL.
+  //
+  // Solo aplica a filas dadas de baja que HOY tengan deuda. No se
+  // puede usar sobre un plan activo (para eso hay que dar la baja
+  // primero).
+  // =====================================================
+  forgiveDebt: async (req, res) => {
+    try {
+      const id = Number(req.params.id);
+
+      if (!id || Number.isNaN(id)) {
+        return res.status(400).json({
+          success: false,
+          message: "ID inválido",
+        });
+      }
+
+      const [rows] = await db.execute(
+        `
+        SELECT id, end_date, debt_forgiven_at
+        FROM student_plans
+        WHERE id = ?
+        `,
+        [id],
+      );
+
+      if (!rows.length) {
+        return res.status(404).json({
+          success: false,
+          message: "Inscripción no encontrada",
+        });
+      }
+
+      const current = rows[0];
+
+      if (current.end_date === null) {
+        return res.status(400).json({
+          success: false,
+          message:
+            "Solo se puede olvidar la deuda de una inscripción dada de baja.",
+        });
+      }
+
+      if (current.debt_forgiven_at !== null) {
+        return res.status(400).json({
+          success: false,
+          message: "La deuda de esta inscripción ya fue olvidada.",
+        });
+      }
+
+      const status = await getStudentPlanStatus(id);
+
+      if (status?.account_status !== "OVERDUE") {
+        return res.status(400).json({
+          success: false,
+          message: "Esta inscripción no tiene deuda pendiente.",
+        });
+      }
+
+      // Las condiciones del WHERE protegen de una carrera con otra
+      // pestaña (que ya la haya olvidado o la haya reactivado).
+      const [result] = await db.execute(
+        `
+        UPDATE student_plans
+        SET debt_forgiven_at = NOW()
+        WHERE id = ?
+          AND end_date IS NOT NULL
+          AND debt_forgiven_at IS NULL
+        `,
+        [id],
+      );
+
+      if (!result.affectedRows) {
+        return res.status(409).json({
+          success: false,
+          message:
+            "La inscripción cambió mientras se procesaba. Recargá la pantalla e intentá de nuevo.",
+        });
+      }
+
+      res.json({
+        success: true,
+        message: "Deuda olvidada correctamente",
+      });
+    } catch (error) {
+      console.error(error);
+
+      res.status(500).json({
+        success: false,
+        message: "Error al olvidar la deuda",
+      });
+    }
+  },
+
   softDelete: async (req, res) => {
     const id = Number(req.params.id);
     const connection = await db.getConnection();

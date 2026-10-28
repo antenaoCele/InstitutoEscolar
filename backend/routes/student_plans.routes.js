@@ -74,6 +74,19 @@ router.put(
   studentPlansController.changeTeacher,
 );
 
+// OLVIDAR DEUDA: marca una inscripción dada de baja para que deje de
+// reclamar deuda (ej. el plan se cargó mal y se dio de baja por error).
+// No lleva body: el controller valida que esté dada de baja y que
+// realmente tenga deuda.
+router.put(
+  "/:id/forgive-debt",
+  authentication,
+  authorization("ADMIN"),
+  ...validateID("student_plans"),
+  checkValidations,
+  studentPlansController.forgiveDebt,
+);
+
 router.put(
   "/:id",
   authentication,

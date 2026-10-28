@@ -102,6 +102,7 @@ export function Students() {
     handleUpdate,
     handleDelete,
     confirmDelete,
+    handleForgiveDebt,
 
     // Planes
     togglePlan,
@@ -240,6 +241,7 @@ export function Students() {
         isOpen={openViewModal}
         onClose={closeViewModal}
         student={selectedStudent}
+        onForgiveDebt={handleForgiveDebt}
       />
 
       <StudentDeleteModal

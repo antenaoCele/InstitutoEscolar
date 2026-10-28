@@ -328,6 +328,38 @@ export function useStudents() {
   };
 
   // ======================================================
+  // OLVIDAR DEUDA (solo admin, desde la ficha del estudiante)
+  // ======================================================
+  const handleForgiveDebt = async (studentPlanId) => {
+    const confirmed = window.confirm(
+      "¿Olvidar la deuda de esta inscripción? El alumno dejará de figurar debiendo este plan.",
+    );
+
+    if (!confirmed) return;
+
+    try {
+      await studentPlanService.forgiveDebt(studentPlanId);
+
+      if (selectedStudent?.student?.id) {
+        const { data } = await studentService.getInfo(
+          selectedStudent.student.id,
+        );
+
+        setSelectedStudent(data.data);
+      }
+
+      await fetchStudents();
+
+      showFeedback("Deuda olvidada correctamente.", "success");
+    } catch (error) {
+      showFeedback(
+        error.response?.data?.message || "Error al olvidar la deuda.",
+        "error",
+      );
+    }
+  };
+
+  // ======================================================
   // EDITAR
   // ======================================================
   const handleEdit = async (student) => {
@@ -781,6 +813,7 @@ export function useStudents() {
     handleUpdate,
     handleDelete,
     confirmDelete,
+    handleForgiveDebt,
 
     // ====================================================
     // OTROS
